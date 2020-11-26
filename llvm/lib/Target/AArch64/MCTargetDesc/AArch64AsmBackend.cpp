@@ -72,6 +72,8 @@ public:
         {"fixup_aarch64_pcrel_call26", 0, 26, PCRelFlagVal},
         {"fixup_morello_pcrel_branch26", 0, 26, PCRelFlagVal },
         {"fixup_morello_pcrel_call26", 0, 26, PCRelFlagVal },
+        {"fixup_morello_desc_call", 0, 0, 0},
+        {"fixup_morello_desc_tcall", 0, 0, 0},
         {"fixup_aarch64_tlsdesc_call", 0, 0, 0},
         {"fixup_morello_tlsdesc_call", 0, 0, 0}};
 
@@ -124,6 +126,8 @@ static unsigned getFixupKindNumBytes(unsigned Kind) {
 
   case AArch64::fixup_aarch64_tlsdesc_call:
   case AArch64::fixup_morello_tlsdesc_call:
+  case AArch64::fixup_morello_desc_call:
+  case AArch64::fixup_morello_desc_tcall:
     return 0;
 
   case FK_Data_1:
@@ -390,6 +394,8 @@ unsigned AArch64AsmBackend::getFixupKindContainereSizeInBytes(unsigned Kind) con
 
   case AArch64::fixup_aarch64_tlsdesc_call:
   case AArch64::fixup_morello_tlsdesc_call:
+  case AArch64::fixup_morello_desc_call:
+  case AArch64::fixup_morello_desc_tcall:
   case AArch64::fixup_aarch64_movw:
   case AArch64::fixup_aarch64_pcrel_branch14:
   case AArch64::fixup_aarch64_add_imm12:

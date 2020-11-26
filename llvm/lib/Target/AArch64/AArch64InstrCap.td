@@ -105,6 +105,15 @@ def stlxr_fatptr : PatFrag<(ops node:$val, node:$ptr),
   return cast<MemIntrinsicSDNode>(N)->getMemoryVT() == MVT::iFATPTR128;
 }]>;
 
+let hasSideEffects = 1 in {
+def DESCCALL : Pseudo<(outs), (ins i64imm:$sym), []>, Sched<[]> {
+  let AsmString = ".desccall $sym";
+}
+def DESCTCALL : Pseudo<(outs), (ins i64imm:$sym), []>, Sched<[]> {
+  let AsmString = ".desctcall $sym";
+}
+}
+
 //===------------------------------------
 // Atomic infrastructure for capabilities
 //===------------------------------------

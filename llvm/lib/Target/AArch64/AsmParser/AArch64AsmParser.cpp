@@ -174,6 +174,7 @@ private:
   bool parseDirectiveTLSDescCall(SMLoc L);
 
   bool parseDirectiveCapInit(SMLoc L);
+  bool parseDirectiveDescCall(SMLoc L, bool Tail);
 
   bool parseDirectiveLOH(StringRef LOH, SMLoc L);
   bool parseDirectiveLtorg(SMLoc L);
@@ -5732,6 +5733,10 @@ bool AArch64AsmParser::ParseDirective(AsmToken DirectiveID) {
     parseDirectiveUnreq(Loc);
   else if (IDVal == ".capinit")
     parseDirectiveCapInit(Loc);
+  else if (IDVal == ".desccall")
+    parseDirectiveDescCall(Loc, false);
+  else if (IDVal == ".desctcall")
+    parseDirectiveDescCall(Loc, true);
   else if (IDVal == ".inst")
     parseDirectiveInst(Loc);
   else if (IDVal == ".cfi_negate_ra_state")
@@ -5899,6 +5904,28 @@ bool AArch64AsmParser::parseFeatures(StringRef ExtensionString,
 
   if (HasA64C && HasC64 && EnableA64C && EnableC64)
     report_fatal_error("Cannot enable both A64C and C64");
+  return false;
+}
+
+// parseDirectiveDescCall:
+//   ::= .desccall symbol
+//   ::= .desctcall symbol
+bool AArch64AsmParser::parseDirectiveDescCall(SMLoc L, bool Tail) {
+  StringRef Name;
+  if (check(getParser().parseIdentifier(Name), L,
+            "expected symbol after directive") ||
+      parseToken(AsmToken::EndOfStatement))
+    return true;
+
+  MCSymbol *Sym = getContext().getOrCreateSymbol(Name);
+  const MCExpr *Expr = MCSymbolRefExpr::create(Sym, getContext());
+  Expr = AArch64MCExpr::create(Expr, AArch64MCExpr::VK_ABS, getContext());
+
+  MCInst Inst;
+  Inst.setOpcode(Tail ? AArch64::DESCCALL : AArch64::DESCTCALL);
+  Inst.addOperand(MCOperand::createExpr(Expr));
+
+  getParser().getStreamer().emitInstruction(Inst, getSTI());
   return false;
 }
 

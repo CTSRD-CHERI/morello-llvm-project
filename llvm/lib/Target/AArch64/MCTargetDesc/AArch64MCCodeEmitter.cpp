@@ -664,6 +664,16 @@ void AArch64MCCodeEmitter::encodeInstruction(const MCInst &MI, raw_ostream &OS,
     return;
   }
 
+  if (MI.getOpcode() == AArch64::DESCCALL ||
+      MI.getOpcode() == AArch64::DESCTCALL) {
+    // Same as R_AARCH64_TLSDESC_CALL, these don't emit any code.
+    MCFixupKind Fixup = MCFixupKind(MI.getOpcode() == AArch64::DESCCALL
+        ? AArch64::fixup_morello_desc_call
+        : AArch64::fixup_morello_desc_tcall);
+    Fixups.push_back(MCFixup::create(0, MI.getOperand(0).getExpr(), Fixup));
+    return;
+  }
+
   if (MI.getOpcode() == AArch64::CompilerBarrier ||
       MI.getOpcode() == AArch64::SPACE) {
     // CompilerBarrier just prevents the compiler from reordering accesses, and
