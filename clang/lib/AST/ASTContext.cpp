@@ -6065,7 +6065,9 @@ unsigned ASTContext::getIntegerRank(const Type *T) const {
   // Does this make sense?
   case BuiltinType::IntCap:
   case BuiltinType::UIntCap:
-    return 6 + (getIntWidth(IntCapTy) << 3);
+    // Give (u)intcap_t the highest priority to avoid
+    // losing metadata bits.
+    return -1;
   case BuiltinType::Int128:
   case BuiltinType::UInt128:
     return 7 + (getIntWidth(Int128Ty) << 3);
