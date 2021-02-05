@@ -474,6 +474,10 @@ struct ElfSym {
   static Defined *newLibBss1;
   static Defined *newLibBss2;
   static Defined *newLibEnd;
+
+  // __cap_dynrelocs_{start,end} symbols.
+  static Defined *relaCapDynRelocsStart;
+  static Defined *relaCapDynRelocsEnd;
 };
 
 // A buffer class that is large enough to hold any Symbol-derived

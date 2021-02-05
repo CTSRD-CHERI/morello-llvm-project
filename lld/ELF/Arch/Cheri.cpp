@@ -697,7 +697,9 @@ static uint64_t getMorelloTargetSize(const InputSectionBase *isec,
     // reserved by .capinit
     if (!targetSym->isInGot()) {
       const uint8_t *buf = isec->data().begin() + offset;
-      targetSize = read64le(buf + 8);
+      targetSize = (config->morelloStaticCapsMode == CapRelocsMode::Legacy)
+                       ? read64le(buf + 8)
+                       : read64le(buf);
       if (targetSize)
         return targetSize;
     }
@@ -742,6 +744,7 @@ static uint64_t getMorelloTargetSize(const InputSectionBase *isec,
   }
   return targetSize;
 }
+
 // The Morello permissions are encoded differently in the __cap_relocs
 // section (static linking) or in the fragment (dynamic linking).
 //  Helper class to return the right one dependent on context.
@@ -868,6 +871,7 @@ void MorelloCapRelocsSection::writeTo(uint8_t *buf) {
       });
   assert(offset == this->getSize() && "Not all data written?");
 }
+
 
 // Implementation of R_MORELLO_CAPFRAG_SIZE_AND_PERM static relocation. This is
 // an internal to LLD relocation that we use to calculate the
@@ -1038,9 +1042,13 @@ void addMorelloC64GotRelocation(RelType dynType, Symbol *sym, InputSectionBase *
   // being present.
   if (config->hasDynSymTab || dynType == R_MORELLO_IRELATIVE)
     addCapDynamicRelocation(dynType, sym, sec, offset, 0);
-  else
+  else if (config->morelloStaticCapsMode == CapRelocsMode::ElfReloc) {
+    in.relaIplt->addReloc({R_MORELLO_RELATIVE, sec, offset, true, sym, 0});
+    addMorelloCapabilityFragment(sec, sym, offset);
+  } else {
     in.capRelocs->addCapReloc({sec, offset, false}, {sym, 0u},
                               sym->isPreemptible, 0);
+  }
 }
 
 // For the .capinit R_MORELLO_CAPINIT relocation. Called from the
@@ -1055,6 +1063,9 @@ static void addMorelloCapabilityRelocation(Symbol *sym, RelType type,
                           ? R_MORELLO_CAPINIT
                           : R_MORELLO_RELATIVE;
     addCapDynamicRelocation(dynType, sym, sec, offset, addend);
+  } else if (config->morelloStaticCapsMode == CapRelocsMode::ElfReloc) {
+    in.relaIplt->addReloc({R_MORELLO_RELATIVE, sec, offset, true, sym, addend});
+    addMorelloCapabilityFragment(sec, sym, offset);
   } else {
     in.capRelocs->addCapReloc({sec, offset, false}, {sym, 0u},
                               sym->isPreemptible, addend);

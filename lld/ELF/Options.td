@@ -66,6 +66,12 @@ defm Ttext: Eq<"Ttext", "Same as --section-start with .text as the sectionname">
 def morello_c64_plt: F<"morello-c64-plt">,
   HelpText<"Emit PLTs in c64 mode.">;
 
+// Select how to emit capability metadata in static executables:
+def morello_static_caprelocs_legacy: F<"morello-static-caps=legacy">,
+  HelpText<"Emit capability metadata for Morello static executables using the legacy __cap_relocs mechanism (default)">;
+def morello_static_caprelocs_elf: F<"morello-static-caps=elf">,
+  HelpText<"Emit capability metadata for Morello static executables using R_MORELLO_RELATIVE relocations in .rela.dyn.">;
+
 def Ttext_segment: Separate<["-", "--"], "Ttext-segment">;
 
 defm allow_multiple_definition: B<"allow-multiple-definition",

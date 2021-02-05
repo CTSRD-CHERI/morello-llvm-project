@@ -84,6 +84,7 @@ private:
   std::unique_ptr<FileOutputBuffer> &buffer;
 
   void addRelIpltSymbols();
+  void addCapDynRelocsSymbols();
   void addStartEndSymbols();
   void addStartStopSymbols(OutputSection *sec);
 
@@ -346,6 +347,9 @@ void addReservedSymbols() {
   ElfSym::newLibBss1 = add("__bss_start__", 0);
   ElfSym::newLibBss2 = add("__bss_end__", -1);
   ElfSym::newLibEnd = add("__end__", -1);
+
+  //  ElfSym::relaCapDynRelocsStart = add("__cap_dynrelocs_start", 0);
+  //  ElfSym::relaCapDynRelocsEnd = add("__cap_dynrelocs_end", -1);
 }
 
 static OutputSection *findSection(StringRef name, unsigned partition = 1) {
@@ -1093,6 +1097,26 @@ template <class ELFT> void Writer<ELFT>::addRelIpltSymbols() {
       Out::elfHeader, 0, STV_HIDDEN, STB_WEAK);
 }
 
+// The beginning and the ending of .rela.dyn section are marked
+// with __cap_dynrelocs_{start,end} symbols if it is a statically linked
+// executable. The runtime needs these symbols in order to resolve
+// all RELATIVE relocs and create capabilities on startup.
+template <class ELFT> void Writer<ELFT>::addCapDynRelocsSymbols() {
+  if (config->emachine != EM_AARCH64 || config->relocatable ||
+      needsInterpSection())
+    return;
+
+  // By default, __cap_dynrelocs_{start,end} belong to a dummy section 0
+  // because .rela.dyn might be empty and thus removed from output.
+  // We'll override Out::elfHeader with In.relaIplt later when we are
+  // sure that .rela.plt exists in output.
+  ElfSym::relaCapDynRelocsStart = addOptionalRegular(
+      "__cap_dynrelocs_start", Out::elfHeader, 0, STV_HIDDEN, STB_WEAK);
+
+  ElfSym::relaCapDynRelocsEnd = addOptionalRegular(
+      "__cap_dynrelocs_end", Out::elfHeader, 0, STV_HIDDEN, STB_WEAK);
+}
+
 template <class ELFT>
 void Writer<ELFT>::forEachRelSec(
     llvm::function_ref<void(InputSectionBase &)> fn) {
@@ -1134,6 +1158,13 @@ template <class ELFT> void Writer<ELFT>::setReservedSymbolSections() {
     ElfSym::relaIpltStart->section = in.relaIplt;
     ElfSym::relaIpltEnd->section = in.relaIplt;
     ElfSym::relaIpltEnd->value = in.relaIplt->getSize();
+  }
+
+  // __cap_dynrelocs_{start,end} mark the start and the end of in.relaIplt.
+  if (ElfSym::relaCapDynRelocsStart && in.relaIplt->isNeeded()) {
+    ElfSym::relaCapDynRelocsStart->section = in.relaIplt;
+    ElfSym::relaCapDynRelocsEnd->section = in.relaIplt;
+    ElfSym::relaCapDynRelocsEnd->value = in.relaIplt->getSize();
   }
 
   PhdrEntry *last = nullptr;
@@ -1926,6 +1957,9 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
 
   // Define __rel[a]_iplt_{start,end} symbols if needed.
   addRelIpltSymbols();
+
+  // Define __cap_dynrelocs_{start,end} symbols if needed.
+  addCapDynRelocsSymbols();
 
   // RISC-V's gp can address +/- 2 KiB, set it to .sdata + 0x800. This symbol
   // should only be defined in an executable. If .sdata does not exist, its

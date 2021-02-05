@@ -691,6 +691,19 @@ static CapRelocsMode getLocalCapRelocsMode(opt::InputArgList &args) {
   llvm_unreachable("Invalid arg");
 }
 
+static CapRelocsMode getMorelloStaticCapRelocsMode(opt::InputArgList &args) {
+  auto *arg = args.getLastArg(OPT_morello_static_caprelocs_legacy,
+                              OPT_morello_static_caprelocs_elf);
+  if (!arg)
+    return CapRelocsMode::Legacy;
+  if (arg->getOption().getID() == OPT_morello_static_caprelocs_legacy) {
+    return CapRelocsMode::Legacy;
+  } else if (arg->getOption().getID() == OPT_morello_static_caprelocs_elf) {
+    return CapRelocsMode::ElfReloc;
+  }
+  llvm_unreachable("Invalid arg");
+}
+
 static StringRef getDynamicLinker(opt::InputArgList &args) {
   auto *arg = args.getLastArg(OPT_dynamic_linker, OPT_no_dynamic_linker);
   if (!arg)
@@ -944,6 +957,7 @@ static void readConfigs(opt::InputArgList &args) {
                    args.hasArg(OPT_shared));
   config->allowUndefinedCapRelocs = args.hasArg(OPT_allow_undefined_cap_relocs);
   config->morelloC64Plt = args.hasArg(OPT_morello_c64_plt);
+  config->morelloStaticCapsMode = getMorelloStaticCapRelocsMode(args);
   config->auxiliaryList = args::getStrings(args, OPT_auxiliary);
   config->bsymbolic = args.hasArg(OPT_Bsymbolic);
   config->bsymbolicFunctions = args.hasArg(OPT_Bsymbolic_functions);

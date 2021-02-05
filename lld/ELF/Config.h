@@ -142,6 +142,8 @@ struct Configuration {
   bool armHasMovtMovw = false;
   bool armJ1J2BranchEncoding = false;
   bool morelloC64Plt;
+  // Method used for capability metadata in Morello static executables
+  CapRelocsMode morelloStaticCapsMode;
   bool asNeeded = false;
   bool bsymbolic;
   bool bsymbolicFunctions;
