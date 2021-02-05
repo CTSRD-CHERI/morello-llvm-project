@@ -68,6 +68,11 @@ def morello_c64_plt: F<"morello-c64-plt">,
 
 def strip_note_cheri: F<"strip-note-cheri">,
   HelpText<"Strip .note.cheri section from final image.">;
+// Select how to emit capability metadata in static executables:
+def morello_static_caprelocs_legacy: F<"morello-static-caps=legacy">,
+  HelpText<"Emit capability metadata for Morello static executables using the legacy __cap_relocs mechanism (default)">;
+def morello_static_caprelocs_elf: F<"morello-static-caps=elf">,
+  HelpText<"Emit capability metadata for Morello static executables using R_MORELLO_RELATIVE relocations in .rela.dyn.">;
 
 def Ttext_segment: Separate<["-", "--"], "Ttext-segment">;
 

@@ -443,7 +443,9 @@ static uint64_t getTargetSize(const CheriCapRelocLocation &location,
     // reserved by .capinit
     if (config->emachine == EM_AARCH64 && !targetSym->isInGot()) {
       const uint8_t *buf = location.section->data().begin() + location.offset;
-      targetSize = read64le(buf + 8);
+      targetSize = (config->morelloStaticCapsMode == CapRelocsMode::Legacy)
+                       ? read64le(buf + 8)
+                       : read64le(buf);
       if (targetSize)
         return targetSize;
     }

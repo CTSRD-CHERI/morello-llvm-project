@@ -146,6 +146,8 @@ struct Configuration {
   bool morelloC64Plt;
   bool stripNoteCheri;
   uint32_t cheriABIVariant = 0;
+  // Method used for capability metadata in Morello static executables
+  CapRelocsMode morelloStaticCapsMode;
   bool asNeeded = false;
   bool bsymbolic;
   bool bsymbolicFunctions;

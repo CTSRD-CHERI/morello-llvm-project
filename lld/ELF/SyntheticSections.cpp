@@ -1743,8 +1743,14 @@ void RelocationBaseSection::finalizeContents() {
   } else {
     if (in.relaPlt == this)
       getParent()->info = in.gotPlt->getParent()->sectionIndex;
-    if (in.relaIplt == this)
-      getParent()->info = in.igotPlt->getParent()->sectionIndex;
+    if (in.relaIplt == this) {
+      if (in.igotPlt && in.igotPlt->isNeeded())
+        getParent()->info = in.igotPlt->getParent()->sectionIndex;
+      else if (!config->hasDynSymTab)
+        // In Morello static linking, the relaDyn can be used without the GOT or
+        // PLTGOT
+        getParent()->info = 0;
+    }
   }
   assert(getParent()->info != UINT32_MAX);
 }
