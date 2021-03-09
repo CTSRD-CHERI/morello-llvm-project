@@ -608,19 +608,11 @@ bool AArch64PassConfig::addPreISel() {
   // CGP can add calls to memcpy and friends so we need to switch to switch
   // to the capability variants here.
   addPass(createAArch64SandboxMemOpLowering());
-  if (EnableSandboxGlobalsOpt && getAArch64TargetMachine().IsMorello())
-    addPass(createAArch64SandboxGlobalsOpt(TM));
-
-  // Don't merge globals in the pure capability ABI at least for now.
-  // The current implementation would drop bounds checks.
-  // The PromoteConstant pass would also create globals in the default
-  // address space and is not ported yet.
-  if (getAArch64TargetMachine().IsPureCap())
-    return false;
 
   // Run promote constant before global merge, so that the promoted constants
   // get a chance to be merged
-  if (TM->getOptLevel() != CodeGenOpt::None && EnablePromoteConstant)
+  if (TM->getOptLevel() != CodeGenOpt::None && EnablePromoteConstant &&
+      !getAArch64TargetMachine().IsPureCap())
     addPass(createAArch64PromoteConstantPass());
   // FIXME: On AArch64, this depends on the type.
   // Basically, the addressable offsets are up to 4095 * Ty.getSizeInBytes().
@@ -645,6 +637,9 @@ bool AArch64PassConfig::addPreISel() {
     addPass(createGlobalMergePass(TM, 4095, OnlyOptimizeForSize,
                                   MergeExternalByDefault));
   }
+
+  if (EnableSandboxGlobalsOpt && getAArch64TargetMachine().IsMorello())
+    addPass(createAArch64SandboxGlobalsOpt(TM));
 
   return false;
 }

@@ -7034,23 +7034,12 @@ SDValue AArch64TargetLowering::LowerGlobalAddress(SDValue Op,
   }
 
   if (!IsLargeCM && Op.getSimpleValueType() == MVT::iFATPTR128) {
-    // Look after the MD_cap_addr to see if we already have a module level
-    // constant that holds this address.
-    const MDNode *SG = nullptr;
-    if (auto *GO = dyn_cast<GlobalObject>(GV)) {
-      SG = GO->getMetadata(LLVMContext::MD_cap_addr);
-    } else if (auto *GA = dyn_cast<GlobalAlias>(GV)) {
-      auto *GO = dyn_cast<GlobalObject>(GA->getAliasee());
-      if (GO) {
-        SG = GO->getMetadata(LLVMContext::MD_cap_addr);
-      }
-    }
-
-    if (SG) {
-      auto *VAM = cast<ValueAsMetadata>(SG->getOperand(0));
-      auto *VAMIndex = cast<ValueAsMetadata>(SG->getOperand(1));
-      auto *AddrGV = cast<GlobalVariable>(VAM->getValue());
-      uint64_t Index = cast<ConstantInt>(VAMIndex->getValue())->getZExtValue();
+    MachineFunction &MF = DAG.getMachineFunction();
+    AArch64FunctionInfo *FuncInfo = MF.getInfo<AArch64FunctionInfo>();
+    auto Entry = FuncInfo->getCapTableEntry(GV);
+    if (Entry.first) {
+      uint64_t Index = Entry.second;
+      auto *AddrGV = cast<GlobalVariable>(Entry.first);
       EVT Type = Subtarget->hasC64() ? MVT::iFATPTR128: MVT::i64;
       SDValue Addr =
           DAG.getGlobalAddress(AddrGV, DL, Type);

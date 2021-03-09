@@ -184,6 +184,11 @@ class AArch64FunctionInfo final : public MachineFunctionInfo {
   /// The stack slot where the Swift asynchronous context is stored.
   int SwiftAsyncContextFrameIdx = std::numeric_limits<int>::max();
 
+  // Captable mappings - these provide the index in the captable for each
+  // global (if there is any).
+  std::map<const Value *, std::pair<const Value *, unsigned>> CapTableMapping;
+  void initCapTableMapping(MachineFunction &MF);
+
 public:
   explicit AArch64FunctionInfo(MachineFunction &MF);
 
@@ -200,6 +205,13 @@ public:
   unsigned getTailCallReservedStack() const { return TailCallReservedStack; }
   void setTailCallReservedStack(unsigned bytes) {
     TailCallReservedStack = bytes;
+  }
+
+  std::pair<const Value *, unsigned> getCapTableEntry(const Value *V) {
+    auto it = CapTableMapping.find(V);
+    if (it == CapTableMapping.end())
+      return std::make_pair(nullptr, 0);
+    return it->second;
   }
 
   bool hasCalculatedStackSizeSVE() const { return HasCalculatedStackSizeSVE; }

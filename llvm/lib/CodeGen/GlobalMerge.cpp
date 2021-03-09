@@ -139,6 +139,7 @@ namespace {
 
   class GlobalMerge : public FunctionPass {
     const TargetMachine *TM = nullptr;
+    const TargetLoweringObjectFile *TLOF = nullptr;
 
     // FIXME: Infer the maximum possible offset depending on the actual users
     // (these max offsets are different for the users inside Thumb or ARM
@@ -156,6 +157,8 @@ namespace {
     bool MergeExternalGlobals = false;
 
     bool IsMachO;
+
+    bool IsPureCap;
 
     bool doMerge(SmallVectorImpl<GlobalVariable*> &Globals,
                  Module &M, bool isConst, unsigned AddrSpace) const;
@@ -193,7 +196,9 @@ namespace {
 
     explicit GlobalMerge(const TargetMachine *TM, unsigned MaximalOffset,
                          bool OnlyOptimizeForSize, bool MergeExternalGlobals)
-        : FunctionPass(ID), TM(TM), MaxOffset(MaximalOffset),
+        : FunctionPass(ID), TM(TM),
+          TLOF(TM ? TM->getObjFileLowering() : nullptr),
+          MaxOffset(MaximalOffset),
           OnlyOptimizeForSize(OnlyOptimizeForSize),
           MergeExternalGlobals(MergeExternalGlobals) {
       initializeGlobalMergePass(*PassRegistry::getPassRegistry());
@@ -466,6 +471,10 @@ bool GlobalMerge::doMerge(const SmallVectorImpl<GlobalVariable *> &Globals,
 
       // Make sure we use the same alignment AsmPrinter would use.
       Align Alignment = DL.getPreferredAlign(Globals[j]);
+      if (IsPureCap) {
+        Align CapAlign = TLOF->getAlignmentForPreciseBounds(DL.getTypeAllocSize(Ty), *TM);
+        Alignment = std::max(Alignment, CapAlign);
+      }
       unsigned Padding = alignTo(MergedSize, Alignment) - MergedSize;
       MergedSize += Padding;
       MergedSize += DL.getTypeAllocSize(Ty);
@@ -480,6 +489,16 @@ bool GlobalMerge::doMerge(const SmallVectorImpl<GlobalVariable *> &Globals,
       Tys.push_back(Ty);
       Inits.push_back(Globals[j]->getInitializer());
       StructIdxs.push_back(CurIdx++);
+      if (IsPureCap) {
+        // Add padding after the global.
+        Align CapAlign = TLOF->getAlignmentForPreciseBounds(DL.getTypeAllocSize(Ty), *TM);
+        unsigned Padding = alignTo(MergedSize, CapAlign) - MergedSize;
+        if (Padding) {
+          Tys.push_back(ArrayType::get(Int8Ty, Padding));
+          Inits.push_back(ConstantAggregateZero::get(Tys.back()));
+          ++CurIdx;
+        }
+      }
 
       MaxAlign = std::max(MaxAlign, Alignment);
 
@@ -541,7 +560,17 @@ bool GlobalMerge::doMerge(const SmallVectorImpl<GlobalVariable *> &Globals,
       };
       Constant *GEP =
           ConstantExpr::getInBoundsGetElementPtr(MergedTy, MergedGV, Idx);
-      Globals[k]->replaceAllUsesWith(GEP);
+
+      GlobalAlias *Alias = nullptr;
+      if (IsPureCap) {
+        Alias = GlobalAlias::create(Tys[StructIdxs[idx]], AddrSpace,
+                                 Linkage, "__tmp_merge_" + Name, GEP, &M);
+        Alias->setVisibility(Visibility);
+        Alias->setDLLStorageClass(DLLStorage);
+      }
+
+      Value *ReplaceWith = IsPureCap ? Alias : GEP;
+      Globals[k]->replaceAllUsesWith(ReplaceWith);
       Globals[k]->eraseFromParent();
 
       // When the linkage is not internal we must emit an alias for the original
@@ -549,11 +578,15 @@ bool GlobalMerge::doMerge(const SmallVectorImpl<GlobalVariable *> &Globals,
       // we can also emit an alias for internal linkage as it's safe to do so.
       // It's not safe on Mach-O as the alias (and thus the portion of the
       // MergedGlobals variable) may be dead stripped at link time.
-      if (Linkage != GlobalValue::InternalLinkage || !IsMachO) {
+      if (Linkage != GlobalValue::InternalLinkage || !IsMachO || IsPureCap) {
         GlobalAlias *GA = GlobalAlias::create(Tys[StructIdxs[idx]], AddrSpace,
                                               Linkage, Name, GEP, &M);
         GA->setVisibility(Visibility);
         GA->setDLLStorageClass(DLLStorage);
+        if (Alias) {
+          Alias->replaceAllUsesWith(GA);
+          Alias->eraseFromParent();
+        }
       }
 
       NumMerged++;
@@ -606,6 +639,10 @@ bool GlobalMerge::doInitialization(Module &M) {
   IsMachO = Triple(M.getTargetTriple()).isOSBinFormatMachO();
 
   auto &DL = M.getDataLayout();
+  IsPureCap = DL.getGlobalsAddressSpace() == 200;
+  if (IsPureCap && !TM)
+    return false;
+
   DenseMap<std::pair<unsigned, StringRef>, SmallVector<GlobalVariable *, 16>>
       Globals, ConstGlobals, BSSGlobals;
   bool Changed = false;
@@ -641,8 +678,10 @@ bool GlobalMerge::doInitialization(Module &M) {
       continue;
 
     Type *Ty = GV.getValueType();
+    // Don't try to keep BSS globals together for purecap, merging
+    // them is likely more profitable.
     if (DL.getTypeAllocSize(Ty) < MaxOffset) {
-      if (TM &&
+      if (TM && !IsPureCap &&
           TargetLoweringObjectFile::getKindForGlobal(&GV, *TM).isBSS())
         BSSGlobals[{AddressSpace, Section}].push_back(&GV);
       else if (GV.isConstant())

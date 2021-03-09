@@ -83,6 +83,8 @@ AArch64FunctionInfo::AArch64FunctionInfo(MachineFunction &MF) : MF(MF) {
   if (MF.getFunction().hasFnAttribute(Attribute::NoRedZone))
     HasRedZone = false;
 
+  initCapTableMapping(MF);
+
   const Function &F = MF.getFunction();
   std::tie(SignReturnAddress, SignReturnAddressAll) = GetSignReturnAddress(F);
   SignWithBKey = ShouldSignWithBKey(F);
@@ -113,4 +115,20 @@ bool AArch64FunctionInfo::shouldSignReturnAddress() const {
   return shouldSignReturnAddress(llvm::any_of(
       MF.getFrameInfo().getCalleeSavedInfo(),
       [](const auto &Info) { return Info.getReg() == AArch64::LR; }));
+}
+
+void AArch64FunctionInfo::initCapTableMapping(MachineFunction &MF) {
+  Module &M = *MF.getFunction().getParent();
+  NamedMDNode *NMD = M.getNamedMetadata("llvm.captable");
+  if (!NMD)
+    return;
+  for (unsigned Idx = 0; Idx < NMD->getNumOperands(); ++Idx) {
+    MDNode *Table = NMD->getOperand(Idx);
+    Value *CapTable = cast<ValueAsMetadata>(Table->getOperand(0))->getValue();
+    for (unsigned ValIdx = 1; ValIdx < Table->getNumOperands(); ++ValIdx) {
+      Value *Global =
+          cast<ValueAsMetadata>(Table->getOperand(ValIdx))->getValue();
+      CapTableMapping[Global] = std::make_pair(CapTable, ValIdx - 1);
+    }
+  }
 }

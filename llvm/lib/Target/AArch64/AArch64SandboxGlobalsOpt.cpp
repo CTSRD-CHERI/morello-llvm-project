@@ -36,7 +36,7 @@ namespace {
 
 class AArch64SandboxGlobalsOpt : public ModulePass {
   llvm::StringRef getPassName() const override {
-    return "AArch64 sandbox global address optimization pass";
+    return "AArch64 sandbox globals optimization";
   }
 
 public:
@@ -67,7 +67,7 @@ public:
     }
   };
 
-  std::map<GlobalKey, std::vector<GlobalObject*>, GlobalKeyCompare> Globals;
+  std::map<GlobalKey, std::vector<GlobalValue*>, GlobalKeyCompare> Globals;
 
   bool doInitialization(Module &Mod) override {
     return true;
@@ -87,7 +87,7 @@ public:
     return false;
   }
 
-  static bool isUsedGlobal(GlobalVariable &GV) {
+  static bool isUsedGlobal(GlobalValue &GV) {
     std::set<Value *> Cache;
     for (User *U : GV.users())
       if (isUsedGlobalHelper(U, Cache))
@@ -95,7 +95,7 @@ public:
     return false;
   }
 
-  void addGlobalValue(GlobalObject *GV) {
+  void addGlobalValue(GlobalValue *GV) {
     GlobalKey Key;
     Key.Linkage = getCapLinkage(GV);
     Key.ObjComdat = GV->hasComdat() ? getCapComdat(GV) : nullptr;
@@ -129,12 +129,11 @@ public:
   // metadata to the original global pointing pointing to the the
   // table, with an additional index. Codegen will then load from
   // from the capability table when producing global addresses.
-  bool createGlobalAddressTable(std::vector<GlobalObject *> &GVS, GlobalKey Key) {
+  bool createGlobalAddressTable(std::vector<GlobalValue *> &GVS, GlobalKey Key) {
     if (GVS.empty() || !OptShareGlobalCaps)
       return false;
 
     LLVMContext &C = GVS[0]->getContext();
-    auto* I64Ty = IntegerType::get(C, 64);
     auto* I8Ty = IntegerType::get(C, 8);
     // FIXME: don't hard-code 200
     PointerType* VoidPtrTy = PointerType::get(I8Ty, 200);
@@ -153,18 +152,17 @@ public:
       NGV->setComdat(Key.ObjComdat);
     NGV->setVisibility(Key.Visibility);
     NGV->setAlignment(MaybeAlign(16));
-
-    for (unsigned ii = 0; ii < GVS.size(); ++ii) {
-      auto *VAM = ValueAsMetadata::get(NGV);
-      SmallVector<Metadata*, 2> Elements;
-      Elements.push_back(VAM);
-      Elements.push_back(ValueAsMetadata::get(ConstantInt::get(I64Ty, ii)));
-      GVS[ii]->setMetadata(LLVMContext::MD_cap_addr, MDTuple::get(C, Elements));
-    }
+    NamedMDNode *NMD =
+        GVS[0]->getParent()->getOrInsertNamedMetadata("llvm.captable");
+    SmallVector<Metadata*, 4> Elements;
+    Elements.push_back(ValueAsMetadata::get(NGV));
+    for (unsigned ii = 0; ii < GVS.size(); ++ii)
+      Elements.push_back(ValueAsMetadata::get(GVS[ii]));
+    NMD->addOperand(MDTuple::get(C, Elements));
     return true;
   }
 
-  bool runOnGlobal(GlobalVariable &GV, Module &M) {
+  bool runOnGlobal(GlobalValue &GV, Module &M) {
     if (M.begin() == M.end())
       return false;
     const Function &Fun = *M.begin();
@@ -172,7 +170,6 @@ public:
       static_cast<const AArch64Subtarget *>(TM->getSubtargetImpl(Fun));
     if ((ST->ClassifyGlobalReference(&GV, *TM) & AArch64II::MO_GOT) != 0)
       return false;
-
     if (GV.getThreadLocalMode() != GlobalValue::NotThreadLocal)
       return false;
 
@@ -202,9 +199,16 @@ public:
         continue;
       }
     }
+    for (GlobalValue &GV: M.aliases()) {
+      if (GlobalAlias *GVar = dyn_cast<GlobalAlias>(&GV)) {
+        Modified |= runOnGlobal(*GVar, M);
+        continue;
+      }
+    }
 
     for (auto &II: Globals)
       createGlobalAddressTable(II.second, II.first);
+
     Globals.clear();
     return Modified;
   }
