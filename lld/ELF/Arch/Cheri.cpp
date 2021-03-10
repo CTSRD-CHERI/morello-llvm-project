@@ -120,7 +120,12 @@ SymbolAndOffset::fromSectionWithOffset(InputSectionBase *isec, int64_t offset,
     // since clang won't emit a symbol (and no size) for those
     if (!isec->name.startswith(".rodata.str") &&
         // AArch64 .capinit in .data.rel.ro will seldom have a symbol.
-        !(config->emachine == EM_AARCH64 && isec->name.equals(".data.rel.ro")))
+        // No symbols are emitted for .capinit in .gcc_except_table either.
+        // However all caprelocs there are performed on executable symbols so
+        // we don't need size information.
+        !(config->emachine == EM_AARCH64 &&
+         (isec->name.equals(".data.rel.ro") ||
+          isec->name.equals(".gcc_except_table"))))
       nonFatalWarning("Could not find a real symbol for " + isec->name +
            "+0x" + utohexstr(offset) + " in " + toString(isec->file));
     // Could not find a symbol -> return section+offset
