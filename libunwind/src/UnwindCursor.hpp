@@ -1879,10 +1879,11 @@ void UnwindCursor<A, R>::setInfoBasedOnIPRegister(bool isReturnAddress) {
   pc_t pc = this->getIP();
   CHERI_DBG("%s(%d): pc=%#p\n", __func__, isReturnAddress, (void *)pc.get());
 
-#if defined(_LIBUNWIND_ARM_EHABI)
+#if defined(_LIBUNWIND_ARM_EHABI) || defined(__aarch64__)
   // Remove the thumb bit so the IP represents the actual instruction address.
   // This matches the behaviour of _Unwind_GetIP on arm.
-  pc &= (pint_t)~0x1;
+  // The Morello PC also uses a similar mechanism and needs the LSB cleared.
+  pc &= ~(pint_t)0x1;
 #endif
 
   // Exit early if at the top of the stack.

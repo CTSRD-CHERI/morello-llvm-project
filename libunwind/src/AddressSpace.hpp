@@ -247,13 +247,6 @@ public:
     LocalProgramCounter(uint64_t) = delete;
     LocalProgramCounter(int64_t) = delete;
 #endif
-    bool isImmutable() const {
-#ifdef __CHERI_PURE_CAPABILITY__
-      return __builtin_cheri_sealed_get(value);
-#else
-      return false;
-#endif
-    }
     LocalProgramCounter assertInBounds(addr_t addr) const {
 #ifdef __CHERI_PURE_CAPABILITY__
       if (!__builtin_cheri_tag_get(value)) {
@@ -270,14 +263,10 @@ public:
                              "value " _LIBUNWIND_FMT_PTR,
                              (uintmax_t)addr, value);
       }
-      if (isImmutable()) {
-        // For sentries we have to modify the addend instead of creating a new
-        // capability from value.
-        uint64_t new_addend = addr - __builtin_cheri_address_get(value);
-        return LocalProgramCounter(value, new_addend);
-      } else {
-        return LocalProgramCounter(__builtin_cheri_address_set(value, addr), 0);
-      }
+      // For sentries we have to modify the addend instead of creating a new
+      // capability from value.
+      uint64_t new_addend = addr - (ptraddr_t)(uintptr_t)value;
+      return LocalProgramCounter(value, new_addend);
 #else
       return LocalProgramCounter(addr);
 #endif
@@ -298,17 +287,14 @@ public:
     ImmutablePointer *get() const { return (ImmutablePointer *)value; }
     addr_t address() const {
 #ifdef __CHERI_PURE_CAPABILITY__
-      return __builtin_cheri_address_get(value) + addend;
+      return (ptraddr_t)(uintptr_t)value + addend;
 #else
       return (addr_t)(uintptr_t)value;
 #endif
     }
     LocalProgramCounter &operator--() {
 #ifdef __CHERI_PURE_CAPABILITY__
-      if (isImmutable()) {
-        addend--;
-        return *this;
-      }
+      addend--;
 #else
       value = (void *)((uintptr_t)value - 1);
 #endif
@@ -316,11 +302,8 @@ public:
     }
     LocalProgramCounter &operator&=(addr_t a) {
 #ifdef __CHERI_PURE_CAPABILITY__
-      if (isImmutable()) {
-        addr_t new_addr = address() & a;
-        addend = new_addr - address();
-        return *this;
-      }
+      addr_t new_addr = address() & a;
+      addend = new_addr - (ptraddr_t)(uintptr_t)value;
 #else
       value = (void *)((uintptr_t)value & a);
 #endif
