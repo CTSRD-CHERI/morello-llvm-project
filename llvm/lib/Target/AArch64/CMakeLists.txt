@@ -68,6 +68,7 @@ add_llvm_target(AArch64CodeGen
   AArch64MacroFusion.cpp
   AArch64MCInstLower.cpp
   AArch64SandboxGlobalsOpt.cpp
+  AArch64GlobalsAddressing.cpp
   AArch64SandboxMemOpLowering.cpp
   MorelloRangeChecker.cpp
   AArch64PromoteConstant.cpp

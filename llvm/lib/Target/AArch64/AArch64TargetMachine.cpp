@@ -638,9 +638,12 @@ bool AArch64PassConfig::addPreISel() {
                                   MergeExternalByDefault));
   }
 
-  if (EnableSandboxGlobalsOpt && getAArch64TargetMachine().IsMorello())
-    addPass(createAArch64SandboxGlobalsOpt(TM));
+  if (TM->getOptLevel() != CodeGenOpt::None &&
+      getAArch64TargetMachine().IsPureCap())
+    addPass(createAArch64SandboxGlobalAddressing());
 
+  if (EnableSandboxGlobalsOpt && getAArch64TargetMachine().IsPureCap())
+    addPass(createAArch64SandboxGlobalsOpt(TM));
   return false;
 }
 

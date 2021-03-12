@@ -87,6 +87,7 @@
 #include "llvm/IR/Argument.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CFG.h"
+#include "llvm/IR/Cheri.h"
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/ConstantRange.h"
 #include "llvm/IR/Constants.h"
@@ -7173,9 +7174,12 @@ const SCEV *ScalarEvolution::createSCEV(Value *V) {
       return getUnknown(UndefValue::get(V->getType()));
   } else if (ConstantInt *CI = dyn_cast<ConstantInt>(V))
     return getConstant(CI);
-  else if (GlobalAlias *GA = dyn_cast<GlobalAlias>(V))
+  else if (GlobalAlias *GA = dyn_cast<GlobalAlias>(V)) {
+    if (isCheriPointer(GA->getType(), &getDataLayout()))
+      // Aliases might have different bounds, so we can't use the aliasee.
+      return getUnknown(V);
     return GA->isInterposable() ? getUnknown(V) : getSCEV(GA->getAliasee());
-  else if (!isa<ConstantExpr>(V))
+  } else if (!isa<ConstantExpr>(V))
     return getUnknown(V);
 
   Operator *U = cast<Operator>(V);

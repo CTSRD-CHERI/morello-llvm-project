@@ -1,5 +1,5 @@
-; RUN: llc %s -mtriple=aarch64-none-linux-gnu -mattr=+c64,+morello -target-abi purecap -aarch64-enable-global-merge -global-merge-on-external -disable-post-ra -o - | FileCheck %s
-; RUN: llc %s -mtriple=aarch64-linux-gnuabi -mattr=+c64,+morello -target-abi purecap -aarch64-enable-global-merge -global-merge-on-external -disable-post-ra -o - | FileCheck %s
+; RUN: llc %s -mtriple=aarch64-none-linux-gnu -mattr=+c64,+morello -target-abi purecap -aarch64-enable-global-merge -global-merge-on-external -aarch64-sandbox-merge=false -disable-post-ra -o - | FileCheck %s
+; RUN: llc %s -mtriple=aarch64-linux-gnuabi -mattr=+c64,+morello -target-abi purecap -aarch64-enable-global-merge -global-merge-on-external -aarch64-sandbox-merge=false -disable-post-ra -o - | FileCheck %s
 
 @x = dso_local addrspace(200) global [100 x i32] zeroinitializer, align 1
 @y = dso_local addrspace(200) global [100 x i32] zeroinitializer, align 1
