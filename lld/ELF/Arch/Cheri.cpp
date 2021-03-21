@@ -406,14 +406,14 @@ void CheriCapRelocsSection<ELFT>::addCapReloc(CheriCapRelocLocation loc,
 
 template<typename ELFT>
 static uint64_t getTargetSize(const CheriCapRelocLocation &location,
-                              const CheriCapReloc &reloc, bool strict) {
-  uint64_t targetSize = reloc.target.sym()->getSize();
+                              const SymbolAndOffset &target, bool strict) {
+  uint64_t targetSize = target.sym()->getSize(/*forCheriCap=*/true);
   if (targetSize > INT_MAX) {
-    error("Insanely large symbol size for " + reloc.target.verboseToString() +
+    error("Insanely large symbol size for " + target.verboseToString() +
           "for cap_reloc at" + location.toString());
     return 0;
   }
-  auto targetSym = reloc.target.sym();
+  auto targetSym = target.sym();
   if (targetSize == 0 && !targetSym->isPreemptible) {
     StringRef name = targetSym->getName();
     // Section end symbols like __preinit_array_end, etc. should actually be
@@ -438,6 +438,15 @@ static uint64_t getTargetSize(const CheriCapRelocLocation &location,
     if (isAbsoluteSym)
       return targetSize;
 
+    // Morello may store symbol size in lower 8-bytes of the 16-byte frag
+    // reserved by .capinit
+    if (config->emachine == EM_AARCH64 && !targetSym->isInGot()) {
+      const uint8_t *buf = location.section->data().begin() + location.offset;
+      targetSize = read64le(buf + 8);
+      if (targetSize)
+        return targetSize;
+    }
+
     // Otherwise warn about missing sizes for symbols
     bool warnAboutUnknownSize = true;
     // currently clang doesn't emit the necessary symbol information for local
@@ -457,11 +466,11 @@ static uint64_t getTargetSize(const CheriCapRelocLocation &location,
     if (OutputSection *os = targetSym->getOutputSection()) {
       // Cast must succeed since getOutputSection() returned non-NULL
       Defined* def = cast<Defined>(targetSym);
-      // warn("Could not find size for symbol " + reloc.target.verboseToString() +
+      // warn("Could not find size for symbol " + target.verboseToString() +
       //    " and could not determine section size. Using 0.");
       if ((int64_t)def->value < 0 || def->value > os->size) {
         // Note: we allow def->value == os->size for pointers to the end
-        warn("Symbol " + reloc.target.verboseToString() +
+        warn("Symbol " + target.verboseToString() +
              " is defined as being in section " + os->name +
              " but the value (0x" + utohexstr(targetSym->getVA()) +
              ") is outside this section. Will create a zero-size capability."
@@ -469,7 +478,7 @@ static uint64_t getTargetSize(const CheriCapRelocLocation &location,
         return 0;
       }
       // For negative offsets use 0 instead (we want the range of the full symbol in that case)
-      int64_t offset = std::max((int64_t)0, reloc.target.offset);
+      int64_t offset = std::max((int64_t)0, target.offset);
       uint64_t targetVA = targetSym->getVA(offset);
       assert(targetVA >= os->addr);
       uint64_t offsetInOS = targetVA - os->addr;
@@ -488,7 +497,7 @@ static uint64_t getTargetSize(const CheriCapRelocLocation &location,
     }
     if (warnAboutUnknownSize || errorHandler().verbose) {
       std::string msg = "could not determine size of cap reloc against " +
-          reloc.target.verboseToString() +
+          target.verboseToString() +
           "\n>>> referenced by " + location.toString();
       if (strict)
         warn(msg);
@@ -496,7 +505,7 @@ static uint64_t getTargetSize(const CheriCapRelocLocation &location,
         nonFatalWarning(msg);
     }
     if (UnknownSectionSize) {
-      warn("Could not find size for symbol " + reloc.target.verboseToString() +
+      warn("Could not find size for symbol " + target.verboseToString() +
            " and could not determine section size. Using 0.");
       // TargetSize = std::numeric_limits<uint64_t>::max();
       return 0;
@@ -551,7 +560,7 @@ template <class ELFT> void CheriCapRelocsSection<ELFT>::writeTo(uint8_t *buf) {
       targetVA = reloc.target.offset;
     } else {
       // For non-preemptible symbols we can write the target size:
-      targetSize = getTargetSize<ELFT>(location, reloc,
+      targetSize = getTargetSize<ELFT>(location, reloc.target,
                                        /*strict=*/!containsLegacyCapRelocs());
     }
     uint64_t targetOffset = reloc.capabilityOffset;
@@ -655,98 +664,6 @@ void MorelloCapRelocsSection::finalizeContents() {
       d->value = this->outSecOff + this->getSize();
 }
 
-// This is very close to the CHERI getTargetSize, there are a few parameters
-// split out so this can be called when there are no __cap_relocs (dynamic
-// linking.
-// FIXME: merge with CHERI getTargetSize.
-static uint64_t getMorelloTargetSize(const InputSectionBase *isec,
-                                   uint64_t offset, const Symbol *targetSym,
-                                   bool strict) {
-  uint64_t targetSize = targetSym->getSize();
-  if (targetSize > INT_MAX) {
-    error("Insanely large symbol size for " + targetSym->getName() +
-          "for cap_reloc at" + lld::verboseToString(targetSym, offset));
-    return 0;
-  }
-  if (targetSize == 0 && !targetSym->isPreemptible) {
-    if (targetSym->isUndefWeak() && targetSym->getVA(0) == 0)
-      // Weak symbol resolved to NULL -> zero size is fine
-      return 0;
-
-    StringRef name = targetSym->getName();
-    // Section end symbols like __preinit_array_end, etc. should actually be
-    // zero size symbol since they are just markers for the end of a section
-    // and not usable as a valid pointer
-    if (isSectionStartSymbol(name)) {
-      OutputSection *os = targetSym->getOutputSection();
-      assert(os);
-      targetSize = os->size;
-      return targetSize;
-    }
-    if (isSectionEndSymbol(name))
-      return targetSize;
-
-    bool isAbsoluteSym = targetSym->getOutputSection() == nullptr;
-    // Symbols previously declared as weak can have size 0 (if they then resolve
-    // to NULL). For example __preinit_array_start, etc. are generated by the
-    // linker as ABS symbols with value 0.
-    // A symbol is linker-synthesized/linker script generated if File == nullptr
-    if (isAbsoluteSym && targetSym->file == nullptr)
-      return targetSize;
-
-    // Absolute value provided by -defsym or assignment in .o file is fine
-    if (isAbsoluteSym)
-      return targetSize;
-
-    // Morello may store symbol size in lower 8-bytes of the 16-byte frag
-    // reserved by .capinit
-    if (!targetSym->isInGot()) {
-      const uint8_t *buf = isec->data().begin() + offset;
-      targetSize = read64le(buf + 8);
-      if (targetSize)
-        return targetSize;
-    }
-
-    // Otherwise warn about missing sizes for symbols
-    bool warnAboutUnknownSize = true;
-    // currently clang doesn't emit the necessary symbol information for local
-    // string constants such as: struct config_opt opts[] = { { ..., "foo" },
-    // { ..., "bar" } }; As this pattern is quite common don't warn if the
-    // target section is .rodata.str
-    if (const Defined *definedSym = dyn_cast<Defined>(targetSym)) {
-      if (definedSym->isSection() &&
-          definedSym->section->name.startswith(".rodata.str")) {
-        warnAboutUnknownSize = false;
-      }
-    }
-    // TODO: are there any other cases that can be ignored?
-
-    if (warnAboutUnknownSize || errorHandler().verbose) {
-      std::string Msg = "could not determine size of cap reloc against " +
-                        targetSym->getName().str() + "\n>>> referenced by " +
-                        lld::verboseToString(targetSym, offset);
-      if (strict)
-        warn(Msg);
-      else
-        nonFatalWarning(Msg);
-    }
-    if (OutputSection *OS = targetSym->getOutputSection()) {
-      uint64_t TargetVA = targetSym->getVA(0);
-      assert(TargetVA >= OS->addr);
-      uint64_t OffsetInOS = TargetVA - OS->addr;
-      // Use less-or-equal here to account for __end_foo symbols which point 1
-      // past the section
-      assert(OffsetInOS <= OS->size);
-      targetSize = OS->size - OffsetInOS;
-    } else {
-      warn("Could not find size for symbol " + targetSym->getName().str() +
-           " and could not determine section size. Using 0.");
-      // TargetSize = std::numeric_limits<uint64_t>::max();
-      return 0;
-    }
-  }
-  return targetSize;
-}
 // The Morello permissions are encoded differently in the __cap_relocs
 // section (static linking) or in the fragment (dynamic linking).
 //  Helper class to return the right one dependent on context.
@@ -832,8 +749,8 @@ void MorelloCapRelocsSection::writeTo(uint8_t *buf) {
     uint64_t locationVA =
         location.section->getOutputSection()->addr + outSecOffset;
     uint64_t targetVA = reloc.target.sym()->getVA(reloc.target.offset);
-    uint64_t targetSize = getMorelloTargetSize(
-        location.section, location.offset, reloc.target.sym(), /*strict=*/true);
+    uint64_t targetSize = getTargetSize<ELF64LE>(
+        location, reloc.target, /*strict=*/true);
     uint64_t targetOffset = reloc.capabilityOffset;
     uint64_t permissions = getPermissions(*reloc.target.sym(), Permissions::Type::STATIC);
 
@@ -888,7 +805,9 @@ uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
     return sizeAndPerm | (shared->size << 8);
   } else if (const Defined *definedSym = dyn_cast<Defined>(&sym)) {
     sizeAndPerm = getPermissions(*definedSym, Permissions::Type::DYNAMIC);
-    uint64_t size = getMorelloTargetSize(isec, offset, &sym, /* strict */ true);
+    uint64_t size = getTargetSize<ELF64LE>(
+        {isec, offset, false}, SymbolAndOffset(const_cast<Symbol *>(&sym), 0),
+        /*strict=*/true);
     return sizeAndPerm | (size << 8);
   }
   return 2;
