@@ -200,10 +200,16 @@ SDValue DAGTypeLegalizer::ScalarizeVecRes_PTRADD(SDNode *N) {
   if (ScalarizedVectors.find(getTableId(N->getOperand(1))) ==
       ScalarizedVectors.end()) {
     SDLoc dl(N);
-    SDValue Idx = DAG.getConstant(0, dl, TLI.getVectorIdxTy(DAG.getDataLayout()));
-    RHS = DAG.getNode(ISD::EXTRACT_VECTOR_ELT, SDLoc(N),
-                      N->getOperand(1).getValueType().getVectorElementType(),
-                      N->getOperand(1), Idx);
+    if (N->getOperand(1).getValueType().isVector()) {
+      SDValue Idx = DAG.getConstant(0, dl,
+                                   TLI.getVectorIdxTy(DAG.getDataLayout()));
+      RHS = DAG.getNode(ISD::EXTRACT_VECTOR_ELT, SDLoc(N),
+                        N->getOperand(1).getValueType().getVectorElementType(),
+                        N->getOperand(1), Idx);
+    } else {
+      // A scalar RHS is equivalent to a splat, so just keep the RHS as is.
+      RHS = N->getOperand(1);
+    }
   } else {
     RHS = GetScalarizedVector(N->getOperand(1));
   }
@@ -1028,17 +1034,27 @@ void DAGTypeLegalizer::SplitVecRes_PTRADD(SDNode *N, SDValue &Lo,
   // If so, we need to create the operands.
   if (SplitVectors.find(getTableId(N->getOperand(1))) == SplitVectors.end()) {
     EVT LoVT, HiVT;
-    std::tie(LoVT, HiVT) = DAG.GetSplitDestVTs(N->getOperand(1).getValueType());
-    SDValue IdxLo = DAG.getConstant(0, dl, TLI.getVectorIdxTy(DAG.getDataLayout()));
-    SDValue IdxHi = DAG.getConstant(LoVT.getVectorNumElements(), dl,
-                                    TLI.getVectorIdxTy(DAG.getDataLayout()));
+    if (N->getOperand(1).getValueType().isVector()) {
+      std::tie(LoVT, HiVT) =
+          DAG.GetSplitDestVTs(N->getOperand(1).getValueType());
+      SDValue IdxLo = DAG.getConstant(0, dl,
+                                      TLI.getVectorIdxTy(DAG.getDataLayout()));
+      SDValue IdxHi = DAG.getConstant(LoVT.getVectorNumElements(), dl,
+                                      TLI.getVectorIdxTy(DAG.getDataLayout()));
 
-    RHSLo = DAG.getNode(ISD::EXTRACT_SUBVECTOR, dl, LoVT, N->getOperand(1), IdxLo);
-    RHSHi = DAG.getNode(ISD::EXTRACT_SUBVECTOR, dl, HiVT, N->getOperand(1), IdxHi);
+      RHSLo = DAG.getNode(ISD::EXTRACT_SUBVECTOR, dl, LoVT, N->getOperand(1),
+                          IdxLo);
+      RHSHi = DAG.getNode(ISD::EXTRACT_SUBVECTOR, dl, HiVT, N->getOperand(1),
+                          IdxHi);
+    } else {
+      // If the RHS is a scalar then keep it as it is (it's equivalent to a
+      // vector splat).
+      RHSLo = N->getOperand(1);
+      RHSHi = N->getOperand(1);
+    }
   } else {
     GetSplitVector(N->getOperand(1), RHSLo, RHSHi);
   }
-
 
   const SDNodeFlags Flags = N->getFlags();
   unsigned Opcode = N->getOpcode();
