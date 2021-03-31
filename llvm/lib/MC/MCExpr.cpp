@@ -561,11 +561,18 @@ static void AttemptToFoldSymbolOffsetDifference(
   if (SA.getFragment() == SB.getFragment() && !SA.isVariable() &&
       !SA.isUnset() && !SB.isVariable() && !SB.isUnset()) {
     Addend += (SA.getOffset() - SB.getOffset());
-
-    // Pointers to Thumb symbols need to have their low-bit set to allow
-    // for interworking.
-    if (Asm->isThumbFunc(&SA))
-      Addend |= 1;
+    if (Asm->getBackend().shouldClearThumbBitOnReloc()) {
+      // Pointers to Thumb symbols need to have their low-bit set to allow
+      // for interworking.
+      if (Asm->isThumbFunc(&SA))
+        Addend |= 1;
+    } else {
+      // The LSB is part of the relocation calculation.
+      if (Asm->isThumbFunc(&SA))
+        Addend++;
+      if (Asm->isThumbFunc(&SB))
+        Addend--;
+    }
 
     // If symbol is labeled as micromips, we set low-bit to ensure
     // correct offset in .gcc_except_table
@@ -593,10 +600,18 @@ static void AttemptToFoldSymbolOffsetDifference(
   if (Addrs && (&SecA != &SecB))
     Addend += (Addrs->lookup(&SecA) - Addrs->lookup(&SecB));
 
-  // Pointers to Thumb symbols need to have their low-bit set to allow
-  // for interworking.
-  if (Asm->isThumbFunc(&SA))
-    Addend |= 1;
+  if (Asm->getBackend().shouldClearThumbBitOnReloc()) {
+    // Pointers to Thumb symbols need to have their low-bit set to allow
+    // for interworking.
+    if (Asm->isThumbFunc(&SA))
+      Addend |= 1;
+  } else {
+    // The LSB is part of the relocation calculation.
+    if (Asm->isThumbFunc(&SA))
+      Addend++;
+    if (Asm->isThumbFunc(&SB))
+      Addend--;
+  }
 
   // If symbol is labeled as micromips, we set low-bit to ensure
   // correct offset in .gcc_except_table

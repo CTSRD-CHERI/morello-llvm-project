@@ -76,8 +76,10 @@ indirectgoto:                                     ; preds = %entry
 ; CHECK-NEXT:  .size addrof_label_in_global_2, 16
 
 
-; All relocations should have an odd addend since they are C64 symbols:
+; All relocations are done againt blockaddress_in_global, so should have an
+; even addend to make them C64 symbols (the final value is odd because of the
+; LSB from blockaddress_in_global):
 ; RELOCS-LABEL: Section ({{.+}}) .rela.data {
-; RELOCS-NEXT:    0x0 R_MORELLO_CAPINIT blockaddress_in_global 0x11
-; RELOCS-NEXT:    0x10 R_MORELLO_CAPINIT blockaddress_in_global 0x19
+; RELOCS-NEXT:    0x0 R_MORELLO_CAPINIT blockaddress_in_global 0x10
+; RELOCS-NEXT:    0x10 R_MORELLO_CAPINIT blockaddress_in_global 0x18
 ; RELOCS-NEXT:  }

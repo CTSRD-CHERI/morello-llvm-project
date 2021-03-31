@@ -188,6 +188,10 @@ public:
   /// Handle any target-specific assembler flags. By default, do nothing.
   virtual void handleAssemblerFlag(MCAssemblerFlag Flag) {}
 
+  virtual bool shouldClearThumbBitOnReloc() const {
+    return true;
+  }
+
   /// Generate the compact unwind encoding for the CFI instructions.
   virtual uint32_t
       generateCompactUnwindEncoding(ArrayRef<MCCFIInstruction>) const {

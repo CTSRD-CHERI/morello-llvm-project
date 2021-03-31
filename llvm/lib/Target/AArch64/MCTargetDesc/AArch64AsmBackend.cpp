@@ -106,6 +106,8 @@ public:
 
   unsigned getPointerSize() const { return 8; }
 
+  bool shouldClearThumbBitOnReloc() const override { return false; }
+
   unsigned getFixupKindContainereSizeInBytes(unsigned Kind) const;
 
   bool shouldForceRelocation(const MCAssembler &Asm, const MCFixup &Fixup,
