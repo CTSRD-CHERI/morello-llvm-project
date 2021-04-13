@@ -14,7 +14,6 @@
 #ifndef LLVM_CODEGEN_TARGETLOWERINGOBJECTFILE_H
 #define LLVM_CODEGEN_TARGETLOWERINGOBJECTFILE_H
 
-#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/IR/Module.h"
 #include "llvm/MC/MCObjectFileInfo.h"
@@ -96,10 +95,6 @@ public:
   getSectionForMachineBasicBlock(const Function &F,
                                  const MachineBasicBlock &MBB,
                                  const TargetMachine &TM) const;
-
-  virtual MCSection *getNamedSectionForMachineBasicBlock(
-      const Function &F, const MachineBasicBlock &MBB, const TargetMachine &TM,
-      const char *Suffix) const;
 
   /// Classify the specified global variable into a set of target independent
   /// categories embodied in SectionKind.
@@ -271,6 +266,13 @@ public:
   virtual MCSection *
   getSectionForExternalReference(const GlobalObject *GO,
                                  const TargetMachine &TM) const {
+    return nullptr;
+  }
+
+  /// Targets that have a special convention for their symbols could use
+  /// this hook to return a specialized symbol.
+  virtual MCSymbol *getTargetSymbol(const GlobalValue *GV,
+                                    const TargetMachine &TM) const {
     return nullptr;
   }
 

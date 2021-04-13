@@ -1,0 +1,11 @@
+cc_test {
+    name: "frames",
+    srcs: [
+        "main.cpp"
+    ],
+    cflags: [
+        "-g", "-O0"
+    ],
+    compile_multilib: "c64",
+    gtest: false,
+}

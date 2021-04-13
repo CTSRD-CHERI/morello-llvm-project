@@ -1,4 +1,4 @@
-; RUN: llc -march=arm64 < %s -mattr=+c64,+morello -target-abi purecap -o - | FileCheck %s
+; RUN: llc -mtriple=arm64 < %s -mattr=+c64,+morello -target-abi purecap -o - | FileCheck %s
 
 ; We don't yet have the NEON load/store instructions implemented in C64,
 ; so for now make sure we don't emit them.

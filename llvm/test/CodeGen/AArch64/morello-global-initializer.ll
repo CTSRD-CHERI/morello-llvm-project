@@ -1,4 +1,4 @@
-; RUN: llc -march=arm64 -mattr=+morello -o - %s | FileCheck %s
+; RUN: llc -mtriple=arm64 -mattr=+morello -o - %s | FileCheck %s
 
 ; CHECK-LABEL: one
 ; CHECK: .xword 1

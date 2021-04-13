@@ -990,7 +990,6 @@ void GDBRemoteDynamicRegisterInfo::HardcodeARMRegisters(bool from_scratch) {
 #include "Utility/ARM64_DWARF_Registers.h"
 #include "Utility/ARM64_ehframe_Registers.h"
 
-void GDBRemoteDynamicRegisterInfo::HardcodeAArch64MorelloRegisters() {
 #define GPR_OFFSET(idx) ((idx)*8)
 #define GPR_OFFSET_NAME(reg)                                                   \
   (LLVM_EXTENSION offsetof(RegisterInfoPOSIX_arm64::GPR, reg))
@@ -1049,6 +1048,7 @@ void GDBRemoteDynamicRegisterInfo::HardcodeAArch64MorelloRegisters() {
 #undef DECLARE_REGISTER_INFOS_ARM64_STRUCT
 #undef DECLARE_CAPABILITY_REGISTER_INFOS
 
+void GDBRemoteDynamicRegisterInfo::HardcodeAArch64MorelloRegisters() {
   struct RegisterSet reg_sets_arm64[] = {
       {"General Purpose Registers", "gpr", k_num_gpr_registers_arm64, nullptr},
       {"Floating Point Registers", "fpu", k_num_fpr_registers_arm64, nullptr},
@@ -1056,6 +1056,9 @@ void GDBRemoteDynamicRegisterInfo::HardcodeAArch64MorelloRegisters() {
       {"State Registers", "state", k_num_state_registers_arm64, nullptr},
       {"Thread Pointer Registers", "thread", k_num_thread_registers_arm64,
        nullptr}};
+
+  MarkAsFP(g_register_infos_arm64_le[gpr_x29], /*isCapability=*/false);
+  MarkAsFP(g_register_infos_arm64_le[cap_c29], /*isCapability=*/true);
 
   size_t i = 0;
   for (const RegisterSet &reg_set : reg_sets_arm64) {

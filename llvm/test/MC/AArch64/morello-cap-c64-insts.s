@@ -1,5 +1,5 @@
-// RUN: llvm-mc -triple=arm64 -mattr=+morello,+c64,+v8.2a -show-encoding < %s |& FileCheck %s -check-prefix=32CAP
-// RUN: not llvm-mc -triple=arm64 -mattr=+morello,+c64,+use-16-cap-regs,+v8.2a -show-encoding < %s |& FileCheck %s -check-prefix=16CAP
+// RUN: llvm-mc -triple=arm64 -mattr=+morello,+c64,+v8.2a -show-encoding < %s 2>&1 | FileCheck %s -check-prefix=32CAP
+// RUN: not llvm-mc -triple=arm64 -mattr=+morello,+c64,+use-16-cap-regs,+v8.2a -show-encoding < %s 2>&1 | FileCheck %s -check-prefix=16CAP
 
   adr c17, #0
 // 32CAP: adr c17, #0                   // encoding: [0x11,0x00,0x00,0x10]

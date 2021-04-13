@@ -1,4 +1,4 @@
-; RUN: llc -march=arm64 -mattr=+morello,+c64 -target-abi purecap -o - %s | FileCheck %s
+; RUN: llc -mtriple=arm64 -mattr=+morello,+c64 -target-abi purecap -o - %s | FileCheck %s
 
 ; CHECK-LABEL: LoadCapabilityRegisterFromPtr
 define i8 addrspace(200)* @LoadCapabilityRegisterFromPtr(i8 addrspace(200)* addrspace(200)* %foo) {

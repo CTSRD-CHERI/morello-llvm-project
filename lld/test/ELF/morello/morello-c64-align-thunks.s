@@ -1,14 +1,14 @@
 // REQUIRES: aarch64
 // RUN: llvm-mc --triple=aarch64-none-elf %s -mattr=+c64,+morello --filetype=obj -o %t.o
 // RUN: echo "SECTIONS { \
-// RUN:       .text 0xff0000 : { *(.text.1) } \
+// RUN:       .text 0xfff000 : { *(.text.1) } \
 // RUN:       .text_space : { *(.text.2) } \
 // RUN:       .text_targets : { *(.text.3) *(.text.4) } \
 // RUN:       } " > %t.script
 // RUN: ld.lld %t.o -o %t --script=%t.script --morello-c64-plt -zmax-page-size=4096 2>&1 | FileCheck --check-prefix=WARN %s
-// RUN: llvm-objdump --no-show-raw-insn -d --triple=aarch64-none-elf --mattr=+morello --start-address=0xff0000 --stop-address=0xff0008 %t | FileCheck %s
+// RUN: llvm-objdump --no-show-raw-insn -d --triple=aarch64-none-elf --mattr=+morello --start-address=0xfff000 --stop-address=0xfff008 %t | FileCheck %s
 // RUN: ld.lld %t.o -o %t2 --script=%t.script -zmax-page-size=4096
-// RUN: llvm-objdump --no-show-raw-insn -d --triple=aarch64-none-elf --mattr=+morello --start-address=0xff0000 --stop-address=0xff0008 %t2 | FileCheck %s
+// RUN: llvm-objdump --no-show-raw-insn -d --triple=aarch64-none-elf --mattr=+morello --start-address=0xfff000 --stop-address=0xfff008 %t2 | FileCheck %s
 
 /// Check that the alignment of the PCC is not done when explicit addresses are specified
 /// by the linker script.
@@ -41,19 +41,19 @@ target2:
 
 /// Although additional alignment is not done if the linker script provides
 /// explicit, warn about the potential misalignment.
-// WARN: address (0xff0000) of section .text is not a multiple of alignment (262144)
+// WARN: address (0xfff000) of section .text is not a multiple of alignment (32768)
 
 /// Without additional alignment for PCC there are no Thunks needed.
-// CHECK: 0000000000ff0000 <_start>:
-// CHECK-NEXT:   ff0000:        bl      #133234688
-// CHECK-NEXT:   ff0004:        b       #133234688
+// CHECK: 0000000000fff000 <_start>:
+// CHECK-NEXT:   fff000:        bl 0x8f00000 <target>
+// CHECK-NEXT:   fff004:        b 0x8f00004 <target2>
 
 /// Check that specifying alignment of the PCC in the linker script overrides
 /// above behaviour and influences other address sensitive content generation
 /// such as range extension thunks.
 
 // RUN: echo "SECTIONS { \
-// RUN:       . = 0xff0000; \
+// RUN:       . = 0xfff000; \
 // RUN:       .text : { *(.text.1) } \
 // RUN:       .text_space : { *(.text.2) } \
 // RUN:       .text_targets : { *(.text.3) *(.text.4) } \
@@ -74,5 +74,5 @@ target2:
 // ALIGN-NEXT:  1000014:        br      c16
 
 // ALIGN: 0000000001000018 <_start>:
-// ALIGN-NEXT:  1000018:        bl      #-24 <__C64ADRPThunk_target>
-// ALIGN-NEXT:  100001c:        b       #-16 <__C64ADRPThunk_target2>
+// ALIGN-NEXT:  1000018:        bl      0x1000000 <__C64ADRPThunk_target>
+// ALIGN-NEXT:  100001c:        b       0x100000c <__C64ADRPThunk_target2>

@@ -1,0 +1,14 @@
+breakpoint set -p "Break here"
+process launch --
+
+disassemble -n func_in_same_exec
+# CHECK-LABEL: (lldb) disassemble -n func_in_same_exec
+# CHECK: sub csp, csp, #0x10
+# CHECK-NEXT: add c1, csp, #0xc
+# CHECK-NEXT: scbnds c1, c1, #0x4
+# CHECK-NEXT: add csp, csp, #0x10
+# CHECK-NEXT: ret c30
+
+# TODO: Check that we can disassemble a function from a .so
+
+process kill

@@ -12,7 +12,7 @@
 // UNSUPPORTED: libcpp-has-newlib
 
 // Can't test the system lib because this test enables debug mode
-// UNSUPPORTED: with_system_cxx_lib
+// UNSUPPORTED: with_system_cxx_lib=macosx
 
 // ADDITIONAL_COMPILE_FLAGS: -D_LIBCPP_DEBUG=1
 

@@ -24,7 +24,7 @@ namespace llvm {
 namespace AArch64 {
 
 // Arch extension modifiers for CPUs.
-enum ArchExtKind : unsigned long long {
+enum ArchExtKind : uint64_t {
   AEK_INVALID =     0,
   AEK_NONE =        1,
   AEK_CRC =         1 << 1,
@@ -57,9 +57,11 @@ enum ArchExtKind : unsigned long long {
   AEK_TME =         1 << 28,
   AEK_BF16 =        1 << 29,
   AEK_I8MM =        1 << 30,
+  AEK_F32MM =       1ULL << 31,
+  AEK_F64MM =       1ULL << 32,
   // Morello extensions
-  AEK_A64C =        1ULL << 31,
-  AEK_C64 =         1ULL << 32
+  AEK_A64C =        1ULL << 33,
+  AEK_C64 =         1ULL << 34
 };
 
 enum class ArchKind {
@@ -102,7 +104,7 @@ const ArchKind ArchKinds[] = {
 };
 
 // FIXME: These should be moved to TargetTuple once it exists
-bool getExtensionFeatures(unsigned Extensions,
+bool getExtensionFeatures(uint64_t Extensions,
                           std::vector<StringRef> &Features);
 bool getArchFeatures(ArchKind AK, std::vector<StringRef> &Features);
 
@@ -115,7 +117,7 @@ StringRef getArchExtFeature(StringRef ArchExt);
 
 // Information by Name
 unsigned getDefaultFPU(StringRef CPU, ArchKind AK);
-unsigned getDefaultExtensions(StringRef CPU, ArchKind AK);
+uint64_t getDefaultExtensions(StringRef CPU, ArchKind AK);
 StringRef getDefaultCPU(StringRef Arch);
 ArchKind getCPUArchKind(StringRef CPU);
 

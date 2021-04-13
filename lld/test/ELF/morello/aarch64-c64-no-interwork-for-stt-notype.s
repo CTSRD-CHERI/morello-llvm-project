@@ -14,8 +14,8 @@
 // SYMS-NEXT:     Type: None
 
 // CHECK: 0000000000210120 <_start>:
-// CHECK-NEXT:   210120:        bl      #8
-// CHECK-NEXT:   210124:        b       #4
+// CHECK-NEXT:   210120:        bl      0x210128 <notype>
+// CHECK-NEXT:   210124:        b       0x210128 <notype>
 // CHECK: 0000000000210128 <notype>:
 // CHECK-NEXT:   210128:        ret
 

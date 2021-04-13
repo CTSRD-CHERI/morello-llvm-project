@@ -1,4 +1,4 @@
-; RUN: llc -march=arm64 -mattr=+morello -o - %s | FileCheck %s
+; RUN: llc -mtriple=arm64 -mattr=+morello -o - %s | FileCheck %s
 
 ; CHECK-LABEL @test
 define i8 addrspace(200)* @test(i8 addrspace(200)* nocapture readnone %foo, i8 addrspace(200)* readnone %bar, i64 %baz) {

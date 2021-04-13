@@ -30,8 +30,8 @@ target: ret
 target2: ret
 
 // CHECK: <_start>:
-// CHECK-NEXT:  bl      #8 <__C64ADRPThunk_target>
-// CHECK-NEXT:  b       #16 <__C64ADRPThunk_target2>
+// CHECK-NEXT:  bl      0x128 <__C64ADRPThunk_target>
+// CHECK-NEXT:  b       0x134 <__C64ADRPThunk_target2>
 
 // CHECK: <__C64ADRPThunk_target>:
 // CHECK-NEXT:  adrp    c16, #251658240

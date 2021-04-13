@@ -1,4 +1,4 @@
-; RUN: llc -march=arm64 -mattr=+morello -o - %s | FileCheck %s
+; RUN: llc -mtriple=arm64 -mattr=+morello -o - %s | FileCheck %s
 
 ; CHECK-LABEL: LoadCapabilityRegisterFromPtrWithScaledOffset
 define i8 addrspace(200)* @LoadCapabilityRegisterFromPtrWithScaledOffset(i8 addrspace(200)* addrspace(200)* %foo, i64 %offset) {

@@ -573,7 +573,7 @@ DwarfInstructions<A, R>::evaluateExpression(pint_t expression, A &addressSpace,
 #ifndef __CHERI_PURE_CAPABILITY__
       *sp = *sp - value;
 #else
-      *sp = *sp - (vaddr_t)(void*)value;
+      *sp = *sp - (ptraddr_t)(void*)value;
 #endif
       if (log)
         fprintf(stderr, "minus\n");

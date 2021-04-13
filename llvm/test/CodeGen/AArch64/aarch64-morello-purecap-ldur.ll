@@ -1,4 +1,4 @@
-; RUN: llc < %s -march=arm64 -mattr=+c64,+morello -target-abi purecap | FileCheck %s
+; RUN: llc < %s -mtriple=arm64 -mattr=+c64,+morello -target-abi purecap | FileCheck %s
 
 @var_8bit = addrspace(200) global i8 0
 @var_16bit = addrspace(200) global i16 0

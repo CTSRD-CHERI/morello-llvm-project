@@ -84,7 +84,7 @@ static uint32_t g_gpr_regnums[] = {
     gpr_x7,  gpr_x8,  gpr_x9,  gpr_x10, gpr_x11, gpr_x12, gpr_x13,
     gpr_x14, gpr_x15, gpr_x16, gpr_x17, gpr_x18, gpr_x19, gpr_x20,
     gpr_x21, gpr_x22, gpr_x23, gpr_x24, gpr_x25, gpr_x26, gpr_x27,
-    gpr_x28, gpr_fp,  gpr_lr,  gpr_sp,  gpr_pc,  gpr_cpsr};
+    gpr_x28, gpr_x29, gpr_lr,  gpr_sp,  gpr_pc,  gpr_cpsr};
 
 // Floating point registers
 static uint32_t g_fpu_regnums[] = {
@@ -110,6 +110,8 @@ RegisterContextDarwin_arm64::RegisterContextDarwin_arm64(
     fpu_errs[i] = -1;
     exc_errs[i] = -1;
   }
+  MarkAsFP(g_register_infos_arm64_le[gpr_x29], /*isCapability=*/false);
+  MarkAsFP(g_register_infos_arm64_le[cap_c29], /*isCapability=*/true);
 }
 
 RegisterContextDarwin_arm64::~RegisterContextDarwin_arm64() {}
@@ -342,7 +344,7 @@ bool RegisterContextDarwin_arm64::ReadRegister(const RegisterInfo *reg_info,
   case gpr_x28:
     value.SetUInt64(gpr.x[reg - gpr_x0]);
     break;
-  case gpr_fp:
+  case gpr_x29:
     value.SetUInt64(gpr.fp);
     break;
   case gpr_sp:
@@ -582,7 +584,7 @@ bool RegisterContextDarwin_arm64::WriteRegister(const RegisterInfo *reg_info,
   case gpr_x26:
   case gpr_x27:
   case gpr_x28:
-  case gpr_fp:
+  case gpr_x29:
   case gpr_sp:
   case gpr_lr:
   case gpr_pc:
@@ -700,7 +702,7 @@ uint32_t RegisterContextDarwin_arm64::ConvertRegisterKindToRegisterNumber(
     case LLDB_REGNUM_GENERIC_SP:
       return gpr_sp;
     case LLDB_REGNUM_GENERIC_FP:
-      return gpr_fp;
+      return gpr_x29;
     case LLDB_REGNUM_GENERIC_RA:
       return gpr_lr;
     case LLDB_REGNUM_GENERIC_FLAGS:
@@ -768,9 +770,9 @@ uint32_t RegisterContextDarwin_arm64::ConvertRegisterKindToRegisterNumber(
       return gpr_x27;
     case arm64_dwarf::x28:
       return gpr_x28;
+    case arm64_dwarf::x29:
+      return gpr_x29;
 
-    case arm64_dwarf::fp:
-      return gpr_fp;
     case arm64_dwarf::sp:
       return gpr_sp;
     case arm64_dwarf::lr:
@@ -908,8 +910,8 @@ uint32_t RegisterContextDarwin_arm64::ConvertRegisterKindToRegisterNumber(
       return gpr_x27;
     case arm64_ehframe::x28:
       return gpr_x28;
-    case arm64_ehframe::fp:
-      return gpr_fp;
+    case arm64_ehframe::x29:
+      return gpr_x29;
     case arm64_ehframe::sp:
       return gpr_sp;
     case arm64_ehframe::lr:

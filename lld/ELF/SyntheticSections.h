@@ -800,6 +800,7 @@ public:
   void writeTo(uint8_t *buf) override;
   size_t getSize() const override;
   bool isNeeded() const override;
+  void finalizeContents() override;
 };
 
 // For more information about .gnu.version and .gnu.version_r see:
@@ -1048,7 +1049,7 @@ public:
   std::vector<InputSection *> exidxSections;
 
 private:
-  size_t size;
+  size_t size = 0;
 
   // Instead of storing pointers to the .ARM.exidx InputSections from
   // InputObjects, we store pointers to the executable sections that need

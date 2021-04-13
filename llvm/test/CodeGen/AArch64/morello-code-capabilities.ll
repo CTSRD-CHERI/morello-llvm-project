@@ -8,8 +8,9 @@ target triple = "aarch64-none--elf"
 define i8 addrspace(200)* @fun1() addrspace(200) nounwind {
 ; CHECK-LABEL: fun1:
 ; CHECK:       // %bb.0: // %entry
-; CHECK-NEXT:    adrp c0, :got:fun1
-; CHECK-NEXT:    ldr c0, [c0, :got_lo12:fun1]
+; CHECK-NEXT:    adrp c0, fun1
+; CHECK-NEXT:    add c0, c0, :lo12:fun1
+; CHECK-NEXT:    seal c0, c0, rb
 ; CHECK-NEXT:    ret c30
 entry:
   ret i8 addrspace(200) * bitcast (i8 addrspace(200)* () addrspace(200)* @fun1 to i8 addrspace(200)*)
@@ -76,8 +77,10 @@ indirectgoto:                                     ; preds = %entry
 ; CHECK-NEXT:  .size addrof_label_in_global_2, 16
 
 
-; All relocations should have an odd addend since they are C64 symbols:
+; All relocations are done againt blockaddress_in_global, so should have an
+; even addend to make them C64 symbols (the final value is odd because of the
+; LSB from blockaddress_in_global):
 ; RELOCS-LABEL: Section ({{.+}}) .rela.data {
-; RELOCS-NEXT:    0x0 R_MORELLO_CAPINIT blockaddress_in_global 0x11
-; RELOCS-NEXT:    0x10 R_MORELLO_CAPINIT blockaddress_in_global 0x19
+; RELOCS-NEXT:    0x0 R_MORELLO_CAPINIT blockaddress_in_global 0x10
+; RELOCS-NEXT:    0x10 R_MORELLO_CAPINIT blockaddress_in_global 0x18
 ; RELOCS-NEXT:  }

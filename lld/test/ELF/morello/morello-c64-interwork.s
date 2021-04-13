@@ -19,14 +19,14 @@ _start: b func2
 func:  bl func2
 
 // CHECK: 0000000000210120 <_start>:
-// CHECK-NEXT:   210120:       b       #20 <__C64ADRPThunk_func2>
+// CHECK-NEXT:   210120:       b       0x210134 <__C64ADRPThunk_func2>
 
 // CHECK: 0000000000210124 <func>:
-// CHECK-NEXT:   210124:       bl      #16 <__C64ADRPThunk_func2>
+// CHECK-NEXT:   210124:       bl      0x210134 <__C64ADRPThunk_func2>
 
 // CHECK: 0000000000210128 <func2>:
-// CHECK-NEXT:   210128:       bl      #24 <__A64ToC64Thunk_func>
-// CHECK-NEXT:   21012c:       b       #36 <__A64ToC64Thunk__start>
+// CHECK-NEXT:   210128:       bl      0x210140 <__A64ToC64Thunk_func>
+// CHECK-NEXT:   21012c:       b       0x210150 <__A64ToC64Thunk__start>
 // CHECK-NEXT:   210130:       ret
 
 // CHECK: 0000000000210134 <__C64ADRPThunk_func2>:

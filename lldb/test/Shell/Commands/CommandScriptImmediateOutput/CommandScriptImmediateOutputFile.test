@@ -1,7 +1,6 @@
 # Test that LLDB correctly allows scripted commands to set immediate output to
 # a file.
 
-# UNSUPPORTED: linux
 # RUN: echo "READ" > %t.read.txt
 # RUN: echo "WRITE" > %t.write.txt
 # RUN: echo "APPEND" > %t.append.txt

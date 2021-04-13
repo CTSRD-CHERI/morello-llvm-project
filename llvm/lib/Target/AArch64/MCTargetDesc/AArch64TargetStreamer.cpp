@@ -18,6 +18,7 @@
 #include "llvm/MC/MCContext.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Cheri.h"
+#include "llvm/Support/Morello.h"
 #include "llvm/MC/MCSectionELF.h"
 #include "llvm/BinaryFormat/ELF.h"
 #include <cassert>
@@ -64,9 +65,9 @@ void AArch64TargetStreamer::emitInst(uint32_t Inst,
 
 const std::pair<uint64_t, uint64_t>
 AArch64TargetStreamer::getTargetSizeAlignReq(uint64_t Size) {
-  uint64_t Align = concentrateReqdAlignment(Size);
+  uint64_t Align = getMorelloRequiredAlignment(Size);
   uint64_t NewSize = alignTo(Size, Align);
-  if (concentrateReqdAlignment(NewSize) != Align)
+  if (getMorelloRequiredAlignment(NewSize) != Align)
     return getTargetSizeAlignReq(NewSize);
   return  {NewSize, Log2_64(Align)};
 }

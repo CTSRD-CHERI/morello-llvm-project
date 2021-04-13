@@ -77,7 +77,7 @@ def main():
         print(err)
         if (out.find('assert') != -1 or err.find('assert') != -1):
             exitCode = 1
-        if (out.find('exception') != -1 or err.find('exception') != -1):
+        if (out.find('Terminated by exception') != -1):
             exitCode = 1
         if expect_fail:
             if exitCode == 0:

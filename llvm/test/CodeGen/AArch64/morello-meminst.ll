@@ -1,6 +1,6 @@
-; RUN: llc -march=arm64 -mattr=+morello -o - %s | FileCheck %s --check-prefix=ALL --check-prefix=CFUN
-; RUN: llc -march=arm64 -mattr=+morello -cheri-no-cap-libfunc -o - %s | FileCheck %s --check-prefix=ALL --check-prefix=NOCFUN
-; RUN: llc -march=arm64 -mattr=+morello -cheri-no-pure-cap-libfunc -o - %s | FileCheck %s --check-prefix=ALL --check-prefix=CFUN
+; RUN: llc -mtriple=arm64 -mattr=+morello -o - %s | FileCheck %s --check-prefix=ALL --check-prefix=CFUN
+; RUN: llc -mtriple=arm64 -mattr=+morello -cheri-no-cap-libfunc -o - %s | FileCheck %s --check-prefix=ALL --check-prefix=NOCFUN
+; RUN: llc -mtriple=arm64 -mattr=+morello -cheri-no-pure-cap-libfunc -o - %s | FileCheck %s --check-prefix=ALL --check-prefix=CFUN
 
 target triple = "aarch64-none--elf"
 

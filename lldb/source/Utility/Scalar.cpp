@@ -2963,6 +2963,8 @@ bool Scalar::IsBitSet(uint32_t bit, bool &is_set) {
   case e_uint128:
   case e_sint256:
   case e_uint256:
+  case e_sint512:
+  case e_uint512:
     is_set = m_integer[bit];
     return true;
   case e_float:

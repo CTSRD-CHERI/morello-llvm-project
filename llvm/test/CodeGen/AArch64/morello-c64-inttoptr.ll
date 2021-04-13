@@ -1,4 +1,4 @@
-; RUN: llc -march=arm64 -mattr=+morello,+c64 -target-abi purecap -o - %s | FileCheck %s
+; RUN: llc -mtriple=arm64 -mattr=+morello,+c64 -target-abi purecap -o - %s | FileCheck %s
 
 ; CHECK-LABEL: testIntToPtr64:
 define i32 addrspace(200)* @testIntToPtr64(i64 %in) addrspace(200) {

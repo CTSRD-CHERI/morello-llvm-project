@@ -184,10 +184,10 @@ caller:
 // CHECK-NEXT:    105a4:        ret
 
 // CHECK: 00000000000105a8 <caller>:
-// CHECK-NEXT:    105a8:        bl      #0x78 <importfunc+0x10620>
-// CHECK-NEXT:    105ac:        bl      #-0x24 <hiddenfunc>
-// CHECK-NEXT:    105b0:        bl      #-0x18 <localfunc>
-// CHECK-NEXT:    105b4:        bl      #0x7c <importfunc+0x10630>
+// CHECK-NEXT:    105a8:        bl      0x10620 <importfunc+0x10620>
+// CHECK-NEXT:    105ac:        bl      0x10588 <hiddenfunc>
+// CHECK-NEXT:    105b0:        bl      0x10598 <localfunc>
+// CHECK-NEXT:    105b4:        bl      0x10630 <importfunc+0x10630>
 // CHECK-NEXT:    105b8:        ret
 // CHECK-NEXT:    105bc:        adrp    c0, #0x10000
 // CHECK-NEXT:    105c0:        ldr     c0, [c0, #0x830]

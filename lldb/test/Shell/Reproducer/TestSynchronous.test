@@ -1,5 +1,4 @@
 # REQUIRES: python
-# UNSUPPORTED: linux
 # Ensure that replay happens in synchronous mode.
 
 # RUN: rm -rf %t.repro

@@ -45,6 +45,8 @@ static uint64_t adjustFixupValue(unsigned Kind, uint64_t Value) {
     return Value & 0xffff;
   case PPC::fixup_ppc_half16ds:
     return Value & 0xfffc;
+  case PPC::fixup_ppc_pcrel34:
+    return Value & 0x3ffffffff;
   }
 }
 
@@ -65,6 +67,7 @@ static unsigned getFixupKindNumBytes(unsigned Kind) {
   case PPC::fixup_ppc_br24abs:
   case PPC::fixup_ppc_br24_notoc:
     return 4;
+  case PPC::fixup_ppc_pcrel34:
   case FK_Data_8:
     return 8;
   case PPC::fixup_ppc_nofixup:
@@ -96,6 +99,7 @@ public:
       { "fixup_ppc_brcond14abs", 16,     14,   0 },
       { "fixup_ppc_half16",       0,     16,   0 },
       { "fixup_ppc_half16ds",     0,     14,   0 },
+      { "fixup_ppc_pcrel34",     0,      34,   MCFixupKindInfo::FKF_IsPCRel },
       { "fixup_ppc_nofixup",      0,      0,   0 }
     };
     const static MCFixupKindInfo InfosLE[PPC::NumTargetFixupKinds] = {
@@ -107,6 +111,7 @@ public:
       { "fixup_ppc_brcond14abs", 2,      14,   0 },
       { "fixup_ppc_half16",      0,      16,   0 },
       { "fixup_ppc_half16ds",    2,      14,   0 },
+      { "fixup_ppc_pcrel34",     0,      34,   MCFixupKindInfo::FKF_IsPCRel },
       { "fixup_ppc_nofixup",     0,       0,   0 }
     };
 
@@ -187,8 +192,8 @@ public:
     llvm_unreachable("relaxInstruction() unimplemented");
   }
 
-  void relaxInstruction(const MCInst &Inst, const MCSubtargetInfo &STI,
-                        MCInst &Res) const override {
+  void relaxInstruction(MCInst &Inst,
+                        const MCSubtargetInfo &STI) const override {
     // FIXME.
     llvm_unreachable("relaxInstruction() unimplemented");
   }

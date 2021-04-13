@@ -104,6 +104,30 @@ int main() {
                    : [ r14_value ] "X"(expected_r14),                          \
                      [ r15_value ] "X"(expected_r15) /* inputs */              \
                    : "r14", "r15" /* clobbers */)
+#elif defined(__aarch64__)
+  size_t expected_x14 = 0x12345678;
+  size_t expected_x15 = 0x87654321;
+  auto check_reg_values = [=](unw_context_t *context, unw_cursor_t *cursor) {
+    CHECK_REG(UNW_ARM64_X14, expected_x14);
+    CHECK_REG(UNW_ARM64_X15, expected_x15);
+    // The address of context should have been captured as the argument passed
+    // to unw_getcontext (in c0):
+#ifdef __CHERI_PURE_CAPABILITY__
+    CHECK_REG(UNW_ARM64_C0, (uintptr_t)context);
+#else
+    CHECK_REG(UNW_ARM64_X0, (uintptr_t)context);
+#endif
+  };
+  // Setup some registers that we can compare to the values stored in the
+  // unw_cursor
+#define ASM_SETUP_CONTEXT()                                                    \
+  __asm__ volatile("mov x14, %[x14_value]\n\t"                                 \
+                   "mov x15, %[x15_value]"                                     \
+                   : /* no outputs */                                          \
+                   : [ x14_value ] "r"(expected_x14),                          \
+                     [ x15_value ] "r"(expected_x15) /* inputs */              \
+                   : "x14", "x15" /* clobbers */)
+
 #else
 #warning "Test not implemented for this architecture"
   auto check_reg_values = [](unw_context_t *context, unw_cursor_t *cursor) {

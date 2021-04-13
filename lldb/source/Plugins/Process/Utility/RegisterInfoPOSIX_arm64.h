@@ -17,8 +17,7 @@ class RegisterInfoPOSIX_arm64 : public lldb_private::RegisterInfoInterface {
 public:
   // based on RegisterContextDarwin_arm64.h
   struct GPR {
-    uint64_t x[29]; // x0-x28
-    uint64_t fp;    // x29
+    uint64_t x[30]; // x0-x29
     uint64_t lr;    // x30
     uint64_t sp;    // x31
     uint64_t pc;    // pc
@@ -42,8 +41,7 @@ public:
   };
 
   struct CAP {
-    CReg c[28]; // c0-c28
-    CReg cfp;   // c29
+    CReg c[30]; // c0-c29
     CReg clr;   // c30
     CReg csp;   // c31
     CReg pcc;

@@ -1,0 +1,11 @@
+breakpoint set -p "Break here"
+process launch --
+
+frame variable an_address
+memory read -C -c 1 -f capability &an_address
+# CHECK-LABEL: (lldb) frame variable an_address
+# CHECK: {[[ADDRESS:.*]]}
+# CHECK: (lldb) memory read -C -c 1 -f capability &an_address
+# CHECK: 0x{{[0-9a-fA-F]*}}: {[[ADDRESS]]}
+
+process kill

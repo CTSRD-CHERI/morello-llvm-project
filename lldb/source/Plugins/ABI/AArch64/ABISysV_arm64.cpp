@@ -391,13 +391,13 @@ static RegisterInfo g_register_infos[] = {
      nullptr,
      nullptr,
      0},
-    {"fp",
-     "x29",
+    {"x29",
+     nullptr,
      8,
      0,
      eEncodingUint,
      eFormatHex,
-     {LLDB_INVALID_REGNUM, arm64_dwarf::x29, LLDB_REGNUM_GENERIC_FP,
+     {LLDB_INVALID_REGNUM, arm64_dwarf::x29, LLDB_INVALID_REGNUM,
       LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM},
      nullptr,
      nullptr,
@@ -1788,13 +1788,13 @@ static RegisterInfo g_register_infos[] = {
      nullptr,
      nullptr,
      0},
-    {"cfp",
-     "c29",
+    {"c29",
+     nullptr,
      17,
      0,
      eEncodingCapability,
      eFormatHex,
-     {arm64_ehframe::cfp, arm64_dwarf::cfp, LLDB_REGNUM_GENERIC_CFP,
+     {arm64_ehframe::c29, arm64_dwarf::c29, LLDB_INVALID_REGNUM,
       LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM},
      nullptr,
      nullptr,
@@ -1995,17 +1995,40 @@ static bool GetReturnRegisterType(RegisterContext &reg_ctx, RegisterKind kind,
   return true;
 }
 
+static void MarkAsFP(RegisterInfo &fp_reg_info, bool is_capability) {
+  auto current_register_kind = fp_reg_info.kinds[lldb::eRegisterKindGeneric];
+  if (current_register_kind == LLDB_REGNUM_GENERIC_FP ||
+      current_register_kind == LLDB_REGNUM_GENERIC_CFP) {
+    // Register has already been marked as FP.
+    return;
+  }
+
+  assert(fp_reg_info.alt_name == nullptr && "FP already has an alternate name");
+  fp_reg_info.alt_name = fp_reg_info.name;
+  fp_reg_info.name = is_capability ? "cfp" : "fp";
+
+  assert(fp_reg_info.kinds[eRegisterKindGeneric] == LLDB_INVALID_REGNUM && "FP already has a register kind");
+  fp_reg_info.kinds[eRegisterKindGeneric] = is_capability ? LLDB_REGNUM_GENERIC_CFP : LLDB_REGNUM_GENERIC_FP;
+}
+
 const lldb_private::RegisterInfo *
 ABISysV_arm64::GetRegisterInfoArray(uint32_t &count) {
   // Make the C-string names and alt_names for the register infos into const
   // C-string values by having the ConstString unique the names in the global
   // constant C-string pool.
+  // Also set the frame pointer to X29/C29.
   if (!g_register_info_names_constified) {
     g_register_info_names_constified = true;
     for (uint32_t i = 0; i < k_num_register_infos; ++i) {
-      if (g_register_infos[i].name)
+      if (g_register_infos[i].name) {
+        if (strcmp(g_register_infos[i].name, "x29") == 0)
+          MarkAsFP(g_register_infos[i], /* is_capability=*/false);
+        if (strcmp(g_register_infos[i].name, "c29") == 0)
+          MarkAsFP(g_register_infos[i], /* is_capability=*/true);
+
         g_register_infos[i].name =
-            ConstString(g_register_infos[i].name).GetCString();
+          ConstString(g_register_infos[i].name).GetCString();
+      }
       if (g_register_infos[i].alt_name)
         g_register_infos[i].alt_name =
             ConstString(g_register_infos[i].alt_name).GetCString();
@@ -2330,7 +2353,7 @@ bool ABISysV_arm64::CreateDefaultUnwindPlan(UnwindPlan &unwind_plan) {
   unwind_plan.Clear();
   unwind_plan.SetRegisterKind(eRegisterKindDWARF);
 
-  uint32_t fp_reg_num = arm64_dwarf::fp;
+  uint32_t fp_reg_num = arm64_dwarf::x29;
   uint32_t pc_reg_num = arm64_dwarf::pc;
 
   UnwindPlan::RowSP row(new UnwindPlan::Row);

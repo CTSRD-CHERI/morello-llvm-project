@@ -185,6 +185,7 @@ AArch64Subtarget::AArch64Subtarget(const Triple &TT, const std::string &CPU,
     ReserveXRegister.set(18);
 
   CallLoweringInfo.reset(new AArch64CallLowering(*getTargetLowering()));
+  InlineAsmLoweringInfo.reset(new InlineAsmLowering(getTargetLowering()));
   Legalizer.reset(new AArch64LegalizerInfo(*this));
 
   auto *RBI = new AArch64RegisterBankInfo(*getRegisterInfo());
@@ -200,6 +201,10 @@ AArch64Subtarget::AArch64Subtarget(const Triple &TT, const std::string &CPU,
 
 const CallLowering *AArch64Subtarget::getCallLowering() const {
   return CallLoweringInfo.get();
+}
+
+const InlineAsmLowering *AArch64Subtarget::getInlineAsmLowering() const {
+  return InlineAsmLoweringInfo.get();
 }
 
 InstructionSelector *AArch64Subtarget::getInstructionSelector() const {
@@ -239,7 +244,7 @@ AArch64Subtarget::ClassifyGlobalReference(const GlobalValue *GV,
   }
 
   if (IsFat && hasCapGOT() && !GV->hasLocalLinkage() &&
-      !GV->hasProtectedVisibility())
+      !GV->hasProtectedVisibility() && !isa<Function>(GV))
     return AArch64II::MO_GOT | Flags;
 
   // The small code model's direct accesses use ADRP, which cannot

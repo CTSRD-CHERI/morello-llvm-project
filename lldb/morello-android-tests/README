@@ -1,0 +1,60 @@
+This directory contains end-to-end tests, expected to run on an FVP model
+with Android.
+
+
+Prerequisites
+=============
+
+These tests assume that they have been checked out somewhere inside an
+Android development tree (you don't need to check out the whole llvm repository,
+just this directory). The tests can then be discovered and built using
+Android's own build system.
+
+The tests also assume that an FVP model with Android on it is already running,
+and that lldb-server has already been uploaded to it (e.g. at
+`/data/local/tmp/lldb-server`).
+
+In order to run the tests, you will need to have `lit` available. You can either
+install it with `pip` or use the one from the llvm tree, if present. You will
+also need FileCheck, which should be part of any llvm install hierarchy that was
+configured with '-DLLVM_INSTALL_UTILS=ON'.
+
+
+How to run
+==========
+
+In order to use these tests, you need to copy this whole subdirectory somewhere
+in the Android tree (e.g. at test/).
+
+To build the tests, you first need to run these commands in the Android root:
+> source build/envsetup.sh
+> lunch morello_fvp_nano-eng
+
+Then in the directory where you copied the tests:
+> mma
+
+This should build all the tests.
+
+To run all the tests, invoke `lit` in the same directory:
+> lit -v . --param ANDROID_ROOT=/path/to/android \
+           --param ADB_PORT=5555 \
+           --param LLDB_SERVER_PORT=5040 \
+           --param LLVM_TOOLS_DIR=/path/to/dir/containing/lldb/and/FileCheck \
+           --param LLDB_SERVER=/path/to/lldb-server/on/device
+
+If you wish to run only a subset of the tests, you can use a filter, e.g:
+> LIT_FILTER=frames lit -v . [...]
+
+
+Test structure
+==============
+
+Each test should live in its own subdirectory (referred to as $TESTNAME below).
+This subdirectory should contain:
+* sources for the target that will be debugged
+* an `Android.bp` file describing how the target needs to be built
+* a `$TESTNAME.test` file containing lldb commands and FileCheck expectations
+
+Each test must build an executable named `$TESTNAME`, which will be
+automatically uploaded to the model and run under lldb by the test harness.
+

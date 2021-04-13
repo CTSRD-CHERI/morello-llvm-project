@@ -68,7 +68,7 @@ for.cond.cleanup:
 ; CHECK-LABEL: fun2
 define i32 @fun2() addrspace(200) {
 entry:
-; CHECK: mov w[[SIZE:[0-9]+]], #7168
+; CHECK: mov w[[SIZE:[0-9]+]], #6784
 ; CHECK: movk w[[SIZE]], #6, lsl #16
 ; CHECK: mov c[[TMPADDR:[0-9]+]], csp
 ; CHECK: scbndse c[[ADDR:[0-9]+]], c[[TMPADDR]], x[[SIZE]]

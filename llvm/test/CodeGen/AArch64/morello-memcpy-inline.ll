@@ -1,4 +1,4 @@
-; RUN: llc -march=arm64 -mattr=+morello %s -o - -aarch64-enable-ldst-opt=false | FileCheck %s
+; RUN: llc -mtriple=arm64 -mattr=+morello %s -o - -aarch64-enable-ldst-opt=false | FileCheck %s
 
 ; CHECK-LABEL: @t0
 define void @t0(i8* nocapture %dst, i8* nocapture %src) {

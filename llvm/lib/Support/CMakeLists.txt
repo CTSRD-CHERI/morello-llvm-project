@@ -93,6 +93,7 @@ add_llvm_component_library(LLVMSupport
   ELFAttributes.cpp
   Error.cpp
   ErrorHandling.cpp
+  ExtensibleRTTI.cpp
   FileCheck.cpp
   FileCollector.cpp
   FileUtilities.cpp
@@ -116,10 +117,12 @@ add_llvm_component_library(LLVMSupport
   LowLevelType.cpp
   ManagedStatic.cpp
   MathExtras.cpp
+  MemAlloc.cpp
   MemoryBuffer.cpp
   MD5.cpp
+  Morello.cpp
   NativeFormatting.cpp
-  OptimalLayout.cpp
+  OptimizedStructLayout.cpp
   Optional.cpp
   Parallel.cpp
   PluginLoader.cpp
@@ -139,7 +142,6 @@ add_llvm_component_library(LLVMSupport
   Statistic.cpp
   StringExtras.cpp
   StringMap.cpp
-  StringPool.cpp
   StringSaver.cpp
   StringRef.cpp
   SymbolRemappingReader.cpp

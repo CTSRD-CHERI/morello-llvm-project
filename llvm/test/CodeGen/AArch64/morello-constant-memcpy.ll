@@ -1,4 +1,4 @@
-; RUN: llc -march=arm64 -mattr=+c64,+morello -target-abi purecap -o - %s | FileCheck %s
+; RUN: llc -mtriple=arm64 -mattr=+c64,+morello -target-abi purecap -o - %s | FileCheck %s
 
 @.str = private unnamed_addr addrspace(200) constant [5 x i8] c"dsad\00", align 1
 

@@ -13,11 +13,7 @@
 #ifndef LLVM_SUPPORT_CHERI_H
 #define LLVM_SUPPORT_CHERI_H
 
-#include "llvm/Support/MathExtras.h"
-
 namespace llvm {
-
-uint64_t concentrateReqdAlignment(uint64_t length);
 
 bool useCHERICapLibFunc(bool PureCapABI);
 

@@ -1,5 +1,5 @@
-; RUN: llc -march=arm64 -mattr=+morello -o - %s -verify-machineinstrs | FileCheck %s
-; RUN: llc -march=arm64 -mattr=+morello,+c64 -target-abi purecap  -o - %s -verify-machineinstrs | FileCheck %s
+; RUN: llc -mtriple=arm64 -mattr=+morello -o - %s -verify-machineinstrs | FileCheck %s
+; RUN: llc -mtriple=arm64 -mattr=+morello,+c64 -target-abi purecap  -o - %s -verify-machineinstrs | FileCheck %s
 
 declare i32 @foo(...)
 declare i32 @bar(...)

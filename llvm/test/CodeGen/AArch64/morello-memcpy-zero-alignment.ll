@@ -1,4 +1,4 @@
-; RUN: llc -march=arm64 -mattr=+morello %s -o - | FileCheck %s
+; RUN: llc -mtriple=arm64 -mattr=+morello %s -o - | FileCheck %s
 
 %struct.B = type { i8 addrspace(200)* }
 

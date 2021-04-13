@@ -1,5 +1,5 @@
-; RUN: llc -march=arm64 -mattr=+c64,+morello -target-abi purecap -o - %s -aarch64-enable-sandbox-globals-opt=false | FileCheck %s --check-prefix=PURE --check-prefix=ALL --check-prefix=PURE-STATIC
-; RUN: llc -march=arm64 -mattr=+c64,+morello -target-abi purecap -relocation-model=pic -aarch64-enable-sandbox-globals-opt=false -o - %s | FileCheck %s --check-prefix=PURE --check-prefix=ALL --check-prefix=PURE-PIC --check-prefix=PURE-PIC-C64
+; RUN: llc -mtriple=arm64 -mattr=+c64,+morello -target-abi purecap -o - %s -aarch64-enable-sandbox-globals-opt=false | FileCheck %s --check-prefix=PURE --check-prefix=ALL --check-prefix=PURE-STATIC
+; RUN: llc -mtriple=arm64 -mattr=+c64,+morello -target-abi purecap -relocation-model=pic -aarch64-enable-sandbox-globals-opt=false -o - %s | FileCheck %s --check-prefix=PURE --check-prefix=ALL --check-prefix=PURE-PIC --check-prefix=PURE-PIC-C64
 
 @v = internal addrspace(200) global i32 5, align 4
 

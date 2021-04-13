@@ -8,7 +8,7 @@
 //
 // XFAIL: suse-linux-enterprise-server-11
 // XFAIL: centos-6.10
-// XFAIL: apple-darwin
+// XFAIL: darwin
 // XFAIL: newlib
 // XFAIL: netbsd
 // XFAIL: libcpp-has-newlib

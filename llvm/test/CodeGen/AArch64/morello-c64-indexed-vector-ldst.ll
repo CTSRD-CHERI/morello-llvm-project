@@ -1,4 +1,4 @@
-; RUN: llc -march=arm64 -mattr=+c64,+morello -target-abi purecap -disable-post-ra -verify-machineinstrs -o - %s | FileCheck %s
+; RUN: llc -mtriple=arm64 -mattr=+c64,+morello -target-abi purecap -disable-post-ra -verify-machineinstrs -o - %s | FileCheck %s
 
 @ptr = addrspace(200) global i8 addrspace(200)* null
 

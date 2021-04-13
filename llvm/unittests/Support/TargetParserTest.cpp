@@ -636,6 +636,7 @@ TEST(TargetParserTest, ARMArchExtFeature) {
                               {"maverick", "maverick", nullptr, nullptr},
                               {"xscale", "noxscale", nullptr, nullptr},
                               {"sb", "nosb", "+sb", "-sb"},
+                              {"i8mm", "noi8mm", "+i8mm", "-i8mm"},
                               {"mve", "nomve", "+mve", "-mve"},
                               {"mve.fp", "nomve.fp", "+mve.fp", "-mve.fp"}};
 
@@ -765,12 +766,12 @@ TEST(TargetParserTest, ARMparseArchVersion) {
 }
 
 bool testAArch64CPU(StringRef CPUName, StringRef ExpectedArch,
-                    StringRef ExpectedFPU, unsigned ExpectedFlags,
+                    StringRef ExpectedFPU, uint64_t ExpectedFlags,
                     StringRef CPUAttr) {
   AArch64::ArchKind AK = AArch64::parseCPUArch(CPUName);
   bool pass = AArch64::getArchName(AK).equals(ExpectedArch);
 
-  unsigned ExtKind = AArch64::getDefaultExtensions(CPUName, AK);
+  uint64_t ExtKind = AArch64::getDefaultExtensions(CPUName, AK);
   if (ExtKind > 1 && (ExtKind & AArch64::AEK_NONE))
     pass &= ((ExtKind ^ AArch64::AEK_NONE) == ExpectedFlags);
   else
@@ -1237,7 +1238,10 @@ TEST(TargetParserTest, AArch64ArchExtFeature) {
                               {"tme", "notme", "+tme", "-tme"},
                               {"ssbs", "nossbs", "+ssbs", "-ssbs"},
                               {"sb", "nosb", "+sb", "-sb"},
-                              {"predres", "nopredres", "+predres", "-predres"}
+                              {"predres", "nopredres", "+predres", "-predres"},
+                              {"i8mm", "noi8mm", "+i8mm", "-i8mm"},
+                              {"f32mm", "nof32mm", "+f32mm", "-f32mm"},
+                              {"f64mm", "nof64mm", "+f64mm", "-f64mm"},
 };
 
   for (unsigned i = 0; i < array_lengthof(ArchExt); i++) {

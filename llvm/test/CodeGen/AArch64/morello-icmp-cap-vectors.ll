@@ -1,4 +1,4 @@
-; RUN: opt -march=arm64 -mattr=+morello,+c64 -target-abi purecap -instcombine -S -o - %s | FileCheck %s
+; RUN: opt -mtriple=arm64 -mattr=+morello,+c64 -target-abi purecap -instcombine -S -o - %s | FileCheck %s
 
 ; Don't crash while trying to simplify icmps with vectors of capabilities as operands.
 

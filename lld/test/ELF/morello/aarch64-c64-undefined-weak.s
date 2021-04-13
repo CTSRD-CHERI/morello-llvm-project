@@ -23,7 +23,7 @@ _start:
 
 // CHECK: Disassembly of section .text:
 // CHECK-EMPTY:
-// CHECK:         210120:       b       #4
-// CHECK-NEXT:    210124:       bl      #4
+// CHECK:         210120:       b       0x210124 <_start+0x4>
+// CHECK-NEXT:    210124:       bl      0x210128 <_start+0x8>
 // CHECK-NEXT:    210128:       adrp    c0, #0
 // CHECK-NEXT:    21012c:       ldr     c8, #0

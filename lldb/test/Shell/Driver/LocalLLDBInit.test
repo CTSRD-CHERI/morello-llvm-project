@@ -1,6 +1,5 @@
 # REQUIRES: python
 # UNSUPPORTED: lldb-repro
-# UNSUPPORTED: linux
 # RUN: mkdir -p %t.root
 # RUN: mkdir -p %t.home
 # RUN: cp %S/Inputs/.lldbinit %t.root

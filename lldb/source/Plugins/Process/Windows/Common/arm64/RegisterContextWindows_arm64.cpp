@@ -91,7 +91,10 @@ RegisterSet g_register_sets[] = {
 // Constructors and Destructors
 RegisterContextWindows_arm64::RegisterContextWindows_arm64(
     Thread &thread, uint32_t concrete_frame_idx)
-    : RegisterContextWindows(thread, concrete_frame_idx) {}
+    : RegisterContextWindows(thread, concrete_frame_idx) {
+        MarkAsFP(g_register_infos_arm64_le[gpr_x29], /*isCapability=*/false);
+        MarkAsFP(g_register_infos_arm64_le[cap_c29], /*isCapability=*/true);
+    }
 
 RegisterContextWindows_arm64::~RegisterContextWindows_arm64() {}
 

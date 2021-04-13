@@ -101,7 +101,6 @@ enum {
   gpr_x27,
   gpr_x28,
   gpr_x29 = 29,
-  gpr_fp = gpr_x29,
   gpr_x30 = 30,
   gpr_lr = gpr_x30,
   gpr_ra = gpr_x30,
@@ -272,7 +271,6 @@ enum {
   cap_c27,
   cap_c28,
   cap_c29,
-  cap_cfp = cap_c29,
   cap_c30,
   cap_clr = cap_c30,
   cap_c31,
@@ -433,7 +431,7 @@ static uint32_t g_x25_invalidates[] = {gpr_x25, cap_c25, LLDB_INVALID_REGNUM};
 static uint32_t g_x26_invalidates[] = {gpr_x26, cap_c26, LLDB_INVALID_REGNUM};
 static uint32_t g_x27_invalidates[] = {gpr_x27, cap_c27, LLDB_INVALID_REGNUM};
 static uint32_t g_x28_invalidates[] = {gpr_x28, cap_c28, LLDB_INVALID_REGNUM};
-static uint32_t g_fp_invalidates[] = {gpr_fp, cap_cfp, LLDB_INVALID_REGNUM};
+static uint32_t g_x29_invalidates[] = {gpr_x29, cap_c29, LLDB_INVALID_REGNUM};
 static uint32_t g_lr_invalidates[] = {gpr_lr, cap_clr, LLDB_INVALID_REGNUM};
 static uint32_t g_sp_invalidates[] = {
     gpr_sp,        cap_csp,        state_sp_el0,       state_rsp_el0,
@@ -599,7 +597,7 @@ static uint32_t g_c25_invalidates[] = {gpr_x25, LLDB_INVALID_REGNUM};
 static uint32_t g_c26_invalidates[] = {gpr_x26, LLDB_INVALID_REGNUM};
 static uint32_t g_c27_invalidates[] = {gpr_x27, LLDB_INVALID_REGNUM};
 static uint32_t g_c28_invalidates[] = {gpr_x28, LLDB_INVALID_REGNUM};
-static uint32_t g_cfp_invalidates[] = {gpr_fp, LLDB_INVALID_REGNUM};
+static uint32_t g_c29_invalidates[] = {gpr_x29, LLDB_INVALID_REGNUM};
 static uint32_t g_clr_invalidates[] = {gpr_lr, LLDB_INVALID_REGNUM};
 static uint32_t g_csp_invalidates[] = {gpr_sp,         state_sp_el0,
                                        state_rsp_el0,  state_csp_el0,
@@ -773,6 +771,8 @@ static uint32_t g_rddc_el0_invalidates[] = {cap_ddc, LLDB_INVALID_REGNUM};
         nullptr, 0                                                             \
   }
 
+// This is incomplete! The FP/CFP are not marked as such and need to be
+// specified dynamically before the first use. Call MarkAsFP to do so.
 static lldb_private::RegisterInfo g_register_infos_arm64_le[] = {
     // DEFINE_GPR64(name, GENERIC KIND)
     DEFINE_GPR64(x0, LLDB_REGNUM_GENERIC_ARG1),
@@ -804,8 +804,8 @@ static lldb_private::RegisterInfo g_register_infos_arm64_le[] = {
     DEFINE_GPR64(x26, LLDB_INVALID_REGNUM),
     DEFINE_GPR64(x27, LLDB_INVALID_REGNUM),
     DEFINE_GPR64(x28, LLDB_INVALID_REGNUM),
+    DEFINE_GPR64(x29, LLDB_INVALID_REGNUM),
     // DEFINE_GPR64(name, GENERIC KIND)
-    DEFINE_GPR64_ALT(fp, x29, LLDB_REGNUM_GENERIC_FP),
     DEFINE_GPR64_ALT(lr, x30, LLDB_REGNUM_GENERIC_RA),
     DEFINE_GPR64_ALT(sp, x31, LLDB_REGNUM_GENERIC_SP),
     DEFINE_GPR64(pc, LLDB_REGNUM_GENERIC_PC),
@@ -979,7 +979,7 @@ static lldb_private::RegisterInfo g_register_infos_arm64_le[] = {
     DEFINE_CAP(c26, LLDB_INVALID_REGNUM),
     DEFINE_CAP(c27, LLDB_INVALID_REGNUM),
     DEFINE_CAP(c28, LLDB_INVALID_REGNUM),
-    DEFINE_CAP_ALT(cfp, c29, LLDB_REGNUM_GENERIC_CFP),
+    DEFINE_CAP(c29, LLDB_INVALID_REGNUM),
     DEFINE_CAP_ALT(clr, c30, LLDB_REGNUM_GENERIC_RAC),
     DEFINE_CAP_ALT(csp, c31, LLDB_REGNUM_GENERIC_CSP),
     DEFINE_CAP_PCC(pcc, LLDB_REGNUM_GENERIC_PCC),
@@ -1069,5 +1069,22 @@ static lldb_private::RegisterInfo g_register_infos_arm64_le[] = {
     {DEFINE_DBG(wcr, 15)}
     // clang-format on
 };
+
+static void MarkAsFP(lldb_private::RegisterInfo &fp_reg_info, bool is_capability) {
+  auto current_register_kind = fp_reg_info.kinds[lldb::eRegisterKindGeneric];
+  if (current_register_kind == LLDB_REGNUM_GENERIC_FP ||
+      current_register_kind == LLDB_REGNUM_GENERIC_CFP) {
+    // Register has already been marked as FP.
+    return;
+  }
+
+  assert(fp_reg_info.alt_name == nullptr && "FP already has an alternate name");
+  fp_reg_info.alt_name = fp_reg_info.name;
+  fp_reg_info.name = is_capability ? "cfp" : "fp";
+
+  assert(fp_reg_info.kinds[lldb::eRegisterKindGeneric] == LLDB_INVALID_REGNUM &&
+         "FP already has a register kind");
+  fp_reg_info.kinds[lldb::eRegisterKindGeneric] = is_capability ? LLDB_REGNUM_GENERIC_CFP : LLDB_REGNUM_GENERIC_FP;
+}
 
 #endif // DECLARE_REGISTER_INFOS_ARM64_STRUCT

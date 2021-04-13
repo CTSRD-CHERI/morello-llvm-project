@@ -1,4 +1,4 @@
-; RUN: llc < %s -march=arm64 -mattr=+c64,+morello -target-abi purecap -aarch64-redzone | FileCheck %s
+; RUN: llc < %s -mtriple=arm64 -mattr=+c64,+morello -target-abi purecap -aarch64-redzone | FileCheck %s
 
 define i64 addrspace(200)* @store64(i64 addrspace(200)* %tmp, i64 %index, i64 %spacing) nounwind noinline ssp {
 ; CHECK-LABEL: store64:

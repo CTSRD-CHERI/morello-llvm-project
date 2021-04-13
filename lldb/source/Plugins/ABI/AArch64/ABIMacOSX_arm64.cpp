@@ -1996,7 +1996,7 @@ bool ABIMacOSX_arm64::CreateDefaultUnwindPlan(UnwindPlan &unwind_plan) {
   unwind_plan.Clear();
   unwind_plan.SetRegisterKind(eRegisterKindDWARF);
 
-  uint32_t fp_reg_num = arm64_dwarf::fp;
+  uint32_t fp_reg_num = arm64_dwarf::x29;
   uint32_t pc_reg_num = arm64_dwarf::pc;
 
   UnwindPlan::RowSP row(new UnwindPlan::Row);

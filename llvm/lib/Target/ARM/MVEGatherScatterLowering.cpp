@@ -15,26 +15,27 @@
 #include "ARM.h"
 #include "ARMBaseInstrInfo.h"
 #include "ARMSubtarget.h"
+#include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/CodeGen/TargetLowering.h"
 #include "llvm/CodeGen/TargetPassConfig.h"
 #include "llvm/CodeGen/TargetSubtargetInfo.h"
-#include "llvm/InitializePasses.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/IntrinsicsARM.h"
-#include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/PatternMatch.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Value.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Transforms/Utils/Local.h"
@@ -157,8 +158,8 @@ Value *MVEGatherScatterLowering::checkGEP(Value *&Offsets, Type *Ty, Value *Ptr,
   }
   Offsets = GEP->getOperand(1);
   // Paranoid check whether the number of parallel lanes is the same
-  assert(Ty->getVectorNumElements() ==
-         Offsets->getType()->getVectorNumElements());
+  assert(cast<VectorType>(Ty)->getNumElements() ==
+         cast<VectorType>(Offsets->getType())->getNumElements());
   // Only <N x i32> offsets can be integrated into an arm gather, any smaller
   // type would have to be sign extended by the gep - and arm gathers can only
   // zero extend. Additionally, the offsets do have to originate from a zext of
@@ -168,7 +169,7 @@ Value *MVEGatherScatterLowering::checkGEP(Value *&Offsets, Type *Ty, Value *Ptr,
     return nullptr;
   if (ZExtInst *ZextOffs = dyn_cast<ZExtInst>(Offsets))
     Offsets = ZextOffs->getOperand(0);
-  else if (!(Offsets->getType()->getVectorNumElements() == 4 &&
+  else if (!(cast<VectorType>(Offsets->getType())->getNumElements() == 4 &&
              Offsets->getType()->getScalarSizeInBits() == 32))
     return nullptr;
 
@@ -191,9 +192,9 @@ Value *MVEGatherScatterLowering::checkGEP(Value *&Offsets, Type *Ty, Value *Ptr,
 void MVEGatherScatterLowering::lookThroughBitcast(Value *&Ptr) {
   // Look through bitcast instruction if #elements is the same
   if (auto *BitCast = dyn_cast<BitCastInst>(Ptr)) {
-    Type *BCTy = BitCast->getType();
-    Type *BCSrcTy = BitCast->getOperand(0)->getType();
-    if (BCTy->getVectorNumElements() == BCSrcTy->getVectorNumElements()) {
+    auto *BCTy = cast<VectorType>(BitCast->getType());
+    auto *BCSrcTy = cast<VectorType>(BitCast->getOperand(0)->getType());
+    if (BCTy->getNumElements() == BCSrcTy->getNumElements()) {
       LLVM_DEBUG(
           dbgs() << "masked gathers/scatters: looking through bitcast\n");
       Ptr = BitCast->getOperand(0);
@@ -223,14 +224,14 @@ Value *MVEGatherScatterLowering::lowerGather(IntrinsicInst *I) {
   // @llvm.masked.gather.*(Ptrs, alignment, Mask, Src0)
   // Attempt to turn the masked gather in I into a MVE intrinsic
   // Potentially optimising the addressing modes as we do so.
-  Type *Ty = I->getType();
+  auto *Ty = cast<VectorType>(I->getType());
   Value *Ptr = I->getArgOperand(0);
   unsigned Alignment = cast<ConstantInt>(I->getArgOperand(1))->getZExtValue();
   Value *Mask = I->getArgOperand(2);
   Value *PassThru = I->getArgOperand(3);
 
-  if (!isLegalTypeAndAlignment(Ty->getVectorNumElements(),
-                               Ty->getScalarSizeInBits(), Alignment))
+  if (!isLegalTypeAndAlignment(Ty->getNumElements(), Ty->getScalarSizeInBits(),
+                               Alignment))
     return nullptr;
   lookThroughBitcast(Ptr);
   assert(Ptr->getType()->isVectorTy() && "Unexpected pointer type");
@@ -267,9 +268,9 @@ Value *MVEGatherScatterLowering::tryCreateMaskedGatherBase(IntrinsicInst *I,
                                                            Value *Ptr,
                                                            IRBuilder<> &Builder) {
   using namespace PatternMatch;
-  Type *Ty = I->getType();
+  auto *Ty = cast<VectorType>(I->getType());
   LLVM_DEBUG(dbgs() << "masked gathers: loading from vector of pointers\n");
-  if (Ty->getVectorNumElements() != 4 || Ty->getScalarSizeInBits() != 32)
+  if (Ty->getNumElements() != 4 || Ty->getScalarSizeInBits() != 32)
     // Can't build an intrinsic for this
     return nullptr;
   Value *Mask = I->getArgOperand(2);
@@ -357,11 +358,12 @@ Value *MVEGatherScatterLowering::lowerScatter(IntrinsicInst *I) {
   Value *Input = I->getArgOperand(0);
   Value *Ptr = I->getArgOperand(1);
   unsigned Alignment = cast<ConstantInt>(I->getArgOperand(2))->getZExtValue();
-  Type *Ty = Input->getType();
+  auto *Ty = cast<VectorType>(Input->getType());
 
-  if (!isLegalTypeAndAlignment(Ty->getVectorNumElements(),
-                               Ty->getScalarSizeInBits(), Alignment))
+  if (!isLegalTypeAndAlignment(Ty->getNumElements(), Ty->getScalarSizeInBits(),
+                               Alignment))
     return nullptr;
+
   lookThroughBitcast(Ptr);
   assert(Ptr->getType()->isVectorTy() && "Unexpected pointer type");
 
@@ -386,9 +388,9 @@ Value *MVEGatherScatterLowering::tryCreateMaskedScatterBase(
   using namespace PatternMatch;
   Value *Input = I->getArgOperand(0);
   Value *Mask = I->getArgOperand(3);
-  Type *Ty = Input->getType();
+  auto *Ty = cast<VectorType>(Input->getType());
   // Only QR variants allow truncating
-  if (!(Ty->getVectorNumElements() == 4 && Ty->getScalarSizeInBits() == 32)) {
+  if (!(Ty->getNumElements() == 4 && Ty->getScalarSizeInBits() == 32)) {
     // Can't build an intrinsic for this
     return nullptr;
   }
@@ -462,11 +464,7 @@ void MVEGatherScatterLowering::pushOutAdd(PHINode *&Phi,
                                           Value *OffsSecondOperand,
                                           unsigned StartIndex) {
   LLVM_DEBUG(dbgs() << "masked gathers/scatters: optimising add instruction\n");
-  Instruction *InsertionPoint;
-  if (isa<Instruction>(OffsSecondOperand))
-    InsertionPoint = &cast<Instruction>(OffsSecondOperand)->getParent()->back();
-  else
-    InsertionPoint =
+  Instruction *InsertionPoint =
         &cast<Instruction>(Phi->getIncomingBlock(StartIndex)->back());
   // Initialize the phi with a vector that contains a sum of the constants
   Instruction *NewIndex = BinaryOperator::Create(
@@ -491,11 +489,7 @@ void MVEGatherScatterLowering::pushOutMul(PHINode *&Phi,
 
   // Create a new scalar add outside of the loop and transform it to a splat
   // by which loop variable can be incremented
-  Instruction *InsertionPoint;
-  if (isa<Instruction>(OffsSecondOperand))
-    InsertionPoint = &cast<Instruction>(OffsSecondOperand)->getParent()->back();
-  else
-    InsertionPoint = &cast<Instruction>(
+  Instruction *InsertionPoint = &cast<Instruction>(
         Phi->getIncomingBlock(LoopIncrement == 1 ? 0 : 1)->back());
 
   // Create a new index
@@ -521,7 +515,7 @@ void MVEGatherScatterLowering::pushOutMul(PHINode *&Phi,
 }
 
 // Return true if the given intrinsic is a gather or scatter
-bool isGatherScatter(IntrinsicInst *IntInst) {
+static bool isGatherScatter(IntrinsicInst *IntInst) {
   if (IntInst == nullptr)
     return false;
   unsigned IntrinsicID = IntInst->getIntrinsicID();
@@ -543,7 +537,7 @@ bool isGatherScatter(IntrinsicInst *IntInst) {
 
 // Check whether all usages of this instruction are as offsets of
 // gathers/scatters or simple arithmetics only used by gathers/scatters
-bool hasAllGatScatUsers(Instruction *I) {
+static bool hasAllGatScatUsers(Instruction *I) {
   if (I->hasNUses(0)) {
     return false;
   }

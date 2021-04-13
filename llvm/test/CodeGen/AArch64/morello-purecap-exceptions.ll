@@ -64,9 +64,9 @@ attributes #2 = { nounwind }
 !2 = !{!"omnipotent char", !3, i64 0}
 !3 = !{!"Simple C++ TBAA"}
 
-; CHECK: .section	.gcc_except_table,"a",@progbits
-; CHECK: .p2align	2
-; CHECK: GCC_except_table0
+; CHECK:	.section	.gcc_except_table,"aw",@progbits
+; CHECK:	.p2align	2
+; CHECK-LABEL: GCC_except_table0:
 ; CHECK-NEXT: .Lexception0:
 ; CHECK-NEXT:	.byte	255                     // @LPStart Encoding = omit
 ; CHECK-NEXT:	.byte	255                     // @TType Encoding = omit
@@ -75,14 +75,20 @@ attributes #2 = { nounwind }
 ; CHECK-NEXT: .Lcst_begin0:
 ; CHECK-NEXT:	.uleb128 .Ltmp0-.Lfunc_begin0   // >> Call Site 1 <<
 ; CHECK-NEXT:	.uleb128 .Ltmp1-.Ltmp0          //   Call between .Ltmp0 and .Ltmp1
-; CHECK-NEXT:	.uleb128 .Ltmp2-.Lfunc_begin0   //     jumps to .Ltmp2
+; CHECK-NEXT:	.byte	12                      // (landing pad is a capability)
+; CHECK-NEXT:	.capinit _ZNKSt3__17num_getIwNS_19istreambuf_iteratorIwNS_11char_traitsIwEEEEE6do_getES4_S4_QRNS_8ios_baseEQRjQRb+(.Ltmp2-.Lfunc_begin0)
+; CHECK-NEXT:	.xword	0
+; CHECK-NEXT:	.xword	0
 ; CHECK-NEXT:	.byte	0                       //   On action: cleanup
 ; CHECK-NEXT:	.uleb128 .Ltmp3-.Lfunc_begin0   // >> Call Site 2 <<
 ; CHECK-NEXT:	.uleb128 .Ltmp4-.Ltmp3          //   Call between .Ltmp3 and .Ltmp4
-; CHECK-NEXT:	.uleb128 .Ltmp5-.Lfunc_begin0   //     jumps to .Ltmp5
+; CHECK-NEXT:	.byte	12                      // (landing pad is a capability)
+; CHECK-NEXT:	.capinit _ZNKSt3__17num_getIwNS_19istreambuf_iteratorIwNS_11char_traitsIwEEEEE6do_getES4_S4_QRNS_8ios_baseEQRjQRb+(.Ltmp5-.Lfunc_begin0)
+; CHECK-NEXT:	.xword	0
+; CHECK-NEXT:	.xword	0
 ; CHECK-NEXT:	.byte	0                       //   On action: cleanup
 ; CHECK-NEXT:	.uleb128 .Ltmp4-.Lfunc_begin0   // >> Call Site 3 <<
 ; CHECK-NEXT:	.uleb128 .Lfunc_end0-.Ltmp4     //   Call between .Ltmp4 and .Lfunc_end0
 ; CHECK-NEXT:	.byte	0                       //     has no landing pad
 ; CHECK-NEXT:	.byte	0                       //   On action: cleanup
-; CHECK-NEXT:.Lcst_end0:
+; CHECK-NEXT: .Lcst_end0:

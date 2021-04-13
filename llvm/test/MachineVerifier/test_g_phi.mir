@@ -74,6 +74,6 @@ body:             |
   bb.4.return:
     %7(s32) = G_PHI %9(s16), %bb.2.case1, %6(s32), %bb.3.case2
     $w0 = COPY %7(s32)
-    RET_ReallyLR implicit $w0
+    RET_ReallyLR 0, implicit $w0
 
 ...

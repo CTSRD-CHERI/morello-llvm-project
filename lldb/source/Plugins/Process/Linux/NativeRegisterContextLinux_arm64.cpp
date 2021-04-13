@@ -49,7 +49,7 @@ static const uint32_t g_gpr_regnums_arm64[] = {
     gpr_x16_arm64,      gpr_x17_arm64,  gpr_x18_arm64, gpr_x19_arm64,
     gpr_x20_arm64,      gpr_x21_arm64,  gpr_x22_arm64, gpr_x23_arm64,
     gpr_x24_arm64,      gpr_x25_arm64,  gpr_x26_arm64, gpr_x27_arm64,
-    gpr_x28_arm64,      gpr_fp_arm64,   gpr_lr_arm64,  gpr_sp_arm64,
+    gpr_x28_arm64,      gpr_x29_arm64,  gpr_lr_arm64,  gpr_sp_arm64,
     gpr_pc_arm64,       gpr_cpsr_arm64, gpr_w0_arm64,  gpr_w1_arm64,
     gpr_w2_arm64,       gpr_w3_arm64,   gpr_w4_arm64,  gpr_w5_arm64,
     gpr_w6_arm64,       gpr_w7_arm64,   gpr_w8_arm64,  gpr_w9_arm64,
@@ -107,7 +107,7 @@ static const uint32_t g_cap_regnums_arm64[] = {
     cap_c16_arm64,      cap_c17_arm64, cap_c18_arm64, cap_c19_arm64,
     cap_c20_arm64,      cap_c21_arm64, cap_c22_arm64, cap_c23_arm64,
     cap_c24_arm64,      cap_c25_arm64, cap_c26_arm64, cap_c27_arm64,
-    cap_c28_arm64,      cap_cfp_arm64, cap_clr_arm64, cap_csp_arm64,
+    cap_c28_arm64,      cap_c29_arm64, cap_clr_arm64, cap_csp_arm64,
     cap_pcc_arm64,      cap_ddc_arm64,
     LLDB_INVALID_REGNUM // register sets need to end with this flag
 };
@@ -996,7 +996,7 @@ Status NativeRegisterContextLinux_arm64::ReadCapabilityRegister(
     GET_CAP_DATA(c26, cregs[26]);
     GET_CAP_DATA(c27, cregs[27]);
     GET_CAP_DATA(c28, cregs[28]);
-    GET_CAP_DATA(cfp, cregs[29]);
+    GET_CAP_DATA(c29, cregs[29]);
     GET_CAP_DATA(clr, cregs[30]);
     GET_CAP_DATA(pcc, pcc);
 #undef GET_CAP_DATA

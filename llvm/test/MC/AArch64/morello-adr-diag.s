@@ -1,4 +1,4 @@
-// RUN: not llvm-mc -triple aarch64-none-linux-gnu -show-encoding -mattr=+morello < %s |& FileCheck %s
+// RUN: not llvm-mc -triple aarch64-none-linux-gnu -show-encoding -mattr=+morello < %s 2>&1 | FileCheck %s
 
 // Verify that we reject the C64 Morello variants of adrp. The diagnostics are currently not
 // useful here because we can match from too many different architectures.

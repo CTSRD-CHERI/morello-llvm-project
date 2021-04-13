@@ -1,0 +1,40 @@
+breakpoint set -p "Break here"
+process launch --
+
+thread backtrace
+# CHECK-LABEL: (lldb) thread backtrace
+# CHECK: frame #0{{.*}}last(x=36) at main.cpp:2:
+# CHECK: frame #1{{.*}}second(x0={tag = 1,{{.*}}x1=1, x2=2, x3=3, x4=4, x5=5, x6=6, x7=7, x8=8) at main.cpp:9:
+# CHECK: frame #2{{.*}}first(x=42) at main.cpp:14:
+# CHECK: frame #3{{.*}}main at main.cpp:18:
+
+frame variable x
+# CHECK: x = 36
+
+frame variable y
+# CHECK: y = 2
+
+frame select 1
+# CHECK-LABEL: (lldb) frame select 1
+# CHECK: frame #1{{.*}}second
+
+frame variable x0
+# CHECK: x0 = {tag = 1,
+
+frame variable x8
+# CHECK: x8 = 8
+
+frame variable y
+# CHECK: y = 36
+
+frame select 2
+# CHECK-LABEL: (lldb) frame select 2
+# CHECK: frame #2{{.*}}first
+
+frame variable x
+# CHECK: x = 42
+
+frame variable y
+# CHECK: y = 54
+
+process kill

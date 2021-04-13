@@ -1,5 +1,5 @@
 ; FIXME: we shouldn't use O2 here
-; RUN: llc -march=arm64 -mattr=+c64,+morello -O2 -target-abi purecap -o - %s
+; RUN: llc -mtriple=arm64 -mattr=+c64,+morello -O2 -target-abi purecap -o - %s
 
 ; This example was crashing in the load store optimizer because we were producing
 ; a CAddImm instruction on an undef register operand.

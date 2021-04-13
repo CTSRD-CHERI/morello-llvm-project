@@ -30,7 +30,7 @@ struct AArch64MCAsmInfoDarwin : public MCAsmInfoDarwin {
 };
 
 struct AArch64MCAsmInfoELF : public MCAsmInfoELF {
-  explicit AArch64MCAsmInfoELF(const Triple &T);
+  explicit AArch64MCAsmInfoELF(const Triple &T, bool IsPureCap);
 };
 
 struct AArch64MCAsmInfoMicrosoftCOFF : public MCAsmInfoMicrosoft {

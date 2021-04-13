@@ -1,4 +1,4 @@
-; RUN: llc -march=arm64 < %s -target-abi purecap -mattr=+c64,+morello,+use-16-cap-regs -frame-pointer=all -o - | FileCheck %s
+; RUN: llc -mtriple=arm64 < %s -target-abi purecap -mattr=+c64,+morello,+use-16-cap-regs -frame-pointer=all -o - | FileCheck %s
 
 declare dso_local i32 @gs({ i64, i8 addrspace(200)* }) local_unnamed_addr addrspace(200) #1
 declare dso_local i32 @g({ i64, i8 addrspace(200)* }, { i64, i8 addrspace(200)* }, i32, { i64, i8 addrspace(200)* }, { i64, i8 addrspace(200)* }) local_unnamed_addr addrspace(200) #1

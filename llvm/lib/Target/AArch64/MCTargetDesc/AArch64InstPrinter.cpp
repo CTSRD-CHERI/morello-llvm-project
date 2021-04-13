@@ -1784,7 +1784,30 @@ void AArch64InstPrinter::printVectorIndex(const MCInst *MI, unsigned OpNum,
   O << "[" << MI->getOperand(OpNum).getImm() << "]";
 }
 
-template <int Scale>
+void AArch64InstPrinter::printCapLitLabel(const MCInst *MI,
+                                          unsigned OpNum,
+                                          const MCSubtargetInfo &STI,
+                                          raw_ostream &O) {
+  const MCOperand &Op = MI->getOperand(OpNum);
+
+  if (Op.isImm()) {
+    int64_t Offset = Op.getImm() * 16;
+    O << "#" << formatImm(Offset);
+    return;
+  }
+
+  // If the branch target is simply an address then print it in hex.
+  const MCConstantExpr *BranchTarget =
+      dyn_cast<MCConstantExpr>(MI->getOperand(OpNum).getExpr());
+  int64_t TargetAddress;
+  if (BranchTarget && BranchTarget->evaluateAsAbsolute(TargetAddress)) {
+    O << formatHex(TargetAddress);
+  } else {
+    // Otherwise, just print the expression.
+    MI->getOperand(OpNum).getExpr()->print(O, &MAI);
+  }
+}
+
 void AArch64InstPrinter::printAlignedLabel(const MCInst *MI, uint64_t Address,
                                            unsigned OpNum,
                                            const MCSubtargetInfo &STI,
@@ -1794,7 +1817,11 @@ void AArch64InstPrinter::printAlignedLabel(const MCInst *MI, uint64_t Address,
   // If the label has already been resolved to an immediate offset (say, when
   // we're running the disassembler), just print the immediate.
   if (Op.isImm()) {
-    O << "#" << formatImm(Op.getImm() * Scale);
+    int64_t Offset = Op.getImm() * 4;
+    if (PrintBranchImmAsAddress)
+      O << formatHex(Address + Offset);
+    else
+      O << "#" << formatImm(Offset);
     return;
   }
 

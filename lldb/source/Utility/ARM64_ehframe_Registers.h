@@ -45,7 +45,7 @@ enum {
   x26,
   x27,
   x28,
-  fp, // aka x29
+  x29,
   lr, // aka x30
   sp, // aka x31 aka wzr
   pc, // value is 32
@@ -117,7 +117,7 @@ enum {
   c26,
   c27,
   c28,
-  cfp, // aka c29
+  c29,
   clr, // aka c30
   csp, // 229
   pcc, // 230

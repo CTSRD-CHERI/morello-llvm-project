@@ -1118,6 +1118,20 @@ enum MemoryContentType {
   eMemoryContentCap128 // 1-byte tag associated with 16 bytes of data.
 };
 
+
+/// The result from a command interpreter run.
+enum CommandInterpreterResult {
+  /// Command interpreter finished successfully.
+  eCommandInterpreterResultSuccess,
+  /// Stopped because the corresponding option was set and the inferior
+  /// crashed.
+  eCommandInterpreterResultInferiorCrash,
+  /// Stopped because the corresponding option was set and a command returned
+  /// an error.
+  eCommandInterpreterResultCommandError,
+  /// Stopped because quit was requested.
+  eCommandInterpreterResultQuitRequested,
+};
 } // namespace lldb
 
 #endif // LLDB_LLDB_ENUMERATIONS_H

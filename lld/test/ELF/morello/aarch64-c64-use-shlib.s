@@ -136,7 +136,7 @@ appdata: .xword 8
 // CHECK-PIE-NEXT:  306a0 71040100 00000000 00000000 00000000
 
 // CHECK: 0000000000210430 <_start>:
-// CHECK-NEXT:   210430:        bl      #0x60 <rodata+0x210490>
+// CHECK-NEXT:   210430:        bl      0x210490 <rodata+0x210490>
 // CHECK-NEXT:   210434:        adrp    c0, #0x10000
 // CHECK-NEXT:   210438:        ldr     c0, [c0, #0x600]
 // CHECK-NEXT:   21043c:        adrp    c1, #0x10000
@@ -172,7 +172,7 @@ appdata: .xword 8
 // CHECK-NEXT:   21049c:        br      c17
 
 // CHECK-PIE: 0000000000010430 <_start>:
-// CHECK-PIE-NEXT:    10430:            bl      #0x60 <rodata+0x10490>
+// CHECK-PIE-NEXT:    10430:            bl      0x10490 <rodata+0x10490>
 // CHECK-PIE-NEXT:    10434:            adrp    c0, #0x10000
 // CHECK-PIE-NEXT:    10438:            ldr     c0, [c0, #0x600]
 // CHECK-PIE-NEXT:    1043c:            adrp    c1, #0x10000

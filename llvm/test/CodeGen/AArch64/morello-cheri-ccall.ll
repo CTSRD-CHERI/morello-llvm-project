@@ -1,4 +1,4 @@
-; RUN: llc -march=arm64 -mattr=+morello -o - %s | FileCheck %s
+; RUN: llc -mtriple=arm64 -mattr=+morello -o - %s | FileCheck %s
 
 ; The cheri ccall on Morello (currently) passes the first two capability arguments
 ; in c9/c10 and first i64 argument in x11.

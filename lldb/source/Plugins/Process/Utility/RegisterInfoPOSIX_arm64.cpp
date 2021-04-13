@@ -112,7 +112,10 @@ RegisterInfoPOSIX_arm64::RegisterInfoPOSIX_arm64(
     const lldb_private::ArchSpec &target_arch)
     : lldb_private::RegisterInfoInterface(target_arch),
       m_register_info_p(GetRegisterInfoPtr(target_arch)),
-      m_register_info_count(GetRegisterInfoCount(target_arch)) {}
+      m_register_info_count(GetRegisterInfoCount(target_arch)) {
+        MarkAsFP(g_register_infos_arm64_le[gpr_x29], /*isCapability=*/false);
+        MarkAsFP(g_register_infos_arm64_le[cap_c29], /*isCapability=*/true);
+      }
 
 size_t RegisterInfoPOSIX_arm64::GetGPRSize() const {
   return sizeof(struct RegisterInfoPOSIX_arm64::GPR);

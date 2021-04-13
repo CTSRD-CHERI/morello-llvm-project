@@ -1,5 +1,5 @@
-; RUN: llc -march=arm64 -mattr=+c64,+morello,+use-16-cap-regs -target-abi purecap -o - %s -verify-machineinstrs | FileCheck %s --check-prefix=PCS16
-; RUN: llc -march=arm64 -mattr=+c64,+morello -target-abi purecap -o - %s -verify-machineinstrs | FileCheck %s --check-prefix=PCS32
+; RUN: llc -mtriple=arm64 -mattr=+c64,+morello,+use-16-cap-regs -target-abi purecap -o - %s -verify-machineinstrs | FileCheck %s --check-prefix=PCS16
+; RUN: llc -mtriple=arm64 -mattr=+c64,+morello -target-abi purecap -o - %s -verify-machineinstrs | FileCheck %s --check-prefix=PCS32
 
 target datalayout = "e-m:e-pf200:128:128-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128-A200-P200-G200"
 
@@ -11,10 +11,10 @@ target datalayout = "e-m:e-pf200:128:128-i8:8:32-i16:16:32-i64:64-i128:128-n32:6
 define i32 @fun1() addrspace(200) {
 entry:
 ; Allocate extra memory. CSP still needs to be 16 bytes aligned.
-; PCS16:	sub c6, csp, #1031, lsl #12
+; PCS16:	sub c6, csp, #1024, lsl #12
 ; PCS16-NEXT: sub c6, c6, #4032
 
-; PCS16: mov w[[REG:[0-9]+]], #16384
+; PCS16: mov w[[REG:[0-9]+]], #2048
 ; PCS16-NEXT: movk w8, #64, lsl #16
 ; PCS16: scbndse c{{.*}}, c{{.*}}, x[[REG]]
 
@@ -35,11 +35,11 @@ declare i32 @g(i32 addrspace(200)*) local_unnamed_addr addrspace(200) #2
 define i32 @fun2() addrspace(200) {
 entry:
 ; Here we need more alignment than the stack alignment. We know that the scratch register is c6.
-; PCS16: alignd	csp, c6, #17
+; PCS16: alignd	csp, c6, #14
 ; PCS16: mov w[[REG:[0-9]+]], #33554432
 ; PCS16: scbndse c{{.*}}, c{{.*}}, x[[REG]]
 ;
-; PCS32: alignd	csp, c9, #17
+; PCS32: alignd	csp, c9, #11
 ; PCS32: mov w[[REG:[0-9]+]], #33554432
 ; PCS32: scbndse c{{.*}}, c{{.*}}, x[[REG]]
 
@@ -54,17 +54,17 @@ entry:
 ; PCS16: .type ss,@object
 ; PCS16-NEXT: .bss
 ; PCS16-NEXT:    .globl ss
-; PCS16-NEXT:    .p2align 14
+; PCS16-NEXT:    .p2align 11
 ; PCS16-NEXT: ss:
 ; PCS16-NEXT:    .zero 4194308
-; PCS16-NEXT:    .zero 16380
-; PCS16-NEXT:    .size ss, 4210688
+; PCS16-NEXT:    .zero 2044
+; PCS16-NEXT:    .size ss, 4196352
 
 ; Pad and align this object.
 ; PCS16: .type s3,@object
-; PCS16-NEXT: .comm s3,4210688,16384
+; PCS16-NEXT: .comm s3,4196352,2048
 
 ; Small objectes don't need extra alignment or padding.
 ; PCS16: .type s4,@object
-; PCS16-NEXT: .comm s4,4096,8
+; PCS16-NEXT: .comm s4,4096,4
 

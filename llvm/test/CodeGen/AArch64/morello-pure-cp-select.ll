@@ -1,4 +1,4 @@
-; RUN: llc -march=arm64 < %s -target-abi purecap -mattr=+c64,+morello | FileCheck %s
+; RUN: llc -mtriple=arm64 < %s -target-abi purecap -mattr=+c64,+morello | FileCheck %s
 
 ; CHECK-LABEL: foo
 ; CHECK-DAG: cmp	w0, #0

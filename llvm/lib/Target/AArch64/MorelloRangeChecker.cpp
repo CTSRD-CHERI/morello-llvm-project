@@ -17,7 +17,6 @@
 #include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/ADT/StringSwitch.h"
-#include "llvm/IR/CallSite.h"
 #include "llvm/IR/InstVisitor.h"
 
 #include <string>
@@ -53,9 +52,8 @@ class MorelloRangeChecker : public FunctionPass,
   Function *SetLengthFn = nullptr;
 
   AllocOperands getRangeForAllocation(Value *Src) {
-    CallSite Malloc = CallSite(Src);
-    if (Malloc != CallSite()) {
-      Function *Fn = Malloc.getCalledFunction();
+    if (auto Malloc = dyn_cast<CallBase>(Src)) {
+      Function *Fn = Malloc->getCalledFunction();
       if (!Fn)
         return AllocOperands();
       switch (StringSwitch<int>(Fn->getName())
@@ -69,11 +67,11 @@ class MorelloRangeChecker : public FunctionPass,
       default:
         return AllocOperands();
       case 1:
-        return AllocOperands(Malloc.getArgument(0), 0);
+        return AllocOperands(Malloc->getArgOperand(0), 0);
       case 2:
-        return AllocOperands(Malloc.getArgument(1), 0);
+        return AllocOperands(Malloc->getArgOperand(1), 0);
       case 3:
-        return AllocOperands(Malloc.getArgument(0), Malloc.getArgument(1));
+        return AllocOperands(Malloc->getArgOperand(0), Malloc->getArgOperand(1));
       }
     } else if (AllocaInst *AI = dyn_cast<AllocaInst>(Src)) {
       PointerType *AllocaTy = AI->getType();
@@ -132,7 +130,7 @@ public:
           Value *Src = P2I->getOperand(0)->stripPointerCasts();
           if (GlobalVariable *GV = dyn_cast<GlobalVariable>(Src))
             return GV->hasExternalLinkage() ? 0 : P2I;
-          if (isa<AllocaInst>(Src) || CallSite(Src) != CallSite()) {
+          if (isa<AllocaInst>(Src) || isa<CallBase>(Src)) {
             return P2I;
           }
         }
@@ -150,7 +148,7 @@ public:
       if (GlobalVariable *GV = dyn_cast<GlobalVariable>(Src)) {
         if (GV->hasExternalLinkage())
           return;
-      } else if (!(isa<AllocaInst>(Src) || CallSite(Src) != CallSite()))
+      } else if (!(isa<AllocaInst>(Src) || isa<CallBase>(Src)))
         return;
       AllocOperands AO = getRangeForAllocation(Src);
       if (AO != AllocOperands())

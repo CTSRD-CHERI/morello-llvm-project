@@ -24,6 +24,7 @@ public:
                                  const TargetMachine &TM) const override;
   Align getAlignmentForPreciseBounds(uint64_t Size,
                                      const TargetMachine &TM) const override;
+  int getCheriCapabilitySize(const TargetMachine &TM) const override { return 16; }
 };
 
 /// AArch64_MachoTargetObjectFile - This TLOF implementation is used for Darwin.

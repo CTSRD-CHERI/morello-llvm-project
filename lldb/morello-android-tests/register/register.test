@@ -1,0 +1,48 @@
+breakpoint set -p "Break here"
+process launch --
+
+register read c11
+# CHECK-LABEL: (lldb) register read c11
+# CHECK: c11 = 0x{{[0-9a-fA-F]+}}7ef3beefdeaddeaddeadbeef
+
+register read -f capability c11
+# CHECK-LABEL: (lldb) register read -f capability c11
+# CHECK: c11 = {tag = {{.*}}, address = 0xdeaddeaddeadbeef, {{.*}}range = [0xdeaddeaddeadbeef-0xdeaddeaddeadbef3)
+
+register read x11
+# CHECK-LABEL: (lldb) register read x11
+# CHECK: x11 = 0xdeaddeaddeadbeef
+
+register read c29
+# CHECK-LABEL: (lldb) register read c29
+# CHECK: cfp = [[C29:.*]]
+
+register read cfp
+# CHECK-LABEL: (lldb) register read cfp
+# CHECK: cfp = [[C29]]
+
+register read x29
+# CHECK-LABEL: (lldb) register read x29
+# CHECK: fp = [[X29:.*]]
+
+register read fp
+# CHECK-LABEL: (lldb) register read fp
+# CHECK: fp = [[X29]]
+
+register read clr
+# CHECK-LABEL: (lldb) register read clr
+# CHECK: clr = 0x{{[0-9a-fA-F]+}}
+
+register read csp
+# CHECK-LABEL: (lldb) register read csp
+# CHECK: csp = 0x{{[0-9a-fA-F]+}}
+
+register read pcc
+# CHECK-LABEL: (lldb) register read pcc
+# CHECK: pcc = 0x{{[0-9a-fA-F]+}}
+
+register read ddc
+# CHECK-LABEL: (lldb) register read ddc
+# CHECK: ddc = 0x{{[0-9a-fA-F]+}}
+
+process kill

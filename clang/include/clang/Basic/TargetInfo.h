@@ -586,6 +586,12 @@ public:
     return (getPointerWidth(0) >= 64) || getTargetOpts().ForceEnableInt128;
   } // FIXME
 
+  /// Determine whether the _ExtInt type is supported on this target. This
+  /// limitation is put into place for ABI reasons.
+  virtual bool hasExtIntType() const {
+    return false;
+  }
+
   /// Determine whether _Float16 is supported on this target.
   virtual bool hasLegalHalfType() const { return HasLegalHalfType; }
 
@@ -737,10 +743,10 @@ public:
 
   /// Return the "preferred" register width on this target.
   virtual unsigned getRegisterWidth() const {
-    // Currently we assume the register width on the target matches the pointer
+    // Currently we assume the register width on the target matches the size
     // width, we can introduce a new variable for this if/when some target wants
     // it.
-    return PointerWidth;
+    return getTypeWidth(SizeType);
   }
 
   /// Returns the name of the mcount instrumentation function.

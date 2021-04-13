@@ -1,4 +1,4 @@
-// RUN: not llvm-mc -triple arm64 -mattr=+morello,+c64 -show-encoding < %s |& FileCheck %s
+// RUN: not llvm-mc -triple arm64 -mattr=+morello,+c64 -show-encoding < %s 2>&1 | FileCheck %s
 
         adrp c5, #-2147487744
 // CHECK: expected label or encodable integer pc offset

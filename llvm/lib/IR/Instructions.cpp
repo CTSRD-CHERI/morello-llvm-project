@@ -18,7 +18,6 @@
 #include "llvm/ADT/Twine.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/BasicBlock.h"
-#include "llvm/IR/CallSite.h"
 #include "llvm/IR/Cheri.h"
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/Constants.h"
@@ -61,14 +60,6 @@ AllocaInst::getAllocationSizeInBits(const DataLayout &DL) const {
     Size *= C->getZExtValue();
   }
   return Size;
-}
-
-//===----------------------------------------------------------------------===//
-//                            CallSite Class
-//===----------------------------------------------------------------------===//
-
-User::op_iterator CallSite::getCallee() const {
-  return cast<CallBase>(getInstruction())->op_end() - 1;
 }
 
 //===----------------------------------------------------------------------===//
@@ -265,7 +256,7 @@ unsigned CallBase::getNumSubclassExtraOperandsDynamic() const {
 }
 
 bool CallBase::isIndirectCall() const {
-  const Value *V = getCalledValue();
+  const Value *V = getCalledOperand();
   if (isa<Function>(V) || isa<Constant>(V))
     return false;
   return !isInlineAsm();
@@ -509,7 +500,7 @@ CallInst *CallInst::Create(CallInst *CI, ArrayRef<OperandBundleDef> OpB,
                            Instruction *InsertPt) {
   std::vector<Value *> Args(CI->arg_begin(), CI->arg_end());
 
-  auto *NewCI = CallInst::Create(CI->getFunctionType(), CI->getCalledValue(),
+  auto *NewCI = CallInst::Create(CI->getFunctionType(), CI->getCalledOperand(),
                                  Args, OpB, CI->getName(), InsertPt);
   NewCI->setTailCallKind(CI->getTailCallKind());
   NewCI->setCallingConv(CI->getCallingConv());
@@ -820,9 +811,9 @@ InvokeInst *InvokeInst::Create(InvokeInst *II, ArrayRef<OperandBundleDef> OpB,
                                Instruction *InsertPt) {
   std::vector<Value *> Args(II->arg_begin(), II->arg_end());
 
-  auto *NewII = InvokeInst::Create(II->getFunctionType(), II->getCalledValue(),
-                                   II->getNormalDest(), II->getUnwindDest(),
-                                   Args, OpB, II->getName(), InsertPt);
+  auto *NewII = InvokeInst::Create(
+      II->getFunctionType(), II->getCalledOperand(), II->getNormalDest(),
+      II->getUnwindDest(), Args, OpB, II->getName(), InsertPt);
   NewII->setCallingConv(II->getCallingConv());
   NewII->SubclassOptionalData = II->SubclassOptionalData;
   NewII->setAttributes(II->getAttributes());
@@ -903,11 +894,9 @@ CallBrInst *CallBrInst::Create(CallBrInst *CBI, ArrayRef<OperandBundleDef> OpB,
                                Instruction *InsertPt) {
   std::vector<Value *> Args(CBI->arg_begin(), CBI->arg_end());
 
-  auto *NewCBI = CallBrInst::Create(CBI->getFunctionType(),
-                                    CBI->getCalledValue(),
-                                    CBI->getDefaultDest(),
-                                    CBI->getIndirectDests(),
-                                    Args, OpB, CBI->getName(), InsertPt);
+  auto *NewCBI = CallBrInst::Create(
+      CBI->getFunctionType(), CBI->getCalledOperand(), CBI->getDefaultDest(),
+      CBI->getIndirectDests(), Args, OpB, CBI->getName(), InsertPt);
   NewCBI->setCallingConv(CBI->getCallingConv());
   NewCBI->SubclassOptionalData = CBI->SubclassOptionalData;
   NewCBI->setAttributes(CBI->getAttributes());
@@ -1888,7 +1877,7 @@ ShuffleVectorInst::ShuffleVectorInst(Value *V1, Value *V2, ArrayRef<int> Mask,
                                      Instruction *InsertBefore)
     : Instruction(
           VectorType::get(cast<VectorType>(V1->getType())->getElementType(),
-                          Mask.size(), V1->getType()->getVectorIsScalable()),
+                          Mask.size(), isa<ScalableVectorType>(V1->getType())),
           ShuffleVector, OperandTraits<ShuffleVectorInst>::op_begin(this),
           OperandTraits<ShuffleVectorInst>::operands(this), InsertBefore) {
   assert(isValidOperands(V1, V2, Mask) &&
@@ -1903,7 +1892,7 @@ ShuffleVectorInst::ShuffleVectorInst(Value *V1, Value *V2, ArrayRef<int> Mask,
                                      const Twine &Name, BasicBlock *InsertAtEnd)
     : Instruction(
           VectorType::get(cast<VectorType>(V1->getType())->getElementType(),
-                          Mask.size(), V1->getType()->getVectorIsScalable()),
+                          Mask.size(), isa<ScalableVectorType>(V1->getType())),
           ShuffleVector, OperandTraits<ShuffleVectorInst>::op_begin(this),
           OperandTraits<ShuffleVectorInst>::operands(this), InsertAtEnd) {
   assert(isValidOperands(V1, V2, Mask) &&
@@ -1916,7 +1905,7 @@ ShuffleVectorInst::ShuffleVectorInst(Value *V1, Value *V2, ArrayRef<int> Mask,
 }
 
 void ShuffleVectorInst::commute() {
-  int NumOpElts = Op<0>()->getType()->getVectorNumElements();
+  int NumOpElts = cast<VectorType>(Op<0>()->getType())->getNumElements();
   int NumMaskElts = ShuffleMask.size();
   SmallVector<int, 16> NewMask(NumMaskElts);
   for (int i = 0; i != NumMaskElts; ++i) {
@@ -1945,7 +1934,7 @@ bool ShuffleVectorInst::isValidOperands(const Value *V1, const Value *V2,
     if (Elem != UndefMaskElem && Elem >= V1Size * 2)
       return false;
 
-  if (V1->getType()->getVectorIsScalable())
+  if (isa<ScalableVectorType>(V1->getType()))
     if ((Mask[0] != 0 && Mask[0] != UndefMaskElem) || !is_splat(Mask))
       return false;
 
@@ -1958,10 +1947,11 @@ bool ShuffleVectorInst::isValidOperands(const Value *V1, const Value *V2,
   if (!V1->getType()->isVectorTy() || V1->getType() != V2->getType())
     return false;
 
-  // Mask must be vector of i32.
+  // Mask must be vector of i32, and must be the same kind of vector as the
+  // input vectors
   auto *MaskTy = dyn_cast<VectorType>(Mask->getType());
   if (!MaskTy || !MaskTy->getElementType()->isIntegerTy(32) ||
-      MaskTy->isScalable() != V1->getType()->getVectorIsScalable())
+      isa<ScalableVectorType>(MaskTy) != isa<ScalableVectorType>(V1->getType()))
     return false;
 
   // Check to see if Mask is valid.
@@ -1994,7 +1984,7 @@ bool ShuffleVectorInst::isValidOperands(const Value *V1, const Value *V2,
 
 void ShuffleVectorInst::getShuffleMask(const Constant *Mask,
                                        SmallVectorImpl<int> &Result) {
-  unsigned NumElts = Mask->getType()->getVectorElementCount().Min;
+  unsigned NumElts = cast<VectorType>(Mask->getType())->getElementCount().Min;
   if (isa<ConstantAggregateZero>(Mask)) {
     Result.resize(NumElts, 0);
     return;
@@ -2019,7 +2009,7 @@ void ShuffleVectorInst::setShuffleMask(ArrayRef<int> Mask) {
 Constant *ShuffleVectorInst::convertShuffleMaskForBitcode(ArrayRef<int> Mask,
                                                           Type *ResultTy) {
   Type *Int32Ty = Type::getInt32Ty(ResultTy->getContext());
-  if (ResultTy->getVectorIsScalable()) {
+  if (isa<ScalableVectorType>(ResultTy)) {
     assert(is_splat(Mask) && "Unexpected shuffle");
     Type *VecTy = VectorType::get(Int32Ty, Mask.size(), true);
     if (Mask[0] == 0)
@@ -2179,8 +2169,8 @@ bool ShuffleVectorInst::isExtractSubvectorMask(ArrayRef<int> Mask,
 }
 
 bool ShuffleVectorInst::isIdentityWithPadding() const {
-  int NumOpElts = Op<0>()->getType()->getVectorNumElements();
-  int NumMaskElts = getType()->getVectorNumElements();
+  int NumOpElts = cast<VectorType>(Op<0>()->getType())->getNumElements();
+  int NumMaskElts = cast<VectorType>(getType())->getNumElements();
   if (NumMaskElts <= NumOpElts)
     return false;
 
@@ -2198,8 +2188,8 @@ bool ShuffleVectorInst::isIdentityWithPadding() const {
 }
 
 bool ShuffleVectorInst::isIdentityWithExtract() const {
-  int NumOpElts = Op<0>()->getType()->getVectorNumElements();
-  int NumMaskElts = getType()->getVectorNumElements();
+  int NumOpElts = cast<VectorType>(Op<0>()->getType())->getNumElements();
+  int NumMaskElts = getType()->getNumElements();
   if (NumMaskElts >= NumOpElts)
     return false;
 
@@ -2211,8 +2201,8 @@ bool ShuffleVectorInst::isConcat() const {
   if (isa<UndefValue>(Op<0>()) || isa<UndefValue>(Op<1>()))
     return false;
 
-  int NumOpElts = Op<0>()->getType()->getVectorNumElements();
-  int NumMaskElts = getType()->getVectorNumElements();
+  int NumOpElts = cast<VectorType>(Op<0>()->getType())->getNumElements();
+  int NumMaskElts = getType()->getNumElements();
   if (NumMaskElts != NumOpElts * 2)
     return false;
 
@@ -2980,7 +2970,8 @@ CastInst *CastInst::CreatePointerCast(Value *S, Type *Ty,
          "Invalid cast");
   assert(Ty->isVectorTy() == S->getType()->isVectorTy() && "Invalid cast");
   assert((!Ty->isVectorTy() ||
-          Ty->getVectorNumElements() == S->getType()->getVectorNumElements()) &&
+          cast<VectorType>(Ty)->getNumElements() ==
+              cast<VectorType>(S->getType())->getNumElements()) &&
          "Invalid cast");
 
   if (Ty->isIntOrIntVectorTy())
@@ -2998,7 +2989,8 @@ CastInst *CastInst::CreatePointerCast(Value *S, Type *Ty,
          "Invalid cast");
   assert(Ty->isVectorTy() == S->getType()->isVectorTy() && "Invalid cast");
   assert((!Ty->isVectorTy() ||
-          Ty->getVectorNumElements() == S->getType()->getVectorNumElements()) &&
+          cast<VectorType>(Ty)->getNumElements() ==
+              cast<VectorType>(S->getType())->getNumElements()) &&
          "Invalid cast");
 
   if (Ty->isIntOrIntVectorTy())

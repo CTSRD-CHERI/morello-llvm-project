@@ -127,12 +127,12 @@ namespace libunwind {
 //   __eh_frame_hdr_start = SIZEOF(.eh_frame_hdr) > 0 ? ADDR(.eh_frame_hdr) : 0;
 //   __eh_frame_hdr_end = SIZEOF(.eh_frame_hdr) > 0 ? . : 0;
 
-extern char __eh_frame_start;
-extern char __eh_frame_end;
+extern char __eh_frame_start __attribute__((weak));
+extern char __eh_frame_end __attribute__((weak));
 
 #if defined(_LIBUNWIND_SUPPORT_DWARF_INDEX)
-extern char __eh_frame_hdr_start;
-extern char __eh_frame_hdr_end;
+extern char __eh_frame_hdr_start __attribute__((weak));
+extern char __eh_frame_hdr_end __attribute__((weak));
 #endif
 
 #elif defined(_LIBUNWIND_ARM_EHABI) && defined(_LIBUNWIND_IS_BAREMETAL)
@@ -185,7 +185,7 @@ private:
   uintptr_t       __dwarf_index_section;
 public:
   void set_dwarf_index_section(uintptr_t value) {
-      __dwarf_index_section = assert_pointer_in_bounds(value);
+      __dwarf_index_section = value ? assert_pointer_in_bounds(value) : 0;
   }
   uintptr_t dwarf_index_section() const { return __dwarf_index_section; }
   size_t    dwarf_index_section_length;
@@ -247,14 +247,6 @@ public:
     LocalProgramCounter(uint64_t) = delete;
     LocalProgramCounter(int64_t) = delete;
 #endif
-    bool isImmutable() const {
-#ifdef __CHERI_PURE_CAPABILITY__
-      return (uint64_t)__builtin_cheri_type_get((void *)value) !=
-             UINT64_MAX; // -1 is unsealed
-#else
-      return false;
-#endif
-    }
     LocalProgramCounter assertInBounds(addr_t addr) const {
 #ifdef __CHERI_PURE_CAPABILITY__
       if (!__builtin_cheri_tag_get(value)) {
@@ -271,13 +263,10 @@ public:
                              "value " _LIBUNWIND_FMT_PTR,
                              (uintmax_t)addr, value);
       }
-      if (isImmutable()) {
-        // For sentries we have to modify the addend instead of creating a new
-        // capability from value.
-        return LocalProgramCounter(value, addr - address());
-      } else {
-        return LocalProgramCounter(__builtin_cheri_address_set(value, addr), 0);
-      }
+      // For sentries we have to modify the addend instead of creating a new
+      // capability from value.
+      uint64_t new_addend = addr - (ptraddr_t)(uintptr_t)value;
+      return LocalProgramCounter(value, new_addend);
 #else
       return LocalProgramCounter(addr);
 #endif
@@ -298,17 +287,14 @@ public:
     ImmutablePointer *get() const { return (ImmutablePointer *)value; }
     addr_t address() const {
 #ifdef __CHERI_PURE_CAPABILITY__
-      return __builtin_cheri_address_get(value) + addend;
+      return (ptraddr_t)(uintptr_t)value + addend;
 #else
       return (addr_t)(uintptr_t)value;
 #endif
     }
     LocalProgramCounter &operator--() {
 #ifdef __CHERI_PURE_CAPABILITY__
-      if (isImmutable()) {
-        addend--;
-        return *this;
-      }
+      addend--;
 #else
       value = (void *)((uintptr_t)value - 1);
 #endif
@@ -316,11 +302,8 @@ public:
     }
     LocalProgramCounter &operator&=(addr_t a) {
 #ifdef __CHERI_PURE_CAPABILITY__
-      if (isImmutable()) {
-        addr_t new_addr = address() & a;
-        addend = new_addr - address();
-        return *this;
-      }
+      addr_t new_addr = address() & a;
+      addend = new_addr - (ptraddr_t)(uintptr_t)value;
 #else
       value = (void *)((uintptr_t)value & a);
 #endif
@@ -497,9 +480,14 @@ constexpr int check_same_type() {
   return 0;
 }
 
-#ifdef __CHERI_PURE_CAPABILITY__
+#if defined(__CHERI_PURE_CAPABILITY__)
+#if defined(_LIBUNWIND_IS_BAREMETAL)
+extern "C" uintcap_t __get_eh_frame_capability();
+extern "C" uintcap_t __get_eh_frame_hdr_capability();
+#else
 __attribute__((weak)) extern "C" ElfW(Dyn) _DYNAMIC[];
 // #pragma weak _DYNAMIC
+#endif
 #endif
 
 inline LocalAddressSpace::pint_t
@@ -884,14 +872,29 @@ inline bool LocalAddressSpace::findUnwindSections(pc_t targetAddr,
 #elif defined(_LIBUNWIND_SUPPORT_DWARF_UNWIND) && defined(_LIBUNWIND_IS_BAREMETAL)
   // Bare metal is statically linked, so no need to ask the dynamic loader
   info.dwarf_section_length = (uintptr_t)(&__eh_frame_end - &__eh_frame_start);
-  info.dwarf_section =        (uintptr_t)(&__eh_frame_start);
+  info.dso_base = 0;
+  uintptr_t ds;
+#if !defined(__CHERI_PURE_CAPABILITY__)
+  ds = (uintptr_t)(&__eh_frame_start);
+#else
+  ds = __get_eh_frame_capability();
+  ds = ds + ((addr_t)&__eh_frame_start - (addr_t)ds);
+#endif
+  info.set_dwarf_section(ds);
   _LIBUNWIND_TRACE_UNWINDING("findUnwindSections: section %p length %p",
-                             (void *)info.dwarf_section, (void *)info.dwarf_section_length);
+                             (void *)info.dwarf_section(), (void *)info.dwarf_section_length);
 #if defined(_LIBUNWIND_SUPPORT_DWARF_INDEX)
-  info.dwarf_index_section =        (uintptr_t)(&__eh_frame_hdr_start);
+  uintptr_t dhs;
+#if !defined(__CHERI_PURE_CAPABILITY__)
+  dhs = (uintptr_t)(&__eh_frame_hdr_start);
+#else
+  dhs = __get_eh_frame_hdr_capability();
+  dhs = dhs + ((addr_t)&__eh_frame_hdr_start - (addr_t)dhs);
+#endif
+  info.set_dwarf_index_section(dhs);
   info.dwarf_index_section_length = (uintptr_t)(&__eh_frame_hdr_end - &__eh_frame_hdr_start);
   _LIBUNWIND_TRACE_UNWINDING("findUnwindSections: index section %p length %p",
-                             (void *)info.dwarf_index_section, (void *)info.dwarf_index_section_length);
+                             (void *)info.dwarf_index_section(), (void *)info.dwarf_index_section_length);
 #endif
   if (info.dwarf_section_length)
     return true;
@@ -996,7 +999,7 @@ inline bool LocalAddressSpace::findFunctionName(pc_t ip, char *buf,
     }
   }
 #else
-  (void)addr;
+  (void)ip;
   (void)buf;
   (void)bufLen;
   (void)offset;

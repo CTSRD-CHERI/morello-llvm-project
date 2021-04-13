@@ -2,6 +2,8 @@
 // This was not the case on CheriBSD
 // We need to explicitly link with -pthreads:
 // LINK_PTHREADS_LIBRARY.
+// UNSUPPORTED: libunwind-no-threads
+
 #include <dlfcn.h>
 #include <err.h>
 #include <pthread.h>

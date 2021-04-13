@@ -1,4 +1,4 @@
-RUN: llvm-cxxfilt _Z20fooCapabilityPointerQPi _Z22fooCapabilityReferenceQRi _Z28fooCapabilityRValueReferenceQOi | FileCheck %s
+RUN: llvm-cxxfilt -n _Z20fooCapabilityPointerQPi _Z22fooCapabilityReferenceQRi _Z28fooCapabilityRValueReferenceQOi | FileCheck %s
 
 CHECK: fooCapabilityPointer(int* __capability)
 CHECK-NEXT: fooCapabilityReference(int& __capability)

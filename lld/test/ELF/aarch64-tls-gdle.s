@@ -6,7 +6,7 @@
 # RUN: llvm-readobj -r %tout | FileCheck -check-prefix=RELOC %s
 
 # RUN: ld.lld --morello-c64-plt %tmain.o %ttlsie.o -o %tout2 2>&1 | FileCheck --check-prefix=WARN %s
-# RUN: llvm-objdump -d --no-show-raw-insn %tout2 | FileCheck %s
+# RUN: llvm-objdump -d --no-show-raw-insn %tout2 | FileCheck %s --check-prefix=C64
 # RUN: llvm-readobj -r %tout2 | FileCheck -check-prefix=RELOC %s
 
 ## Local-Dynamic to Local-Exec relax creates no dynamic relocations.
@@ -19,6 +19,13 @@
 # CHECK-NEXT:    2101cc: movk    x0, #16
 # CHECK-NEXT:    2101d0: nop
 # CHECK-NEXT:    2101d4: nop
+
+# In purecap the DTV pointer and TCB are 16 bytes.
+# C64-LABEL: <_start>:
+# C64-NEXT:    2101c8: movz    x0, #0, lsl #16
+# C64-NEXT:    2101cc: movk    x0, #32
+# C64-NEXT:    2101d0: nop
+# C64-NEXT:    2101d4: nop
 
 # WARN: warning: AArch64 TLS GD to LE relaxation detected but --morello-c64-plt set
 

@@ -163,6 +163,8 @@ EmulateInstructionARM64::CreateInstance(const ArchSpec &arch,
           inst_type)) {
     if (arch.GetTriple().getArch() == llvm::Triple::aarch64 ||
         arch.GetTriple().getArch() == llvm::Triple::aarch64_32) {
+      MarkAsFP(g_register_infos_arm64_le[gpr_x29], /*isCapability=*/false);
+      MarkAsFP(g_register_infos_arm64_le[cap_c29], /*isCapability=*/true);
       return new EmulateInstructionARM64(arch);
     }
   }
@@ -194,7 +196,7 @@ bool EmulateInstructionARM64::GetRegisterInfo(RegisterKind reg_kind,
       break;
     case LLDB_REGNUM_GENERIC_FP:
       reg_kind = eRegisterKindLLDB;
-      reg_num = gpr_fp_arm64;
+      reg_num = gpr_x29_arm64;
       break;
     case LLDB_REGNUM_GENERIC_RA:
       reg_kind = eRegisterKindLLDB;
@@ -458,20 +460,12 @@ bool EmulateInstructionARM64::EvaluateInstruction(uint32_t evaluate_options) {
   if (opcode_data == nullptr)
     return false;
 
-  // printf ("opcode template for 0x%8.8x: %s\n", opcode, opcode_data->name);
   const bool auto_advance_pc =
       evaluate_options & eEmulateInstructionOptionAutoAdvancePC;
   m_ignore_conditions =
       evaluate_options & eEmulateInstructionOptionIgnoreConditions;
 
   bool success = false;
-  //    if (m_opcode_cpsr == 0 || m_ignore_conditions == false)
-  //    {
-  //        m_opcode_cpsr = ReadRegisterUnsigned (eRegisterKindLLDB,
-  //                                              gpr_cpsr_arm64,
-  //                                              0,
-  //                                              &success);
-  //    }
 
   // Only return false if we are unable to read the CPSR if we care about
   // conditions
@@ -532,7 +526,7 @@ uint32_t EmulateInstructionARM64::GetFramePointerRegisterNumber() const {
   if (m_arch.GetTriple().isAndroid())
     return LLDB_INVALID_REGNUM; // Don't use frame pointer on android
 
-  return gpr_fp_arm64;
+  return gpr_x29_arm64;
 }
 
 bool EmulateInstructionARM64::UsingAArch32() {
@@ -826,10 +820,6 @@ bool EmulateInstructionARM64::EmulateLDPSTP(const uint32_t opcode) {
 
   RegisterValue data_Rt;
   RegisterValue data_Rt2;
-
-  //    if (vector)
-  //        CheckFPEnabled(false);
-
   RegisterInfo reg_info_base;
   RegisterInfo reg_info_Rt;
   RegisterInfo reg_info_Rt2;

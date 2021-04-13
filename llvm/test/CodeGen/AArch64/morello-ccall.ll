@@ -1,5 +1,5 @@
-; RUN: llc -march=arm64 -mattr=+morello,+c64  -target-abi purecap -o - %s | FileCheck --check-prefix=CHECK --check-prefix=C64 %s
-; RUN: llc -march=arm64 -mattr=+morello -o - %s | FileCheck --check-prefix=CHECK --check-prefix=A64 %s
+; RUN: llc -mtriple=arm64 -mattr=+morello,+c64  -target-abi purecap -o - %s | FileCheck --check-prefix=CHECK --check-prefix=C64 %s
+; RUN: llc -mtriple=arm64 -mattr=+morello -o - %s | FileCheck --check-prefix=CHECK --check-prefix=A64 %s
 
 define chericcallcc i32 @bar(i8 addrspace(200) * %ddc,  i8 addrspace(200) * %pcc, i32 %num, i32 %a, i32 %b, i32 %c) {
 ; CHECK-LABEL:bar:

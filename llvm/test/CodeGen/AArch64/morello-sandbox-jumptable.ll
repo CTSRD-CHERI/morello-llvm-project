@@ -1,7 +1,7 @@
-; RUN: llc -march=arm64 -mattr=+c64,+morello -target-abi purecap -relocation-model=pic -o - %s | FileCheck %s
-; RUN: llc -march=arm64 -mattr=+c64,+morello -target-abi purecap  -o - %s | FileCheck %s
+; RUN: llc -mtriple=arm64 -mattr=+c64,+morello -target-abi purecap -relocation-model=pic -o - %s | FileCheck %s
+; RUN: llc -mtriple=arm64 -mattr=+c64,+morello -target-abi purecap  -o - %s | FileCheck %s
 
-; RUN: llc -march=arm64 -mattr=+c64,+morello -o - -relocation-model=pic -filetype=obj -target-abi purecap %s | \
+; RUN: llc -mtriple=arm64 -mattr=+c64,+morello -o - -relocation-model=pic -filetype=obj -target-abi purecap %s | \
 ; RUN: llvm-readobj -r | FileCheck %s --check-prefix=c64-relocs
 
 ; CHECK-LABEL: jumpfun

@@ -67,7 +67,7 @@ foo:
 // CHECK-NEXT:     ]
 // CHECK-NEXT:     Address: 0x2202A0
 // CHECK-NEXT:     Offset: 0x2A0
-// CHECK-NEXT:     Size: 352
+// CHECK-NEXT:     Size: 96
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
 // CHECK-NEXT:     AddressAlignment: 16
@@ -80,12 +80,12 @@ foo:
 // CHECK-NEXT:     Location: 0x2202A0
 // CHECK-NEXT:     Base: bar (0x200200)
 // CHECK-NEXT:     Offset: 65545
-// CHECK-NEXT:     Length: 131584
+// CHECK-NEXT:     Length: 131328
 // CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Location: 0x2202B0
-// CHECK-NEXT:     Base: foo (0x230400)
+// CHECK-NEXT:     Base: foo (0x230300)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 8
 // CHECK-NEXT:     Permissions: (RWDATA) (0x8FBE)

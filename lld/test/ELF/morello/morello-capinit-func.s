@@ -102,7 +102,7 @@ bss:
 // CHECK-NEXT:     ]
 // CHECK-NEXT:     Address: 0x230000
 // CHECK-NEXT:     Offset: 0x20000
-// CHECK-NEXT:     Size: 512
+// CHECK-NEXT:     Size: 64
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
 // CHECK-NEXT:     AddressAlignment: 65536
@@ -116,8 +116,8 @@ bss:
 // CHECK-NEXT:       SHF_ALLOC (0x2)
 // CHECK-NEXT:       SHF_WRITE (0x1)
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x240200
-// CHECK-NEXT:     Offset: 0x20200
+// CHECK-NEXT:     Address: 0x240040
+// CHECK-NEXT:     Offset: 0x20040
 // CHECK-NEXT:     Size: 96
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
@@ -132,8 +132,8 @@ bss:
 // CHECK-NEXT:       SHF_ALLOC (0x2)
 // CHECK-NEXT:       SHF_WRITE (0x1)
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x240260
-// CHECK-NEXT:     Offset: 0x20260
+// CHECK-NEXT:     Address: 0x2400A0
+// CHECK-NEXT:     Offset: 0x200A0
 // CHECK-NEXT:     Size: 240
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
@@ -176,42 +176,42 @@ bss:
 
 // CHECK: CHERI __cap_relocs [
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x240200
+// CHECK-NEXT:     Location: 0x240040
 // CHECK-NEXT:     Base: ro (0x210000)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 4
 // CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x240210
+// CHECK-NEXT:     Location: 0x240050
 // CHECK-NEXT:     Base: ro2 (0x210004)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 4
 // CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x240220
+// CHECK-NEXT:     Location: 0x240060
 // CHECK-NEXT:     Base: ro (0x210000)
 // CHECK-NEXT:     Offset: 131073
-// CHECK-NEXT:     Length: 131584
+// CHECK-NEXT:     Length: 131136
 // CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x240230
+// CHECK-NEXT:     Location: 0x240070
 // CHECK-NEXT:     Base: ro (0x210000)
 // CHECK-NEXT:     Offset: 131077
-// CHECK-NEXT:     Length: 131584
+// CHECK-NEXT:     Length: 131136
 // CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x240240
+// CHECK-NEXT:     Location: 0x240080
 // CHECK-NEXT:     Base: rw (0x260000)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 4
 // CHECK-NEXT:     Permissions: (RWDATA) (0x8FBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x240250
+// CHECK-NEXT:     Location: 0x240090
 // CHECK-NEXT:     Base: bss (0x260004)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 4
@@ -231,42 +231,42 @@ bss:
 
 // CHECK-SCRIPT: CHERI __cap_relocs [
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220100
+// CHECK-SCRIPT-NEXT:     Location: 0x220020
 // CHECK-SCRIPT-NEXT:     Base: ro (0x220000)
 // CHECK-SCRIPT-NEXT:     Offset: 0
 // CHECK-SCRIPT-NEXT:     Length: 4
 // CHECK-SCRIPT-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220110
+// CHECK-SCRIPT-NEXT:     Location: 0x220030
 // CHECK-SCRIPT-NEXT:     Base: ro2 (0x220004)
 // CHECK-SCRIPT-NEXT:     Offset: 0
 // CHECK-SCRIPT-NEXT:     Length: 4
 // CHECK-SCRIPT-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220120
+// CHECK-SCRIPT-NEXT:     Location: 0x220040
 // CHECK-SCRIPT-NEXT:     Base: $c.1 (0x210000)
 // CHECK-SCRIPT-NEXT:     Offset: 1
-// CHECK-SCRIPT-NEXT:     Length: 65792
+// CHECK-SCRIPT-NEXT:     Length: 65568
 // CHECK-SCRIPT-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220130
+// CHECK-SCRIPT-NEXT:     Location: 0x220050
 // CHECK-SCRIPT-NEXT:     Base: $c.1 (0x210000)
 // CHECK-SCRIPT-NEXT:     Offset: 5
-// CHECK-SCRIPT-NEXT:     Length: 65792
+// CHECK-SCRIPT-NEXT:     Length: 65568
 // CHECK-SCRIPT-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220140
+// CHECK-SCRIPT-NEXT:     Location: 0x220060
 // CHECK-SCRIPT-NEXT:     Base: rw (0x230000)
 // CHECK-SCRIPT-NEXT:     Offset: 0
 // CHECK-SCRIPT-NEXT:     Length: 4
 // CHECK-SCRIPT-NEXT:     Permissions: (RWDATA) (0x8FBE)
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220150
+// CHECK-SCRIPT-NEXT:     Location: 0x220070
 // CHECK-SCRIPT-NEXT:     Base: bss (0x230004)
 // CHECK-SCRIPT-NEXT:     Offset: 0
 // CHECK-SCRIPT-NEXT:     Length: 4

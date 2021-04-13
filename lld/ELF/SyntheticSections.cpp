@@ -538,6 +538,10 @@ void EhFrameSection::finalizeContents() {
   off += 4;
 
   this->size = off;
+
+  if (auto *r = symtab->find("__eh_frame_end"))
+    if (auto *d = dyn_cast<Defined>(r))
+      d->value = this->outSecOff + this->getSize();
 }
 
 // Returns data for .eh_frame_hdr. .eh_frame_hdr is a binary search table
@@ -3105,6 +3109,12 @@ bool EhFrameHeader::isNeeded() const {
   return isLive() && getPartition().ehFrame->isNeeded();
 }
 
+void EhFrameHeader::finalizeContents() {
+  if (auto *r = symtab->find("__eh_frame_hdr_end"))
+    if (auto *d = dyn_cast<Defined>(r))
+      d->value = this->outSecOff + this->getSize();
+}
+
 VersionDefinitionSection::VersionDefinitionSection()
     : SyntheticSection(SHF_ALLOC, SHT_GNU_verdef, sizeof(uint32_t),
                        ".gnu.version_d") {}
@@ -3423,8 +3433,13 @@ static bool isValidExidxSectionDep(InputSection *isec) {
 bool ARMExidxSyntheticSection::addSection(InputSection *isec) {
   if (isec->type == SHT_ARM_EXIDX) {
     if (InputSection *dep = isec->getLinkOrderDep())
-      if (isValidExidxSectionDep(dep))
+      if (isValidExidxSectionDep(dep)) {
         exidxSections.push_back(isec);
+        // Every exidxSection is 8 bytes, we need an estimate of
+        // size before assignAddresses can be called. Final size
+        // will only be known after finalize is called.
+        size += 8;
+      }
     return true;
   }
 
@@ -3510,14 +3525,14 @@ void ARMExidxSyntheticSection::finalizeContents() {
 
   // Sort the executable sections that may or may not have associated
   // .ARM.exidx sections by order of ascending address. This requires the
-  // relative positions of InputSections to be known.
+  // relative positions of InputSections and OutputSections to be known.
   auto compareByFilePosition = [](const InputSection *a,
                                   const InputSection *b) {
     OutputSection *aOut = a->getParent();
     OutputSection *bOut = b->getParent();
 
     if (aOut != bOut)
-      return aOut->sectionIndex < bOut->sectionIndex;
+      return aOut->addr < bOut->addr;
     return a->outSecOff < b->outSecOff;
   };
   llvm::stable_sort(executableSections, compareByFilePosition);

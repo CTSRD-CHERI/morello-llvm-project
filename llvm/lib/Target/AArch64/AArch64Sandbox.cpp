@@ -418,10 +418,12 @@ public:
 
     LLVMContext &C = M->getContext();
 
-    Intrinsic::ID SetLength = Intrinsic::cheri_cap_bounds_set_exact;
+    Intrinsic::ID SetLengthExact = Intrinsic::cheri_cap_bounds_set_exact;
+    Intrinsic::ID SetLengthInexact = Intrinsic::cheri_cap_bounds_set;
     Type *SizeTy = Type::getIntNTy(M->getContext(),
                                    DL.getIndexSizeInBits(200));
-    Function *SetLenFun = Intrinsic::getDeclaration(M, SetLength, SizeTy);
+    Function *SetLenExFun = Intrinsic::getDeclaration(M, SetLengthExact, SizeTy);
+    Function *SetLenInexFun = Intrinsic::getDeclaration(M, SetLengthInexact, SizeTy);
 
     IRBuilder<> B(C);
     AllocaInfoMap AllocaInfo;
@@ -435,6 +437,8 @@ public:
       PointerType *AllocaTy = AI->getType();
       Type *AllocationTy = AllocaTy->getElementType();
       AllocaInst *Alloca = nullptr;
+      Instruction *CastAlloca;
+      Function *SetLenFun;
       uint64_t ElementSize = DL.getTypeAllocSize(AllocationTy);
       Value *ASz = AI->isArrayAllocation() ? AI->getArraySize() :
           ASz = ConstantInt::get(Type::getInt64Ty(C), 1);
@@ -459,14 +463,7 @@ public:
           Alloca = B.CreateAlloca(Type::getInt8Ty(C), ASz);
           Alloca->setAlignment(Alignment);
         }
-      } else {
-        // This case is handled in the backend.
-        VariableBounds++;
-        continue;
-      }
 
-      Instruction *OldAlloca = AI;
-      if (Alloca) {
         if (AllocaInfo.find(AI) != AllocaInfo.end()) {
           AllocaInfo[Alloca] = AllocaInfo[AI];
           AllocaInfo.erase(AI);
@@ -477,29 +474,43 @@ public:
                             AI->getType());
         AI->replaceAllUsesWith(NAlloca);
         AI->eraseFromParent();
-        OldAlloca = cast<Instruction>(NAlloca);
+        CastAlloca = cast<Instruction>(NAlloca);
+        SetLenFun = SetLenExFun;
+      } else {
+        VariableBounds++;
+        Alloca = AI;
+        CastAlloca = AI;
+        // ExpandDYNAMIC_ALLOCA will pad to stack alignment (16), round that to
+        // a representable length and set bounds on the whole allocation,
+        // meaning it doesn't suitably bound small allocations. Thus we need to
+        // set the bounds here (and we use an inexact set bounds since that
+        // automatically rounds to a representable length and we don't need to
+        // use the actual length).
+        SetLenFun = SetLenInexFun;
       }
 
       SmallVector<Instruction *, 4> Users;
-      auto IT = getAllocaUsers(OldAlloca, Users);
+      auto IT = getAllocaUsers(CastAlloca, Users);
       B.SetInsertPoint(IT->getParent(), IT);
 
       assert(Alloca->getType()->getPointerAddressSpace() == 200);
       Value *Size = ConstantInt::get(Type::getInt64Ty(C), ElementSize);
       Size = B.CreateMul(Size, ASz);
 
-      auto *Const = cast<ConstantInt>(Size);
-      if (Const->getLimitedValue() <= LowBinThreshold)
-        LowBounds++;
-      else
-        HighBounds++;
+      if (Alloca->isStaticAlloca()) {
+        auto *Const = cast<ConstantInt>(Size);
+        if (Const->getLimitedValue() <= LowBinThreshold)
+          LowBounds++;
+        else
+          HighBounds++;
+      }
 
-      Value *NAlloca = B.CreateBitCast(OldAlloca,
+      Value *NAlloca = B.CreateBitCast(CastAlloca,
                                SetLenFun->getFunctionType()->getParamType(0));
       Value *SetLenInst = B.CreateCall(SetLenFun, {NAlloca, Size});
       SetLenInst = B.CreateBitCast(SetLenInst, AllocaTy);
       for (Instruction *Inst : Users)
-        Inst->replaceUsesOfWith(OldAlloca, SetLenInst);
+        Inst->replaceUsesOfWith(CastAlloca, SetLenInst);
 
       // The set lenght instruction might be removed by the dead code
       // elimination so track it.

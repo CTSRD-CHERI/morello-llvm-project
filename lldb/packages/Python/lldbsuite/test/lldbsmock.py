@@ -84,10 +84,8 @@ def setup_morello(remote):
             Register('pc', offset=256, value=rv[33], generic='pc', **gpr_desc)] +
             # Capability registers (cN)
             [Register('c{}'.format(N), offset=264 + N * 17, value=rv[N],
-                gcc=198 + N, dwarf=198 + N, **cap_desc) for N in range(29)] +
-            [Register('c29', offset=757, value=rv[29], gcc=227, dwarf=227,
-                alt_name='cfp', generic='cfp', **cap_desc),
-            Register('c30', offset=774, value=rv[30], gcc=228, dwarf=228,
+                gcc=198 + N, dwarf=198 + N, **cap_desc) for N in range(30)] +
+            [Register('c30', offset=774, value=rv[30], gcc=228, dwarf=228,
                 alt_name='clr', generic='rac', **cap_desc),
             Register('csp', offset=791, value=csp_res, gcc=229, dwarf=229,
                 generic='csp', **cap_desc),

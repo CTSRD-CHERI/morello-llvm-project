@@ -1,4 +1,4 @@
-; RUN: llc -march=arm64 < %s -mattr=+c64,+morello -target-abi purecap | FileCheck %s
+; RUN: llc -mtriple=arm64 < %s -mattr=+c64,+morello -target-abi purecap | FileCheck %s
 
 @object = external hidden global i64, align 8
 @object1 = addrspace(200) global i64 zeroinitializer

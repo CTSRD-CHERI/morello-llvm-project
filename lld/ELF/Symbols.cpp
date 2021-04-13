@@ -16,6 +16,7 @@
 #include "lld/Common/ErrorHandler.h"
 #include "lld/Common/Strings.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
 #include <cstring>
 
@@ -280,9 +281,9 @@ uint64_t Symbol::getPltVA() const {
   return outVA;
 }
 
-uint64_t Symbol::getSize() const {
+uint64_t Symbol::getSize(bool forCheriCap) const {
   if (const auto *dr = dyn_cast<Defined>(this)) {
-    if (config->isCheriABI() && dr->isSectionStartSymbol) {
+    if ((config->isCheriABI() || forCheriCap) && dr->isSectionStartSymbol) {
       assert(dr->value == 0 && "Bad section start symbol?");
       if (!dr->section)
         return 0; // Section is not included in the output
@@ -637,6 +638,17 @@ void Symbol::resolveUndefined(const Undefined &other) {
     // group assignment rule simulates the traditional linker's semantics.
     bool backref = config->warnBackrefs && other.file &&
                    file->groupId < other.file->groupId;
+    if (backref) {
+      // Some libraries have known problems and can cause noise. Filter them out
+      // with --warn-backrefs-exclude=.
+      StringRef name =
+          !file->archiveName.empty() ? file->archiveName : file->getName();
+      for (const llvm::GlobPattern &pat : config->warnBackrefsExclude)
+        if (pat.match(name)) {
+          backref = false;
+          break;
+        }
+    }
     fetch();
 
     // We don't report backward references to weak symbols as they can be

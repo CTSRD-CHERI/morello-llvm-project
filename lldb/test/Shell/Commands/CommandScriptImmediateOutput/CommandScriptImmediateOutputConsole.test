@@ -1,7 +1,6 @@
 # Test that LLDB correctly allows scripted commands to set immediate output to
 # the console.
 
-# UNSUPPORTED: linux
 # RUN: %lldb -s %s \
 # RUN:  -o 'command script import %S/Inputs/custom_command.py' \
 # RUN:  -o 'command script add -f custom_command.command_function mycommand' \

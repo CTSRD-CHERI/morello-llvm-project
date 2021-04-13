@@ -430,6 +430,9 @@ def FPR8  : RegisterClass<"AArch64", [untyped], 8, (sequence "B%u", 0, 31)> {
 def FPR16 : RegisterClass<"AArch64", [f16], 16, (sequence "H%u", 0, 31)> {
   let Size = 16;
 }
+def FPR16_lo : RegisterClass<"AArch64", [f16], 16, (trunc FPR16, 16)> {
+  let Size = 16;
+}
 def FPR32 : RegisterClass<"AArch64", [f32, i32], 32,(sequence "S%u", 0, 31)>;
 def FPR64 : RegisterClass<"AArch64", [f64, i64, v2f32, v1f64, v8i8, v4i16, v2i32,
                                     v1i64, v4f16],
@@ -653,6 +656,10 @@ def FPR16Op  : RegisterOperand<FPR16, "printOperand"> {
   let ParserMatchClass = FPRAsmOperand<"FPR16">;
 }
 
+def FPR16Op_lo  : RegisterOperand<FPR16_lo, "printOperand"> {
+  let ParserMatchClass = FPRAsmOperand<"FPR16_lo">;
+}
+
 def FPR32Op  : RegisterOperand<FPR32, "printOperand"> {
   let ParserMatchClass = FPRAsmOperand<"FPR32">;
 }
@@ -673,20 +680,20 @@ def WSeqPairs : RegisterTuples<[sube32, subo32],
 def XSeqPairs : RegisterTuples<[sube64, subo64],
                                [(rotl GPR64, 0), (rotl GPR64, 1)]>;
 
-def WSeqPairsClass   : RegisterClass<"AArch64", [untyped], 32, 
+def WSeqPairsClass   : RegisterClass<"AArch64", [untyped], 32,
                                      (decimate WSeqPairs, 2)>{
   let Size = 64;
 }
-def WSeqPairsAllClass   : RegisterClass<"AArch64", [untyped], 32, 
+def WSeqPairsAllClass   : RegisterClass<"AArch64", [untyped], 32,
                                         (add WSeqPairs)>{
   let Size = 64;
 }
 
-def XSeqPairsClass   : RegisterClass<"AArch64", [untyped], 64, 
+def XSeqPairsClass   : RegisterClass<"AArch64", [untyped], 64,
                                      (decimate XSeqPairs, 2)>{
   let Size = 128;
 }
-def XSeqPairsAllClass   : RegisterClass<"AArch64", [untyped], 64, 
+def XSeqPairsAllClass   : RegisterClass<"AArch64", [untyped], 64,
                                         (add XSeqPairs)>{
   let Size = 128;
 }
@@ -876,7 +883,7 @@ def Z30   : AArch64Reg<30, "z30", [Q30, Z30_HI]>, DwarfRegNum<[126]>;
 def Z31   : AArch64Reg<31, "z31", [Q31, Z31_HI]>, DwarfRegNum<[127]>;
 }
 
-// Enum descibing the element size for destructive
+// Enum describing the element size for destructive
 // operations.
 class ElementSizeEnum<bits<3> val> {
   bits<3> Value = val;

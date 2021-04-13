@@ -293,7 +293,7 @@ readEncodedPointer(const uint8_t** data, uint8_t encoding)
         break;
     case DW_EH_PE_pcrel:
         if (result)
-            result += (uintptr_t)(*data);
+            result = (uintptr_t)(*data) + result;
         break;
     case DW_EH_PE_textrel:
     case DW_EH_PE_datarel:
@@ -612,7 +612,13 @@ static void scan_eh_tab(scan_results &results, _Unwind_Action actions,
     results.languageSpecificData = lsda;
     // Get the current instruction pointer and offset it before next
     // instruction in the current frame which threw the exception.
-    uintptr_t ip = _Unwind_GetIP(context) - 1;
+    size_t ip = _Unwind_GetIP(context);
+#if defined(__aarch64__) && defined(__CHERI_PURE_CAPABILITY__)
+    // The LSB is not part of the address (it indicates the A64/C64 modes).
+    // Clear it LSB to get the actual address of the instruction
+    ip &= ~1UL;
+#endif
+    ip--;
     // Get beginning current frame's code (as defined by the
     // emitted dwarf code)
     uintptr_t funcStart = _Unwind_GetRegionStart(context);
@@ -666,6 +672,14 @@ static void scan_eh_tab(scan_results &results, _Unwind_Action actions,
         uintptr_t start = readEncodedPointer(&callSitePtr, callSiteEncoding);
         uintptr_t length = readEncodedPointer(&callSitePtr, callSiteEncoding);
         uintptr_t landingPad = readEncodedPointer(&callSitePtr, callSiteEncoding);
+#ifdef __CHERI_PURE_CAPABILITY__
+        if (landingPad != 0) {
+           assert(landingPad == 0xc && "Unexpect capability marker");
+           callSitePtr = __builtin_align_up(callSitePtr, alignof(uintptr_t*));
+           landingPad = *((uintptr_t*)callSitePtr);
+           callSitePtr += sizeof(uintptr_t);
+        }
+#endif
         uintptr_t actionEntry = readULEB128(&callSitePtr);
         if ((start <= ipOffset) && (ipOffset < (start + length)))
 #else  // __USING_SJLJ_EXCEPTIONS__
@@ -683,7 +697,9 @@ static void scan_eh_tab(scan_results &results, _Unwind_Action actions,
                 results.reason = _URC_CONTINUE_UNWIND;
                 return;
             }
+#if !defined(__CHERI_PURE_CAPABILITY__)
             landingPad = (uintptr_t)lpStart + landingPad;
+#endif
 #else  // __USING_SJLJ_EXCEPTIONS__
             ++landingPad;
 #endif  // __USING_SJLJ_EXCEPTIONS__

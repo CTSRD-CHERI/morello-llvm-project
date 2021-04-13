@@ -25,7 +25,7 @@ _start:
 
 // CHECK:      <_start>:
 // CHECK-NEXT: 2101c8: mov	x0, #0xfe0000
-// CHECK-NEXT: 2101cc: movk	x0, #0xed10
+// CHECK-NEXT: 2101cc: movk	x0, #0xed20
 // CHECK-NEXT: 2101d0: mov	x1, #0xbe0000
 // CHECK-NEXT: 2101d4: movk	x1, #0xef00
 // CHECK-NEXT: 2101d8: add	c0, c2, x0, uxtx

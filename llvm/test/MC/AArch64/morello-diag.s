@@ -1,4 +1,4 @@
-// RUN: not llvm-mc -triple arm64 -mattr=+morello -show-encoding < %s |& FileCheck %s
+// RUN: not llvm-mc -triple arm64 -mattr=+morello -show-encoding < %s 2>&1 | FileCheck %s
 
 // CHECK: expected compatible register, symbol or integer in range [0, 4095]
 // CHECK-NEXT:  add c3, c27, #4097

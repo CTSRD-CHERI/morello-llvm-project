@@ -10,3 +10,7 @@ add_lldb_unittest(ScriptInterpreterPythonTests
     Support
     RuntimeDyld
   )
+
+if(PYTHON_RPATH)
+  set_property(TARGET ScriptInterpreterPythonTests APPEND PROPERTY BUILD_RPATH "${PYTHON_RPATH}")
+endif()

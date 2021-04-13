@@ -1102,14 +1102,14 @@ AArch64LoadStoreOpt::mergeNarrowZeroStores(MachineBasicBlock::iterator I,
   assert(isPromotableZeroStoreInst(*I) && isPromotableZeroStoreInst(*MergeMI) &&
          "Expected promotable zero stores.");
 
-  MachineBasicBlock::iterator NextI = I;
-  ++NextI;
+  MachineBasicBlock::iterator E = I->getParent()->end();
+  MachineBasicBlock::iterator NextI = next_nodbg(I, E);
   // If NextI is the second of the two instructions to be merged, we need
   // to skip one further. Either way we merge will invalidate the iterator,
   // and we don't need to scan the new instruction, as it's a pairwise
   // instruction, which we're not considering for further action anyway.
   if (NextI == MergeMI)
-    ++NextI;
+    NextI = next_nodbg(NextI, E);
 
   unsigned Opc = I->getOpcode();
   bool IsScaled = !TII->isUnscaledLdSt(Opc);
@@ -1172,18 +1172,17 @@ static bool forAllMIsUntilDef(MachineInstr &MI, MCPhysReg DefReg,
                               const TargetRegisterInfo *TRI, unsigned Limit,
                               std::function<bool(MachineInstr &, bool)> &Fn) {
   auto MBB = MI.getParent();
-  for (MachineBasicBlock::reverse_iterator I = MI.getReverseIterator(),
-                                           E = MBB->rend();
-       I != E; I++) {
+  for (MachineInstr &I :
+       instructionsWithoutDebug(MI.getReverseIterator(), MBB->instr_rend())) {
     if (!Limit)
       return false;
     --Limit;
 
-    bool isDef = any_of(I->operands(), [DefReg, TRI](MachineOperand &MOP) {
+    bool isDef = any_of(I.operands(), [DefReg, TRI](MachineOperand &MOP) {
       return MOP.isReg() && MOP.isDef() && !MOP.isDebug() && MOP.getReg() &&
              TRI->regsOverlap(MOP.getReg(), DefReg);
     });
-    if (!Fn(*I, isDef))
+    if (!Fn(I, isDef))
       return false;
     if (isDef)
       break;
@@ -1207,14 +1206,14 @@ MachineBasicBlock::iterator
 AArch64LoadStoreOpt::mergePairedInsns(MachineBasicBlock::iterator I,
                                       MachineBasicBlock::iterator Paired,
                                       const LdStPairFlags &Flags) {
-  MachineBasicBlock::iterator NextI = I;
-  ++NextI;
+  MachineBasicBlock::iterator E = I->getParent()->end();
+  MachineBasicBlock::iterator NextI = next_nodbg(I, E);
   // If NextI is the second of the two instructions to be merged, we need
   // to skip one further. Either way we merge will invalidate the iterator,
   // and we don't need to scan the new instruction, as it's a pairwise
   // instruction, which we're not considering for further action anyway.
   if (NextI == Paired)
-    ++NextI;
+    NextI = next_nodbg(NextI, E);
 
   int SExtIdx = Flags.getSExtIdx();
   unsigned Opc =
@@ -1433,8 +1432,8 @@ AArch64LoadStoreOpt::mergePairedInsns(MachineBasicBlock::iterator I,
 MachineBasicBlock::iterator
 AArch64LoadStoreOpt::promoteLoadFromStore(MachineBasicBlock::iterator LoadI,
                                           MachineBasicBlock::iterator StoreI) {
-  MachineBasicBlock::iterator NextI = LoadI;
-  ++NextI;
+  MachineBasicBlock::iterator NextI =
+      next_nodbg(LoadI, LoadI->getParent()->end());
 
   int LoadSize = TII->getMemScale(*LoadI);
   int StoreSize = TII->getMemScale(*StoreI);
@@ -1574,24 +1573,11 @@ static int alignTo(int Num, int PowOf2) {
   return (Num + PowOf2 - 1) & ~(PowOf2 - 1);
 }
 
-static bool mayAlias(MachineInstr &MIa, MachineInstr &MIb,
-                     AliasAnalysis *AA) {
-  // One of the instructions must modify memory.
-  if (!MIa.mayStore() && !MIb.mayStore())
-    return false;
-
-  // Both instructions must be memory operations.
-  if (!MIa.mayLoadOrStore() && !MIb.mayLoadOrStore())
-    return false;
-
-  return MIa.mayAlias(AA, MIb, /*UseTBAA*/false);
-}
-
 static bool mayAlias(MachineInstr &MIa,
                      SmallVectorImpl<MachineInstr *> &MemInsns,
                      AliasAnalysis *AA) {
   for (MachineInstr *MIb : MemInsns)
-    if (mayAlias(MIa, *MIb, AA))
+    if (MIa.mayAlias(AA, *MIb, /*UseTBAA*/ false))
       return true;
 
   return false;
@@ -1617,7 +1603,7 @@ bool AArch64LoadStoreOpt::findMatchingStore(
 
   unsigned Count = 0;
   do {
-    --MBBI;
+    MBBI = prev_nodbg(MBBI, B);
     MachineInstr &MI = *MBBI;
 
     // Don't count transient instructions towards the search limit since there
@@ -1649,7 +1635,7 @@ bool AArch64LoadStoreOpt::findMatchingStore(
       return false;
 
     // If we encounter a store aliased with the load, return early.
-    if (MI.mayStore() && mayAlias(LoadMI, MI, AA))
+    if (MI.mayStore() && LoadMI.mayAlias(AA, MI, /*UseTBAA*/ false))
       return false;
   } while (MBBI != B && Count < Limit);
   return false;
@@ -1869,7 +1855,7 @@ AArch64LoadStoreOpt::findMatchingInsn(MachineBasicBlock::iterator I,
   MachineBasicBlock::iterator MBBI = I;
   MachineBasicBlock::iterator MBBIWithRenameReg;
   MachineInstr &FirstMI = *I;
-  ++MBBI;
+  MBBI = next_nodbg(MBBI, E);
 
   bool MayLoad = FirstMI.mayLoad();
   bool IsUnscaled = TII->isUnscaledLdSt(FirstMI);
@@ -1897,7 +1883,8 @@ AArch64LoadStoreOpt::findMatchingInsn(MachineBasicBlock::iterator I,
   // Remember any instructions that read/write memory between FirstMI and MI.
   SmallVector<MachineInstr *, 4> MemInsns;
 
-  for (unsigned Count = 0; MBBI != E && Count < Limit; ++MBBI) {
+  for (unsigned Count = 0; MBBI != E && Count < Limit;
+       MBBI = next_nodbg(MBBI, E)) {
     MachineInstr &MI = *MBBI;
 
     UsedInBetween.accumulate(MI);
@@ -2068,12 +2055,13 @@ AArch64LoadStoreOpt::mergeUpdateInsn(MachineBasicBlock::iterator I,
           Update->getOpcode() == AArch64::CapAddImm ||
           Update->getOpcode() == AArch64::CapSubImm) &&
          "Unexpected base register update instruction to merge!");
-  MachineBasicBlock::iterator NextI = I;
+  MachineBasicBlock::iterator E = I->getParent()->end();
+  MachineBasicBlock::iterator NextI = next_nodbg(I, E);
   // Return the instruction following the merged instruction, which is
   // the instruction following our unmerged load. Unless that's the add/sub
   // instruction we're merging, in which case it's the one after that.
-  if (++NextI == Update)
-    ++NextI;
+  if (NextI == Update)
+    NextI = next_nodbg(NextI, E);
 
   int Value = Update->getOperand(2).getImm();
   assert(AArch64_AM::getShiftValue(Update->getOperand(3).getImm()) == 0 &&
@@ -2229,7 +2217,7 @@ MachineBasicBlock::iterator AArch64LoadStoreOpt::findMatchingUpdateInsnForward(
   // insn (inclusive) and the second insn.
   ModifiedRegUnits.clear();
   UsedRegUnits.clear();
-  ++MBBI;
+  MBBI = next_nodbg(MBBI, E);
 
   // We can't post-increment the stack pointer if any instruction between
   // the memory access (I) and the increment (MBBI) can access the memory
@@ -2245,7 +2233,8 @@ MachineBasicBlock::iterator AArch64LoadStoreOpt::findMatchingUpdateInsnForward(
       return E;
   }
 
-  for (unsigned Count = 0; MBBI != E && Count < Limit; ++MBBI) {
+  for (unsigned Count = 0; MBBI != E && Count < Limit;
+       MBBI = next_nodbg(MBBI, E)) {
     MachineInstr &MI = *MBBI;
 
     // Don't count transient instructions towards the search limit since there
@@ -2309,7 +2298,7 @@ MachineBasicBlock::iterator AArch64LoadStoreOpt::findMatchingUpdateInsnBackward(
   UsedRegUnits.clear();
   unsigned Count = 0;
   do {
-    --MBBI;
+    MBBI = prev_nodbg(MBBI, B);
     MachineInstr &MI = *MBBI;
 
     // Don't count transient instructions towards the search limit since there

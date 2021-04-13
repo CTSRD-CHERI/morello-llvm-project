@@ -1,4 +1,5 @@
 # UNSUPPORTED: system-windows
+# REQUIRES: python
 # RUN: %clang_host -g -O0 %S/Inputs/assert.c -o %t.out
 # RUN: %lldb -b -s %s %t.out | FileCheck %s
 run

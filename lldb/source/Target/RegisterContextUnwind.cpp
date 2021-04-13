@@ -2132,7 +2132,7 @@ bool RegisterContextUnwind::ReadFrameAddress(
       if (process.GetLoadAddressPermissions(candidate, permissions) &&
           permissions & lldb::ePermissionsExecutable) {
         address = FrameAddressLLDB(candidate_addr);
-        UnwindLogMsg("Heuristically found CFA: 0x%" PRIx64,
+        UnwindLogMsg("Heuristically found CFA: %s",
                      address.GetAsString().c_str());
         return true;
       }
