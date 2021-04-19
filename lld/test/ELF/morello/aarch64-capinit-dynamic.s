@@ -2,7 +2,7 @@
 // RUN: llvm-mc --triple=aarch64-none-elf -mattr=+c64,+morello -filetype=obj %s -o %t.o
 // RUN: ld.lld --shared --morello-c64-plt %t.o -o %t
 // RUN: llvm-objdump -s %t | FileCheck %s --check-prefix=DATA
-// RUN: llvm-readobj --expand-relocs --relocations --cap-relocs %t | FileCheck %s
+// RUN: llvm-readobj --expand-relocs --relocations --symbols --cap-relocs %t | FileCheck %s
 
 /// Basics of the .capinit relocation using dynamic linking.
 /// We create two capabilites via .capinit. These will produce R_MORELLO_CAPINIT
@@ -39,11 +39,25 @@ ptr3:
  .8byte 0
  .8byte 0
 
+/// Check that the linker uses the size in the fragment (0xA)
+/// when the size is not provided in the symbol table.
+ .type ptr4, %object
+ .size ptr4, 16
+ptr4:
+ .capinit unsized_str
+ .8byte 0
+ .8byte 10
+
  .local str
  .type str, %object
  .size str, 12
 str:
  .string "Hello World"
+
+ .local unsized_str
+ .type unsized_str, %object
+unsized_str:
+ .string "Bye World"
 
  .globl foo
  .type foo, %object
@@ -55,11 +69,12 @@ foo:
 /// Check that we write the size, permissions and address if relevant to the
 /// Fragment.
 // DATA: Contents of section .data:
-// DATA:       303b0 e0030300 00000000 0c000000 00000002
-// DATA-NEXT:  303c0 e0030300 00000000 0c000000 00000002
-// DATA-NEXT:  303d0 ec030300 00000000 08000000 00000002
-// DATA-NEXT:  303e0 48656c6c 6f20576f 726c6400 00000000  Hello World
-// DATA-NEXT:  303f0 00000000 00000000
+// DATA:       303b0 f0030300 00000000 0c000000 00000002
+// DATA-NEXT:  303c0 f0030300 00000000 0c000000 00000002
+// DATA-NEXT:  303d0 06040300 00000000 08000000 00000002
+// DATA-NEXT:  303e0 fc030300 00000000 0a000000 00000002
+// DATA-NEXT:  303f0 48656c6c 6f20576f 726c6400 42796520 Hello World.Bye
+// DATA-NEXT:  30400 576f726c 64000000 00000000 00000000 World
 
 /// Dynamic relocations
 // CHECK: Relocations [
@@ -76,6 +91,12 @@ foo:
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
+// CHECK-NEXT:    Relocation {
+// CHECK-NEXT:      Offset: 0x303E0
+// CHECK-NEXT:      Type: R_MORELLO_RELATIVE
+// CHECK-NEXT:      Symbol: - (0)
+// CHECK-NEXT:      Addend: 0x0
+// CHECK-NEXT:    }
 // CHECK-NEXT:     Relocation {
 // CHECK-NEXT:       Offset: 0x303D0
 // CHECK-NEXT:       Type: R_MORELLO_CAPINIT
@@ -84,4 +105,35 @@ foo:
 // CHECK-NEXT:     }
 // CHECK-NEXT:   }
 // CHECK-NEXT: ]
+
+/// Symbols
+// CHECK:   Symbol {
+// CHECK:     Name: str
+// CHECK-NEXT:     Value: 0x303F0
+// CHECK-NEXT:     Size: 12
+// CHECK-NEXT:     Binding: Local
+// CHECK-NEXT:     Type: Object
+// CHECK-NEXT:     Other: 0
+// CHECK-NEXT:     Section: .data
+// CHECK-NEXT:   }
+
+// CHECK:     Name: unsized_str
+// CHECK-NEXT:     Value: 0x303FC
+// CHECK-NEXT:     Size: 0
+// CHECK-NEXT:     Binding: Local
+// CHECK-NEXT:     Type: Object
+// CHECK-NEXT:     Other: 0
+// CHECK-NEXT:     Section: .data
+// CHECK-NEXT:   }
+
+// CHECK:     Name: foo
+// CHECK-NEXT:     Value: 0x30406
+// CHECK-NEXT:     Size: 8
+// CHECK-NEXT:     Binding: Global
+// CHECK-NEXT:     Type: Object
+// CHECK-NEXT:     Other: 0
+// CHECK-NEXT:     Section: .data
+// CHECK-NEXT:   }
+// CHECK-NEXT: ]
+
 // CHECK-NEXT: There is no __cap_relocs section in the file.

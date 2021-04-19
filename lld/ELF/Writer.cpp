@@ -347,9 +347,6 @@ void addReservedSymbols() {
   ElfSym::newLibBss1 = add("__bss_start__", 0);
   ElfSym::newLibBss2 = add("__bss_end__", -1);
   ElfSym::newLibEnd = add("__end__", -1);
-
-  //  ElfSym::relaCapDynRelocsStart = add("__cap_dynrelocs_start", 0);
-  //  ElfSym::relaCapDynRelocsEnd = add("__cap_dynrelocs_end", -1);
 }
 
 static OutputSection *findSection(StringRef name, unsigned partition = 1) {
@@ -1150,7 +1147,7 @@ template <class ELFT> void Writer<ELFT>::addRelIpltSymbols() {
 }
 
 // The beginning and the ending of .rela.dyn section are marked
-// with __cap_dynrelocs_{start,end} symbols if it is a statically linked
+// with __rela_dyn_{start,end} symbols if it is a statically linked
 // executable. The runtime needs these symbols in order to resolve
 // all RELATIVE relocs and create capabilities on startup.
 template <class ELFT> void Writer<ELFT>::addCapDynRelocsSymbols() {
@@ -1158,15 +1155,15 @@ template <class ELFT> void Writer<ELFT>::addCapDynRelocsSymbols() {
       needsInterpSection())
     return;
 
-  // By default, __cap_dynrelocs_{start,end} belong to a dummy section 0
+  // By default, __rela_dyn_{start,end} belong to a dummy section 0
   // because .rela.dyn might be empty and thus removed from output.
   // We'll override Out::elfHeader with In.relaIplt later when we are
-  // sure that .rela.plt exists in output.
-  ElfSym::relaCapDynRelocsStart = addOptionalRegular(
-      "__cap_dynrelocs_start", Out::elfHeader, 0, STV_HIDDEN, STB_WEAK);
+  // sure that .rela.dyn exists in output.
+  ElfSym::relaDynStart = addOptionalRegular("__rela_dyn_start", Out::elfHeader,
+                                            0, STV_HIDDEN, STB_WEAK);
 
-  ElfSym::relaCapDynRelocsEnd = addOptionalRegular(
-      "__cap_dynrelocs_end", Out::elfHeader, 0, STV_HIDDEN, STB_WEAK);
+  ElfSym::relaDynEnd = addOptionalRegular("__rela_dyn_end", Out::elfHeader, 0,
+                                          STV_HIDDEN, STB_WEAK);
 }
 
 template <class ELFT>
@@ -1212,11 +1209,11 @@ template <class ELFT> void Writer<ELFT>::setReservedSymbolSections() {
     ElfSym::relaIpltEnd->value = in.relaIplt->getSize();
   }
 
-  // __cap_dynrelocs_{start,end} mark the start and the end of in.relaIplt.
-  if (ElfSym::relaCapDynRelocsStart && in.relaIplt->isNeeded()) {
-    ElfSym::relaCapDynRelocsStart->section = in.relaIplt;
-    ElfSym::relaCapDynRelocsEnd->section = in.relaIplt;
-    ElfSym::relaCapDynRelocsEnd->value = in.relaIplt->getSize();
+  //  __rela_dyn_{start,end} mark the start and the end of in.relaIplt.
+  if (ElfSym::relaDynStart && in.relaIplt->isNeeded()) {
+    ElfSym::relaDynStart->section = in.relaIplt;
+    ElfSym::relaDynEnd->section = in.relaIplt;
+    ElfSym::relaDynEnd->value = in.relaIplt->getSize();
   }
 
   PhdrEntry *last = nullptr;
