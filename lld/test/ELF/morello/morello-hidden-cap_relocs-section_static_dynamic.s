@@ -30,10 +30,10 @@ ptr2:
 bye:
  .string "Bye World"
 
- .globl __cap_dynrelocs_start
- .globl __cap_dynrelocs_end
- .xword __cap_dynrelocs_start
- .xword __cap_dynrelocs_end
+ .globl __rela_dyn_start
+ .globl __rela_dyn_end
+ .xword __rela_dyn_start
+ .xword __rela_dyn_end
 
 // CHECK: Relocations [
 // CHECK-NEXT:   Section (1) .rela.dyn {
@@ -90,7 +90,7 @@ bye:
 // CHECK-NEXT:     Section: other
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Symbol {
-// CHECK-NEXT:     Name: __cap_dynrelocs_end
+// CHECK-NEXT:     Name: __rela_dyn_end
 // CHECK-NEXT:     Value: 0x30
 // CHECK-NEXT:     Size: 0
 // CHECK-NEXT:     Binding: Local
@@ -101,7 +101,7 @@ bye:
 // CHECK-NEXT:     Section: .rela.dyn
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Symbol {
-// CHECK-NEXT:     Name: __cap_dynrelocs_start
+// CHECK-NEXT:     Name: __rela_dyn_start
 // CHECK-NEXT:     Value: 0x0
 // CHECK-NEXT:     Size: 0
 // CHECK-NEXT:     Binding: Local

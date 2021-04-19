@@ -143,8 +143,8 @@ Defined *ElfSym::newLibBss1;
 Defined *ElfSym::newLibBss2;
 Defined *ElfSym::newLibEnd;
 
-Defined *ElfSym::relaCapDynRelocsStart;
-Defined *ElfSym::relaCapDynRelocsEnd;
+Defined *ElfSym::relaDynStart;
+Defined *ElfSym::relaDynEnd;
 
 static uint64_t getSymVA(const Symbol &sym, int64_t &addend) {
   switch (sym.kind()) {

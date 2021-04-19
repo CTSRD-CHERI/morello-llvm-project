@@ -8,9 +8,8 @@
 /// Relocations that the linker will propogate to the "rela.dyn" section.
 /// Although the symbol size is not specified in the source, the linker will
 /// use until the end of the section to calculate the symbol size.
-/// We also check that the linker creates the __cap_dynrelocs_start and
-/// __cap_dynrelocs_end symbols that a C-library can use to initialise the
-/// capabilities with.
+/// We also check that the linker creates the __rela_dyn_{start,end} symbols
+/// that a C-library can use to initialise the capabilities with.
 
  .data
  .balign 16
@@ -31,10 +30,10 @@ ptr2:
 str:
  .string "Hello World"
 
- .globl __cap_dynrelocs_start
- .globl __cap_dynrelocs_end
- .xword __cap_dynrelocs_start
- .xword __cap_dynrelocs_end
+ .globl __rela_dyn_start
+ .globl __rela_dyn_end
+ .xword __rela_dyn_start
+ .xword __rela_dyn_end
 
 
 /// .rel.dyn section
@@ -101,11 +100,11 @@ str:
 // CHECK-NEXT:    Section: .data
 // CHECK-NEXT:  }
 
-/// __cap_dynrelocs_end = __cap_dynrelocs_start + .rela.dyn size
-///                     = 0x200158 + 48
-///                     = 0x200188
+/// __rela_dyn_end = __rela_dyn_start + .rela.dyn size
+///                = 0x200158 + 48
+///                = 0x200188
 // CHECK-NEXT:   Symbol {
-// CHECK-NEXT:     Name: __cap_dynrelocs_end
+// CHECK-NEXT:     Name: __rela_dyn_end
 // CHECK-NEXT:     Value: 0x200188
 // CHECK-NEXT:     Size: 0
 // CHECK-NEXT:     Binding: Local
@@ -116,7 +115,7 @@ str:
 // CHECK-NEXT:     Section: .rela.dyn
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Symbol {
-// CHECK-NEXT:     Name: __cap_dynrelocs_start
+// CHECK-NEXT:     Name: __rela_dyn_start
 // CHECK-NEXT:     Value: 0x200158
 // CHECK-NEXT:     Size: 0
 // CHECK-NEXT:     Binding: Local
