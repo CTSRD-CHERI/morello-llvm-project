@@ -157,6 +157,8 @@ RelExpr AArch64::getRelExpr(RelType type, const Symbol &s,
   case R_MORELLO_ADR_PREL_PG_HI20:
   case R_MORELLO_ADR_PREL_PG_HI20_NC:
     return R_AARCH64_PAGE_PC;
+  case R_MORELLO_DESC_ADR_PREL_PG_HI20:
+    return s.isDefined() ? R_MORELLO_DESC_PAGE_PC : R_AARCH64_PAGE_PC;
   case R_AARCH64_LD64_GOT_LO12_NC:
   case R_AARCH64_TLSIE_LD64_GOTTPREL_LO12_NC:
   case R_MORELLO_LD128_GOT_LO12_NC:
@@ -540,6 +542,12 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
   case R_AARCH64_TLSLE_ADD_TPREL_LO12_NC:
   case R_AARCH64_TLSDESC_ADD_LO12:
     or32AArch64Imm(loc, val);
+    break;
+  case R_MORELLO_DESC_ADR_PREL_PG_HI20:
+    // Reset bit 23 (P) to convert the ADRP to ADRDP
+    write32le(loc, (read32le(loc) & ~(1 << 23)));
+    // Setting the immediate is same as the ADRP
+    relocateNoSym(loc, R_MORELLO_ADR_PREL_PG_HI20, val);
     break;
   default:
     llvm_unreachable("unknown relocation");

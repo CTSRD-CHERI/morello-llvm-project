@@ -113,7 +113,8 @@ enum RelExpr {
   R_MORELLO_CAPFRAG_BASE,
   R_MORELLO_CAPFRAG_SIZE_AND_PERM,
   R_MORELLO_VADREF,
-  R_MORELLO_TLSDESC_PAGE
+  R_MORELLO_TLSDESC_PAGE,
+  R_MORELLO_DESC_PAGE_PC,
 };
 
 // Architecture-neutral representation of relocation.

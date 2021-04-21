@@ -429,7 +429,8 @@ static bool needsGot(RelExpr expr) {
 static bool isRelExpr(RelExpr expr) {
   return oneof<R_PC, R_GOTREL, R_GOTPLTREL, R_MIPS_GOTREL, R_PPC64_CALL,
                R_PPC64_RELAX_TOC, R_AARCH64_PAGE_PC, R_RELAX_GOT_PC,
-               R_RISCV_PC_INDIRECT, R_CHERI_CAPABILITY_TABLE_REL>(expr);
+               R_RISCV_PC_INDIRECT, R_CHERI_CAPABILITY_TABLE_REL,
+               R_MORELLO_DESC_PAGE_PC>(expr);
 }
 
 // Returns true if a given relocation can be computed at link-time.
@@ -1484,6 +1485,21 @@ static void scanReloc(InputSectionBase &sec, OffsetGetter &getOffset, RelTy *&i,
   if (sym.isGnuIFunc() && config->zIfuncNoplt) {
     sym.exportDynamic = true;
     mainPart->relaDyn->addReloc(type, &sec, offset, &sym, addend, R_ADDEND, type);
+    return;
+  }
+
+  if (expr == R_MORELLO_DESC_PAGE_PC) {
+    // We have checked that sym is defined so OutputSection cannot be null.
+    // Switch to adrdp if sym is in a .descdata section or to adrp if sym is
+    // not in a descdata section. descdata section = .data section or any
+    // section starting with .desc. For adrp, this will have the function of
+    // R_MORELLO_ADR_PREL_PG_HI20.
+    if (sym.getOutputSection()->name == ".data" ||
+        sym.getOutputSection()->name.startswith(".desc"))
+      sec.relocations.push_back({expr, type, offset, addend, &sym});
+    else
+      sec.relocations.push_back({R_AARCH64_PAGE_PC, R_MORELLO_ADR_PREL_PG_HI20,
+                                 offset, addend, &sym});
     return;
   }
 

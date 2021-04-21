@@ -777,6 +777,13 @@ uint64_t InputSectionBase::getRelocTargetVA(const InputFile *file, RelType type,
     uint64_t val = sym.isUndefWeak() ? p + a : sym.getVA(a);
     return getAArch64Page(val) - getAArch64Page(p);
   }
+  case R_MORELLO_DESC_PAGE_PC: {
+    // return value is Page(S+A)-Page(D)
+    // D is the address of section where "sym" is located.
+    uint64_t val = sym.isUndefWeak() ? p + a : sym.getVA(a);
+    return getAArch64Page(val) -
+           getAArch64Page(sym.getOutputSection()->getVA());
+  }
   case R_RISCV_PC_INDIRECT: {
     if (const Relocation *hiRel = getRISCVPCRelHi20(&sym, a))
       return getRelocTargetVA(file, hiRel->type, hiRel->addend, sym.getVA(),
