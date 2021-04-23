@@ -1224,6 +1224,7 @@ struct InStruct {
   IBTPltSection *ibtPlt;
   RelocationBaseSection *relaPlt;
   RelocationBaseSection *relaIplt;
+  RelocationBaseSection *relaDyn;
   StringTableSection *shStrTab;
   StringTableSection *strTab;
   SymbolTableBaseSection *symTab;
