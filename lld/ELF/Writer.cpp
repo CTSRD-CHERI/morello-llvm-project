@@ -581,6 +581,10 @@ template <class ELFT> void createSyntheticSections() {
       config->androidPackDynRelocs ? in.relaPlt->name : relaDynName,
       /*sort=*/false);
   add(in.relaIplt);
+  in.relaDyn = make<RelocationSection<ELFT>>(
+      config->androidPackDynRelocs ? in.relaPlt->name : relaDynName,
+      /*sort=*/false);
+  add(in.relaDyn);
 
   if ((config->emachine == EM_386 || config->emachine == EM_X86_64) &&
       (config->andFeatures & GNU_PROPERTY_X86_FEATURE_1_IBT)) {
@@ -1144,6 +1148,18 @@ template <class ELFT> void Writer<ELFT>::addRelIpltSymbols() {
   ElfSym::relaIpltEnd = addOptionalRegular(
       config->isRela ? "__rela_iplt_end" : "__rel_iplt_end",
       Out::elfHeader, 0, STV_HIDDEN, STB_WEAK);
+
+  // By default, __rela_dyn_{start,end} belong to a dummy section 0
+  // because .rela.dyn might be empty and thus removed from output.
+  // We'll override Out::elfHeader with in.relaDyn later when we are
+  // sure that .rela.dyn exists in output.
+  ElfSym::relaDynStart = addOptionalRegular(
+      config->isRela ? "__rela_dyn_start" : "__rel_dyn_start", Out::elfHeader,
+      0, STV_HIDDEN, STB_WEAK);
+
+  ElfSym::relaDynEnd =
+      addOptionalRegular(config->isRela ? "__rela_dyn_end" : "__rel_dyn_end",
+                         Out::elfHeader, 0, STV_HIDDEN, STB_WEAK);
 }
 
 // The beginning and the ending of .rela.dyn section are marked
@@ -1154,16 +1170,6 @@ template <class ELFT> void Writer<ELFT>::addCapDynRelocsSymbols() {
   if (config->emachine != EM_AARCH64 || config->relocatable ||
       needsInterpSection())
     return;
-
-  // By default, __rela_dyn_{start,end} belong to a dummy section 0
-  // because .rela.dyn might be empty and thus removed from output.
-  // We'll override Out::elfHeader with In.relaIplt later when we are
-  // sure that .rela.dyn exists in output.
-  ElfSym::relaDynStart = addOptionalRegular("__rela_dyn_start", Out::elfHeader,
-                                            0, STV_HIDDEN, STB_WEAK);
-
-  ElfSym::relaDynEnd = addOptionalRegular("__rela_dyn_end", Out::elfHeader, 0,
-                                          STV_HIDDEN, STB_WEAK);
 }
 
 template <class ELFT>
@@ -1209,11 +1215,11 @@ template <class ELFT> void Writer<ELFT>::setReservedSymbolSections() {
     ElfSym::relaIpltEnd->value = in.relaIplt->getSize();
   }
 
-  //  __rela_dyn_{start,end} mark the start and the end of in.relaIplt.
-  if (ElfSym::relaDynStart && in.relaIplt->isNeeded()) {
-    ElfSym::relaDynStart->section = in.relaIplt;
-    ElfSym::relaDynEnd->section = in.relaIplt;
-    ElfSym::relaDynEnd->value = in.relaIplt->getSize();
+  //  __rela_dyn_{start,end} mark the start and the end of in.relaDyn.
+  if (ElfSym::relaDynStart && in.relaDyn->isNeeded()) {
+    ElfSym::relaDynStart->section = in.relaDyn;
+    ElfSym::relaDynEnd->section = in.relaDyn;
+    ElfSym::relaDynEnd->value = in.relaDyn->getSize();
   }
 
   PhdrEntry *last = nullptr;
@@ -2249,6 +2255,7 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
   finalizeSynthetic(in.iplt);
   finalizeSynthetic(in.ppc32Got2);
   finalizeSynthetic(in.partIndex);
+  finalizeSynthetic(in.relaDyn);
 
   // Dynamic section must be the last one in this list and dynamic
   // symbol table section (dynSymTab) must be the first one.

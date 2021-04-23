@@ -1337,6 +1337,8 @@ void DynamicSection<ELFT>::addSym(int32_t tag, Symbol *sym) {
 // - in.relaIplt: this is included if in.relaIplt is named .rela.dyn
 // - in.relaPlt: this is included if a linker script places .rela.plt inside
 //   .rela.dyn
+// - in.relaDyn: this is included if R_MORELLO_RELATIVE relocations are
+//   created.
 //
 // DT_RELASZ is the total size of the included sections.
 static std::function<uint64_t()> addRelaSz(RelocationBaseSection *relaDyn) {
@@ -1346,6 +1348,8 @@ static std::function<uint64_t()> addRelaSz(RelocationBaseSection *relaDyn) {
       size += in.relaIplt->getSize();
     if (in.relaPlt->getParent() == relaDyn->getParent())
       size += in.relaPlt->getSize();
+    if (in.relaDyn->getParent() == relaDyn->getParent())
+      size += in.relaDyn->getSize();
     return size;
   };
 }
@@ -1359,6 +1363,10 @@ static uint64_t addPltRelSz() {
   if (in.relaIplt->getParent() == in.relaPlt->getParent() &&
       in.relaIplt->name == in.relaPlt->name)
     size += in.relaIplt->getSize();
+
+  if (in.relaDyn->getParent() == in.relaPlt->getParent() &&
+      in.relaDyn->name == in.relaPlt->name)
+    size += in.relaDyn->getSize();
   return size;
 }
 
@@ -1440,7 +1448,9 @@ template <class ELFT> void DynamicSection<ELFT>::finalizeContents() {
 
   if (part.relaDyn->isNeeded() ||
       (in.relaIplt->isNeeded() &&
-       part.relaDyn->getParent() == in.relaIplt->getParent())) {
+       part.relaDyn->getParent() == in.relaIplt->getParent()) ||
+      (in.relaDyn->isNeeded() &&
+       part.relaDyn->getParent() == in.relaDyn->getParent())) {
     addInSec(part.relaDyn->dynamicTag, part.relaDyn);
     entries.push_back({part.relaDyn->sizeDynamicTag, addRelaSz(part.relaDyn)});
 
@@ -1471,7 +1481,8 @@ template <class ELFT> void DynamicSection<ELFT>::finalizeContents() {
   // as relaIplt has. And we still want to emit proper dynamic tags for that
   // case, so here we always use relaPlt as marker for the beginning of
   // .rel[a].plt section.
-  if (isMain && (in.relaPlt->isNeeded() || in.relaIplt->isNeeded())) {
+  if (isMain && (in.relaPlt->isNeeded() || in.relaIplt->isNeeded() ||
+                 in.relaDyn->isNeeded())) {
     addInSec(DT_JMPREL, in.relaPlt);
     entries.push_back({DT_PLTRELSZ, addPltRelSz});
     switch (config->emachine) {
@@ -1740,10 +1751,20 @@ void RelocationBaseSection::finalizeContents() {
       getParent()->info = in.cheriCapTable->getParent()->sectionIndex;
     if (in.relaIplt == this)
       getParent()->info = in.cheriCapTable->getParent()->sectionIndex;
+    if (in.relaDyn == this)
+      getParent()->info = in.cheriCapTable->getParent()->sectionIndex;
   } else {
     if (in.relaPlt == this)
       getParent()->info = in.gotPlt->getParent()->sectionIndex;
     if (in.relaIplt == this) {
+      if (in.igotPlt && in.igotPlt->isNeeded())
+        getParent()->info = in.igotPlt->getParent()->sectionIndex;
+      else if (!config->hasDynSymTab)
+        // In Morello static linking, the relaDyn can be used without the GOT or
+        // PLTGOT
+        getParent()->info = 0;
+    }
+    if (in.relaDyn == this) {
       if (in.igotPlt && in.igotPlt->isNeeded())
         getParent()->info = in.igotPlt->getParent()->sectionIndex;
       else if (!config->hasDynSymTab)

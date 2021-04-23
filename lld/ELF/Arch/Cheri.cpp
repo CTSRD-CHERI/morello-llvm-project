@@ -974,9 +974,13 @@ void addMorelloC64GotRelocation(RelType dynType, Symbol *sym, InputSectionBase *
   // being present.
   if (config->hasDynSymTab || dynType == R_MORELLO_IRELATIVE)
     addCapDynamicRelocation(dynType, sym, sec, offset, 0);
-  else
+  else if (config->morelloStaticCapsMode == CapRelocsMode::ElfReloc) {
+    in.relaDyn->addReloc({R_MORELLO_RELATIVE, sec, offset, true, sym, 0});
+    addMorelloCapabilityFragment(sec, sym, offset);
+  } else {
     in.capRelocs->addCapReloc({sec, offset, false}, {sym, 0u},
                               sym->isPreemptible, 0);
+  }
 }
 
 // For the .capinit R_MORELLO_CAPINIT relocation. Called from the
@@ -991,6 +995,9 @@ static void addMorelloCapabilityRelocation(Symbol *sym, RelType type,
                           ? R_MORELLO_CAPINIT
                           : R_MORELLO_RELATIVE;
     addCapDynamicRelocation(dynType, sym, sec, offset, addend);
+  } else if (config->morelloStaticCapsMode == CapRelocsMode::ElfReloc) {
+    in.relaDyn->addReloc({R_MORELLO_RELATIVE, sec, offset, true, sym, addend});
+    addMorelloCapabilityFragment(sec, sym, offset);
   } else {
     in.capRelocs->addCapReloc({sec, offset, false}, {sym, 0u},
                               sym->isPreemptible, addend);

@@ -67,7 +67,7 @@ foo:
 // CHECK-NEXT:     ]
 // CHECK-NEXT:     Address: 0x220270
 // CHECK-NEXT:     Offset: 0x270
-// CHECK-NEXT:     Size: 400
+// CHECK-NEXT:     Size: 80
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
 // CHECK-NEXT:     AddressAlignment: 16
@@ -87,7 +87,7 @@ foo:
 // CHECK-NEXT:       Offset: 0x220280
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x230400
+// CHECK-NEXT:       Addend: 0x2302C0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
 // CHECK-NEXT:       Offset: 0x220290
@@ -118,7 +118,7 @@ foo:
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Symbol {
 // CHECK-NEXT:     Name: foo
-// CHECK-NEXT:     Value: 0x230400
+// CHECK-NEXT:     Value: 0x2302C0
 // CHECK-NEXT:     Size: 8
 // CHECK-NEXT:     Binding: Global (0x1)
 // CHECK-NEXT:     Type: None (0x0)
@@ -132,8 +132,8 @@ foo:
 /// _start: address: 0x210251, size = 16 (0x10), perms = exec(0x4)
 // CHECK-NEXT: 0x00220270 51022100 00000000 10000000 00000004
 
-/// foo: address: 0x230400, size = 8 (0x8), perms = RW(0x2)
-// CHECK-NEXT: 0x00220280 00042300 00000000 08000000 00000002
+/// foo: address: 0x2302C0, size = 8 (0x8), perms = RW(0x2)
+// CHECK-NEXT: 0x00220280 c0022300 00000000 08000000 00000002
 
 /// bar: address: 0x200248, size = 8 (0x8), perms = RO(0x1)
 // CHECK-NEXT: 0x00220290 48022000 00000000 08000000 00000001

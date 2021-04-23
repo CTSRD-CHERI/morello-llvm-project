@@ -61,8 +61,8 @@ foo:
 
 // CHECK: Relocations [
 // CHECK-NEXT:   .rela.dyn {
-// CHECK-NEXT:     0x220260 R_MORELLO_RELATIVE - 0x230400
-// CHECK-NEXT:     0x220244 R_MORELLO_RELATIVE - 0x230400
+// CHECK-NEXT:     0x220260 R_MORELLO_RELATIVE - 0x230280
+// CHECK-NEXT:     0x220244 R_MORELLO_RELATIVE - 0x230280
 // CHECK-NEXT:   }
 // CHECK-NEXT:   .rela.text {
 // CHECK-NEXT:     0x210230 R_MORELLO_CALL26 target 0x0
@@ -74,7 +74,7 @@ foo:
 // CHECK-NEXT:     0x220244 R_MORELLO_CAPINIT foo 0x0
 
 // CHECK:         Name: foo
-// CHECK-NEXT:    Value: 0x230400
+// CHECK-NEXT:    Value: 0x230280
 // CHECK-NEXT:    Size: 4
 // CHECK-NEXT:    Binding: Global
 // CHECK-NEXT:    Type: Object
@@ -82,12 +82,12 @@ foo:
 // CHECK-NEXT:    Section: .data
 
 // CHECK:      Hex dump of section '.data.rel.ro':
-/// foo: address: 0x230400, size = 4, perms = EXEC(0x4)
-// CHECK-NEXT: 0x00220244 00042300 00000000 04000000 00000002
+/// foo: address: 0x230280, size = 4, perms = EXEC(0x4)
+// CHECK-NEXT: 0x00220244 80022300 00000000 04000000 00000002
 
 // CHECK:      Hex dump of section '.got':
-/// foo: address: 0x230400, size = 4, perms = EXEC(0x4)
-// CHECK-NEXT: 0x00220260 00042300 00000000 04000000 00000002
+/// foo: address: 0x230280, size = 4, perms = EXEC(0x4)
+// CHECK-NEXT: 0x00220260 80022300 00000000 04000000 00000002
 
 
 // SHARED:     Name: .text
