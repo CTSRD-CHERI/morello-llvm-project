@@ -420,8 +420,8 @@ static bool needsPlt(RelExpr expr) {
 // TLS variables uses GOT differently than the regular variables.
 static bool needsGot(RelExpr expr) {
   return oneof<R_GOT, R_GOT_OFF, R_MIPS_GOT_LOCAL_PAGE, R_MIPS_GOT_OFF,
-               R_MIPS_GOT_OFF32, R_AARCH64_GOT_PAGE_PC, R_GOT_PC, R_GOTPLT>(
-      expr);
+               R_MIPS_GOT_OFF32, R_AARCH64_GOT_PAGE_PC, R_GOT_PC, R_GOTPLT,
+               R_MORELLO_DESC_GOT_PAGE_PC>(expr);
 }
 
 // True if this expression is of the form Sym - X, where X is a position in the
@@ -450,16 +450,14 @@ static bool isStaticLinkTimeConstant(RelExpr e, RelType type, const Symbol &sym,
             R_CHERI_CAPABILITY_TABLE_INDEX_SMALL_IMMEDIATE,
             R_CHERI_CAPABILITY_TABLE_INDEX_CALL,
             R_CHERI_CAPABILITY_TABLE_INDEX_CALL_SMALL_IMMEDIATE,
-            R_CHERI_CAPABILITY_TABLE_ENTRY_PC,
-            R_CHERI_CAPABILITY_TABLE_REL,
+            R_CHERI_CAPABILITY_TABLE_ENTRY_PC, R_CHERI_CAPABILITY_TABLE_REL,
             R_MIPS_GOT_LOCAL_PAGE, R_MIPS_GOTREL, R_MIPS_GOT_OFF,
             R_MIPS_GOT_OFF32, R_MIPS_GOT_GP_PC, R_MIPS_TLSGD,
             R_AARCH64_GOT_PAGE_PC, R_GOT_PC, R_GOTONLY_PC, R_GOTPLTONLY_PC,
             R_PLT_PC, R_TLSGD_GOT, R_TLSGD_GOTPLT, R_TLSGD_PC, R_PPC32_PLTREL,
             R_PPC64_CALL_PLT, R_PPC64_RELAX_TOC, R_RISCV_ADD, R_TLSDESC_CALL,
             R_TLSDESC_PC, R_AARCH64_TLSDESC_PAGE, R_TLSLD_HINT, R_TLSIE_HINT,
-            R_MORELLO_TLSDESC_PAGE>(
-          e))
+            R_MORELLO_TLSDESC_PAGE, R_MORELLO_DESC_GOT_PAGE_PC>(e))
     return true;
 
   // Cheri capability relocations are never static link time constants since
@@ -1406,6 +1404,21 @@ static void scanReloc(InputSectionBase &sec, OffsetGetter &getOffset, RelTy *&i,
   if (expr == R_NONE)
     return;
 
+  // Ideally this should be done in getRelExpr().
+  // But getOutputSection is an incomplete class at that stage. So do it here.
+  if (expr == R_MORELLO_DESC_GOT_PAGE_PC) {
+    // switch to adrdp if sym is in a .descdata section or to adrp if the sym is
+    // not in a .descdata section.
+    // If switching to adrp, this will have the function of
+    // R_MORELLO_ADR_GOT_PAGE.
+    if (!(sym.isDefined() &&
+          (sym.getOutputSection()->name == ".data" ||
+           sym.getOutputSection()->name.startswith(".desc")))) {
+      expr = R_AARCH64_GOT_PAGE_PC;
+      type = R_MORELLO_ADR_GOT_PAGE;
+    }
+  }
+
   if (sym.isGnuIFunc() && !config->zText && config->warnIfuncTextrel) {
     warn("using ifunc symbols when text relocations are allowed may produce "
          "a binary that will segfault, if the object file is linked with "
@@ -1516,7 +1529,8 @@ static void scanReloc(InputSectionBase &sec, OffsetGetter &getOffset, RelTy *&i,
   if (config->emachine == EM_AARCH64 && !config->morelloC64Plt &&
       (needsGot(expr) || needsPlt(expr)) &&
       (type == R_MORELLO_CALL26 || type == R_MORELLO_JUMP26 ||
-       type == R_MORELLO_LD128_GOT_LO12_NC)) {
+       type == R_MORELLO_LD128_GOT_LO12_NC ||
+       type == R_MORELLO_DESC_LD128_GOT_LO12_NC)) {
     // We require 16-byte GOT entries and a different PLT sequence, we
     // need --morello-c64-plt to choose these prior to this point.
     error("Morello PLT/GOT generating relocation " + toString(type) +

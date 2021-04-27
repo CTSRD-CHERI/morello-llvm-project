@@ -162,11 +162,14 @@ RelExpr AArch64::getRelExpr(RelType type, const Symbol &s,
   case R_AARCH64_LD64_GOT_LO12_NC:
   case R_AARCH64_TLSIE_LD64_GOTTPREL_LO12_NC:
   case R_MORELLO_LD128_GOT_LO12_NC:
+  case R_MORELLO_DESC_LD128_GOT_LO12_NC:
     return R_GOT;
   case R_AARCH64_ADR_GOT_PAGE:
   case R_MORELLO_ADR_GOT_PAGE:
   case R_AARCH64_TLSIE_ADR_GOTTPREL_PAGE21:
     return R_AARCH64_GOT_PAGE_PC;
+  case R_MORELLO_DESC_ADR_GOT_PAGE:
+    return R_MORELLO_DESC_GOT_PAGE_PC;
   case R_AARCH64_NONE:
     return R_NONE;
   case R_MORELLO_CAPINIT:
@@ -206,6 +209,7 @@ bool AArch64::usesOnlyLowPageBits(RelType type) const {
   case R_AARCH64_TLSIE_LD64_GOTTPREL_LO12_NC:
   case R_MORELLO_LD128_GOT_LO12_NC:
   case R_MORELLO_TLSDESC_LD128_LO12:
+  case R_MORELLO_DESC_LD128_GOT_LO12_NC:
     return true;
   }
 }
@@ -478,6 +482,7 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
   case R_AARCH64_TLSLE_LDST128_TPREL_LO12_NC:
   case R_MORELLO_LD128_GOT_LO12_NC:
   case R_MORELLO_TLSDESC_LD128_LO12:
+  case R_MORELLO_DESC_LD128_GOT_LO12_NC:
     checkAlignment(loc, val, 16, rel);
     or32AArch64Imm(loc, getBits(val, 4, 11));
     break;
@@ -544,6 +549,7 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
     or32AArch64Imm(loc, val);
     break;
   case R_MORELLO_DESC_ADR_PREL_PG_HI20:
+  case R_MORELLO_DESC_ADR_GOT_PAGE:
     // Reset bit 23 (P) to convert the ADRP to ADRDP
     write32le(loc, (read32le(loc) & ~(1 << 23)));
     // Setting the immediate is same as the ADRP

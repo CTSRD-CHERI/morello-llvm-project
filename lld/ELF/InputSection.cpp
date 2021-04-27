@@ -732,6 +732,11 @@ uint64_t InputSectionBase::getRelocTargetVA(const InputFile *file, RelType type,
   case R_AARCH64_GOT_PAGE_PC:
   case R_AARCH64_RELAX_TLS_GD_TO_IE_PAGE_PC:
     return getAArch64Page(sym.getGotVA() + a) - getAArch64Page(p);
+  case R_MORELLO_DESC_GOT_PAGE_PC:
+    // return value is Page(G(GDAT(S+A)))-Page(D)
+    // D is the address of section .descdata, where "sym" is located.
+    return getAArch64Page(sym.getGotVA() + a) -
+           getAArch64Page(sym.getOutputSection()->getVA());
   case R_GOT_PC:
   case R_RELAX_TLS_GD_TO_IE:
     return sym.getGotVA() + a - p;

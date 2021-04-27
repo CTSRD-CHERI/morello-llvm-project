@@ -115,6 +115,7 @@ enum RelExpr {
   R_MORELLO_VADREF,
   R_MORELLO_TLSDESC_PAGE,
   R_MORELLO_DESC_PAGE_PC,
+  R_MORELLO_DESC_GOT_PAGE_PC
 };
 
 // Architecture-neutral representation of relocation.
