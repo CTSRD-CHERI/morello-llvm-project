@@ -571,6 +571,12 @@ template <class ELFT> void createSyntheticSections() {
       config->isRela ? ".rela.plt" : ".rel.plt", /*sort=*/false);
   add(in.relaPlt);
 
+  if (config->emachine == EM_AARCH64 &&
+      config->morelloStaticCapsMode == CapRelocsMode::ElfReloc) {
+    in.relaDyn = make<RelocationSection<ELFT>>(relaDynName, /*sort=*/false);
+    add(in.relaDyn);
+  }
+
   // The relaIplt immediately follows .rel[a].dyn to ensure that the IRelative
   // relocations are processed last by the dynamic loader. We cannot place the
   // iplt section in .rel.dyn when Android relocation packing is enabled because
@@ -581,10 +587,6 @@ template <class ELFT> void createSyntheticSections() {
       config->androidPackDynRelocs ? in.relaPlt->name : relaDynName,
       /*sort=*/false);
   add(in.relaIplt);
-  in.relaDyn = make<RelocationSection<ELFT>>(
-      config->androidPackDynRelocs ? in.relaPlt->name : relaDynName,
-      /*sort=*/false);
-  add(in.relaDyn);
 
   if ((config->emachine == EM_386 || config->emachine == EM_X86_64) &&
       (config->andFeatures & GNU_PROPERTY_X86_FEATURE_1_IBT)) {
@@ -2018,7 +2020,7 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
   // Define __rel[a]_iplt_{start,end} symbols if needed.
   addRelIpltSymbols();
 
-  // Define __cap_dynrelocs_{start,end} symbols if needed.
+  // Define __rela_dyn_{start,end} symbols if needed.
   addCapDynRelocsSymbols();
 
   // RISC-V's gp can address +/- 2 KiB, set it to .sdata + 0x800. This symbol
