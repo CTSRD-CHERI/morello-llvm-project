@@ -4394,6 +4394,10 @@ static bool canGuaranteeTCO(CallingConv::ID CC) {
 
 /// Return true if we might ever do TCO for calls with this calling convention.
 static bool mayTailCallThisCC(CallingConv::ID CC) {
+  if (MCTargetOptions::cheriCapabilityTableABI() ==
+      CheriCapabilityTableABI::FunctionDescriptor)
+    return false;
+
   switch (CC) {
   case CallingConv::C:
   case CallingConv::PreserveMost:
@@ -4411,6 +4415,20 @@ bool AArch64TargetLowering::isEligibleForTailCallOptimization(
     const SmallVectorImpl<ISD::InputArg> &Ins, SelectionDAG &DAG) const {
   if (!mayTailCallThisCC(CalleeCC))
     return false;
+
+  if (MCTargetOptions::cheriCapabilityTableABI() ==
+      CheriCapabilityTableABI::FunctionDescriptor) {
+    // If the callee is not DSO-local the call will clobber some callee-saved
+    // registers.
+    // FIXME: this doesn't do anything at the moment since the CSR mask
+    // prevents this from being a tail call anyway.
+    bool IsLocal = false;
+    if (GlobalAddressSDNode *G = dyn_cast<GlobalAddressSDNode>(Callee.getNode()))
+      IsLocal = G->getGlobal()->isDSOLocal();
+
+    if (!IsLocal)
+      return false;
+  }
 
   MachineFunction &MF = DAG.getMachineFunction();
   const Function &CallerF = MF.getFunction();
@@ -6754,7 +6772,10 @@ SDValue AArch64TargetLowering::LowerFRAMEADDR(SDValue Op,
   unsigned Depth = cast<ConstantSDNode>(Op.getOperand(0))->getZExtValue();
   const AArch64RegisterInfo *TRI = Subtarget->getRegisterInfo();
   unsigned FP = TRI->getFramePointerRegister(MF);
-  if (FP == AArch64::CFP) {
+  bool IsDescABI =
+      (MCTargetOptions::cheriCapabilityTableABI() ==
+       CheriCapabilityTableABI::FunctionDescriptor);
+  if (FP == (IsDescABI ? AArch64::C17 : AArch64::CFP)) {
     assert(VT == MVT::iFATPTR128);
   }
   SDValue FrameAddr = DAG.getCopyFromReg(DAG.getEntryNode(), DL, FP, VT);

@@ -1149,7 +1149,8 @@ void AArch64AsmPrinter::emitInstruction(const MachineInstr *MI) {
     EmitToStreamer(*OutStreamer, TmpInst);
     return;
   }
-  case AArch64::CTCRETURNr: {
+  case AArch64::CTCRETURNr:
+  case AArch64::CTCRETURNDescr: {
     MCInst TmpInst;
     TmpInst.setOpcode(AArch64::CapBranch);
     TmpInst.addOperand(MCOperand::createReg(MI->getOperand(0).getReg()));
