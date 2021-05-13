@@ -1310,7 +1310,7 @@ static std::function<uint64_t()> addRelaSz(RelocationBaseSection *relaDyn) {
       size += in.relaIplt->getSize();
     if (in.relaPlt->getParent() == relaDyn->getParent())
       size += in.relaPlt->getSize();
-    if (in.relaDyn && (in.relaDyn->getParent() == relaDyn->getParent()))
+    if (in.relaDyn->getParent() == relaDyn->getParent())
       size += in.relaDyn->getSize();
     return size;
   };
@@ -1326,7 +1326,7 @@ static uint64_t addPltRelSz() {
       in.relaIplt->name == in.relaPlt->name)
     size += in.relaIplt->getSize();
 
-  if (in.relaDyn && (in.relaDyn->getParent() == in.relaPlt->getParent()) &&
+  if (in.relaDyn->getParent() == in.relaPlt->getParent() &&
       (in.relaDyn->name == in.relaPlt->name))
     size += in.relaDyn->getSize();
   return size;
@@ -1411,7 +1411,7 @@ template <class ELFT> void DynamicSection<ELFT>::finalizeContents() {
   if (part.relaDyn->isNeeded() ||
       (in.relaIplt->isNeeded() &&
        part.relaDyn->getParent() == in.relaIplt->getParent()) ||
-      (in.relaDyn && in.relaDyn->isNeeded() &&
+      (in.relaDyn->isNeeded() &&
        part.relaDyn->getParent() == in.relaDyn->getParent())) {
     addInSec(part.relaDyn->dynamicTag, part.relaDyn);
     entries.push_back({part.relaDyn->sizeDynamicTag, addRelaSz(part.relaDyn)});
@@ -1444,7 +1444,7 @@ template <class ELFT> void DynamicSection<ELFT>::finalizeContents() {
   // case, so here we always use relaPlt as marker for the beginning of
   // .rel[a].plt section.
   if (isMain && (in.relaPlt->isNeeded() || in.relaIplt->isNeeded() ||
-                 (in.relaDyn && in.relaDyn->isNeeded()))) {
+                 in.relaDyn->isNeeded())) {
     addInSec(DT_JMPREL, in.relaPlt);
     entries.push_back({DT_PLTRELSZ, addPltRelSz});
     switch (config->emachine) {
