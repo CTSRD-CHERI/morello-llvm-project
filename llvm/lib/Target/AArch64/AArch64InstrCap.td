@@ -12,6 +12,8 @@
 
 let isCall = 1, Defs = [LR], Uses = [SP] in {
   def CBranchLinkClear : Pseudo<(outs), (ins Cap:$Cn), []>;
+  def CFnDescBranchLink : Pseudo<(outs), (ins Cap:$Cn), []>;
+  def CFnDescBranchLinkClear : Pseudo<(outs), (ins Cap:$Cn), []>;
 }
 
 let isBarrier = 1, isReturn = 1, isTerminator = 1 in {
@@ -27,6 +29,10 @@ let isCall = 1, isTerminator = 1, isReturn = 1,
     isBarrier = 1, Uses = [SP] in {
   def CTCRETURNr : Pseudo<(outs), (ins tcCap:$dst, i32imm:$FPDiff), []>;
   def ClearCTCRETURNr : Pseudo<(outs), (ins tcCap:$dst, i32imm:$FPDiff), []>;
+
+  def CTCRETURNDescr : Pseudo<(outs), (ins tcCapDesc:$dst, i32imm:$FPDiff), []>;
+  def ClearCTCRETURNDescr : Pseudo<(outs), (ins tcCapDesc:$dst, i32imm:$FPDiff), []>;
+
 }
 
 // This models the case where DDC is assumed to be time invariant, like when we

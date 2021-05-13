@@ -834,6 +834,11 @@ def tcCap : RegisterClass<"AArch64", [iFATPTR128], 128,
   let Size = 128;
 }
 
+def tcCapDesc : RegisterClass<"AArch64", [iFATPTR128], 128,
+    (sub Capcommon, C19, C20, C21, C22, C23, C24, C25, C26, C27, C17, CLR)> {
+  let Size = 128;
+}
+
 // SVE predicate registers
 def P0    : AArch64Reg<0,   "p0">, DwarfRegNum<[48]>;
 def P1    : AArch64Reg<1,   "p1">, DwarfRegNum<[49]>;

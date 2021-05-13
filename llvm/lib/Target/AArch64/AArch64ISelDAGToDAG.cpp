@@ -4205,17 +4205,26 @@ bool AArch64DAGToDAGISel::
 SelectCapabilityBranch(SDNode *N, bool Clear, bool Tail) {
   SDLoc dl(N);
   SDValue CalleeNode = N->getOperand(1);
+  bool IsDescABI =
+      (MCTargetOptions::cheriCapabilityTableABI() ==
+       CheriCapabilityTableABI::FunctionDescriptor);
 
   unsigned Opcode =
       Clear ? AArch64::CBranchLinkClear
             : (MCTargetOptions::integerBranches() ? AArch64::FakeCapBranchLink
                                                   : AArch64::CapBranchLink);
+  if (IsDescABI)
+    Opcode = Clear ? AArch64::CFnDescBranchLinkClear
+                   : AArch64::CFnDescBranchLink;
+
   if (CalleeNode.getOpcode() == ISD::TargetGlobalAddress ||
       CalleeNode.getOpcode() == ISD::TargetExternalSymbol)
     Opcode = Clear ? AArch64::PBLClear : AArch64::BL;
 
   if (Tail) {
-    Opcode = Clear ? AArch64::ClearCTCRETURNr : AArch64::CTCRETURNr;
+    Opcode = Clear ?
+        (IsDescABI ? AArch64::ClearCTCRETURNDescr : AArch64::ClearCTCRETURNr) :
+        (IsDescABI ? AArch64::CTCRETURNDescr : AArch64::CTCRETURNr);
     if (CalleeNode.getOpcode() == ISD::TargetGlobalAddress ||
         CalleeNode.getOpcode() == ISD::TargetExternalSymbol)
       Opcode = Clear ? AArch64::ClearTCRETURNdi : AArch64::TCRETURNdi;

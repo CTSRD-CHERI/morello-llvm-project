@@ -1377,6 +1377,22 @@ bool AArch64ExpandPseudo::expandMI(MachineBasicBlock &MBB,
   case AArch64::MOVi64imm:
     return expandMOVImm(MBB, MBBI, 64);
 
+  case AArch64::CFnDescBranchLink:
+  case AArch64::CFnDescBranchLinkClear: {
+    if (Opcode == AArch64::CFnDescBranchLinkClear)
+      clearUnusedArgRegisters(*MBB.getParent(), MBBI, false);
+    MachineFunction *MF = MBB.getParent();
+    unsigned Opc = AArch64::CapLoadPairBranchLink;
+    MachineInstrBuilder MIB =
+        BuildMI(MBB, MBBI, MI.getDebugLoc(), TII->get(Opc), AArch64::CFP);
+    for (unsigned OpNum = 0; OpNum < MI.getNumOperands(); ++OpNum)
+      MIB->addOperand(MI.getOperand(OpNum));
+    if (MI.shouldUpdateCallSiteInfo())
+      MF->moveCallSiteInfo(&MI, &*MIB);
+    MI.eraseFromParent();
+    break;
+  }
+
   case AArch64::PBLClear:
   case AArch64::PBLRClear:
   case AArch64::CBranchLinkClear: {

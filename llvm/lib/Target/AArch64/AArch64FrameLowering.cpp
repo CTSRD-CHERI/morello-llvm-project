@@ -210,6 +210,7 @@ static int64_t getArgumentStackToRestore(MachineFunction &MF,
     unsigned RetOpcode = MBBI->getOpcode();
     IsTailCallReturn = RetOpcode == AArch64::TCRETURNdi ||
                        RetOpcode == AArch64::CTCRETURNr ||
+                       RetOpcode == AArch64::CTCRETURNDescr ||
                        RetOpcode == AArch64::TCRETURNri ||
                        RetOpcode == AArch64::TCRETURNriBTI;
   }
@@ -2944,6 +2945,9 @@ void AArch64FrameLowering::determineCalleeSaves(MachineFunction &MF,
   unsigned UnspilledCSGPRPaired = AArch64::NoRegister;
   const bool HasCapRegs = MF.getSubtarget<AArch64Subtarget>().hasMorello();
   const bool HasPureCap = MF.getSubtarget<AArch64Subtarget>().hasPureCap();
+  bool IsDescABI =
+      (MCTargetOptions::cheriCapabilityTableABI() ==
+       CheriCapabilityTableABI::FunctionDescriptor);
 
   MachineFrameInfo &MFI = MF.getFrameInfo();
   const MCPhysReg *CSRegs = MF.getRegInfo().getCalleeSavedRegs();
@@ -3027,7 +3031,7 @@ void AArch64FrameLowering::determineCalleeSaves(MachineFunction &MF,
       windowsRequiresStackProbe(MF, EstimatedStackSize + CSStackSize + 16)) {
     if (HasPureCap) {
       AFI->setFrameRecordSize(32);
-      SavedRegs.set(AArch64::CFP);
+      SavedRegs.set(IsDescABI ? AArch64::C17 : AArch64::CFP);
       SavedRegs.set(AArch64::CLR);
     } else {
       AFI->setFrameRecordSize(16);

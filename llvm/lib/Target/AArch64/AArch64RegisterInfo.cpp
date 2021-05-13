@@ -79,6 +79,9 @@ AArch64RegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
   bool hasPureCap = MF->getSubtarget<AArch64Subtarget>().hasPureCap();
   bool hasC64 = MF->getSubtarget<AArch64Subtarget>().hasC64();
   bool use32CapRegs = !MF->getSubtarget<AArch64Subtarget>().use16CapRegs();
+  bool hasDescABI =
+      (MCTargetOptions::cheriCapabilityTableABI() ==
+       CheriCapabilityTableABI::FunctionDescriptor);
 
   if (MF->getFunction().getCallingConv() == CallingConv::GHC)
     // GHC set of callee saved regs is empty as all those regs are
@@ -122,9 +125,12 @@ AArch64RegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
     return hasC64 ? CSR_Darwin_AArch64_AAPCS_SaveList
         : (use32CapRegs ? CSR_AArch64_AAPCS_32Cap_Regs_Alternate_SaveList
             : CSR_AArch64_AAPCS_16Cap_Regs_Alternate_SaveList);
-  if (hasPureCap)
+  if (hasPureCap) {
+    if (hasDescABI)
+      return CSR_AArch64_AAPCS_32Cap_DescABI_Regs_SaveList;
     return use32CapRegs ? CSR_AArch64_AAPCS_32Cap_Regs_SaveList
         : CSR_AArch64_AAPCS_16Cap_Regs_SaveList;
+  }
   if (hasSVEArgsOrReturn(MF))
     return CSR_AArch64_SVE_AAPCS_SaveList;
   return CSR_AArch64_AAPCS_SaveList;
@@ -235,6 +241,9 @@ AArch64RegisterInfo::getCallPreservedMask(const MachineFunction &MF,
   bool hasC64 = MF.getSubtarget<AArch64Subtarget>().hasC64();
   bool use32CapRegs = !MF.getSubtarget<AArch64Subtarget>().use16CapRegs();
   bool SCS = MF.getFunction().hasFnAttribute(Attribute::ShadowCallStack);
+  bool hasDescABI =
+      (MCTargetOptions::cheriCapabilityTableABI() ==
+       CheriCapabilityTableABI::FunctionDescriptor);
 
   if (CC == CallingConv::GHC)
     // This is academic because all GHC calls are (supposed to be) tail calls
@@ -282,9 +291,13 @@ AArch64RegisterInfo::getCallPreservedMask(const MachineFunction &MF,
     return hasC64 ? CSR_Darwin_AArch64_AAPCS_RegMask
                   : (use32CapRegs ? CSR_AArch64_AAPCS_32Cap_Regs_Alternate_RegMask
                                   : CSR_AArch64_AAPCS_16Cap_Regs_Alternate_RegMask);
-  if (hasPureCap)
+  if (hasPureCap) {
+    if (hasDescABI)
+      return CSR_AArch64_AAPCS_32Cap_DescABI_Caller_Regs_RegMask;
+
     return use32CapRegs ? CSR_AArch64_AAPCS_32Cap_Regs_RegMask
                         : CSR_AArch64_AAPCS_16Cap_Regs_RegMask;
+  }
 
   return SCS ? CSR_AArch64_AAPCS_SCS_RegMask : CSR_AArch64_AAPCS_RegMask;
 }
@@ -354,14 +367,20 @@ AArch64RegisterInfo::getReservedRegs(const MachineFunction &MF) const {
   const AArch64FrameLowering *TFI = getFrameLowering(MF);
   bool HasPureCap = MF.getSubtarget<AArch64Subtarget>().hasPureCap();
   bool Use16CapRegs = MF.getSubtarget<AArch64Subtarget>().use16CapRegs();
+  bool HasDescABI =
+      (MCTargetOptions::cheriCapabilityTableABI() ==
+       CheriCapabilityTableABI::FunctionDescriptor);
 
   // FIXME: avoid re-calculating this every time.
   BitVector Reserved(getNumRegs());
   markSuperRegs(Reserved, AArch64::WSP);
   markSuperRegs(Reserved, AArch64::WZR);
 
+  if (HasDescABI)
+    markSuperRegs(Reserved, AArch64::W28);
+
   if (TFI->hasFP(MF) || TT.isOSDarwin())
-    markSuperRegs(Reserved, AArch64::W29);
+    markSuperRegs(Reserved, HasDescABI ? AArch64::W17 : AArch64::W29);
 
   for (size_t i = 0; i < AArch64::CapcommonRegClass.getNumRegs(); ++i) {
     if (MF.getSubtarget<AArch64Subtarget>().isCRegisterReserved(i))
@@ -486,15 +505,22 @@ AArch64RegisterInfo::getStackPointerRegister(const MachineFunction &MF) const {
 Register
 AArch64RegisterInfo::getFramePointerRegister(const MachineFunction &MF) const {
   bool HasPureCap = MF.getSubtarget<AArch64Subtarget>().hasPureCap();
-  return HasPureCap ? AArch64::CFP : AArch64::FP;
+  bool HasDescABI =
+      (MCTargetOptions::cheriCapabilityTableABI() ==
+       CheriCapabilityTableABI::FunctionDescriptor);
+  return HasPureCap ? (HasDescABI ? AArch64::C17 : AArch64::CFP) : AArch64::FP;
 }
 
 Register
 AArch64RegisterInfo::getFrameRegister(const MachineFunction &MF) const {
   const AArch64FrameLowering *TFI = getFrameLowering(MF);
   bool HasPureCap = MF.getSubtarget<AArch64Subtarget>().hasPureCap();
+  bool HasDescABI =
+      (MCTargetOptions::cheriCapabilityTableABI() ==
+       CheriCapabilityTableABI::FunctionDescriptor);
   if (HasPureCap)
-    return TFI->hasFP(MF) ? AArch64::CFP : AArch64::CSP;
+    return TFI->hasFP(MF) ? (HasDescABI ? AArch64::C17 : AArch64::CFP)
+                          : AArch64::CSP;
   else
     return TFI->hasFP(MF) ? AArch64::FP : AArch64::SP;
 }

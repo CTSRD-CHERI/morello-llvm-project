@@ -705,6 +705,14 @@ def CSR_AArch64_AAPCS_32Cap_Regs_Alternate :
     CalleeSavedRegs<(add CLR, CFP, (sequence "C%u", 19, 28),
                                    (sequence "D%u",  8, 15))>;
 
+def CSR_AArch64_AAPCS_32Cap_DescABI_Regs :
+    CalleeSavedRegs<(add (sequence "C%u", 19, 27), CLR, C17,
+                         (sequence "D%u",  8, 15))>;
+
+def CSR_AArch64_AAPCS_32Cap_DescABI_Caller_Regs :
+    CalleeSavedRegs<(add (sequence "C%u", 21, 27), CLR, C17,
+                         (sequence "D%u",  8, 15))>;
+
 // C24 is used for passing the indirect function result, so we can't make it
 // callee saved. C9, C10 are used for passing the sealed DDC/PCC pair.
 def CSR_AArch64_AAPCS_CCall : CalleeSavedRegs<(add

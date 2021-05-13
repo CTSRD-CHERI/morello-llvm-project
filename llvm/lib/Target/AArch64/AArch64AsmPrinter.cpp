@@ -1339,7 +1339,8 @@ void AArch64AsmPrinter::emitInstruction(const MachineInstr *MI) {
     EmitToStreamer(*OutStreamer, TmpInst);
     return;
   }
-  case AArch64::CTCRETURNr: {
+  case AArch64::CTCRETURNr:
+  case AArch64::CTCRETURNDescr: {
     MCInst TmpInst;
     if (MCTargetOptions::integerBranches()) {
       TmpInst.setOpcode(AArch64::BR);
