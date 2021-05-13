@@ -84,7 +84,7 @@ private:
   std::unique_ptr<FileOutputBuffer> &buffer;
 
   void addRelIpltSymbols();
-  void addCapDynRelocsSymbols();
+  void addRelDynSymbols();
   void addStartEndSymbols();
   void addStartStopSymbols(OutputSection *sec);
 
@@ -1168,7 +1168,7 @@ template <class ELFT> void Writer<ELFT>::addRelIpltSymbols() {
 // with __rela_dyn_{start,end} symbols if it is a statically linked
 // executable. The runtime needs these symbols in order to resolve
 // all RELATIVE relocs and create capabilities on startup.
-template <class ELFT> void Writer<ELFT>::addCapDynRelocsSymbols() {
+template <class ELFT> void Writer<ELFT>::addRelDynSymbols() {
   if (config->emachine != EM_AARCH64 || config->relocatable ||
       needsInterpSection())
     return;
@@ -2021,7 +2021,7 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
   addRelIpltSymbols();
 
   // Define __rela_dyn_{start,end} symbols if needed.
-  addCapDynRelocsSymbols();
+  addRelDynSymbols();
 
   // RISC-V's gp can address +/- 2 KiB, set it to .sdata + 0x800. This symbol
   // should only be defined in an executable. If .sdata does not exist, its
