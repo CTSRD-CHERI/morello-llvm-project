@@ -84,7 +84,7 @@ private:
   std::unique_ptr<FileOutputBuffer> &buffer;
 
   void addRelIpltSymbols();
-  void addRelDynSymbols();
+  void addCapDynRelocsSymbols();
   void addStartEndSymbols();
   void addStartStopSymbols(OutputSection *sec);
 
@@ -574,8 +574,11 @@ template <class ELFT> void createSyntheticSections() {
   if (config->emachine == EM_AARCH64 &&
       config->morelloStaticCapsMode == CapRelocsMode::ElfReloc) {
     in.relaDyn = make<RelocationSection<ELFT>>(relaDynName, /*sort=*/false);
-    add(in.relaDyn);
-  }
+  } else if (config->androidPackDynRelocs)
+    in.relaDyn = make<AndroidPackedRelocationSection<ELFT>>(relaDynName);
+  else
+    in.relaDyn = make<RelocationSection<ELFT>>(relaDynName, config->zCombreloc);
+  add(in.relaDyn);
 
   // The relaIplt immediately follows .rel[a].dyn to ensure that the IRelative
   // relocations are processed last by the dynamic loader. We cannot place the
@@ -1168,7 +1171,7 @@ template <class ELFT> void Writer<ELFT>::addRelIpltSymbols() {
 // with __rela_dyn_{start,end} symbols if it is a statically linked
 // executable. The runtime needs these symbols in order to resolve
 // all RELATIVE relocs and create capabilities on startup.
-template <class ELFT> void Writer<ELFT>::addRelDynSymbols() {
+template <class ELFT> void Writer<ELFT>::addCapDynRelocsSymbols() {
   if (config->emachine != EM_AARCH64 || config->relocatable ||
       needsInterpSection())
     return;
@@ -2021,7 +2024,7 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
   addRelIpltSymbols();
 
   // Define __rela_dyn_{start,end} symbols if needed.
-  addRelDynSymbols();
+  addCapDynRelocsSymbols();
 
   // RISC-V's gp can address +/- 2 KiB, set it to .sdata + 0x800. This symbol
   // should only be defined in an executable. If .sdata does not exist, its

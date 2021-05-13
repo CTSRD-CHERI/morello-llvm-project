@@ -6,7 +6,7 @@
 // RUN:         } \
 // RUN:       } " > %t.script
 // RUN: ld.lld --morello-static-caps=elf %t.o -o %t --script %t.script
-// RUN: llvm-readobj --relocs --symbols --expand-relocs -x other %t | FileCheck %s
+// RUN: llvm-readobj --relocs --symbols -x other %t | FileCheck %s
 
  .data
  .balign 16
@@ -37,18 +37,8 @@ bye:
 
 // CHECK: Relocations [
 // CHECK-NEXT:   Section (1) .rela.dyn {
-// CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x3C
-// CHECK-NEXT:       Type: R_MORELLO_RELATIVE
-// CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x38
-// CHECK-NEXT:     }
-// CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x4C
-// CHECK-NEXT:       Type: R_MORELLO_RELATIVE
-// CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x5C
-// CHECK-NEXT:     }
+// CHECK-NEXT:     0x3C R_MORELLO_RELATIVE - 0x8
+// CHECK-NEXT:     0x4C R_MORELLO_RELATIVE - 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT: ]
 

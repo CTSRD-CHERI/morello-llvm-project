@@ -7,6 +7,13 @@
 // RUN: ld.lld --pie --morello-c64-plt %t.so %t.o -o %tpie
 // RUN: llvm-objdump --print-imm-hex --no-show-raw-insn -s -d --triple=aarch64-none-elf --mattr=+morello %tpie | FileCheck %s --check-prefix=CHECK-PIE
 // RUN: llvm-readobj --relocations %tpie | FileCheck %s --check-prefix=RELS-PIE
+// RUN: ld.lld --morello-c64-plt --morello-static-caps=elf %t.so %t.o -o %telf
+// RUN: llvm-objdump --print-imm-hex --no-show-raw-insn -s -d --triple=aarch64-none-elf --mattr=+morello %telf | FileCheck %s
+// RUN: llvm-readobj --relocations %telf | FileCheck %s --check-prefix=RELSELF
+// RUN: not ld.lld --shared --morello-static-caps=elf --soname=t.so --morello-c64-plt %t.o -o /dev/null 2>&1 | FileCheck %s --check-prefix=ERR
+
+/// Check that --morello-static-caps=elf is not supported on shared objects
+// ERR: error: --morello-static-caps=elf only supported for static executables
 
 /// Application using a shared library. Expect to see dynamic
 /// relocations and not a __cap_relocs section. The link is repeated for -fpie
@@ -262,3 +269,31 @@ appdata: .xword 8
 // RELS-PIE-NEXT:   }
 // RELS-PIE-NEXT:   Section (6) .rela.plt {
 // RELS-PIE-NEXT:     0x306A0 R_MORELLO_JUMP_SLOT func 0x0
+
+// RELSELF: Relocations [
+// RELSELF-NEXT:   Section (5) .rela.dyn {
+/// .capinit from_app (strictly speaking don't need symbol here)
+// RELSELF-NEXT:     0x2204D0 R_MORELLO_RELATIVE from_app 0x0
+/// .got from_app (strictly speaking don't need symbol here)
+// RELSELF-NEXT:     0x220630 R_MORELLO_RELATIVE from_app 0x0
+/// .capinit data
+// RELSELF-NEXT:     0x2204B0 R_MORELLO_CAPINIT data 0x0
+/// .got data
+// RELSELF-NEXT:     0x220610 R_MORELLO_GLOB_DAT data 0x0
+/// .capinit func2
+// RELSELF-NEXT:     0x2204E0 R_MORELLO_CAPINIT func2 0x0
+/// .got func2
+// RELSELF-NEXT:     0x220640 R_MORELLO_GLOB_DAT func2 0x0
+/// .capinit rodata
+// RELSELF-NEXT:     0x2204A0 R_MORELLO_CAPINIT rodata 0x0
+/// .got rodata
+// RELSELF-NEXT:     0x220600 R_MORELLO_GLOB_DAT rodata 0x0
+/// .got appdata
+// RELSELF-NEXT:     0x220620 R_MORELLO_RELATIVE - 0x0
+/// _start
+// RELSELF-NEXT:     0x220650 R_MORELLO_RELATIVE - 0x0
+/// .capinit appdata
+// RELSELF-NEXT:     0x2204C0 R_MORELLO_RELATIVE - 0x0
+// RELSELF-NEXT:   }
+// RELSELF-NEXT:   Section (6) .rela.plt {
+// RELSELF-NEXT:     0x2306A0 R_MORELLO_JUMP_SLOT func 0x0

@@ -59,7 +59,7 @@ str:
 // CHECK-NEXT:       Offset: 0x220190
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x2201B8
+// CHECK-NEXT:       Addend: 0x8
 // CHECK-NEXT:     }
 
 /// str
@@ -67,7 +67,7 @@ str:
 // CHECK-NEXT:       Offset: 0x2201A0
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x2201B0
+// CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:   }
 // CHECK-NEXT: ]

@@ -951,19 +951,22 @@ void addMorelloCapabilityFragment(InputSectionBase *sec, Symbol *sym,
 static void addCapDynamicRelocation(RelType dynType, Symbol *sym,
                                     InputSectionBase *sec, uint64_t offset,
                                     int64_t addend) {
-  if (config->morelloStaticCapsMode == CapRelocsMode::ElfReloc)
-    in.relaDyn->addReloc({R_MORELLO_RELATIVE, sec, offset, true, sym, addend});
   // The symbol VA is not used, so if the symbol is not in the dynamic symbol
   // table, and the relocation is relative, add nullptr as the symbol of the
   // dynamic relocation.
+  // Add the relocation directly rather than calling one of the helper methods
+  // this guarantees that we have control over what static relocation is
+  // created.
   Symbol *dynsym = (!sym->includeInDynsym() && (dynType == R_MORELLO_RELATIVE ||
                                                 dynType == R_MORELLO_IRELATIVE))
                        ? nullptr
                        : sym;
-  // Add the relocation directly rather than calling one of the helper methods
-  // this guarantees that we have control over what static relocation is
-  // created.
-  mainPart->relaDyn->addReloc({dynType, sec, offset, false, dynsym, addend});
+  if (dynType == R_MORELLO_RELATIVE && !sym->includeInDynsym() &&
+      config->morelloStaticCapsMode == CapRelocsMode::ElfReloc) {
+    in.relaDyn->addReloc({dynType, sec, offset, false, dynsym, addend});
+  } else {
+    mainPart->relaDyn->addReloc({dynType, sec, offset, false, dynsym, addend});
+  }
   addMorelloCapabilityFragment(sec, sym, offset);
 }
 
