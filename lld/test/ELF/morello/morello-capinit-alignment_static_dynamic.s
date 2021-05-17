@@ -112,37 +112,37 @@ _start:
 // CHECK-NEXT:     Offset: 0x230000
 // CHECK-NEXT:     Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:     Symbol: - (0)
-// CHECK-NEXT:     Addend: 0x200230
+// CHECK-NEXT:     Addend: 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Offset: 0x230010
 // CHECK-NEXT:     Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:     Symbol: - (0)
-// CHECK-NEXT:     Addend: 0x200231
+// CHECK-NEXT:     Addend: 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Offset: 0x230020
 // CHECK-NEXT:     Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:     Symbol: - (0)
-// CHECK-NEXT:     Addend: 0x201234
+// CHECK-NEXT:     Addend: 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Offset: 0x230030
 // CHECK-NEXT:     Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:     Symbol: - (0)
-// CHECK-NEXT:     Addend: 0x220000
+// CHECK-NEXT:     Addend: 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Offset: 0x230040
 // CHECK-NEXT:     Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:     Symbol: - (0)
-// CHECK-NEXT:     Addend: 0x220008
+// CHECK-NEXT:     Addend: 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Offset: 0x230050
 // CHECK-NEXT:     Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:     Symbol: - (0)
-// CHECK-NEXT:     Addend: 0x222008
+// CHECK-NEXT:     Addend: 0x0
 // CHECK-NEXT:   }
 
 // CHECK:          Name: __fini_array_end

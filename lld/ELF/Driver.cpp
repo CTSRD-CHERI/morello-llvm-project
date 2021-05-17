@@ -374,6 +374,11 @@ static void checkOptions() {
   if (config->zRetpolineplt && config->zForceIbt)
     error("-z force-ibt may not be used with -z retpolineplt");
 
+  if (config->morelloStaticCapsMode == CapRelocsMode::ElfReloc) {
+    if (config->shared)
+      error("--morello-static-caps=elf only supported for static executables");
+  }
+
   if (config->emachine != EM_AARCH64) {
     if (config->morelloC64Plt)
       error("--morello-c64-plt only supported on AArch64");

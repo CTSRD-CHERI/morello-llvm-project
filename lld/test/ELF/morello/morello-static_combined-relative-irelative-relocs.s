@@ -38,7 +38,7 @@ _start:
 // CHECK-NEXT:     Offset: 0x2201EC
 // CHECK-NEXT:     Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:     Symbol: -
-// CHECK-NEXT:     Addend: 0x2201E0
+// CHECK-NEXT:     Addend: 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Offset: 0x220200

@@ -170,37 +170,37 @@ bss:
 // CHECK-NEXT:       Offset: 0x240040
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x210000
+// CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
 // CHECK-NEXT:       Offset: 0x240050
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x210004
+// CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
 // CHECK-NEXT:       Offset: 0x240060
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x230001
+// CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
 // CHECK-NEXT:       Offset: 0x240070
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x230005
+// CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
 // CHECK-NEXT:       Offset: 0x240080
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x260000
+// CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
 // CHECK-NEXT:       Offset: 0x240090
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x260004
+// CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:  }
 
@@ -333,37 +333,37 @@ bss:
 // CHECK-SCRIPT-NEXT:       Offset: 0x220020
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
-// CHECK-SCRIPT-NEXT:       Addend: 0x220000
+// CHECK-SCRIPT-NEXT:       Addend: 0x0
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:     Relocation {
 // CHECK-SCRIPT-NEXT:       Offset: 0x220030
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
-// CHECK-SCRIPT-NEXT:       Addend: 0x220004
+// CHECK-SCRIPT-NEXT:       Addend: 0x0
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:     Relocation {
 // CHECK-SCRIPT-NEXT:       Offset: 0x220040
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
-// CHECK-SCRIPT-NEXT:       Addend: 0x210001
+// CHECK-SCRIPT-NEXT:       Addend: 0x0
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:     Relocation {
 // CHECK-SCRIPT-NEXT:       Offset: 0x220050
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
-// CHECK-SCRIPT-NEXT:       Addend: 0x210005
+// CHECK-SCRIPT-NEXT:       Addend: 0x0
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:     Relocation {
 // CHECK-SCRIPT-NEXT:       Offset: 0x220060
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
-// CHECK-SCRIPT-NEXT:       Addend: 0x230000
+// CHECK-SCRIPT-NEXT:       Addend: 0x0
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:     Relocation {
 // CHECK-SCRIPT-NEXT:       Offset: 0x220070
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
-// CHECK-SCRIPT-NEXT:       Addend: 0x230004
+// CHECK-SCRIPT-NEXT:       Addend: 0x0
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT: ]
