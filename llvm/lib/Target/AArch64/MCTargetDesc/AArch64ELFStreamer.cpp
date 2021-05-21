@@ -24,6 +24,7 @@
 #include "llvm/ADT/Twine.h"
 #include "llvm/BinaryFormat/ELF.h"
 #include "llvm/MC/MCAsmBackend.h"
+#include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCAssembler.h"
 #include "llvm/MC/MCCodeEmitter.h"
 #include "llvm/MC/MCContext.h"
@@ -32,6 +33,7 @@
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCObjectWriter.h"
 #include "llvm/MC/MCSection.h"
+#include "llvm/MC/MCSectionELF.h"
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/MC/MCSymbolELF.h"
@@ -155,6 +157,26 @@ public:
 
   void SetCurrentLabel(MCSymbol *Label) {
     CurrentLabels.push_back(Label);
+  }
+
+  void finishImpl() override {
+    const MCAsmInfo* MAI = getContext().getAsmInfo();
+    if (MAI->isCheriPurecapABI()) {
+      MCSection *Cur = getCurrentSectionOnly();
+      MCSection *Nt = getContext().getELFSection(
+          ".note.cheri", ELF::SHT_NOTE, ELF::SHF_ALLOC);
+      Nt->setAlignment(llvm::Align(8));
+      SwitchSection(Nt);
+      emitInt32(6);     // data size for "CHERI\0"
+      emitInt32(4);     // descz
+      emitInt32(0);     // type
+      emitBytes(StringRef("CHERI", 6)); // note name
+      emitInt16(0);     // padding
+      emitInt32(0);     // CHERI_GLOBALS_ABI_PCREL
+      endSection(Nt);
+      SwitchSection(Cur);
+    }
+    MCELFStreamer::finishImpl();
   }
 
   void emitFill(const MCExpr &NumBytes, uint64_t FillValue,

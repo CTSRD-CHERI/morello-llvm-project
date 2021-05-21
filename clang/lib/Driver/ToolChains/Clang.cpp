@@ -7005,6 +7005,12 @@ void ClangAs::ConstructJob(Compilation &C, const JobAction &JA,
     }
     break;
 
+  case llvm::Triple::aarch64: {
+    const llvm::Triple &Triple = getToolChain().getEffectiveTriple();
+    RenderAArch64ABI(Triple, Args, CmdArgs);
+    break;
+  }
+
   case llvm::Triple::riscv32:
   case llvm::Triple::riscv64:
     AddRISCVTargetArgs(Args, CmdArgs);

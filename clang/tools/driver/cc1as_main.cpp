@@ -380,6 +380,7 @@ static bool ExecuteAssembler(AssemblerInvocation &Opts,
   SrcMgr.setIncludeDirs(Opts.IncludePaths);
 
   MCTargetOptions MCOptions;
+  MCOptions.ABIName = Opts.TargetABI;
   std::unique_ptr<MCRegisterInfo> MRI(
       TheTarget->createMCRegInfo(Opts.Triple, MCOptions));
   assert(MRI && "Unable to create target register info!");

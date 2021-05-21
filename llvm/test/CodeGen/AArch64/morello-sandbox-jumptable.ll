@@ -197,7 +197,7 @@ declare i8 addrspace(200)* @llvm.cheri.cap.offset.set(i8 addrspace(200)*, i64)
 ; c64-relocs-NEXT:   0x24 R_AARCH64_PREL32 .text 0x41169
 ; c64-relocs-NEXT:   0x28 R_AARCH64_PREL32 .text 0x41165
 ; c64-relocs-NEXT: }
-; c64-relocs-NEXT: Section (8) .rela.eh_frame {
+; c64-relocs-NEXT: Section (9) .rela.eh_frame {
 ; c64-relocs-NEXT:   0x20 R_AARCH64_PREL32 .text 0x0
 ; c64-relocs-NEXT:   0x34 R_AARCH64_PREL32 .text 0x7C
 ; c64-relocs-NEXT:   0x48 R_AARCH64_PREL32 .text 0x10F0
