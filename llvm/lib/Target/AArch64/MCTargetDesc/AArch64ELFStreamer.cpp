@@ -166,13 +166,24 @@ public:
       MCSection *Nt = getContext().getELFSection(
           ".note.cheri", ELF::SHT_NOTE, ELF::SHF_ALLOC);
       Nt->setAlignment(llvm::Align(8));
+      unsigned ABIVal = 0;
+      switch (MCTargetOptions::cheriCapabilityTableABI()) {
+      case CheriCapabilityTableABI::Pcrel:
+        ABIVal = 0; // CHERI_GLOBALS_ABI_PCREL
+        break;
+      case CheriCapabilityTableABI::FunctionDescriptor:
+        ABIVal = 2; // CHERI_GLOBALS_ABI_FDESC
+        break;
+      default:
+        llvm_unreachable("Unsupported purecap flavour");
+      }
       SwitchSection(Nt);
       emitInt32(6);     // data size for "CHERI\0"
       emitInt32(4);     // descz
       emitInt32(0);     // type
       emitBytes(StringRef("CHERI", 6)); // note name
       emitInt16(0);     // padding
-      emitInt32(0);     // CHERI_GLOBALS_ABI_PCREL
+      emitInt32(ABIVal);
       endSection(Nt);
       SwitchSection(Cur);
     }
