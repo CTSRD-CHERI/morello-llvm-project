@@ -25,6 +25,13 @@ public:
   Align getAlignmentForPreciseBounds(uint64_t Size,
                                      const TargetMachine &TM) const override;
   int getCheriCapabilitySize(const TargetMachine &TM) const override { return 16; }
+
+  MCSection *SelectSectionForGlobal(const GlobalObject *GO, SectionKind Kind,
+                                    const TargetMachine &TM) const override;
+
+  MCSection *getSectionForConstant(const DataLayout &DL, SectionKind Kind,
+                                   const Constant *C,
+                                   unsigned &Align) const override;
 };
 
 /// AArch64_MachoTargetObjectFile - This TLOF implementation is used for Darwin.
