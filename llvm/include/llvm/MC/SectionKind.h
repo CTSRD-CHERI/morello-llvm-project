@@ -112,7 +112,9 @@ class SectionKind {
            /// can write to them.  If it chooses to, the dynamic linker can
            /// mark the pages these globals end up on as read-only after it is
            /// done with its relocation phase.
-           ReadOnlyWithRel
+           ReadOnlyWithRel,
+
+           DescRelRO
   } K : 8;
 public:
 
@@ -160,7 +162,9 @@ public:
     return isBSS() || isCommon() || isData() || isReadOnlyWithRel();
   }
 
-  bool isBSS() const { return K == BSS || K == BSSLocal || K == BSSExtern; }
+  bool isBSS() const {
+    return K == BSS || K == BSSLocal || K == BSSExtern;
+  }
   bool isBSSLocal() const { return K == BSSLocal; }
   bool isBSSExtern() const { return K == BSSExtern; }
 
@@ -169,7 +173,12 @@ public:
   bool isData() const { return K == Data; }
 
   bool isReadOnlyWithRel() const {
-    return K == ReadOnlyWithRel;
+    return K == ReadOnlyWithRel || K == DescRelRO;
+  }
+
+  bool isDesc() const {
+    return K == DescRelRO || K == Data || K == BSSExtern ||
+           K == BSSLocal || K == BSS;
   }
 private:
   static SectionKind get(Kind K) {
@@ -205,6 +214,8 @@ public:
   static SectionKind getCommon() { return get(Common); }
   static SectionKind getData() { return get(Data); }
   static SectionKind getReadOnlyWithRel() { return get(ReadOnlyWithRel); }
+
+  static SectionKind getDescReadOnlyWithRel() { return get(DescRelRO); }
 };
 
 } // end namespace llvm

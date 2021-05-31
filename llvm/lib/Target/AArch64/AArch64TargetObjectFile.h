@@ -28,6 +28,12 @@ public:
   AArch64_ELFTargetObjectFile() {
     PLTRelativeVariantKind = MCSymbolRefExpr::VK_PLT;
   }
+  MCSection *SelectSectionForGlobal(const GlobalObject *GO, SectionKind Kind,
+                                    const TargetMachine &TM) const override;
+
+  MCSection *getSectionForConstant(const DataLayout &DL, SectionKind Kind,
+                                   const Constant *C,
+                                   Align &Align) const override;
 };
 
 /// AArch64_MachoTargetObjectFile - This TLOF implementation is used for Darwin.

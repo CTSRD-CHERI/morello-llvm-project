@@ -608,7 +608,7 @@ static StringRef getSectionPrefixForGlobal(SectionKind Kind) {
   if (Kind.isData())
     return ".data";
   if (Kind.isReadOnlyWithRel())
-    return ".data.rel.ro";
+    return Kind.isDesc() ? ".desc.data.rel.ro" : ".data.rel.ro";
   llvm_unreachable("Unknown section kind");
 }
 

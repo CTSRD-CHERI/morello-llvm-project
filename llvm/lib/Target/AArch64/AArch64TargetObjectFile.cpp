@@ -16,6 +16,8 @@
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCValue.h"
 #include "llvm/CodeGen/AsmPrinter.h"
+#include "llvm/MC/MCSectionELF.h"
+#include "llvm/ADT/SmallSet.h"
 
 using namespace llvm;
 using namespace dwarf;
@@ -45,6 +47,105 @@ getAlignmentForPreciseBounds(uint64_t Size, const TargetMachine &TM) const {
 
 AArch64_MachoTargetObjectFile::AArch64_MachoTargetObjectFile() {
   SupportGOTPCRelWithOffset = false;
+}
+
+static bool
+needsDescSection(const Constant *C, SmallSet<const Constant*, 10> &Processed) {
+  if (Processed.find(C) != Processed.end())
+    return false;
+  Processed.insert(C);
+  if (const GlobalVariable *GV = dyn_cast<GlobalVariable>(C)) {
+    if (GV->isConstant()) {
+      // External constants we might not have an initializer.
+      if (!GV->hasInitializer())
+        return true;
+      return needsDescSection(GV->getInitializer(), Processed);
+    }
+  }
+  if (const GlobalAlias *GA = dyn_cast<GlobalAlias>(C))
+    return needsDescSection(GA->getAliasee(), Processed);
+  if (isa<BlockAddress>(C))
+    return false;
+  if (isa<GlobalValue>(C))
+    return true;
+
+  // Handle pointer difference. Code lifted from Constant::getRelocationInfo().
+  if (const ConstantExpr *CE = dyn_cast<ConstantExpr>(C)) {
+    if (CE->getOpcode() == Instruction::Sub) {
+      ConstantExpr *LHS = dyn_cast<ConstantExpr>(CE->getOperand(0));
+      ConstantExpr *RHS = dyn_cast<ConstantExpr>(CE->getOperand(1));
+      if (LHS && RHS && LHS->getOpcode() == Instruction::PtrToInt &&
+          RHS->getOpcode() == Instruction::PtrToInt) {
+        Constant *LHSOp0 = LHS->getOperand(0);
+        Constant *RHSOp0 = RHS->getOperand(0);
+
+        // While raw uses of blockaddress need to be relocated, differences
+        // between two of them don't when they are for labels in the same
+        // function.  This is a common idiom when creating a table for the
+        // indirect goto extension, so we handle it efficiently here.
+        if (isa<BlockAddress>(LHSOp0) && isa<BlockAddress>(RHSOp0) &&
+            cast<BlockAddress>(LHSOp0)->getFunction() ==
+                cast<BlockAddress>(RHSOp0)->getFunction())
+          return false;
+
+        // Relative pointers do not need to be dynamically relocated.
+        if (auto *RHSGV =
+                dyn_cast<GlobalValue>(RHSOp0->stripInBoundsConstantOffsets())) {
+          auto *LHS = LHSOp0->stripInBoundsConstantOffsets();
+          if (auto *LHSGV = dyn_cast<GlobalValue>(LHS)) {
+            if (LHSGV->isDSOLocal() && RHSGV->isDSOLocal())
+              return false;
+          }
+        }
+      }
+    }
+  }
+
+  for (unsigned i = 0, e = C->getNumOperands(); i != e; ++i)
+    if (needsDescSection(cast<Constant>(C->getOperand(i)), Processed))
+      return true;
+
+  return false;
+}
+
+MCSection *AArch64_ELFTargetObjectFile::
+SelectSectionForGlobal(
+    const GlobalObject *GO, SectionKind SK, const TargetMachine &TM) const {
+  bool IsDescABI =
+      (MCTargetOptions::cheriCapabilityTableABI() ==
+       CheriCapabilityTableABI::FunctionDescriptor);
+  if (IsDescABI) {
+    if (SK.isReadOnlyWithRel()) {
+      if (const GlobalVariable *GV = dyn_cast<GlobalVariable>(GO)) {
+        if (GV->isConstant()) {
+          SmallSet<const Constant *, 10> Cache;
+          if (needsDescSection(GV->getInitializer(), Cache))
+            SK = SectionKind::getDescReadOnlyWithRel();
+        } else
+          SK = SectionKind::getDescReadOnlyWithRel();
+      } else
+        SK = SectionKind::getDescReadOnlyWithRel();
+    }
+  }
+  return TargetLoweringObjectFileELF::SelectSectionForGlobal(GO, SK, TM);
+}
+
+MCSection *AArch64_ELFTargetObjectFile::getSectionForConstant(
+    const DataLayout &DL, SectionKind Kind, const Constant *C,
+    Align &Alignment) const {
+  bool IsDescABI =
+      (MCTargetOptions::cheriCapabilityTableABI() ==
+       CheriCapabilityTableABI::FunctionDescriptor);
+  if (Kind.isReadOnly() || Kind.isMergeableConst() || !IsDescABI)
+    return TargetLoweringObjectFileELF::getSectionForConstant(DL, Kind, C,
+                                                              Alignment);
+  SmallSet<const Constant *, 10> Cache;
+  if (needsDescSection(C, Cache)) {
+    return getContext().getELFSection(".desc.data.rel.ro", ELF::SHT_PROGBITS,
+                              ELF::SHF_ALLOC | ELF::SHF_WRITE);
+  }
+  return TargetLoweringObjectFileELF::getSectionForConstant(DL, Kind, C,
+                                                            Alignment);
 }
 
 const MCExpr *AArch64_MachoTargetObjectFile::getTTypeGlobalReference(
