@@ -1,0 +1,12 @@
+// RUN: llvm-mc -filetype=obj -triple=aarch64 -target-abi purecap %s -o %t.o
+// RUN: llvm-strip %t.o -o - | llvm-objdump -d - | FileCheck  %s
+
+  .section test, "ax"
+  .align 8
+
+  .global main
+main:
+  .arch armv8-a+c64
+  adrdp c0, #0
+
+// CHECK: 00 00 00 90     adrdp c0, #0

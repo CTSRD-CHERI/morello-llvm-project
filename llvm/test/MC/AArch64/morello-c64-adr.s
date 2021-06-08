@@ -1,4 +1,5 @@
 // RUN: llvm-mc -triple aarch64-elf -mattr=+morello,+c64 -filetype=obj %s -o - | llvm-objdump --mattr=+morello -d -r - | FileCheck %s
+// RUN: llvm-mc -triple aarch64-elf -mattr=+morello,+c64 -target-abi purecap -filetype=obj %s -o - | llvm-objdump -d -r - | FileCheck %s
 
 // CHECK:      adrp c0, #0
 // CHECK-NEXT: R_MORELLO_ADR_PREL_PG_HI20	Symbol

@@ -84,6 +84,8 @@ public:
 
   SubtargetFeatures getARMFeatures() const;
 
+  SubtargetFeatures getAArch64Features() const;
+
   SubtargetFeatures getRISCVFeatures() const;
 
   void setARMSubArch(Triple &TheTriple) const override;

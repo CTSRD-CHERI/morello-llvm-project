@@ -1,8 +1,10 @@
 ; RUN: llc -mtriple=arm64-none-linux-gnu -mattr=+c64 -target-abi purecap -relocation-model=pic -verify-machineinstrs < %s | FileCheck %s
 ; RUN: llc -mtriple=arm64-none-linux-gnu -mattr=+c64 -target-abi purecap -relocation-model=pic -filetype=obj < %s | llvm-objdump --mattr=+morello -r - | FileCheck --check-prefix=CHECK-RELOC %s
+; RUN: llc -mtriple=arm64-none-linux-gnu -mattr=+c64 -target-abi purecap -relocation-model=pic -filetype=obj < %s | llvm-objdump -r - | FileCheck --check-prefix=CHECK-RELOC %s
 ; RUN: llc -mtriple=arm64-none-linux-gnu -mattr=+c64 -target-abi purecap -verify-machineinstrs < %s | FileCheck %s
 ; RUN: llc -mtriple=arm64-none-linux-gnu -mattr=+c64 -target-abi purecap -filetype=obj < %s | llvm-objdump -r - | FileCheck --check-prefix=CHECK-RELOC %s
 ; RUN: llc -mtriple=arm64-none-linux-gnu -mattr=+c64 -target-abi purecap -filetype=obj < %s | llvm-objdump -d --mattr=+morello - | FileCheck --check-prefix=CHECK-ASM %s
+; RUN: llc -mtriple=arm64-none-linux-gnu -mattr=+c64 -target-abi purecap -filetype=obj < %s | llvm-objdump -d - | FileCheck --check-prefix=CHECK-ASM %s
 
 target datalayout = "e-m:e-i64:64-i128:128-n32:64-S128-pf200:128:128-A200-P200-G200"
 

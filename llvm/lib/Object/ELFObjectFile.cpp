@@ -297,6 +297,18 @@ SubtargetFeatures ELFObjectFileBase::getARMFeatures() const {
   return Features;
 }
 
+SubtargetFeatures ELFObjectFileBase::getAArch64Features() const {
+  SubtargetFeatures Features;
+  unsigned PlatformFlags = getPlatformFlags();
+
+  if (PlatformFlags & ELF::EF_AARCH64_CHERI_PURECAP) {
+    Features.AddFeature("+morello");
+    Features.AddFeature("+c64");
+  }
+
+  return Features;
+}
+
 SubtargetFeatures ELFObjectFileBase::getRISCVFeatures() const {
   SubtargetFeatures Features;
   unsigned PlatformFlags = getPlatformFlags();
@@ -368,6 +380,8 @@ SubtargetFeatures ELFObjectFileBase::getFeatures() const {
     return getMIPSFeatures();
   case ELF::EM_ARM:
     return getARMFeatures();
+  case ELF::EM_AARCH64:
+    return getAArch64Features();
   case ELF::EM_RISCV:
     return getRISCVFeatures();
   default:

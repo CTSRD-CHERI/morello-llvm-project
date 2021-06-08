@@ -1,6 +1,9 @@
 # RUN: llvm-mc -filetype=obj -triple=aarch64-unknown-freebsd -mattr=+morello %s | \
 # RUN:   llvm-objdump --mattr=+morello -d - | FileCheck  %s
 
+# RUN: llvm-mc -filetype=obj -triple=aarch64-unknown-freebsd -target-abi purecap %s | \
+# RUN: llvm-objdump -d - | FileCheck  %s
+
   .section test, "xa"
   .align 8
  
