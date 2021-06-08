@@ -596,6 +596,9 @@ template <class ELFT> void createSyntheticSections() {
   if (config->andFeatures)
     add(make<GnuPropertySection>());
 
+  if (config->isCheriABI() || config->morelloC64Plt)
+    add(make<CheriNotesSection>());
+
   // .note.GNU-stack is always added when we are creating a re-linkable
   // object file. Other linkers are using the presence of this marker
   // section to control the executable-ness of the stack area, but that

@@ -32,6 +32,7 @@ namespace {
 class AArch64 : public TargetInfo {
 public:
   AArch64();
+  uint32_t calcEFlags() const override;
   RelExpr getRelExpr(RelType type, const Symbol &s,
                      const uint8_t *loc) const override;
   RelType getDynRel(RelType type) const override;
@@ -210,6 +211,13 @@ RelType AArch64::getDynRel(RelType type) const {
   if (type == R_AARCH64_ABS64)
     return type;
   return R_AARCH64_NONE;
+}
+
+uint32_t AArch64::calcEFlags() const {
+  uint32_t eflags = 0;
+  if (config->cheriABIVariant != CHERI_VARIANT_NONE)
+    eflags |= EF_AARCH64_CHERI_PURECAP;
+  return eflags;
 }
 
 void AArch64::writeGotPlt(uint8_t *buf, const Symbol &) const {

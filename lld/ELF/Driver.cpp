@@ -1464,6 +1464,11 @@ void LinkerDriver::inferMachineType() {
     }
     if (f->emachine == EM_RISCV)
       config->setIsCheriABI(f->eflags & EF_RISCV_CHERIABI);
+
+    if (f->emachine == EM_AARCH64)
+      config->morelloC64Plt |=
+          ((f->eflags & EF_AARCH64_CHERI_PURECAP) == EF_AARCH64_CHERI_PURECAP);
+
     return;
   }
   error("target emulation unknown: -m or at least one .o file required");
@@ -1906,6 +1911,26 @@ template <class ELFT> static uint32_t getAndFeatures() {
   return ret;
 }
 
+template <class ELFT> static uint32_t getCheriABIVariant() {
+  uint32_t ret = CHERI_VARIANT_NONE;
+  if (config->emachine != EM_AARCH64)
+    return ret;
+
+  for (InputFile *f : objectFiles) {
+    uint32_t cheriABIVariant =
+        cast<ObjFile<ELFT>>(f)->eflags & EF_AARCH64_CHERI_PURECAP
+            ? cast<ObjFile<ELFT>>(f)->cheriABIVariant
+            : CHERI_VARIANT_NONE;
+    if (ret != CHERI_VARIANT_NONE && ret != cheriABIVariant) {
+      warn(toString(f) + ": CHERI ABI variant mismatch. "
+                         "Defaulting to Purecap ABI.");
+      cheriABIVariant = CHERI_VARIANT_GLOBALS_ABI_PCREL;
+    }
+    ret = cheriABIVariant;
+  }
+  return ret;
+}
+
 // Do actual linking. Note that when this function is called,
 // all linker scripts have already been parsed.
 template <class ELFT> void LinkerDriver::link(opt::InputArgList &args) {
@@ -2115,6 +2140,7 @@ template <class ELFT> void LinkerDriver::link(opt::InputArgList &args) {
   // contain a hint to tweak linker's and loader's behaviors.
   config->andFeatures = getAndFeatures<ELFT>();
 
+  config->cheriABIVariant = getCheriABIVariant<ELFT>();
   // The Target instance handles target-specific stuff, such as applying
   // relocations or writing a PLT section. It also contains target-dependent
   // values such as a default image base address.

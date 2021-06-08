@@ -822,6 +822,67 @@ static uint32_t readAndFeatures(ObjFile<ELFT> *obj, ArrayRef<uint8_t> data) {
 }
 
 template <class ELFT>
+static uint32_t readCheriABIVariant(ObjFile<ELFT> *obj,
+                                    ArrayRef<uint8_t> data) {
+  using Elf_Nhdr = typename ELFT::Nhdr;
+  using Elf_Note = typename ELFT::Note;
+
+  uint32_t cheriABIVariant = 0;
+
+  while (!data.empty()) {
+    // Read one NOTE record.
+    if (data.size() < sizeof(Elf_Nhdr))
+      fatal(toString(obj) + ": notes section too short");
+
+    auto *nhdr = reinterpret_cast<const Elf_Nhdr *>(data.data());
+    if (data.size() < nhdr->getSize())
+      fatal(toString(obj) + ": notes section too short");
+
+    Elf_Note note(*nhdr);
+    if (note.getName() != "CHERI") {
+      data = data.slice(nhdr->getSize());
+      continue;
+    }
+
+    // Read a body of a NOTE record, which consists of type-length-value fields.
+    ArrayRef<uint8_t> desc = note.getDesc();
+    if (desc.empty())
+      fatal(toString(obj) + ": desc section empty");
+    if (desc.size() < 4)
+      fatal(toString(obj) + ": notes section too short");
+
+    uint32_t type = read32le(desc.data());
+    if (nhdr->n_type == NT_CHERI_GLOBALS_ABI) {
+      switch (type) {
+      case CHERI_GLOBALS_ABI_PCREL:
+        cheriABIVariant = CHERI_VARIANT_GLOBALS_ABI_PCREL;
+        break;
+      case CHERI_GLOBALS_ABI_PLT_FPTR:
+        cheriABIVariant = CHERI_VARIANT_GLOBALS_ABI_PLT_FPTR;
+        break;
+      case CHERI_GLOBALS_ABI_FDESC:
+        cheriABIVariant = CHERI_VARIANT_GLOBALS_ABI_FDESC;
+        break;
+      default:
+        fatal(toString(obj) + ": invalid desc for NT_CHERI_GLOBALS_ABI");
+      }
+    } else if (nhdr->n_type == NT_CHERI_TLS_ABI) {
+      switch (type) {
+      case CHERI_TLS_ABI_TRAD:
+        cheriABIVariant = CHERI_VARIANT_TLS_ABI_TRAD;
+        break;
+      default:
+        fatal(toString(obj) + ": invalid desc for NT_CHERI_TLS_ABI");
+      }
+    }
+    // Go to next NOTE record.
+    data = data.slice(nhdr->getSize());
+  }
+
+  return cheriABIVariant;
+}
+
+template <class ELFT>
 InputSectionBase *ObjFile<ELFT>::getRelocTarget(const Elf_Shdr &sec) {
   uint32_t idx = sec.sh_info;
   if (idx >= this->sections.size())
@@ -993,6 +1054,12 @@ InputSectionBase *ObjFile<ELFT>::createInputSection(const Elf_Shdr &sec) {
   if (name == ".note.gnu.property") {
     ArrayRef<uint8_t> contents = check(this->getObj().getSectionContents(&sec));
     this->andFeatures = readAndFeatures(this, contents);
+    return &InputSection::discarded;
+  }
+
+  if (name == ".note.cheri") {
+    ArrayRef<uint8_t> contents = check(this->getObj().getSectionContents(&sec));
+    this->cheriABIVariant = readCheriABIVariant(this, contents);
     return &InputSection::discarded;
   }
 

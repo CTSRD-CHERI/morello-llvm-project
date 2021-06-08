@@ -240,6 +240,8 @@ public:
 
   uint32_t andFeatures = 0;
 
+  uint32_t cheriABIVariant = 0;
+
   // Name of source file obtained from STT_FILE symbol value,
   // or empty string if there is no such symbol in object file
   // symbol table.

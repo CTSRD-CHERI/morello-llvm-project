@@ -320,6 +320,43 @@ static size_t getHashSize() {
   }
 }
 
+static std::pair<unsigned, unsigned> getCheriABIVariant() {
+  switch (config->cheriABIVariant) {
+  case CHERI_VARIANT_NONE:
+    warn("No cheriABIVariant. Default to Purecap");
+    return std::make_pair(NT_CHERI_GLOBALS_ABI, CHERI_GLOBALS_ABI_PCREL);
+  case CHERI_VARIANT_GLOBALS_ABI_PCREL:
+    return std::make_pair(NT_CHERI_GLOBALS_ABI, CHERI_GLOBALS_ABI_PCREL);
+  case CHERI_VARIANT_GLOBALS_ABI_PLT_FPTR:
+    return std::make_pair(NT_CHERI_GLOBALS_ABI, CHERI_GLOBALS_ABI_PLT_FPTR);
+  case CHERI_VARIANT_GLOBALS_ABI_FDESC:
+    return std::make_pair(NT_CHERI_GLOBALS_ABI, CHERI_GLOBALS_ABI_FDESC);
+  case CHERI_VARIANT_TLS_ABI_TRAD:
+    return std::make_pair(NT_CHERI_TLS_ABI, CHERI_TLS_ABI_TRAD);
+  default:
+    llvm_unreachable("unknown cheriABIVariant");
+  }
+}
+
+CheriNotesSection::CheriNotesSection()
+    : SyntheticSection(llvm::ELF::SHF_ALLOC, llvm::ELF::SHT_NOTE,
+                       config->wordsize, ".note.cheri") {}
+
+bool CheriNotesSection::isNeeded() const {
+  return config->cheriABIVariant != CHERI_VARIANT_NONE;
+}
+
+void CheriNotesSection::writeTo(uint8_t *buf) {
+  auto p = getCheriABIVariant();
+  write32(buf, 6);                // Name size
+  write32(buf + 4, 4);            // Content size
+  write32(buf + 8, p.first);      // Type
+  memcpy(buf + 12, "CHERI\0", 6); // Name string
+  write32(buf + 20, p.second);    // Feature type
+}
+
+size_t CheriNotesSection::getSize() const { return 24; }
+
 // This class represents a linker-synthesized .note.gnu.property section.
 //
 // In x86 and AArch64, object files may contain feature flags indicating the
