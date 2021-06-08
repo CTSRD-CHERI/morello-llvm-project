@@ -300,6 +300,17 @@ void AArch64ELFStreamer::emitCheriIntcap(const MCExpr *Expr, unsigned CapSize,
 
 namespace llvm {
 
+AArch64TargetELFStreamer::AArch64TargetELFStreamer(MCStreamer &S,
+                                                   const MCSubtargetInfo &STI)
+    : AArch64TargetStreamer(S) {
+  MCAssembler &MCA = getStreamer().getAssembler();
+  unsigned EFlags = MCA.getELFHeaderEFlags();
+  if (S.getContext().getAsmInfo()->isCheriPurecapABI()) {
+    EFlags |= ELF::EF_AARCH64_CHERI_PURECAP;
+  }
+  MCA.setELFHeaderEFlags(EFlags);
+}
+
 AArch64ELFStreamer &AArch64TargetELFStreamer::getStreamer() {
   return static_cast<AArch64ELFStreamer &>(Streamer);
 }

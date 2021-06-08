@@ -399,6 +399,12 @@ enum {
 #include "ELFRelocs/PowerPC64.def"
 };
 
+// AArch64 Specific e_flags
+enum : unsigned {
+  EF_AARCH64_CHERI_PURECAP = 0x00010000, // AARCH64 binary uses a purecap ABI
+                                         // (uses capabilities for pointers)
+};
+
 // ELF Relocation types for AArch64
 enum {
 #include "ELFRelocs/AArch64.def"

@@ -69,8 +69,7 @@ private:
   void emitLabel(MCSymbol *Symbol) override;
 
 public:
-  AArch64TargetELFStreamer(MCStreamer &S, const MCSubtargetInfo &STI) :
-    AArch64TargetStreamer(S) {}
+  AArch64TargetELFStreamer(MCStreamer &S, const MCSubtargetInfo &STI);
 };
 
 class AArch64TargetWinCOFFStreamer : public llvm::AArch64TargetStreamer {
