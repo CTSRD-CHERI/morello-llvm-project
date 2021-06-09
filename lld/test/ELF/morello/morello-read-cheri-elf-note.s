@@ -15,6 +15,9 @@
 // RUN: ld.lld %t1.o %t2.o -o %t 2>&1 | FileCheck %s --check-prefix=WARN
 // RUN: llvm-readobj -h --notes %t | FileCheck %s --check-prefix=EFLAGS --check-prefix=NT_PCREL
 
+// RUN: ld.lld %t1.o %t2.o -o %t --strip-note-cheri -o - | \
+// RUN: llvm-readobj --notes | FileCheck %s --check-prefix=NT_NONE
+
 // WARN: warning: {{.*}} CHERI ABI variant mismatch. Defaulting to Purecap ABI.
 // NOWARN-NOT: warning: {{.*}} CHERI ABI variant mismatch. Defaulting to Purecap ABI.
 // EFLAGS: Flags [ (0x10000)
@@ -47,3 +50,6 @@
 // NT_FDESC-NEXT:     )
 // NT_FDESC-NEXT:   }
 // NT_FDESC-NEXT: }
+
+// NT_NONE:      Notes [
+// NT_NONE-NEXT: ]

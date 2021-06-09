@@ -144,6 +144,7 @@ struct Configuration {
   bool armHasMovtMovw = false;
   bool armJ1J2BranchEncoding = false;
   bool morelloC64Plt;
+  bool stripNoteCheri;
   uint32_t cheriABIVariant = 0;
   bool asNeeded = false;
   bool bsymbolic;

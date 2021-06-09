@@ -944,6 +944,7 @@ static void readConfigs(opt::InputArgList &args) {
                    args.hasArg(OPT_shared));
   config->allowUndefinedCapRelocs = args.hasArg(OPT_allow_undefined_cap_relocs);
   config->morelloC64Plt = args.hasArg(OPT_morello_c64_plt);
+  config->stripNoteCheri = args.hasArg(OPT_strip_note_cheri);
   config->auxiliaryList = args::getStrings(args, OPT_auxiliary);
   config->bsymbolic = args.hasArg(OPT_Bsymbolic);
   config->bsymbolicFunctions = args.hasArg(OPT_Bsymbolic_functions);

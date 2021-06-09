@@ -343,7 +343,8 @@ CheriNotesSection::CheriNotesSection()
                        config->wordsize, ".note.cheri") {}
 
 bool CheriNotesSection::isNeeded() const {
-  return config->cheriABIVariant != CHERI_VARIANT_NONE;
+  return !config->stripNoteCheri &&
+         config->cheriABIVariant != CHERI_VARIANT_NONE;
 }
 
 void CheriNotesSection::writeTo(uint8_t *buf) {

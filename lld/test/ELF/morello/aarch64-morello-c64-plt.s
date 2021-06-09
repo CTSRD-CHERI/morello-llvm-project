@@ -6,6 +6,13 @@
 // RUN: llvm-readobj --sections --relocs %t | FileCheck %s
 // RUN: llvm-objdump -s --triple=aarch64-none-elf --mattr=+morello %t | FileCheck %s --check-prefix=GOT
 
+// RUN: llvm-mc --triple=aarch64-none-elf -mattr=+c64 -target-abi purecap -filetype=obj %s -o %t.o
+// RUN: ld.lld %t.o -o %t --shared --strip-note-cheri
+// RUN: llvm-objdump --triple=aarch64-none-elf --no-show-raw-insn -d %t | FileCheck %s --check-prefix=DIS
+// RUN: llvm-objdump -s %t | FileCheck %s --check-prefix=GOTPLT
+// RUN: llvm-readobj --sections --relocs %t | FileCheck %s
+// RUN: llvm-objdump -s --triple=aarch64-none-elf %t | FileCheck %s --check-prefix=GOT
+
 /// Test that GOT slots are 16-bytes when we use --morello-c64-plt.
 /// Test that the Morello dynamic relocations are generated.
 /// Test that the Morello PLT sequences are generated.

@@ -66,6 +66,9 @@ defm Ttext: Eq<"Ttext", "Same as --section-start with .text as the sectionname">
 def morello_c64_plt: F<"morello-c64-plt">,
   HelpText<"Emit PLTs in c64 mode.">;
 
+def strip_note_cheri: F<"strip-note-cheri">,
+  HelpText<"Strip .note.cheri section from final image.">;
+
 def Ttext_segment: Separate<["-", "--"], "Ttext-segment">;
 
 defm allow_multiple_definition: B<"allow-multiple-definition",
