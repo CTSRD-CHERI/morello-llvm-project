@@ -53,7 +53,7 @@ define i32 @testEqualityCheck(i8 addrspace(200)* %foo, i8 addrspace(200)* %bar, 
 
 ; CHECK-LABEL: testSubsetCheck
 define i16 @testSubsetCheck(i8 addrspace(200)* %foo, i8 addrspace(200)* %bar, i16 %val) {
-; CHECK:      chkss  c0, c1
+; CHECK:      chkss  c1, c0
 ; CHECK-NEXT: cset   [[reg:w[0-9]+]], mi
 ; CHECK-NEXT: orr    {{w[0-9]+}}, [[reg]], w2
   %1 = call i1 @llvm.cheri.cap.subset.test(i8 addrspace(200)* %foo, i8 addrspace(200)* %bar)

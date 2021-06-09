@@ -3409,16 +3409,19 @@ SDValue AArch64TargetLowering::LowerINTRINSIC_WO_CHAIN(SDValue Op,
   case Intrinsic::cheri_cap_equal_exact:
   case Intrinsic::cheri_cap_subset_test: {
     if (Subtarget->hasMorello()) {
-      unsigned opcode, cond;
+      unsigned cond;
+      SDValue Compare;
       if (IntNo == Intrinsic::cheri_cap_equal_exact) {
-        opcode = AArch64ISD::CapCheckEquals;
+	Compare = DAG.getNode(AArch64ISD::CapCheckEquals, dl, MVT::i32,
+                              Op.getOperand(1), Op.getOperand(2));
         cond = AArch64CC::EQ;
       } else {
-        opcode = AArch64ISD::CapCheckSubset;
+        // Swap operands order as the cap_subset_test intrinsic arguments
+        // are reversed with respect to the chkss instruction.
+        Compare = DAG.getNode(AArch64ISD::CapCheckSubset, dl, MVT::i32,
+                              Op.getOperand(2), Op.getOperand(1));
         cond = AArch64CC::MI;
       }
-      SDValue Compare = DAG.getNode(opcode, dl, MVT::i32,
-                                    Op.getOperand(1), Op.getOperand(2));
       SDValue TVal = DAG.getConstant(1, dl, MVT::i32);
       SDValue FVal = DAG.getConstant(0, dl, MVT::i32);
       SDValue CCVal = DAG.getConstant(cond, dl, MVT::i32);
