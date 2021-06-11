@@ -768,9 +768,9 @@ void MorelloCapRelocsSection::writeTo(uint8_t *buf) {
 
     // Increase bounds of executable capabilities.
     if (permissions == Permissions::func(Permissions::Type::STATIC)) {
-      targetOffset += targetVA - morelloPCCBase;
-      targetVA = morelloPCCBase;
-      targetSize = morelloPCCLimit - morelloPCCBase;
+      targetOffset += targetVA - config->morelloPCCBase;
+      targetVA = config->morelloPCCBase;
+      targetSize = config->morelloPCCLimit - config->morelloPCCBase;
     }
     // Ensure that the base and limit of the capabilities are representable
     // in the CHERI Concentrate Encoding.
@@ -893,6 +893,11 @@ bool morelloLinkerDefinedCapabilityAlign() {
     changed = alignToRequired(
         first, last, getMorelloRequiredAlignment(morelloPCCLimit - morelloPCCBase));
 
+  // Store the PCC capability calculation result so that it is available when
+  // we write out the __cap_relocs section.
+  config->morelloPCCBase = morelloPCCBase;
+  config->morelloPCCLimit = morelloPCCLimit;
+
   // Linker generated Section Base capabilities. When dynamic linking we need
   // to find these via searching the dynamic relocs, when static linking we
   // need to search the entries in the __cap_relocs section.
@@ -909,10 +914,6 @@ bool morelloLinkerDefinedCapabilityAlign() {
     }
   } else if (in.capRelocs->isNeeded()) {
     changed |= in.capRelocs->linkerDefinedCapabilityAlign();
-    // Store the PCC capability calculation result so that it is available when
-    // we write out the __cap_relocs section.
-    in.capRelocs->morelloPCCBase = morelloPCCBase;
-    in.capRelocs->morelloPCCLimit = morelloPCCLimit;
   }
   return changed;
 }

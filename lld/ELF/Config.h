@@ -373,6 +373,14 @@ struct Configuration {
     searchPaths.emplace_back("=/usr/local/libcheri");
   }
 
+  // We need to calculate the PCC to decide how to align the OutputSections
+  // on the boundary of the PCC range. Cache the calculation here so that we
+  // don't need to recalculate later.
+  // TODO: Maybe Configuration is not the best place to hold cached values,
+  // but will do for now. Find a more suitable place for this.
+  unsigned morelloPCCBase;
+  unsigned morelloPCCLimit;
+
 private:
   bool cheriABI = false;
 };

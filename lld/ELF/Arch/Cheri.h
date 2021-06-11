@@ -153,11 +153,6 @@ public:
   bool isNeeded() const override { return !relocsMap.empty(); }
   size_t getSize() const override { return relocsMap.size() * entsize; }
   void finalizeContents() override;
-  // We need to calculate the PCC to decide how to align the OutputSections
-  // on the boundary of the PCC range. Cache the calculation here so that we
-  // don't need to recalculate later.
-  uint64_t morelloPCCBase;
-  uint64_t morelloPCCLimit;
 
 private:
   bool addEntry(CheriCapRelocLocation loc, CheriCapReloc relocation) {
