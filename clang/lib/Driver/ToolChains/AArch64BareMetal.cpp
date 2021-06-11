@@ -45,15 +45,12 @@ bool AArch64BareMetalToolChain::isThreadModelSupported(
 
 AArch64BareMetalToolChain::~AArch64BareMetalToolChain() {}
 
-std::string getVariantName(bool PureCap, bool A64C, bool C64) {
-  if (PureCap && !C64)
-    return "aarch64-none-elf+morello+a64c+purecap";
+std::string getVariantName(bool PureCap, bool A64C, bool C64, bool IsDesc) {
+  if (IsDesc)
+    return "aarch64-none-elf+morello+c64+purecap+desc";
 
-  if (PureCap && C64)
+  if (PureCap)
     return "aarch64-none-elf+morello+c64+purecap";
-
-  if (C64)
-    return "aarch64-none-elf+morello+c64";
 
   if (A64C)
     return "aarch64-none-elf+morello+a64c";
@@ -84,8 +81,9 @@ AArch64BareMetalToolChain::AArch64BareMetalToolChain(const Driver &D,
       Linker(getLinkerName(D, Args)) {
   // Our linker is expected to be found in our install dir.
   bool ReducedCaps;
-  getMorelloMode(D, Triple, Args, A64C, C64, PureCap, ReducedCaps);
-  Variant = getVariantName(PureCap, A64C, C64);
+  bool IsDesc;
+  getMorelloMode(D, Triple, Args, A64C, C64, PureCap, ReducedCaps, IsDesc);
+  Variant = getVariantName(PureCap, A64C, C64, IsDesc);
   getProgramPaths().push_back(D.getInstalledDir());
 }
 

@@ -217,7 +217,7 @@ bool aarch64::isPurecap(const llvm::opt::ArgList &Args) {
 void aarch64::getMorelloMode(const Driver &D, const llvm::Triple &Triple,
                              const ArgList &Args, bool &A64C,
                              bool &C64, bool &PureCap,
-                             bool &ReducedCapRegs) {
+                             bool &ReducedCapRegs, bool &FnDesc) {
   bool ForcePureCap = false;
   bool ForceNoPureCap = false;
 
@@ -225,9 +225,14 @@ void aarch64::getMorelloMode(const Driver &D, const llvm::Triple &Triple,
   C64 = false;
   PureCap = false;
   ReducedCapRegs = false;
+  FnDesc = false;
 
   if (Arg *A = Args.getLastArg(options::OPT_mabi_EQ)) {
-    PureCap = strcmp(A->getValue(), "purecap") == 0;
+    StringRef ABI = A->getValue();
+    PureCap = ABI == "purecap" || ABI == "purecap-desc";
+    if (ABI == "purecap-desc")
+      FnDesc = true;
+
     // Something got passed with mabi, so force either aapcs or purecap.
     ForcePureCap = PureCap;
     ForceNoPureCap = !PureCap;

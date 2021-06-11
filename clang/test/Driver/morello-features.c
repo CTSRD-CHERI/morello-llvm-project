@@ -36,6 +36,12 @@
 // RUN: %clang -target aarch64-none-elf -march=morello+c64 -mabi=purecap %s -### -o %t.o 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-32CAPREGS %s
 
+// RUN: %clang -target aarch64-none-elf -march=morello+c64 -mabi=purecap-desc %s -### -o %t.o 2>&1 \
+// RUN:   | FileCheck --check-prefix=CHECK-DESC %s
+
+// RUN: %clang -target aarch64-freebsd-elf -march=morello+c64 -mabi=purecap-desc %s -### -o %t.o 2>&1 \
+// RUN:   | FileCheck --check-prefix=CHECK-DESC %s
+
 // CHECK-A64C-NOT: "-target-abi" "purecap"
 // CHECK-A64C: "-target-feature" "+morello"
 
@@ -96,3 +102,6 @@
 
 // CHECK-32CAPREGS-NOT: "use-16-cap-regs"
 // CHECK-32CAPREGS: "-target-feature" "+morello"
+
+// CHECK-DESC: "-target-abi" "purecap"
+// CHECK-DESC: "-cheri-cap-table-abi=fn-desc"

@@ -30,7 +30,7 @@ std::string getAArch64TargetCPU(const llvm::opt::ArgList &Args,
 void getMorelloMode(const Driver &D, const llvm::Triple &Triple,
                     const llvm::opt::ArgList &Args, bool &A64C,
                     bool &C64, bool &PureCap,
-                    bool &ReducedCapRegs);
+                    bool &ReducedCapRegs, bool &FnDesc);
 
 void addMorelloLinkerFlags(const llvm::opt::ArgList &Args,
                            llvm::opt::ArgStringList &CmdArgs);
