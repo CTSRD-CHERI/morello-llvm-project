@@ -1653,6 +1653,7 @@ int64_t DynamicReloc::computeAddend() const {
     return sym->getVA(addend);
   if (!outputSec)
     return addend;
+  return getMorelloOffset(addend, *sym);
   // See the comment in the DynamicReloc ctor.
   return getMipsPageAddr(outputSec->addr) + addend;
 }

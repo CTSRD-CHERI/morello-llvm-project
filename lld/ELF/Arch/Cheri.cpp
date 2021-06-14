@@ -820,9 +820,60 @@ uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
     uint64_t size = getTargetSize<ELF64LE>(
         {isec, offset, false}, SymbolAndOffset(const_cast<Symbol *>(&sym), 0),
         /*strict=*/true);
+    if (config->morelloStaticCapsMode == CapRelocsMode::ElfReloc) {
+      uint64_t targetVA = sym.getVA(0);
+      uint64_t targetOffset = a;
+      // Increase bounds of executable capabilities.
+      if (sizeAndPerm == Permissions::func(Permissions::Type::DYNAMIC)) {
+        targetOffset += targetVA - config->morelloPCCBase;
+        size = config->morelloPCCLimit - config->morelloPCCBase;
+      }
+      uint64_t alignReq = getMorelloRequiredAlignment(size);
+      uint64_t targetLimit = targetVA + size;
+      uint64_t alignedTargetVA = alignDown(targetVA, alignReq);
+      uint64_t alignedTargetLimit = alignTo(targetLimit, alignReq);
+      size = alignedTargetLimit - alignedTargetVA;
+    }
     return sizeAndPerm | (size << 8);
   }
   return 2;
+}
+uint64_t getMorelloBaseAddress(int64_t a, const Symbol &sym,
+                               InputSectionBase *isec, uint64_t offset) {
+  uint64_t targetVA = sym.getVA(0);
+  if (config->morelloStaticCapsMode == CapRelocsMode::ElfReloc) {
+    if (const Defined *definedSym = dyn_cast<Defined>(&sym)) {
+      uint64_t perms = getPermissions(*definedSym, Permissions::Type::DYNAMIC);
+      uint64_t size = getTargetSize<ELF64LE>(
+          {isec, offset, false}, SymbolAndOffset(const_cast<Symbol *>(&sym), 0),
+          /*strict=*/true);
+      // Increase bounds of executable capabilities.
+      if (perms == Permissions::func(Permissions::Type::DYNAMIC)) {
+        targetVA = config->morelloPCCBase;
+        size = config->morelloPCCLimit - config->morelloPCCBase;
+      }
+      uint64_t alignReq = getMorelloRequiredAlignment(size);
+      uint64_t alignedTargetVA = alignDown(targetVA, alignReq);
+      return alignedTargetVA;
+    }
+  }
+  return targetVA;
+}
+
+uint64_t getMorelloOffset(int64_t a, const Symbol &sym) {
+  uint64_t targetOffset = a;
+  if (config->morelloStaticCapsMode == CapRelocsMode::ElfReloc) {
+    if (const Defined *definedSym = dyn_cast<Defined>(&sym)) {
+      uint64_t perms = getPermissions(*definedSym, Permissions::Type::DYNAMIC);
+
+      uint64_t targetVA = sym.getVA(0);
+      // Increase bounds of executable capabilities.
+      if (perms == Permissions::func(Permissions::Type::DYNAMIC)) {
+        targetOffset += targetVA - config->morelloPCCBase;
+      }
+    }
+  }
+  return targetOffset;
 }
 
 // Helper function that if required, increases the alignment of First and
@@ -912,6 +963,16 @@ bool morelloLinkerDefinedCapabilityAlign() {
         changed |= alignToRequired(os, os, getMorelloRequiredAlignment(os->size));
       }
     }
+  } else if (config->morelloStaticCapsMode == CapRelocsMode::ElfReloc) {
+    for (const DynamicReloc &reloc : in.relaIplt->relocs) {
+      if (reloc.sym && reloc.sym->getSize() == 0 && !reloc.sym->isPreemptible &&
+          isSectionStartSymbol(reloc.sym->getName())) {
+        OutputSection *os = reloc.sym->getOutputSection();
+        assert(os);
+        changed |=
+            alignToRequired(os, os, getMorelloRequiredAlignment(os->size));
+      }
+    }
   } else if (in.capRelocs->isNeeded()) {
     changed |= in.capRelocs->linkerDefinedCapabilityAlign();
   }
@@ -944,7 +1005,8 @@ bool MorelloCapRelocsSection::linkerDefinedCapabilityAlign() {
 // Address and the second for size and permissions.
 void addMorelloCapabilityFragment(InputSectionBase *sec, Symbol *sym,
                                   uint64_t offset) {
-  sec->relocations.push_back({R_ABS, target->symbolicRel, offset, 0, sym});
+  sec->relocations.push_back(
+      {R_MORELLO_CAPFRAG_BASE, target->symbolicRel, offset, 0, sym});
   sec->relocations.push_back(
     {R_MORELLO_CAPFRAG_SIZE_AND_PERM, target->symbolicRel, offset + 8, 0, sym}
   );

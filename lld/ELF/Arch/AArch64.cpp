@@ -39,6 +39,7 @@ public:
   int getCapabilitySize() const override { return 16; }
   void writeGotPlt(uint8_t *buf, const Symbol &s) const override;
   void writePltHeader(uint8_t *buf) const override;
+  void writeFragmentAddress(uint8_t *buf, uint64_t val) const override;
   void writeFragmentSizeAndPermissions(uint8_t *buf,
                                        uint64_t val) const override;
   void writePlt(uint8_t *buf, const Symbol &sym,
@@ -543,6 +544,10 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
   default:
     llvm_unreachable("unknown relocation");
   }
+}
+
+void AArch64::writeFragmentAddress(uint8_t *buf, uint64_t val) const {
+  write64le(buf, val);
 }
 
 void AArch64::writeFragmentSizeAndPermissions(uint8_t *buf,

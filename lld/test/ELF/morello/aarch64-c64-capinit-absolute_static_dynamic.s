@@ -106,13 +106,13 @@ _start:
 // CHECK-NEXT:   }
 
 // CHECK:      Hex dump of section '.data.rel.ro':
-/// foo: address: 0x218001, size = 4, perms = EXEC(0x4)
-// CHECK-NEXT: 0x00220230 01802100 00000000 04000000 00000004
+/// foo: address: 0x2001c0, size = 4, perms = EXEC(0x4)
+// CHECK-NEXT: 0x00220230 c0012000 00000000 00010200 00000004
 /// bar: address: 0x400000, size = 8, perms = RW(0x2)
 // CHECK-NEXT: 0x00220240 00004000 00000000 08000000 00000002
 
 // CHECK:      Hex dump of section '.got':
-/// foo: address: 0x218001, size = 4, perms = EXEC(0x4)
-// CHECK-NEXT: 0x00220250 01802100 00000000 04000000 00000004
+/// foo: address: 0x2001c0, size = 4, perms = EXEC(0x4)
+// CHECK-NEXT: 0x00220250 c0012000 00000000 00010200 00000004
 /// bar: address: 0x400000, size = 8, perms = RW(0x2)
 // CHECK-NEXT: 0x00220260 00004000 00000000 08000000 00000002

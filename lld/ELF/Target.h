@@ -38,6 +38,7 @@ public:
   virtual int getTlsGdRelaxSkip(RelType type) const { return 1; }
 
   virtual void writeFragmentSizeAndPermissions(uint8_t *buf, uint64_t val) const {};
+  virtual void writeFragmentAddress(uint8_t *buf, uint64_t val) const {};
   // If lazy binding is supported, the first entry of the PLT has code
   // to call the dynamic linker to resolve PLT entries the first time
   // they are called. This function writes that code.

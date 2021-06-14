@@ -129,8 +129,8 @@ foo:
 /// Check the fragments in .got match
 // CHECK:      Hex dump of section '.got':
 
-/// _start: address: 0x210251, size = 16 (0x10), perms = exec(0x4)
-// CHECK-NEXT: 0x00220270 51022100 00000000 10000000 00000004
+/// _start: address: 0x200200, size = 16 (0x10), perms = EXEC(0x4)
+// CHECK-NEXT: 0x00220270 00022000 00000000 00010200 00000004
 
 /// foo: address: 0x2302C0, size = 8 (0x8), perms = RW(0x2)
 // CHECK-NEXT: 0x00220280 c0022300 00000000 08000000 00000002

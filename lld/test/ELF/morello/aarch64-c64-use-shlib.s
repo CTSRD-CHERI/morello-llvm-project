@@ -8,7 +8,7 @@
 // RUN: llvm-objdump --print-imm-hex --no-show-raw-insn -s -d --triple=aarch64-none-elf --mattr=+morello %tpie | FileCheck %s --check-prefix=CHECK-PIE
 // RUN: llvm-readobj --relocations %tpie | FileCheck %s --check-prefix=RELS-PIE
 // RUN: ld.lld --morello-c64-plt --morello-static-caps=elf %t.so %t.o -o %telf
-// RUN: llvm-objdump --print-imm-hex --no-show-raw-insn -s -d --triple=aarch64-none-elf --mattr=+morello %telf | FileCheck %s
+// RUN: llvm-objdump --print-imm-hex --no-show-raw-insn -s -d --triple=aarch64-none-elf --mattr=+morello %telf | FileCheck %s --check-prefix=CHECK-ELF
 // RUN: llvm-readobj --relocations %telf | FileCheck %s --check-prefix=RELSELF
 // RUN: not ld.lld --shared --morello-static-caps=elf --soname=t.so --morello-c64-plt %t.o -o /dev/null 2>&1 | FileCheck %s --check-prefix=ERR
 
@@ -85,6 +85,19 @@ from_app:
 // CHECK-PIE-NEXT:  204d0 69040100 00000000 04000000 00000004
 /// func2 (shlib.so) exec size 4
 // CHECK-PIE-NEXT:  204e0 00000000 00000000 04000000 00000004
+
+// CHECK-ELF: Contents of section .data.rel.ro:
+/// rodata (shlib.so) rw (default) size 8
+// CHECK-ELF-NEXT:  2204a0 00000000 00000000 08000000 00000002
+/// data (shlib.so) rw (default) size 8
+// CHECK-ELF-NEXT:  2204b0 00000000 00000000 08000000 00000002
+/// appdata 0x30660 rw size 8
+// CHECK-ELF-NEXT:  2204c0 60062300 00000000 08000000 00000002
+/// from_app 14069 exec size 4
+// CHECK-ELF-NEXT:  2204d0 00022000 00000000 00050300 00000004
+/// func2 (shlib.so) exec size 4
+// CHECK-ELF-NEXT:  2204e0 00000000 00000000 04000000 00000004
+
 
  .data
  .global appdata
@@ -213,6 +226,42 @@ appdata: .xword 8
 // CHECK-PIE-NEXT:    10494:            add     c16, c16, #0x6a0
 // CHECK-PIE-NEXT:    10498:            ldr     c17, [c16, #0x0]
 // CHECK-PIE-NEXT:    1049c:            br      c17
+
+// CHECK-ELF: 0000000000210430 <_start>:
+// CHECK-ELF-NEXT:    210430:            bl      0x210490 <rodata+0x210490>
+// CHECK-ELF-NEXT:    210434:            adrp    c0, #0x10000
+// CHECK-ELF-NEXT:    210438:            ldr     c0, [c0, #0x600]
+// CHECK-ELF-NEXT:    21043c:            adrp    c1, #0x10000
+// CHECK-ELF-NEXT:    210440:            ldr     c1, [c1, #0x610]
+// CHECK-ELF-NEXT:    210444:            adrp    c2, #0x10000
+// CHECK-ELF-NEXT:    210448:            ldr     c2, [c2, #0x620]
+// CHECK-ELF-NEXT:    21044c:            adrp    c3, #0x10000
+// CHECK-ELF-NEXT:    210450:            ldr     c3, [c3, #0x630]
+// CHECK-ELF-NEXT:    210454:            adrp    c4, #0x10000
+// CHECK-ELF-NEXT:    210458:            ldr     c4, [c4, #0x640]
+// CHECK-ELF-NEXT:    21045c:            adrp    c5, #0x10000
+// CHECK-ELF-NEXT:    210460:            ldr     c5, [c5, #0x650]
+// CHECK-ELF-NEXT:    210464:            ret
+
+// CHECK-ELF: 0000000000210468 <from_app>:
+// CHECK-ELF-NEXT:    210468:            ret
+
+/// Check that the PLT header points to .got.plt[2] (30690)
+// CHECK-ELF: 0000000000210470 <.plt>:
+// CHECK-ELF-NEXT:    210470:            stp     c16, c30, [csp, #-0x20]!
+// CHECK-ELF-NEXT:    210474:            adrp    c16, #0x20000
+// CHECK-ELF-NEXT:    210478:            ldr     c17, [c16, #0x690]
+// CHECK-ELF-NEXT:    21047c:            add     c16, c16, #0x690
+// CHECK-ELF-NEXT:    210480:            br      c17
+// CHECK-ELF-NEXT:    210484:            nop
+// CHECK-ELF-NEXT:    210488:            nop
+// CHECK-ELF-NEXT:    21048c:            nop
+
+/// Check that the next PLT entry (.plt[3]) points to .got.plt[3] (306a0)
+// CHECK-ELF-NEXT:    210490:            adrp    c16, #0x20000
+// CHECK-ELF-NEXT:    210494:            add     c16, c16, #0x6a0
+// CHECK-ELF-NEXT:    210498:            ldr     c17, [c16, #0x0]
+// CHECK-ELF-NEXT:    21049c:            br      c17
 
 // RELS: Relocations [
 // RELS-NEXT:   Section (5) .rela.dyn {

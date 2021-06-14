@@ -405,6 +405,9 @@ bool morelloLinkerDefinedCapabilityAlign();
 // | 56-bits length | 8-bits permission |
 uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
                                     InputSectionBase *isec, uint64_t offset);
+uint64_t getMorelloBaseAddress(int64_t a, const Symbol &sym,
+                               InputSectionBase *isec, uint64_t offset);
+uint64_t getMorelloOffset(int64_t a, const Symbol &sym);
 
 } // namespace elf
 } // namespace lld
