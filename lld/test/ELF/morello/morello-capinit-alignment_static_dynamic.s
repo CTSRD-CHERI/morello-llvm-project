@@ -130,7 +130,7 @@ _start:
 // CHECK-NEXT:     Offset: 0x230030
 // CHECK-NEXT:     Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:     Symbol: - (0)
-// CHECK-NEXT:     Addend: 0x0
+// CHECK-NEXT:     Addend: 0x1FE60
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Offset: 0x230040

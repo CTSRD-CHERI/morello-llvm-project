@@ -182,13 +182,13 @@ bss:
 // CHECK-NEXT:       Offset: 0x240060
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x0
+// CHECK-NEXT:       Addend: 0x2FE01
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
 // CHECK-NEXT:       Offset: 0x240070
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x0
+// CHECK-NEXT:       Addend: 0x2FE05
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
 // CHECK-NEXT:       Offset: 0x240080
@@ -345,13 +345,13 @@ bss:
 // CHECK-SCRIPT-NEXT:       Offset: 0x220040
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
-// CHECK-SCRIPT-NEXT:       Addend: 0x0
+// CHECK-SCRIPT-NEXT:       Addend: 0x1
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:     Relocation {
 // CHECK-SCRIPT-NEXT:       Offset: 0x220050
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
-// CHECK-SCRIPT-NEXT:       Addend: 0x0
+// CHECK-SCRIPT-NEXT:       Addend: 0x5
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:     Relocation {
 // CHECK-SCRIPT-NEXT:       Offset: 0x220060

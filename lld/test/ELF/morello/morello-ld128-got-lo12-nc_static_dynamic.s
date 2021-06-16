@@ -81,7 +81,7 @@ foo:
 // CHECK-NEXT:       Offset: 0x220270
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x0
+// CHECK-NEXT:       Addend: 0x10051
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
 // CHECK-NEXT:       Offset: 0x220280

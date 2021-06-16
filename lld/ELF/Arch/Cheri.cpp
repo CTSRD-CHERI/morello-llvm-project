@@ -860,8 +860,8 @@ uint64_t getMorelloBaseAddress(int64_t a, const Symbol &sym,
   return targetVA;
 }
 
-uint64_t getMorelloOffset(int64_t a, const Symbol &sym) {
-  uint64_t targetOffset = a;
+int64_t getMorelloOffset(int64_t a, const Symbol &sym) {
+  int64_t targetOffset = a;
   if (config->morelloStaticCapsMode == CapRelocsMode::ElfReloc) {
     if (const Defined *definedSym = dyn_cast<Defined>(&sym)) {
       uint64_t perms = getPermissions(*definedSym, Permissions::Type::DYNAMIC);
@@ -1026,7 +1026,7 @@ static void addCapDynamicRelocation(RelType dynType, Symbol *sym,
                        : sym;
   if (dynType == R_MORELLO_RELATIVE && !sym->includeInDynsym() &&
       config->morelloStaticCapsMode == CapRelocsMode::ElfReloc) {
-    in.relaDyn->addReloc({dynType, sec, offset, false, dynsym, addend});
+    in.relaDyn->addReloc({dynType, sec, offset, true, sym, addend});
   } else {
     mainPart->relaDyn->addReloc({dynType, sec, offset, false, dynsym, addend});
   }

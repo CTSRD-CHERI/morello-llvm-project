@@ -1,7 +1,7 @@
 // REQUIRES: aarch64
 // RUN: llvm-mc --triple=aarch64-none-elf -mattr=+c64,+morello -target-abi purecap -filetype=obj %s -o %t.o
 // RUN: ld.lld --morello-static-caps=elf --morello-c64-plt %t.o -o %t
-// RUN: llvm-readobj --relocs --symbols --expand-relocs -x .got.plt %t | FileCheck %s
+// RUN: llvm-readobj --relocs --symbols --expand-relocs -x .data -x .got.plt %t | FileCheck %s
 // RUN: llvm-objdump --triple=arm64 --mattr=+morello,+c64 --no-show-raw-insn --print-imm-hex -d %t | FileCheck %s --check-prefix=DIS
 
  .data
@@ -44,7 +44,7 @@ _start:
 // CHECK-NEXT:     Offset: 0x220260
 // CHECK-NEXT:     Type: R_MORELLO_IRELATIVE
 // CHECK-NEXT:     Symbol: -
-// CHECK-NEXT:     Addend: 0x210209
+// CHECK-NEXT:     Addend: 0x10049
 // CHECK-NEXT:   }
 // CHECK-NEXT: }
 
@@ -130,6 +130,9 @@ _start:
 // CHECK-NEXT:   Section: .text
 // CHECK-NEXT: }
 
+// CHECK:      Hex dump of section '.data':
+// CHECK-NEXT: 0x00220240 48656c6c 6f20576f 726c6400 40022200 Hello World
+// CHECK-NEXT: 0x00220250 00000000 0c000000 00000002          ............
 
 // CHECK:      Hex dump of section '.got.plt':
 // CHECK-NEXT: 0x00220260 c0012000 00000000 00010200 00000004

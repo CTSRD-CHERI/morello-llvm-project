@@ -1650,10 +1650,11 @@ uint64_t DynamicReloc::getOffset() const {
 
 int64_t DynamicReloc::computeAddend() const {
   if (useSymVA)
-    return sym->getVA(addend);
+    return config->morelloStaticCapsMode == CapRelocsMode::ElfReloc
+               ? getMorelloOffset(addend, *sym)
+               : sym->getVA(addend);
   if (!outputSec)
     return addend;
-  return getMorelloOffset(addend, *sym);
   // See the comment in the DynamicReloc ctor.
   return getMipsPageAddr(outputSec->addr) + addend;
 }

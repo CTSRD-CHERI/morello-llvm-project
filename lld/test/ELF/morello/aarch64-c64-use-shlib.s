@@ -340,7 +340,7 @@ appdata: .xword 8
 /// .got appdata
 // RELSELF-NEXT:     0x220620 R_MORELLO_RELATIVE - 0x0
 /// _start
-// RELSELF-NEXT:     0x220650 R_MORELLO_RELATIVE - 0x0
+// RELSELF-NEXT:     0x220650 R_MORELLO_RELATIVE - 0x10231
 /// .capinit appdata
 // RELSELF-NEXT:     0x2204C0 R_MORELLO_RELATIVE - 0x0
 // RELSELF-NEXT:   }
