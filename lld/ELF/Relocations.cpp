@@ -1516,6 +1516,14 @@ static void scanReloc(InputSectionBase &sec, OffsetGetter &getOffset, RelTy *&i,
     return;
   }
 
+  if (expr == R_MORELLO_DESC_CAPABILITY) {
+    if (sym.isDefined() && sym.binding == STB_GLOBAL &&
+        (sym.isFunc() || sym.isGnuIFunc())) {
+      in.descPlts->addEntry(sym);
+    }
+    expr = R_CHERI_CAPABILITY;
+  }
+
   if (oneof<R_CHERI_CAPABILITY_TABLE_INDEX,
             R_CHERI_CAPABILITY_TABLE_INDEX_SMALL_IMMEDIATE,
             R_CHERI_CAPABILITY_TABLE_INDEX_CALL,
@@ -1560,6 +1568,7 @@ static void scanReloc(InputSectionBase &sec, OffsetGetter &getOffset, RelTy *&i,
         addGotEntry(sym);
       }
     }
+
   } else {
     // Handle a reference to a non-preemptible ifunc. These are special in a
     // few ways:

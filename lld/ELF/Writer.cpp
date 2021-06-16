@@ -398,6 +398,9 @@ template <class ELFT> void createSyntheticSections() {
       make<BssSection>(hasDataRelRo ? ".data.rel.ro.bss" : ".bss.rel.ro", 0, 1);
   add(in.bssRelRo);
 
+  in.descPlts = make<MorelloGlobalEntrySection>();
+  add(in.descPlts);
+
   if (config->capabilitySize > 0) {
     if (config->emachine == EM_AARCH64) {
       in.capRelocs = make<MorelloCapRelocsSection>();

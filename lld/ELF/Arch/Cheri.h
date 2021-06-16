@@ -409,6 +409,23 @@ uint64_t getMorelloBaseAddress(int64_t a, const Symbol &sym,
                                InputSectionBase *isec, uint64_t offset);
 int64_t getMorelloOffset(int64_t a, const Symbol &sym);
 
+class MorelloGlobalEntrySection : public SyntheticSection {
+public:
+  static constexpr size_t entrySize = 24;
+  MorelloGlobalEntrySection();
+  size_t getSize() const override { return entries.size() * entrySize; }
+  void finalizeContents() override;
+  bool isNeeded() const override;
+  void writeTo(uint8_t *buf) override;
+  void addEntry(Symbol &sym);
+  const Symbol *getGlobalEntry(const Symbol &sym);
+
+private:
+  llvm::MapVector<Symbol *, size_t> map;
+  llvm::MapVector<Symbol *, Symbol *> globalSymMap;
+  std::vector<const Symbol *> entries;
+};
+
 } // namespace elf
 } // namespace lld
 

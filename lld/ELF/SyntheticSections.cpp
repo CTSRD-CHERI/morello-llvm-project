@@ -304,6 +304,21 @@ Defined *addSyntheticLocal(StringRef name, uint8_t type, uint64_t value,
   return s;
 }
 
+Defined *addGlobalFunc(Symbol &sym, uint64_t value, uint64_t size,
+                       InputSectionBase &section) {
+  Symbol *globalSym = nullptr;
+  if (sym.binding != STB_LOCAL)
+    globalSym = symtab->addSymbol(
+        Defined{nullptr, saver.save("__descglobal_" + sym.getName()),
+                sym.binding, sym.stOther, STT_FUNC, value, size, &section});
+  else
+    // Don't include this in the symbol table to avoid any conflicts.
+    globalSym = make<Defined>(
+        nullptr, saver.save("__descglobal_" + sym.getName()), sym.binding,
+        sym.stOther, STT_FUNC, value, size, &section);
+  return cast<Defined>(globalSym);
+}
+
 static size_t getHashSize() {
   switch (config->buildId) {
   case BuildIdKind::Fast:

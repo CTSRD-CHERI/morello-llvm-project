@@ -171,6 +171,7 @@ ELF_RELOC(R_MORELLO_JUMP_SLOT,                       0xe802)
 ELF_RELOC(R_MORELLO_RELATIVE,                        0xe803)
 ELF_RELOC(R_MORELLO_IRELATIVE,                       0xe804)
 ELF_RELOC(R_MORELLO_TLSDESC,                         0xe805)
+ELF_RELOC(R_MORELLO_DESC_JUMP_SLOT,                  0xe806)
 
 // ELF_RELOC(R_AARCH64_P32_NONE,                         0)
 ELF_RELOC(R_AARCH64_P32_ABS32,                       0x001)

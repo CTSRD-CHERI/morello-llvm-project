@@ -138,6 +138,7 @@ RelExpr AArch64::getRelExpr(RelType type, const Symbol &s,
   case R_AARCH64_CONDBR19:
   case R_AARCH64_JUMP26:
   case R_AARCH64_TSTBR14:
+  case R_MORELLO_DESC_GLOBAL_CALL26:
     return R_PLT_PC;
   case R_AARCH64_PREL16:
   case R_AARCH64_PREL32:
@@ -174,6 +175,8 @@ RelExpr AArch64::getRelExpr(RelType type, const Symbol &s,
     return R_NONE;
   case R_MORELLO_CAPINIT:
     return R_CHERI_CAPABILITY;
+  case R_MORELLO_DESC_CAPINIT:
+    return R_MORELLO_DESC_CAPABILITY;
   case R_MORELLO_LD_PREL_LO17:
     return R_MORELLO_VADREF;
   default:
@@ -412,6 +415,7 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
     break;
   case R_MORELLO_CALL26:
   case R_MORELLO_JUMP26:
+  case R_MORELLO_DESC_GLOBAL_CALL26:
     // If bit 0 is clear then our target is in A64 state, interworking thunks
     // are not implemented yet.
     if ((val & 0x1) == 0x0)
@@ -819,7 +823,13 @@ public:
 private:
 };
 
-class AArch64C64DescABI final : public AArch64C64 {};
+class AArch64C64DescABI final : public AArch64C64 {
+public:
+  AArch64C64DescABI();
+  void writePltHeader(uint8_t *buf) const override;
+  void writePlt(uint8_t *buf, const Symbol &sym,
+                uint64_t pltEntryAddr) const override;
+};
 } // namespace
 
 AArch64C64::AArch64C64() {
@@ -931,6 +941,48 @@ void AArch64C64::relaxTlsGdToLe(uint8_t *loc, const Relocation &rel,
   default:
     AArch64::relaxTlsGdToLe(loc, rel, val);
   }
+}
+
+AArch64C64DescABI::AArch64C64DescABI() {
+  pltRel = R_MORELLO_DESC_JUMP_SLOT;
+}
+
+void AArch64C64DescABI::writePltHeader(uint8_t *buf) const {
+  const uint8_t pltData[] = {
+      0xf0, 0x7b, 0xbf, 0x62, // stp  c16, c30, [csp, #-32]!
+      0x10, 0x00, 0x80, 0x90, // adrp c16, Page(&(.plt.got[2]))
+      0x11, 0x02, 0x40, 0xc2, // ldr  c29, [c16, Offset(&(.plt.got[2]))]
+      0x10, 0x02, 0x00, 0x02, // add  c16, c16, Offset(&(.plt.got[2]))
+      0x1d, 0x12, 0xc4, 0xc2, // ldpbr	c29, [c16]
+      0x1f, 0x20, 0x03, 0xd5, // nop
+      0x1f, 0x20, 0x03, 0xd5, // nop
+      0x1f, 0x20, 0x03, 0xd5, // nop
+  };
+
+  memcpy(buf, pltData, sizeof(pltData));
+
+  uint64_t got = in.gotPlt->getVA();
+  uint64_t plt = in.plt->getVA();
+  relocateNoSym(buf + 4, R_MORELLO_ADR_PREL_PG_HI20,
+                getAArch64Page(got + 32) - getAArch64Page(plt + 4));
+  relocateNoSym(buf + 8, R_AARCH64_LDST128_ABS_LO12_NC, got + 32);
+  relocateNoSym(buf + 12, R_AARCH64_ADD_ABS_LO12_NC, got + 32);
+}
+
+void AArch64C64DescABI::writePlt(uint8_t *buf, const Symbol &sym,
+                                 uint64_t pltEntryAddr) const {
+  const uint8_t pltData[] = {
+      0x10, 0x00, 0x00, 0x90, // adrdp  c16, :got:foo
+      0x10, 0x02, 0x00, 0x02, // add   c16, c16, :got_lo12:foo
+      0x1d, 0x02, 0x40, 0xc2, // ldr   c29, [c16]
+      0xbd, 0x13, 0xc4, 0xc2, // ldpbr c29, [c29]
+  };
+  memcpy(buf, pltData, sizeof(pltData));
+
+  uint64_t gotPltEntryAddr = sym.getGotPltVA();
+  relocateNoSym(buf + 0, R_MORELLO_DESC_ADR_PREL_PG_HI20,
+                getAArch64Page(gotPltEntryAddr) - getAArch64Page(pltEntryAddr));
+  relocateNoSym(buf + 4, R_AARCH64_ADD_ABS_LO12_NC, gotPltEntryAddr);
 }
 
 static TargetInfo *getTargetInfo() {

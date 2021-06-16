@@ -627,6 +627,63 @@ template <class ELFT> void CheriCapRelocsSection<ELFT>::writeTo(uint8_t *buf) {
   assert(offset == getSize() && "Not all data written?");
 }
 
+MorelloGlobalEntrySection::MorelloGlobalEntrySection()
+    : SyntheticSection(SHF_ALLOC | SHF_EXECINSTR, SHT_PROGBITS, 8,
+                       "__desc_cap_plts") {
+  this->entsize = entrySize;
+}
+
+bool MorelloGlobalEntrySection::isNeeded() const { return !entries.empty(); }
+
+void MorelloGlobalEntrySection::finalizeContents() {
+  if (auto *r = symtab->find("__desc_cap_plts_start"))
+    if (auto *d = dyn_cast<Defined>(r))
+      d->value = this->outSecOff;
+
+  if (auto *r = symtab->find("__desc_cap_plts_end"))
+    if (auto *d = dyn_cast<Defined>(r))
+      d->value = this->outSecOff + this->getSize();
+}
+
+void MorelloGlobalEntrySection::addEntry(Symbol &sym) {
+  // Follow the One Definition Rule.
+  // once the capability pair has been allocated it must be reused, and
+  // this relocation should write the same value if it is applied against the
+  // same symbol in multiple locations.
+  if (!isa<Defined>(&sym))
+    return;
+  if (map.find(const_cast<Symbol *>(&sym)) == map.end()) {
+    Symbol *globalSym =
+        addGlobalFunc(sym, getSize() | 0x1, this->entsize, *this);
+    map.insert(std::make_pair(&sym, entries.size()));
+    globalSymMap.insert(std::make_pair(&sym, globalSym));
+    entries.push_back(&sym);
+  }
+}
+
+const Symbol *MorelloGlobalEntrySection::getGlobalEntry(const Symbol &sym) {
+  auto it = globalSymMap.find(const_cast<Symbol *>(&sym));
+  assert(it != globalSymMap.end());
+  return it->second;
+}
+
+void MorelloGlobalEntrySection::writeTo(uint8_t *buf) {
+  const uint8_t data[] = {
+      0x93, 0xd3, 0xc1, 0xc2, // mov  c19, c28
+      0xbc, 0xd3, 0xc1, 0xc2, // mov  c28, c29
+      0xd4, 0xd3, 0xc1, 0xc2, // mov  c20, c30
+      0x00, 0x00, 0x00, 0x94, // bl  sym
+      0x7c, 0xd2, 0xc1, 0xc2, // mov  c28, c19
+      0x80, 0x52, 0xc2, 0xc2, // ret  c20
+  };
+  for (const auto &i : this->entries) {
+    memcpy(buf, data, sizeof(data));
+    auto p = getGlobalEntry(*i)->getVA() + 12;
+    target->relocateNoSym(buf + 12, R_MORELLO_JUMP26, i->getVA() - p);
+    buf += this->entsize;
+  }
+}
+
 MorelloCapRelocsSection::MorelloCapRelocsSection()
     // Morello __cap_relocs are always RELRO, even if they could be RO to match
     // binutils.
