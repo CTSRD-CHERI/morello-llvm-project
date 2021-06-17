@@ -919,8 +919,12 @@ void AArch64C64::relaxTlsGdToLe(uint8_t *loc, const Relocation &rel,
 
 static TargetInfo *getTargetInfo() {
   if (config->morelloC64Plt) {
-    static AArch64C64 t;
-    return &t;
+    switch (config->cheriABIVariant) {
+    default: {
+      static AArch64C64 t;
+      return &t;
+    }
+    }
   }
   if (config->andFeatures & (GNU_PROPERTY_AARCH64_FEATURE_1_BTI |
                              GNU_PROPERTY_AARCH64_FEATURE_1_PAC)) {
