@@ -792,7 +792,7 @@ void AArch64BtiPac::writePlt(uint8_t *buf, const Symbol &sym,
 }
 
 namespace {
-class AArch64C64 final : public AArch64 {
+class AArch64C64 : public AArch64 {
 public:
   AArch64C64();
   void writePltHeader(uint8_t *buf) const override;
@@ -804,6 +804,8 @@ public:
 
 private:
 };
+
+class AArch64C64DescABI final : public AArch64C64 {};
 } // namespace
 
 AArch64C64::AArch64C64() {
@@ -920,6 +922,10 @@ void AArch64C64::relaxTlsGdToLe(uint8_t *loc, const Relocation &rel,
 static TargetInfo *getTargetInfo() {
   if (config->morelloC64Plt) {
     switch (config->cheriABIVariant) {
+    case CHERI_VARIANT_GLOBALS_ABI_FDESC: {
+      static AArch64C64DescABI t;
+      return &t;
+    }
     default: {
       static AArch64C64 t;
       return &t;
