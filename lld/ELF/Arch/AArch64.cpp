@@ -139,6 +139,7 @@ RelExpr AArch64::getRelExpr(RelType type, const Symbol &s,
   case R_AARCH64_JUMP26:
   case R_AARCH64_TSTBR14:
   case R_MORELLO_DESC_GLOBAL_CALL26:
+  case R_MORELLO_DESC_GLOBAL_JUMP26:
     return R_PLT_PC;
   case R_AARCH64_PREL16:
   case R_AARCH64_PREL32:
@@ -416,6 +417,7 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
   case R_MORELLO_CALL26:
   case R_MORELLO_JUMP26:
   case R_MORELLO_DESC_GLOBAL_CALL26:
+  case R_MORELLO_DESC_GLOBAL_JUMP26:
     // If bit 0 is clear then our target is in A64 state, interworking thunks
     // are not implemented yet.
     if ((val & 0x1) == 0x0)
