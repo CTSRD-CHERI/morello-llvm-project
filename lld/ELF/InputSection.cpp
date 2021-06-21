@@ -738,7 +738,7 @@ uint64_t InputSectionBase::getRelocTargetVA(const InputFile *file, RelType type,
     // return value is Page(G(GDAT(S+A)))-Page(D)
     // D is the address of section .descdata, where "sym" is located.
     return getAArch64Page(sym.getGotVA() + a) -
-           getAArch64Page(sym.getOutputSection()->getVA());
+           getAArch64Page(Out::descPhdr->firstSec->addr);
   case R_GOT_PC:
   case R_RELAX_TLS_GD_TO_IE:
     return sym.getGotVA() + a - p;
@@ -788,8 +788,7 @@ uint64_t InputSectionBase::getRelocTargetVA(const InputFile *file, RelType type,
     // return value is Page(S+A)-Page(D)
     // D is the address of section where "sym" is located.
     uint64_t val = sym.isUndefWeak() ? p + a : sym.getVA(a);
-    return getAArch64Page(val) -
-           getAArch64Page(sym.getOutputSection()->getVA());
+    return getAArch64Page(val) - getAArch64Page(Out::descPhdr->firstSec->addr);
   }
   case R_RISCV_PC_INDIRECT: {
     if (const Relocation *hiRel = getRISCVPCRelHi20(&sym, a))

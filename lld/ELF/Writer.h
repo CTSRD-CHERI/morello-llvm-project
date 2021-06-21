@@ -52,6 +52,7 @@ struct PhdrEntry {
 };
 
 void addReservedSymbols();
+bool isMorelloDescSection(const OutputSection *sec);
 llvm::StringRef getOutputSectionName(const InputSectionBase *s);
 
 template <class ELFT> uint32_t calcMipsEFlags();

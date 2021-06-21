@@ -166,6 +166,7 @@ static bool isEligible(InputSection *s) {
   // Don't merge writable sections. .data.rel.ro sections are marked as writable
   // but are semantically read-only.
   if ((s->flags & SHF_WRITE) && s->name != ".data.rel.ro" &&
+      !s->name.startswith(".desc.data.rel.ro.") &&
       !s->name.startswith(".data.rel.ro."))
     return false;
 

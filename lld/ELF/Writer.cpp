@@ -137,7 +137,8 @@ StringRef getOutputSectionName(const InputSectionBase *s) {
   for (StringRef v :
        {".text.", ".rodata.", ".data.rel.ro.", ".data.", ".bss.rel.ro.",
         ".bss.", ".init_array.", ".fini_array.", ".ctors.", ".dtors.", ".tbss.",
-        ".gcc_except_table.", ".tdata.", ".ARM.exidx.", ".ARM.extab."})
+        ".gcc_except_table.", ".tdata.", ".ARM.exidx.", ".ARM.extab.",
+        ".desc.data.rel.ro."})
     if (isSectionPrefix(v, s->name))
       return v.drop_back();
 
@@ -347,6 +348,11 @@ void addReservedSymbols() {
   ElfSym::newLibBss1 = add("__bss_start__", 0);
   ElfSym::newLibBss2 = add("__bss_end__", -1);
   ElfSym::newLibEnd = add("__end__", -1);
+
+  ElfSym::descStart = add("__desc_start", 0);
+  ElfSym::descEnd = add("__desc_end", -1);
+  ElfSym::descROStart = add("__desc_ro_start", 0);
+  ElfSym::descROEnd = add("__desc_ro_end", 0);
 }
 
 static OutputSection *findSection(StringRef name, unsigned partition = 1) {
@@ -871,6 +877,24 @@ template <class ELFT> void Writer<ELFT>::addSectionSymbols() {
   }
 }
 
+bool isMorelloDescSection(const OutputSection *sec) {
+  if (!(config->emachine == EM_AARCH64 &&
+      config->cheriABIVariant == CHERI_VARIANT_GLOBALS_ABI_FDESC))
+    return false;
+
+  // .init_array, .fini_array and .preinit_array goes to the
+  // private data segment.
+  uint32_t type = sec->type;
+  if (type == SHT_INIT_ARRAY || type == SHT_FINI_ARRAY ||
+      type == SHT_PREINIT_ARRAY)
+    return true;
+
+  // .desc.data.rel.ro, .got. .data and .bss goes to the
+  // private data segment.
+  StringRef s = sec->name;
+  return s == ".desc.data.rel.ro" || s == ".got" || s == ".data" || s == ".bss";
+}
+
 // Today's loaders have a feature to make segments read-only after
 // processing dynamic relocations to enhance security. PT_GNU_RELRO
 // is defined for that.
@@ -879,6 +903,9 @@ template <class ELFT> void Writer<ELFT>::addSectionSymbols() {
 // PT_GNU_RELRO segment.
 bool isRelroSection(const OutputSection *sec) {
   if (!config->zRelro)
+    return false;
+
+  if (isMorelloDescSection(sec))
     return false;
 
   uint64_t flags = sec->flags;
@@ -966,6 +993,8 @@ bool isRelroSection(const OutputSection *sec) {
 enum RankFlags {
   RF_NOT_ADDR_SET = 1 << 27,
   RF_NOT_ALLOC = 1 << 26,
+  RF_MORELLO_DESCDATA = 1 << 25,
+  RF_NOT_MORELLO_DESCDATA_TOP = 1 << 24,
   RF_PARTITION = 1 << 18, // Partition number (8 bits)
   RF_NOT_PART_EHDR = 1 << 17,
   RF_NOT_PART_PHDR = 1 << 16,
@@ -1052,6 +1081,15 @@ static unsigned getSectionRank(const OutputSection *sec) {
     rank |= RF_RODATA;
   }
 
+  if (isMorelloDescSection(sec))
+  {
+    StringRef name = sec->name;
+    rank |= RF_MORELLO_DESCDATA;
+    // Morello Descriptor ABI requires .got and .desc.data.rel.ro to be next to
+    // each other and .desc.data.rel.ro to be the start of the segment.
+    if (!(name == ".desc.data.rel.ro") && !(name == ".got"))
+      rank |= RF_NOT_MORELLO_DESCDATA_TOP;
+  }
   // Place RelRo sections first. After considering SHT_NOBITS below, the
   // ordering is PT_LOAD(PT_GNU_RELRO(.data.rel.ro .bss.rel.ro) | .data .bss),
   // where | marks where page alignment happens. An alternative ordering is
@@ -1228,6 +1266,22 @@ template <class ELFT> void Writer<ELFT>::setReservedSymbolSections() {
     ElfSym::relaDynStart->section = in.relaDyn;
     ElfSym::relaDynEnd->section = in.relaDyn;
     ElfSym::relaDynEnd->value = in.relaDyn->getSize();
+  }
+
+  if (ElfSym::descStart && Out::descPhdr) {
+    ElfSym::descStart->section = Out::descPhdr->firstSec;
+  }
+
+  if (ElfSym::descEnd && Out::descPhdr) {
+    ElfSym::descEnd->section = Out::descPhdr->lastSec;
+  }
+
+  if (ElfSym::descROStart && Out::descROStart) {
+    ElfSym::descROStart->section = Out::descROStart;
+  }
+
+  if (ElfSym::descROEnd && Out::descROEnd) {
+    ElfSym::descROEnd->section = Out::descROEnd;
   }
 
   PhdrEntry *last = nullptr;
@@ -2242,6 +2296,11 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
     for (PhdrEntry *p : mainPart->phdrs)
       if (p->p_type == PT_TLS)
         Out::tlsPhdr = p;
+
+    // Find the Descriptor Data segment.
+    for (PhdrEntry *p : mainPart->phdrs)
+      if (p->p_type == PT_MORELLO_DESC)
+        Out::descPhdr = p;
   }
 
   // Some symbols are defined in term of program headers. Now that we
@@ -2592,6 +2651,47 @@ std::vector<PhdrEntry *> Writer<ELFT>::createPhdrs(Partition &part) {
 
   if (relRo->firstSec)
     ret.push_back(relRo);
+
+  // PT_MORELLO_DESC
+  PhdrEntry *morelloDesc = make<PhdrEntry>(PT_MORELLO_DESC, PF_R | PF_W);
+  bool inMorelloDescPhdr = false;
+  bool inMorelloDescROStart = false;
+  OutputSection *morelloDescEnd = nullptr;
+  Out::descROEnd = nullptr;
+  for (OutputSection *sec : outputSections) {
+    if (sec->partition != partNo || !needsPtLoad(sec))
+      continue;
+    if (isMorelloDescSection(sec)) {
+      // Page align the first section.
+      if (!inMorelloDescPhdr) {
+        sec->alignment = config->maxPageSize;
+        Out::descROStart = sec;
+        Out::descROEnd = sec;
+      }
+      inMorelloDescPhdr = true;
+      // Keep tabs on the start/end of the RO section
+      if (!(sec->flags & SHF_WRITE)) {
+        if (!inMorelloDescROStart) {
+          inMorelloDescROStart = true;
+          Out::descROStart = sec;
+        }
+        Out::descROEnd = sec;
+      } else if (inMorelloDescROStart) {
+        inMorelloDescROStart = false;
+        Out::descROEnd = sec;
+      }
+      if (!morelloDescEnd)
+        morelloDesc->add(sec);
+      else
+        error("section: " + sec->name + " is not contiguous with other morello" +
+              " desc sections");
+    } else if (inMorelloDescPhdr) {
+      inMorelloDescPhdr = false;
+      morelloDescEnd = sec;
+    }
+  }
+  if (morelloDesc->firstSec)
+    ret.push_back(morelloDesc);
 
   // PT_GNU_EH_FRAME is a special section pointing on .eh_frame_hdr.
   if (part.ehFrame->isNeeded() && part.ehFrameHdr &&

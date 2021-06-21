@@ -32,6 +32,10 @@ _start:
   /// So expect this to remain adrp
   adrp c7, :got:foo
   ldr c7, [c7, :got_lo12:foo]
+  /// "bar" is in section .desc.data.rel.ro.
+  /// So expect this to be converted into an adrdp
+  adrp c8, :got:bar
+  ldr c8, [c8, :got_lo12:bar]
 
 
 // SEC:   Sections [
@@ -40,44 +44,85 @@ _start:
 // SEC-NEXT:     Flags [
 // SEC-NEXT:       SHF_ALLOC
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x390
+// SEC-NEXT:     Address: 0x568
 // SEC:     Name: .text
 // SEC-NEXT:     Type: SHT_PROGBITS
 // SEC-NEXT:     Flags [
 // SEC-NEXT:       SHF_ALLOC
 // SEC-NEXT:       SHF_EXECINSTR
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x1239C
+// SEC-NEXT:     Address: 0x12574
 // SEC:     Name: .data.rel.ro
 // SEC-NEXT:     Type: SHT_PROGBITS
 // SEC-NEXT:     Flags [
 // SEC-NEXT:       SHF_ALLOC
 // SEC-NEXT:       SHF_WRITE
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x223B4
+// SEC-NEXT:     Address: 0x22594
+// SEC:     Name: .desc.data.rel.ro
+// SEC-NEXT:     Type: SHT_PROGBITS
+// SEC-NEXT:     Flags [
+// SEC-NEXT:       SHF_ALLOC
+// SEC-NEXT:       SHF_WRITE
+// SEC-NEXT:     ]
+// SEC-NEXT:     Address: 0x40000
 // SEC:     Name: .got
 // SEC-NEXT:     Type: SHT_PROGBITS
 // SEC-NEXT:     Flags [
 // SEC-NEXT:       SHF_ALLOC
 // SEC-NEXT:       SHF_WRITE
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x24460
+// SEC-NEXT:     Address: 0x42010
 // SEC:     Name: .data
 // SEC-NEXT:     Type: SHT_PROGBITS
 // SEC-NEXT:     Flags [
 // SEC-NEXT:       SHF_ALLOC
 // SEC-NEXT:       SHF_WRITE
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x344C0
+// SEC-NEXT:     Address: 0x42080
+// SEC:     Name: .init_array
+// SEC-NEXT:     Type: SHT_INIT_ARRAY
+// SEC-NEXT:     Flags [
+// SEC-NEXT:       SHF_ALLOC
+// SEC-NEXT:       SHF_WRITE
+// SEC-NEXT:     ]
+// SEC-NEXT:     Address: 0x420C0
+// SEC:     Name: .fini_array
+// SEC-NEXT:     Type: SHT_FINI_ARRAY
+// SEC-NEXT:     Flags [
+// SEC-NEXT:       SHF_ALLOC
+// SEC-NEXT:       SHF_WRITE
+// SEC-NEXT:     ]
+// SEC-NEXT:     Address: 0x420C8
+// SEC:     Name: .bss
+// SEC-NEXT:     Type: SHT_NOBITS
+// SEC-NEXT:     Flags [
+// SEC-NEXT:       SHF_ALLOC
+// SEC-NEXT:       SHF_WRITE
+// SEC-NEXT:     ]
+// SEC-NEXT:     Address: 0x42108
 
 // RELOCS: Relocations [
 // RELOCS-NEXT: .rela.dyn
-// RELOCS-NEXT: 0x24470 R_MORELLO_GLOB_DAT bye 0x0
-// RELOCS-NEXT: 0x24480 R_MORELLO_GLOB_DAT foo 0x0
-// RELOCS-NEXT: 0x24460 R_MORELLO_GLOB_DAT hello 0x0
+// RELOCS-NEXT: 0x42040 R_MORELLO_GLOB_DAT bar 0x0
+// RELOCS-NEXT: 0x420A8 R_AARCH64_ABS64 __desc_end 0x0
+// RELOCS-NEXT: 0x420B8 R_AARCH64_ABS64 __desc_ro_end 0x0
+// RELOCS-NEXT: 0x42020 R_MORELLO_GLOB_DAT bye 0x0
+// RELOCS-NEXT: 0x42030 R_MORELLO_GLOB_DAT foo 0x0
+// RELOCS-NEXT: 0x42010 R_MORELLO_GLOB_DAT hello 0x0
+// RELOCS-NEXT: 0x420B0 R_AARCH64_ABS64 __desc_ro_start 0x0
+// RELOCS-NEXT: 0x420A0 R_AARCH64_ABS64 __desc_start 0x0
 
+// SYM:    Name: bar
+// SYM-NEXT:    Value: 0x42000
+// SYM-NEXT:    Size: 4
+// SYM-NEXT:    Binding: Global
+// SYM-NEXT:    Type: Object
+// SYM-NEXT:    Other: 0
+// SYM-NEXT:    Section: .desc.data.rel.ro
+// SYM-NEXT:  }
 // SYM:    Name: bye
-// SYM-NEXT:    Value: 0x2390
+// SYM-NEXT:    Value: 0x2568
 // SYM-NEXT:    Size: 10
 // SYM-NEXT:    Binding: Global
 // SYM-NEXT:    Type: Object
@@ -86,7 +131,7 @@ _start:
 // SYM-NEXT:  }
 // SYM-NEXT:  Symbol {
 // SYM-NEXT:    Name: foo
-// SYM-NEXT:    Value: 0x243B4
+// SYM-NEXT:    Value: 0x24594
 // SYM-NEXT:    Size: 4
 // SYM-NEXT:    Binding: Global
 // SYM-NEXT:    Type: Object
@@ -95,52 +140,118 @@ _start:
 // SYM-NEXT:  }
 // SYM-NEXT:  Symbol {
 // SYM-NEXT:    Name: hello
-// SYM-NEXT:    Value: 0x344D4
+// SYM-NEXT:    Value: 0x42094
 // SYM-NEXT:    Size: 12
 // SYM-NEXT:    Binding: Global
 // SYM-NEXT:    Type: Object
 // SYM-NEXT:    Other: 0
 // SYM-NEXT:    Section: .data
 // SYM-NEXT:  }
+// SYM-NEXT:  Symbol {
+// SYM-NEXT:    Name: __desc_end
+// SYM-NEXT:    Value: 0x4210C
+// SYM-NEXT:    Size: 0
+// SYM-NEXT:    Binding: Global
+// SYM-NEXT:    Type: None
+// SYM-NEXT:    Other: 0
+// SYM-NEXT:    Section: .bss
+// SYM-NEXT:  }
+// SYM-NEXT:  Symbol {
+// SYM-NEXT:    Name: __desc_ro_end
+// SYM-NEXT:    Value: 0x40000
+// SYM-NEXT:    Size: 0
+// SYM-NEXT:    Binding: Global
+// SYM-NEXT:    Type: None
+// SYM-NEXT:    Other: 0
+// SYM-NEXT:    Section: .desc.data.rel.ro
+// SYM-NEXT:  }
+// SYM-NEXT:  Symbol {
+// SYM-NEXT:    Name: __desc_ro_start
+// SYM-NEXT:    Value: 0x40000
+// SYM-NEXT:    Size: 0
+// SYM-NEXT:    Binding: Global
+// SYM-NEXT:    Type: None
+// SYM-NEXT:    Other: 0
+// SYM-NEXT:    Section: .desc.data.rel.ro
+// SYM-NEXT:  }
+// SYM-NEXT:  Symbol {
+// SYM-NEXT:    Name: __desc_start
+// SYM-NEXT:    Value: 0x40000
+// SYM-NEXT:    Size: 0
+// SYM-NEXT:    Binding: Global
+// SYM-NEXT:    Type: None
+// SYM-NEXT:    Other: 0
+// SYM-NEXT:    Section: .desc.data.rel.ro
+// SYM-NEXT:  }
+// SYM-NEXT:  Symbol {
+// SYM-NEXT:    Name: bss
+// SYM-NEXT:    Value: 0x42108
+// SYM-NEXT:    Size: 4
+// SYM-NEXT:    Binding: Global
+// SYM-NEXT:    Type: Object
+// SYM-NEXT:    Other: 0
+// SYM-NEXT:    Section: .bss
+// SYM-NEXT:  }
 
 // GOT: Hex dump of section '.got'
-// GOT-NEXT: 0x00024460 d4440300 00000000 0c000000 00000002
-// GOT-NEXT: 0x00024470 90230000 00000000 0a000000 00000001
-// GOT-NEXT: 0x00024480 b4430200 00000000 04000000 00000001
+// GOT-NEXT: 0x00042010 94200400 00000000 0c000000 00000002
+// GOT-NEXT: 0x00042020 68250000 00000000 0a000000 00000001
+// GOT-NEXT: 0x00042030 94450200 00000000 04000000 00000001
+// GOT-NEXT: 0x00042040 00200400 00000000 04000000 00000002
+// GOT-NEXT: 0x00042050 00000000 00000000 00000000 00000000
+// GOT-NEXT: 0x00042060 00000000 00000000 00000000 00000000
+// GOT-NEXT: 0x00042070 00000000 00000000 00000000 00000000
 
-// DIS: 000000000001239c <_start>:
+// DIS: 0000000000012574 <_start>:
 
-/// Immediate of adrdp = Page(GOT(hello)) - Page(.data) =
-/// Page(0x24450) - Page(0x34480 =
-/// 0x24000 - 34000 =
-/// #0xffff0000
-// DIS: 1239c: adrdp	c5, #0xffff0000
-// DIS: 123a0: ldr  c5, [c5, #0x460]
+/// Immediate of adrdp = Page(GOT(hello)) - Page(PT_MORELLO_DESC) =
+/// Page(0x42010) - Page(0x40000) =
+/// 0x42000 - 0x40000 =
+/// 0x42000
+// DIS: 12574: adrdp	c5, #0x2000
+// DIS: 12578: ldr  c5, [c5, #0x10]
 
-/// Immediate of adrdp = Page(GOT(bye)) - Page(.desc.data) =
-/// Page(0x24460) - Page(0x390) =
-/// 0x24000 - 0 =
-/// 0x24000
-// DIS: 123a4: adrdp	c6, #0x24000
-// DIS: 123a8: ldr  c6, [c6, #0x470]
+/// Immediate of adrdp = Page(GOT(bye)) - Page(PT_MORELLO_DESC) =
+/// Page(0x42020) - Page(0x40000) =
+/// 0x42000 - 0x40000 =
+/// 0x2000
+// DIS: 1257c: adrdp	c6, #0x2000
+// DIS: 12580: ldr  c6, [c6, #0x20]
 
-/// Immediate of adrdp = Page(GOT(foo)) - Page(location) =
-/// Page(0x24470) - Page(123a4) =
-/// 0x24000 - 0x12000 =
-/// 0x12000
-// DIS: 123ac: adrp	c7, #0x12000
-// DIS: 123b0: ldr  c7, [c7, #0x480]
+/// Immediate of adrp = Page(GOT(foo)) - Page(PT_MORELLO_DESC) =
+/// Page(0x42030) - Page(0x40000) =
+/// 0x42000 - 0x40000 =
+/// 0x2000
+// DIS: 12584: adrdp	c7, #0x2000
+// DIS: 12588: ldr  c7, [c7, #0x30]
+
+/// Immediate of adrdp = Page(GOT(bar)) - Page(PT_MORELLO_DESC) =
+/// Page(0x42040) - Page(0x40000) =
+/// 0x42000 - 0x40000 =
+/// 0x2000
+// DIS: 1258c: adrdp	c8, #0x2000
+// DIS: 12590: ldr  c8, [c8, #0x40]
+
 
 // STATIC_UNDEF: error: undefined symbol: hello
 
 // SHARED_RELOCS: Relocations
 // SHARED_RELOCS-NEXT: .rela.dyn
-// SHARED_RELOCS-NEXT: 0x20410 R_MORELLO_GLOB_DAT bye 0x0
-// SHARED_RELOCS-NEXT: 0x20420 R_MORELLO_GLOB_DAT foo 0x0
-// SHARED_RELOCS-NEXT: 0x20400 R_MORELLO_GLOB_DAT hello 0x0
+// SHARED_RELOCS-NEXT: 0x40030 R_MORELLO_GLOB_DAT bar 0x0
+// SHARED_RELOCS-NEXT: 0x40010 R_MORELLO_GLOB_DAT bye 0x0
+// SHARED_RELOCS-NEXT: 0x40020 R_MORELLO_GLOB_DAT foo 0x0
+// SHARED_RELOCS-NEXT: 0x40000 R_MORELLO_GLOB_DAT hello 0x0
 
 
 // SHARED_SYM:  Symbol
+// SHARED-SYM:    Name: bar
+// SHARED-SYM-NEXT:    Value: 0x0
+// SHARED-SYM-NEXT:    Size: 0
+// SHARED-SYM-NEXT:    Binding: Global
+// SHARED-SYM-NEXT:    Type: None
+// SHARED-SYM-NEXT:    Other: 0
+// SHARED-SYM-NEXT:    Section: Undefined
+// SHARED-SYM-NEXT:  }
 // SHARED_SYM:    Name: bye
 // SHARED_SYM-NEXT:    Value: 0x0
 // SHARED_SYM-NEXT:    Size: 0
@@ -168,20 +279,24 @@ _start:
 // SHARED_SYM-NEXT:  }
 
 // SHARED_GOT: Hex dump of section '.got'
-// SHARED_GOT-NEXT: 0x00020400 00000000 00000000 00000000 00000002
-// SHARED_GOT-NEXT: 0x00020410 00000000 00000000 00000000 00000002
-// SHARED_GOT-NEXT: 0x00020420 00000000 00000000 00000000 00000002
+// SHARED_GOT-NEXT: 0x00040000 00000000 00000000 00000000 00000002
+// SHARED_GOT-NEXT: 0x00040010 00000000 00000000 00000000 00000002
+// SHARED_GOT-NEXT: 0x00040020 00000000 00000000 00000000 00000002
+// SHARED_GOT-NEXT: 0x00040030 00000000 00000000 00000000 00000002
 
-/// Because all symbols are undefined, the adrp instruction is used.
-/// Immediate of adrp = Page(GOT(symbol)) - Page(location) =
-/// Page(0x203X0) - Page(0x10308) =
-/// 0x20000 - 10000 =
-/// 0x10000
+/// Because all symbols are loaded from the GOT, and the GOT is
+/// in the private data segment, the adrdp instruction is used.
+/// Immediate of adrp = Page(GOT(symbol)) - Page(PT_MORELLO_DESC) =
+/// Page(0x400X0) - Page(0x40000) =
+/// 0x40000 - 40000 =
+/// 0x0
 
-// SHARED_DIS: 0000000000010340 <_start>:
-// SHARED_DIS: 10340: adrp	c5, #0x10000
-// SHARED_DIS: 10344: ldr  c5, [c5, #0x400]
-// SHARED_DIS: 10348: adrp	c6, #0x10000
-// SHARED_DIS: 1034c: ldr  c6, [c6, #0x410]
-// SHARED_DIS: 10350: adrp	c7, #0x10000
-// SHARED_DIS: 10354: ldr  c7, [c7, #0x420]
+// SHARED_DIS: 0000000000010400 <_start>:
+// SHARED_DIS: 10400: adrdp	c5, #0x0
+// SHARED_DIS: 10404: ldr  c5, [c5, #0x0]
+// SHARED_DIS: 10408: adrdp	c6, #0x0
+// SHARED_DIS: 1040c: ldr  c6, [c6, #0x10]
+// SHARED_DIS: 10410: adrdp	c7, #0x0
+// SHARED_DIS: 10414: ldr  c7, [c7, #0x20]
+// SHARED_DIS: 10418: adrdp	c8, #0x0
+// SHARED_DIS: 1041c: ldr  c8, [c8, #0x30]

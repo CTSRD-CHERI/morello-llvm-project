@@ -22,12 +22,15 @@ _start:
   /// "hello" is in .data.
   /// So expect this to be converted into an adrdp
   adrp c5, hello
-  /// "bye" is in section .descdata.
-  /// So expect this to be converted into an adrdp
+  /// "bye" is in .desc.data.
+  /// So expect this to remain adrp
   adrp c6, bye
-  /// "foo" is in  .data.rel.ro.
+  /// "foo" is in .data.rel.ro.
   /// So expect this to remain adrp
   adrp c7, foo
+  /// "bar" is in .desc.data.rel.ro.
+  /// So expect this to be converted into an adrdp
+  adrp c8, bar
 
 
 // SEC:   Sections [
@@ -36,31 +39,68 @@ _start:
 // SEC-NEXT:     Flags [
 // SEC-NEXT:       SHF_ALLOC
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x200218
+// SEC-NEXT:     Address: 0x200258
 // SEC:     Name: .text
 // SEC-NEXT:     Type: SHT_PROGBITS
 // SEC-NEXT:     Flags [
 // SEC-NEXT:       SHF_ALLOC
 // SEC-NEXT:       SHF_EXECINSTR
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x212224
+// SEC-NEXT:     Address: 0x212264
 // SEC:     Name: .data.rel.ro
 // SEC-NEXT:     Type: SHT_PROGBITS
 // SEC-NEXT:     Flags [
 // SEC-NEXT:       SHF_ALLOC
 // SEC-NEXT:       SHF_WRITE
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x222240
+// SEC-NEXT:     Address: 0x222280
+// SEC:     Name: .desc.data.rel.ro
+// SEC-NEXT:     Type: SHT_PROGBITS
+// SEC-NEXT:     Flags [
+// SEC-NEXT:       SHF_ALLOC
+// SEC-NEXT:       SHF_WRITE
+// SEC-NEXT:     ]
+// SEC-NEXT:     Address: 0x240000
 // SEC:     Name: .data
 // SEC-NEXT:     Type: SHT_PROGBITS
 // SEC-NEXT:     Flags [
 // SEC-NEXT:       SHF_ALLOC
 // SEC-NEXT:       SHF_WRITE
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x234244
+// SEC-NEXT:     Address: 0x242004
+// SEC:     Name: .init_array
+// SEC-NEXT:     Type: SHT_INIT_ARRAY
+// SEC-NEXT:     Flags [
+// SEC-NEXT:       SHF_ALLOC
+// SEC-NEXT:       SHF_WRITE
+// SEC-NEXT:     ]
+// SEC-NEXT:     Address: 0x242044
+// SEC:     Name: .fini_array
+// SEC-NEXT:     Type: SHT_FINI_ARRAY
+// SEC-NEXT:     Flags [
+// SEC-NEXT:       SHF_ALLOC
+// SEC-NEXT:       SHF_WRITE
+// SEC-NEXT:     ]
+// SEC-NEXT:     Address: 0x24204C
+// SEC:     Name: .bss
+// SEC-NEXT:     Type: SHT_NOBITS
+// SEC-NEXT:     Flags [
+// SEC-NEXT:       SHF_ALLOC
+// SEC-NEXT:       SHF_WRITE
+// SEC-NEXT:     ]
+// SEC-NEXT:     Address: 0x24208C
 
+// SYM:    Symbols [
+// SYM:    Name: bar
+// SYM-NEXT:    Value: 0x242000
+// SYM-NEXT:    Size: 4
+// SYM-NEXT:    Binding: Global
+// SYM-NEXT:    Type: Object
+// SYM-NEXT:    Other: 0
+// SYM-NEXT:    Section: .desc.data.rel.ro
+// SYM-NEXT:  }
 // SYM:    Name: bye
-// SYM-NEXT:    Value: 0x202218
+// SYM-NEXT:    Value: 0x202258
 // SYM-NEXT:    Size: 10
 // SYM-NEXT:    Binding: Global
 // SYM-NEXT:    Type: Object
@@ -69,7 +109,7 @@ _start:
 // SYM-NEXT:  }
 // SYM-NEXT:  Symbol {
 // SYM-NEXT:    Name: foo
-// SYM-NEXT:    Value: 0x224240
+// SYM-NEXT:    Value: 0x224280
 // SYM-NEXT:    Size: 4
 // SYM-NEXT:    Binding: Global
 // SYM-NEXT:    Type: Object
@@ -78,34 +118,85 @@ _start:
 // SYM-NEXT:  }
 // SYM-NEXT:  Symbol {
 // SYM-NEXT:    Name: hello
-// SYM-NEXT:    Value: 0x234258
+// SYM-NEXT:    Value: 0x242018
 // SYM-NEXT:    Size: 12
 // SYM-NEXT:    Binding: Global
 // SYM-NEXT:    Type: Object
 // SYM-NEXT:    Other: 0
 // SYM-NEXT:    Section: .data
 // SYM-NEXT:  }
+// SYM-NEXT:  Symbol {
+// SYM-NEXT:    Name: __desc_end
+// SYM-NEXT:    Value: 0x242090
+// SYM-NEXT:    Size: 0
+// SYM-NEXT:    Binding: Global
+// SYM-NEXT:    Type: None
+// SYM-NEXT:    Other: 0
+// SYM-NEXT:    Section: .bss
+// SYM-NEXT:  }
+// SYM-NEXT:  Symbol {
+// SYM-NEXT:    Name: __desc_ro_end
+// SYM-NEXT:    Value: 0x240000
+// SYM-NEXT:    Size: 0
+// SYM-NEXT:    Binding: Global
+// SYM-NEXT:    Type: None
+// SYM-NEXT:    Other: 0
+// SYM-NEXT:    Section: .desc.data.rel.ro
+// SYM-NEXT:  }
+// SYM-NEXT:  Symbol {
+// SYM-NEXT:    Name: __desc_ro_start
+// SYM-NEXT:    Value: 0x240000
+// SYM-NEXT:    Size: 0
+// SYM-NEXT:    Binding: Global
+// SYM-NEXT:    Type: None
+// SYM-NEXT:    Other: 0
+// SYM-NEXT:    Section: .desc.data.rel.ro
+// SYM-NEXT:  }
+// SYM-NEXT:  Symbol {
+// SYM-NEXT:    Name: __desc_start
+// SYM-NEXT:    Value: 0x240000
+// SYM-NEXT:    Size: 0
+// SYM-NEXT:    Binding: Global
+// SYM-NEXT:    Type: None
+// SYM-NEXT:    Other: 0
+// SYM-NEXT:    Section: .desc.data.rel.ro
+// SYM-NEXT:  }
+// SYM-NEXT:  Symbol {
+// SYM-NEXT:    Name: bss
+// SYM-NEXT:    Value: 0x24208C
+// SYM-NEXT:    Size: 4
+// SYM-NEXT:    Binding: Global
+// SYM-NEXT:    Type: Object
+// SYM-NEXT:    Other: 0
+// SYM-NEXT:    Section: .bss
+// SYM-NEXT:  }
 
 
-// DIS: 0000000000212224 <_start>:
+// DIS: 0000000000212264 <_start>:
 
-/// Immediate of adrdp = Page(hello) - Page(.data) =
-/// Page(0x234258) - Page(0x234244) =
-/// 0x234000 - 234000 =
-/// 0x0
-// DIS: 212224: adrdp	c5, #0x0
-
-/// Immediate of adrdp = Page(bye) - Page(.desc.data) =
-/// Page(0x202218) - Page(0x200200) =
-/// 0x202000 - 200000 =
+/// Immediate of adrdp = Page(hello) - Page(__desc_start) =
+/// Page(0x242018) - Page(0x240000) =
+/// 0x242000 - 0x240000 =
 /// 0x2000
-// DIS: 212228: adrdp	c6, #0x2000
+// DIS: 212264: adrdp	c5, #0x2000
+
+/// Immediate of adrp = Page(bye) - Page(location) =
+/// Page(0x202258) - Page(2122a8) =
+/// 0x202000 - 0x212000 =
+/// -0x10000
+// DIS: 212268: adrp	c6, #-0x10000
 
 /// Immediate of adrp = Page(foo) - Page(location) =
-/// Page(0x224240) - Page(21222c) =
+/// Page(0x224280) - Page(2122ac) =
 /// 0x224000 - 212000 =
 /// 0x12000
-// DIS: 21222c: adrp	c7, #0x12000
+// DIS: 21226c: adrp	c7, #0x12000
+
+/// Immediate of adrp = Page(bar) - Page(__desc_start) =
+/// Page(0x242000) - Page(0x240000) =
+/// 0x242000 - 0x240000 =
+/// 0x2000
+// DIS: 212270: adrdp	c8, #0x2000
 
 // STATIC_UNDEF: error: undefined symbol: hello
 // SHARED_UNDEF: error: relocation R_MORELLO_DESC_ADR_PREL_PG_HI20 cannot be used against symbol hello; recompile with -fPIC

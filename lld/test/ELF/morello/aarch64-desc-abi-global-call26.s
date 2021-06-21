@@ -20,28 +20,28 @@ _start:
 // SEC-NEXT:     SHF_ALLOC
 // SEC-NEXT:     SHF_EXECINSTR
 // SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x10390
+// SEC-NEXT:   Address: 0x103D0
 // SEC:   Name: function
 // SEC-NEXT:   Type: SHT_PROGBITS
 // SEC-NEXT:   Flags [
 // SEC-NEXT:     SHF_ALLOC
 // SEC-NEXT:     SHF_EXECINSTR
 // SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x1039C
+// SEC-NEXT:   Address: 0x103DC
 // SEC:   Name: ifunction
 // SEC-NEXT:   Type: SHT_PROGBITS
 // SEC-NEXT:   Flags [
 // SEC-NEXT:     SHF_ALLOC
 // SEC-NEXT:     SHF_EXECINSTR
 // SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x103A0
+// SEC-NEXT:   Address: 0x103E0
 // SEC:   Name: __desc_cap_plts
 // SEC-NEXT:   Type: SHT_PROGBITS
 // SEC-NEXT:   Flags [
 // SEC-NEXT:     SHF_ALLOC
 // SEC-NEXT:     SHF_EXECINSTR
 // SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x103A8
+// SEC-NEXT:   Address: 0x103E8
 // SEC-NEXT:   Offset:
 // SEC-NEXT:   Size: 48
 // SEC-NEXT:   Link: 0
@@ -54,9 +54,22 @@ _start:
 // SEC-NEXT:     SHF_ALLOC
 // SEC-NEXT:     SHF_EXECINSTR
 // SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x103E0
+// SEC-NEXT:   Address: 0x10420
 // SEC-NEXT:   Offset:
 // SEC-NEXT:   Size: 48
+// SEC-NEXT:   Link: 0
+// SEC-NEXT:   Info: 0
+// SEC-NEXT:   AddressAlignment: 16
+// SEC-NEXT:   EntrySize: 0
+// SEC:   Name: .got.plt
+// SEC-NEXT:   Type: SHT_PROGBITS
+// SEC-NEXT:   Flags [
+// SEC-NEXT:     SHF_ALLOC
+// SEC-NEXT:     SHF_WRITE
+// SEC-NEXT:   ]
+// SEC-NEXT:   Address: 0x30530
+// SEC-NEXT:   Offset:
+// SEC-NEXT:   Size: 80
 // SEC-NEXT:   Link: 0
 // SEC-NEXT:   Info: 0
 // SEC-NEXT:   AddressAlignment: 16
@@ -67,94 +80,80 @@ _start:
 // SEC-NEXT:     SHF_ALLOC
 // SEC-NEXT:     SHF_WRITE
 // SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x304F0
-// SEC:   Name: .got.plt
-// SEC-NEXT:   Type: SHT_PROGBITS
-// SEC-NEXT:   Flags [
-// SEC-NEXT:     SHF_ALLOC
-// SEC-NEXT:     SHF_WRITE
-// SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x30520
-// SEC-NEXT:   Offset:
-// SEC-NEXT:   Size: 96
-// SEC-NEXT:   Link: 0
-// SEC-NEXT:   Info: 0
-// SEC-NEXT:   AddressAlignment: 16
-// SEC-NEXT:   EntrySize: 0
-// SEC-NEXT: }
+// SEC-NEXT:   Address: 0x40000
 
 // RELOCS:      Relocations [
 // RELOCS-NEXT:   .rela.dyn {
-// RELOCS-NEXT:     0x304F0 R_MORELLO_CAPINIT func 0x0
-// RELOCS-NEXT:     0x30500 R_MORELLO_CAPINIT func 0x0
-// RELOCS-NEXT:     0x30510 R_MORELLO_CAPINIT ifunc 0x0
+// RELOCS-NEXT:     0x40000 R_MORELLO_CAPINIT func 0x0
+// RELOCS-NEXT:     0x40010 R_MORELLO_CAPINIT func 0x0
+// RELOCS-NEXT:     0x40020 R_MORELLO_CAPINIT ifunc 0x0
 // RELOCS-NEXT:   }
 // RELOCS-NEXT:   .rela.plt {
-// RELOCS-NEXT:     0x30550 R_MORELLO_DESC_JUMP_SLOT func 0x0
+// RELOCS-NEXT:     0x30560 R_MORELLO_DESC_JUMP_SLOT func 0x0
 // RELOCS-NEXT:   }
 // RELOCS-NEXT: ]
 
 // SYM:     Name: funcptr1
-// SYM-NEXT:     Value: 0x304F0
+// SYM-NEXT:     Value: 0x40000
 // SYM-NEXT:     Size: 16
 // SYM-NEXT:     Binding: Local
 // SYM-NEXT:     Type: None
 // SYM-NEXT:     Other: 0
 // SYM-NEXT:     Section: .data
 // SYM:     Name: funcptr2
-// SYM-NEXT:     Value: 0x30500
+// SYM-NEXT:     Value: 0x40010
 // SYM-NEXT:     Size: 16
 // SYM-NEXT:     Binding: Local
 // SYM-NEXT:     Type: None
 // SYM-NEXT:     Other: 0
 // SYM-NEXT:     Section: .data
 // SYM:     Name: func
-// SYM-NEXT:     Value: 0x1039D
+// SYM-NEXT:     Value: 0x103DD
 // SYM-NEXT:     Size: 3
 // SYM-NEXT:     Binding: Global
 // SYM-NEXT:     Type: Function
 // SYM-NEXT:     Other: 0
 // SYM-NEXT:     Section: function
 // SYM:     Name: ifunc
-// SYM-NEXT:     Value: 0x103A1
+// SYM-NEXT:     Value: 0x103E1
 // SYM-NEXT:     Size: 3
 // SYM-NEXT:     Binding: Global
 // SYM-NEXT:     Type: GNU_IFunc
 // SYM-NEXT:     Other: 0
 // SYM-NEXT:     Section: ifunction
 // SYM:     Name: __descglobal_func
-// SYM-NEXT:     Value: 0x103A9
+// SYM-NEXT:     Value: 0x103E9
 // SYM-NEXT:     Size: 24
 // SYM-NEXT:     Binding: Global
 // SYM-NEXT:     Type: Function
 // SYM-NEXT:     Other: 0
 // SYM-NEXT:     Section: __desc_cap_plts
 
-// DIS: 0000000000010390 <_start>:
-// DIS-NEXT:   10390:  bl 0x10400
-// DIS-NEXT:   10394:  bl 0x10400
+// DIS: 00000000000103d0 <_start>:
+// DIS-NEXT:   103d0:  bl 0x10440
+// DIS-NEXT:   103d4:  bl 0x10440
 
-// DIS: 000000000001039c <func>:
-// DIS: 00000000000103a1 <ifunc>:
+// DIS: 00000000000103dc <func>:
+// DIS: 00000000000103e1 <ifunc>:
 
-// DIS: 00000000000103a8 <__descglobal_func>:
-// DIS-NEXT:   103a8:  mov c19, c28
-// DIS-NEXT:   103ac:  mov c28, c29
-// DIS-NEXT:   103b0:  mov c20, c30
-// DIS-NEXT:   103b4:  bl 0x1039c <func
-// DIS-NEXT:   103b8:  mov c28, c19
-// DIS-NEXT:   103bc:  ret c20
+// DIS: 00000000000103e8 <__descglobal_func>:
+// DIS-NEXT:   103e8:  mov c19, c28
+// DIS-NEXT:   103ec:  mov c28, c29
+// DIS-NEXT:   103f0:  mov c20, c30
+// DIS-NEXT:   103f4:  bl 0x103dc <func
+// DIS-NEXT:   103f8:  mov c28, c19
+// DIS-NEXT:   103fc:  ret c20
 
-// DIS: 00000000000103e0 <.plt>:
-// DIS-NEXT:   103e0: stp c16, c30, [csp, #-0x20]!
-// DIS-NEXT:   103e4: adrp c16, #0x20000
-// DIS-NEXT:   103e8: ldr c17, [c16, #0x540]
-// DIS-NEXT:   103ec: add c16, c16, #0x540
-// DIS-NEXT:   103f0: ldpbr c29, [c16]
-// DIS-NEXT:   103f4: nop
-// DIS-NEXT:   103f8: nop
-// DIS-NEXT:   103fc: nop
-// DIS-NEXT:   10400: adrdp c16, #0x20000
-// DIS-NEXT:   10404: add c16, c16, #0x550
-// DIS-NEXT:   10408: ldr c29, [c16, #0x0]
-// DIS-NEXT:   1040c: ldpbr c29, [c29]
+// DIS: 0000000000010420 <.plt>:
+// DIS-NEXT:   10420: stp c16, c30, [csp, #-0x20]!
+// DIS-NEXT:   10424: adrp c16, #0x20000
+// DIS-NEXT:   10428: ldr c17, [c16, #0x550]
+// DIS-NEXT:   1042c: add c16, c16, #0x550
+// DIS-NEXT:   10430: ldpbr c29, [c16]
+// DIS-NEXT:   10434: nop
+// DIS-NEXT:   10438: nop
+// DIS-NEXT:   1043c: nop
+// DIS-NEXT:   10440: adrdp c16, #0x20000
+// DIS-NEXT:   10444: add c16, c16, #0x560
+// DIS-NEXT:   10448: ldr c29, [c16, #0x0]
+// DIS-NEXT:   1044c: ldpbr c29, [c29]

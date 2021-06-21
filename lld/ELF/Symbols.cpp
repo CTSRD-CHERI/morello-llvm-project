@@ -146,6 +146,11 @@ Defined *ElfSym::newLibEnd;
 Defined *ElfSym::relaDynStart;
 Defined *ElfSym::relaDynEnd;
 
+Defined *ElfSym::descStart;
+Defined *ElfSym::descEnd;
+Defined *ElfSym::descROStart;
+Defined *ElfSym::descROEnd;
+
 static uint64_t getSymVA(const Symbol &sym, int64_t &addend) {
   switch (sym.kind()) {
   case Symbol::DefinedKind: {

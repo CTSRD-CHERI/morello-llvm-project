@@ -33,11 +33,14 @@ namespace elf {
 uint8_t *Out::bufferStart;
 uint8_t Out::first;
 PhdrEntry *Out::tlsPhdr;
+PhdrEntry *Out::descPhdr;
 OutputSection *Out::elfHeader;
 OutputSection *Out::programHeaders;
 OutputSection *Out::preinitArray;
 OutputSection *Out::initArray;
 OutputSection *Out::finiArray;
+OutputSection *Out::descROStart;
+OutputSection *Out::descROEnd;
 
 std::vector<OutputSection *> outputSections;
 

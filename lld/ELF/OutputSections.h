@@ -128,11 +128,14 @@ struct Out {
   static uint8_t *bufferStart;
   static uint8_t first;
   static PhdrEntry *tlsPhdr;
+  static PhdrEntry *descPhdr;
   static OutputSection *elfHeader;
   static OutputSection *programHeaders;
   static OutputSection *preinitArray;
   static OutputSection *initArray;
   static OutputSection *finiArray;
+  static OutputSection *descROStart;
+  static OutputSection *descROEnd;
 };
 
 } // namespace elf

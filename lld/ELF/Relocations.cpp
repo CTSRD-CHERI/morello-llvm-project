@@ -1404,21 +1404,6 @@ static void scanReloc(InputSectionBase &sec, OffsetGetter &getOffset, RelTy *&i,
   if (expr == R_NONE)
     return;
 
-  // Ideally this should be done in getRelExpr().
-  // But getOutputSection is an incomplete class at that stage. So do it here.
-  if (expr == R_MORELLO_DESC_GOT_PAGE_PC) {
-    // switch to adrdp if sym is in a .descdata section or to adrp if the sym is
-    // not in a .descdata section.
-    // If switching to adrp, this will have the function of
-    // R_MORELLO_ADR_GOT_PAGE.
-    if (!(sym.isDefined() &&
-          (sym.getOutputSection()->name == ".data" ||
-           sym.getOutputSection()->name.startswith(".desc")))) {
-      expr = R_AARCH64_GOT_PAGE_PC;
-      type = R_MORELLO_ADR_GOT_PAGE;
-    }
-  }
-
   if (sym.isGnuIFunc() && !config->zText && config->warnIfuncTextrel) {
     warn("using ifunc symbols when text relocations are allowed may produce "
          "a binary that will segfault, if the object file is linked with "
@@ -1503,12 +1488,11 @@ static void scanReloc(InputSectionBase &sec, OffsetGetter &getOffset, RelTy *&i,
 
   if (expr == R_MORELLO_DESC_PAGE_PC) {
     // We have checked that sym is defined so OutputSection cannot be null.
-    // Switch to adrdp if sym is in a .descdata section or to adrp if sym is
-    // not in a descdata section. descdata section = .data section or any
-    // section starting with .desc. For adrp, this will have the function of
+    // Switch to adrdp if sym is in a . For adrp, this will have the function of
     // R_MORELLO_ADR_PREL_PG_HI20.
-    if (sym.getOutputSection()->name == ".data" ||
-        sym.getOutputSection()->name.startswith(".desc"))
+    if ((sym.getOutputSection()->getPhdrFlags() & PF_W) != 0 &&
+        isMorelloDescSection(sym.getOutputSection()) &&
+        !sym.getOutputSection()->name.startswith(".gcc_except_table"))
       sec.relocations.push_back({expr, type, offset, addend, &sym});
     else
       sec.relocations.push_back({R_AARCH64_PAGE_PC, R_MORELLO_ADR_PREL_PG_HI20,

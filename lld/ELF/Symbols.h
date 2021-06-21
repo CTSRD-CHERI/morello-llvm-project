@@ -481,6 +481,13 @@ struct ElfSym {
   // __rela_dyn_{start,end} symbols.
   static Defined *relaDynStart;
   static Defined *relaDynEnd;
+
+  // __desc_{start,end} symbols.
+  static Defined *descStart;
+  static Defined *descEnd;
+  // __desc_ro_end symbols.
+  static Defined *descROStart;
+  static Defined *descROEnd;
 };
 
 // A buffer class that is large enough to hold any Symbol-derived
