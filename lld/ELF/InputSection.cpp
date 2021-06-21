@@ -565,6 +565,8 @@ static uint64_t getAArch64UndefinedRelativeWeakVA(uint64_t type, uint64_t a,
   // instruction, this is 4 bytes on from P.
   case R_MORELLO_CALL26:
   case R_MORELLO_JUMP26:
+  case R_MORELLO_DESC_GLOBAL_CALL26:
+  case R_MORELLO_DESC_GLOBAL_JUMP26:
     // FIXME: return 5 rather than 4 bytes so that the relocation code
     // identifies the address as C64 and not AArch64. When relocateNoSym() can
     // examine the Symbol type we can remove this line.
