@@ -191,7 +191,7 @@ const char *CFI_Parser<A>::decodeFDE(A &addressSpace, pc_t pc, pint_t fdeStart,
   // in-bounds capability back.
   // FIXME: this will not work with fine-grained function bounds but we only
   //  need the address so we don't really care that it's tagged.
-#if __CHERI_CAPABILITY_TABLE__ != 3
+#if __CHERI_CAPABILITY_TABLE__ != 3 && !defined(_LIBUNWIND_TARGET_AARCH64)
 #error This code will not work with fine-grained function bounds, we need to remove the assert_pointer_in_bounds there.
 #endif
   assert(__builtin_cheri_tag_get((void*)_pcStart));
@@ -290,7 +290,7 @@ bool CFI_Parser<A>::findFDE(A &addressSpace, pc_t pc, pint_t ehSectionStart,
           // in-bounds capability back.
           // FIXME: this will not work with fine-grained function bounds but we only
           //  need the address so we don't really care that it's tagged.
-#if __CHERI_CAPABILITY_TABLE__ != 3
+#if __CHERI_CAPABILITY_TABLE__ != 3 && !defined(_LIBUNWIND_TARGET_AARCH64)
 #error This code will not work with fine-grained function bounds, we need to remove the assert_pointer_in_bounds there.
 #endif
           assert(__builtin_cheri_tag_get((void*)_pcStart));
