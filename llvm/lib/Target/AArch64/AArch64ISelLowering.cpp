@@ -5376,7 +5376,11 @@ SDValue AArch64TargetLowering::LowerGlobalAddress(SDValue Op,
   }
 
   // Dervive function addresses from PCC
-  if (Op.getSimpleValueType() == MVT::iFATPTR128 && dyn_cast<Function>(GV))
+  bool IsDescABI =
+     (MCTargetOptions::cheriCapabilityTableABI() ==
+      CheriCapabilityTableABI::FunctionDescriptor);
+  if (Op.getSimpleValueType() == MVT::iFATPTR128 && dyn_cast<Function>(GV) &&
+      !IsDescABI)
     return DAG.getNode(AArch64ISD::CapSealImm, DL, MVT::iFATPTR128,
                        getFatAddr(GN, DAG, OpFlags),
                        DAG.getConstant(1, DL, MVT::i32));
