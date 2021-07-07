@@ -172,7 +172,6 @@ ELF_RELOC(R_MORELLO_DESC_ADR_PREL_PG_HI20,           0xe204)
 ELF_RELOC(R_MORELLO_DESC_ADR_PREL_PG_HI20_NC,        0xe205)
 ELF_RELOC(R_MORELLO_DESC_ADR_GOT_PAGE,               0xe206)
 ELF_RELOC(R_MORELLO_DESC_LD128_GOT_LO12_NC,          0xe207)
-ELF_RELOC(R_MORELLO_DESC_CAPINIT,                    0xe208)
 ELF_RELOC(R_MORELLO_DESC_CALL,                       0xe209)
 ELF_RELOC(R_MORELLO_DESC_TCALL,                      0xe20a)
 
@@ -184,6 +183,15 @@ ELF_RELOC(R_MORELLO_RELATIVE,                        0xe803)
 ELF_RELOC(R_MORELLO_IRELATIVE,                       0xe804)
 ELF_RELOC(R_MORELLO_TLSDESC,                         0xe805)
 ELF_RELOC(R_MORELLO_TLS_TPREL128,                    0xe806)
+
+// Descriptor ABI Dynamic Relocations
+ELF_RELOC(R_MORELLO_DESC_CAPINIT,                    0xe810)
+ELF_RELOC(R_MORELLO_DESC_GLOB_DAT,                   0xe811)
+ELF_RELOC(R_MORELLO_DESC_JUMP_SLOT,                  0xe812)
+ELF_RELOC(R_MORELLO_DESC_RELATIVE,                   0xe813)
+ELF_RELOC(R_MORELLO_DESC_DAT_RELATIVE,               0xe814)
+ELF_RELOC(R_MORELLO_DESC_FUNC_RELATIVE,              0xe815)
+ELF_RELOC(R_MORELLO_DESC_IRELATIVE,                  0xe816)
 
 // ELF_RELOC(R_AARCH64_P32_NONE,                         0)
 ELF_RELOC(R_AARCH64_P32_ABS32,                       0x001)
