@@ -2,7 +2,7 @@
 // RUN: llvm-mc -filetype=obj -triple=aarch64 -mattr=+morello,+c64 -target-abi purecap -cheri-cap-table-abi=fn-desc %s -o %tmain.o
 // RUN: llvm-mc -filetype=obj -triple=aarch64 -mattr=+morello,+c64 -target-abi purecap -cheri-cap-table-abi=fn-desc %p/Inputs/morello-desc-abi_func.s -o %tfunc.o
 // RUN: ld.lld --strip-note-cheri %tmain.o %tfunc.o -o %tout
-// RUN: llvm-readobj --relocs --symbols --sections %tout | FileCheck --check-prefix=SEC --check-prefix=SYM %s
+// RUN: llvm-readobj --relocs --symbols --sections %tout | FileCheck --check-prefix=SEC --check-prefix=SYM --check-prefix=RELOCS %s
 // RUN: llvm-objdump --triple=aarch64 --no-show-raw-insn --print-imm-hex -d %tout | FileCheck --check-prefix=DIS %s
 
 /// For undefined symbols, in a shared object it is same as the CAPINIT.
@@ -94,7 +94,7 @@ _start:
 
 // RELOCS: Relocations [
 // RELOCS-NEXT:   .rela.dyn {
-// RELOCS-NEXT:     0x2302f0 R_MORELLO_IRELATIVE - 0x210221
+// RELOCS-NEXT:     0x2302F0 R_MORELLO_DESC_IRELATIVE - 0x210221
 // RELOCS-NEXT:   }
 // RELOCS-NEXT: ]
 

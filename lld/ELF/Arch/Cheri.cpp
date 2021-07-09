@@ -1078,7 +1078,7 @@ static void addCapDynamicRelocation(RelType dynType, Symbol *sym,
   // this guarantees that we have control over what static relocation is
   // created.
   Symbol *dynsym = (!sym->includeInDynsym() && (dynType == R_MORELLO_RELATIVE ||
-                                                dynType == R_MORELLO_IRELATIVE))
+                                                dynType == target->iRelativeRel))
                        ? nullptr
                        : sym;
   if (dynType == R_MORELLO_RELATIVE && !sym->includeInDynsym() &&
@@ -1099,7 +1099,7 @@ void addMorelloC64GotRelocation(RelType dynType, Symbol *sym,
   // If there is a Dynamic Symbol Table, there cannot be a caprelocs section.
   // R_MORELLO_IRELATIVE can be present even without a Dynamic Symbol Table
   // being present.
-  if (config->hasDynSymTab || dynType == R_MORELLO_IRELATIVE ||
+  if (config->hasDynSymTab || dynType == target->iRelativeRel ||
       config->morelloStaticCapsMode == CapRelocsMode::ElfReloc) {
     addCapDynamicRelocation(dynType, sym, sec, offset, addend);
   } else {

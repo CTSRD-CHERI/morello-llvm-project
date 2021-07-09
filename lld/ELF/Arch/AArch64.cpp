@@ -952,6 +952,7 @@ void AArch64C64::relaxTlsGdToLe(uint8_t *loc, const Relocation &rel,
 AArch64C64DescABI::AArch64C64DescABI() {
   pltRel = R_MORELLO_DESC_JUMP_SLOT;
   gotRel = R_MORELLO_DESC_GLOB_DAT;
+  iRelativeRel = R_MORELLO_DESC_IRELATIVE;
 }
 
 void AArch64C64DescABI::writePltHeader(uint8_t *buf) const {
