@@ -1725,7 +1725,11 @@ void RelocationBaseSection::addReloc(const DynamicReloc &reloc) {
     ++numRelativeRelocs;
   // target->relativeRel == R_MORELLO_RELATIVE is only when
   // config->morelloC64Plt is set, which is not the case always.
-  else if (config->emachine == EM_AARCH64 && reloc.type == R_MORELLO_RELATIVE)
+  else if (config->emachine == EM_AARCH64 &&
+           (reloc.type == R_MORELLO_RELATIVE ||
+            reloc.type == R_MORELLO_DESC_RELATIVE ||
+            reloc.type == R_MORELLO_DESC_DAT_RELATIVE ||
+            reloc.type == R_MORELLO_DESC_FUNC_RELATIVE))
     ++numRelativeRelocs;
   relocs.push_back(reloc);
   auto isec = reloc.inputSec;
