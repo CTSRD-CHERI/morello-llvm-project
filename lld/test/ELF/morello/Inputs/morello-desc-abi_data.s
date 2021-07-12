@@ -6,15 +6,6 @@ hello:
 	.asciz "Hello world"
 	.size hello, .-hello
 
-  .globl __desc_start
-  .globl __desc_end
-  .globl __desc_ro_start
-  .globl __desc_ro_end
-  .xword __desc_start
-  .xword __desc_end
-  .xword __desc_ro_start
-  .xword __desc_ro_end
-
   .global bye
   .type bye,%object
   .section .desc.data,"a",%progbits
@@ -39,14 +30,6 @@ foo:
 bar:
 	.asciz "Bar"
 	.size bar, .-bar
-
- .section .init_array, "a", %init_array
- .space 8
-
- .section .fini_array, "a", %fini_array
- .space 64
-
-
 
  .bss
  .globl bss

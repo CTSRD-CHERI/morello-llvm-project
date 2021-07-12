@@ -72,7 +72,7 @@ _start:
 // SEC-NEXT:    SHF_ALLOC
 // SEC-NEXT:    SHF_WRITE
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x220270
+// SEC-NEXT:     Address: 0x230000
 // SEC-NEXT:     Offset:
 // SEC-NEXT:     Size: 120
 // SEC: Name: .got.plt
@@ -81,26 +81,28 @@ _start:
 // SEC-NEXT:   SHF_ALLOC
 // SEC-NEXT:   SHF_WRITE
 // SEC-NEXT: ]
-// SEC-NEXT: Address: 0x2302F0
+// SEC-NEXT: Address: 0x240080
 // SEC-NEXT: Offset:
-// SEC-NEXT: Size: 16
+// SEC-NEXT: Size: 64
 // SEC:     Name: .data
 // SEC-NEXT:     Type: SHT_PROGBITS
 // SEC-NEXT:     Flags [
 // SEC-NEXT:    SHF_ALLOC
 // SEC-NEXT:    SHF_WRITE
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x240000
+// SEC-NEXT:     Address: 0x2400C0
+// SEC-NEXT:     Offset:
+// SEC-NEXT:     Size: 48
 
 // RELOCS: Relocations [
 // RELOCS-NEXT:   .rela.dyn {
-// RELOCS-NEXT:     0x2302F0 R_MORELLO_DESC_IRELATIVE - 0x210221
+// RELOCS-NEXT:     0x240080 R_MORELLO_DESC_IRELATIVE - 0x210221
 // RELOCS-NEXT:   }
 // RELOCS-NEXT: ]
 
 // SYM: Symbol {
 // SYM:   Name: funcptr1
-// SYM-NEXT:   Value: 0x240000
+// SYM-NEXT:   Value: 0x2400C0
 // SYM-NEXT:   Size: 16
 // SYM-NEXT:   Binding: Local
 // SYM-NEXT:   Type: None
@@ -108,14 +110,14 @@ _start:
 // SYM-NEXT:   Section: .data
 // SYM-NEXT: }
 // SYM:   Name: funcptr2
-// SYM-NEXT:   Value: 0x240010
+// SYM-NEXT:   Value: 0x2400D0
 // SYM-NEXT:   Size: 16
 // SYM-NEXT:   Binding: Local
 // SYM-NEXT:   Type: None
 // SYM-NEXT:   Other: 0
 // SYM-NEXT:   Section: .data
 // SYM:   Name: ifuncptr
-// SYM-NEXT:   Value: 0x240020
+// SYM-NEXT:   Value: 0x2400E0
 // SYM-NEXT:   Size: 16
 // SYM-NEXT:   Binding: Local
 // SYM-NEXT:   Type: None
@@ -168,14 +170,14 @@ _start:
 // DIS-NEXT: 210254:    ret c20
 
 // DIS: 0000000000210260 <ifunc>:
-// DIS-NEXT: 210260:    adrdp c16, #0x20000
-// DIS-NEXT: 210264:    add c16, c16, #0x2f0
+// DIS-NEXT: 210260:    adrdp c16, #0x30000
+// DIS-NEXT: 210264:    add c16, c16, #0x80
 // DIS-NEXT: 210268:    ldr c29, [c16, #0x0]
 // DIS-NEXT: 21026c:    ldpbr c29, [c29]
 
 
 // SHARED_RELOCS: Relocations
 // SHARED_RELOCS-NEXT:   .rela.dyn
-// SHARED_RELOCS-NEXT:     0x40000 R_MORELLO_CAPINIT func 0x0
-// SHARED_RELOCS-NEXT:     0x40010 R_MORELLO_CAPINIT func 0x0
-// SHARED_RELOCS-NEXT:     0x40020 R_MORELLO_CAPINIT ifunc 0x0
+// SHARED_RELOCS-NEXT:     0x400A0 R_MORELLO_CAPINIT func 0x0
+// SHARED_RELOCS-NEXT:     0x400B0 R_MORELLO_CAPINIT func 0x0
+// SHARED_RELOCS-NEXT:     0x400C0 R_MORELLO_CAPINIT ifunc 0x0

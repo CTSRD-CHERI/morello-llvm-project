@@ -67,9 +67,9 @@ _start:
 // SEC-NEXT:     SHF_ALLOC
 // SEC-NEXT:     SHF_WRITE
 // SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x30530
+// SEC-NEXT:   Address: 0x400E0
 // SEC-NEXT:   Offset:
-// SEC-NEXT:   Size: 80
+// SEC-NEXT:   Size: 96
 // SEC-NEXT:   Link: 0
 // SEC-NEXT:   Info: 0
 // SEC-NEXT:   AddressAlignment: 16
@@ -80,28 +80,35 @@ _start:
 // SEC-NEXT:     SHF_ALLOC
 // SEC-NEXT:     SHF_WRITE
 // SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x40000
+// SEC-NEXT:   Address: 0x40140
 
 // RELOCS:      Relocations [
 // RELOCS-NEXT:   .rela.dyn {
-// RELOCS-NEXT:     0x40000 R_MORELLO_CAPINIT func 0x0
-// RELOCS-NEXT:     0x40010 R_MORELLO_CAPINIT func 0x0
-// RELOCS-NEXT:     0x40020 R_MORELLO_CAPINIT ifunc 0x0
+// RELOCS-NEXT:     0x40140 R_MORELLO_CAPINIT func 0x0
+// RELOCS-NEXT:     0x40150 R_MORELLO_CAPINIT func 0x0
+// RELOCS-NEXT:     0x40160 R_MORELLO_CAPINIT ifunc 0x0
 // RELOCS-NEXT:   }
 // RELOCS-NEXT:   .rela.plt {
-// RELOCS-NEXT:     0x30560 R_MORELLO_DESC_JUMP_SLOT func 0x0
+// RELOCS-NEXT:     0x40110 R_MORELLO_DESC_JUMP_SLOT func 0x0
 // RELOCS-NEXT:   }
 // RELOCS-NEXT: ]
 
 // SYM:     Name: funcptr1
-// SYM-NEXT:     Value: 0x40000
+// SYM-NEXT:     Value: 0x40140
 // SYM-NEXT:     Size: 16
 // SYM-NEXT:     Binding: Local
 // SYM-NEXT:     Type: None
 // SYM-NEXT:     Other: 0
 // SYM-NEXT:     Section: .data
 // SYM:     Name: funcptr2
-// SYM-NEXT:     Value: 0x40010
+// SYM-NEXT:     Value: 0x40150
+// SYM-NEXT:     Size: 16
+// SYM-NEXT:     Binding: Local
+// SYM-NEXT:     Type: None
+// SYM-NEXT:     Other: 0
+// SYM-NEXT:     Section: .data
+// SYM:     Name: ifuncptr
+// SYM-NEXT:     Value: 0x40160
 // SYM-NEXT:     Size: 16
 // SYM-NEXT:     Binding: Local
 // SYM-NEXT:     Type: None
@@ -146,14 +153,14 @@ _start:
 
 // DIS: 0000000000010420 <.plt>:
 // DIS-NEXT:   10420: stp c16, c30, [csp, #-0x20]!
-// DIS-NEXT:   10424: adrp c16, #0x20000
-// DIS-NEXT:   10428: ldr c17, [c16, #0x550]
-// DIS-NEXT:   1042c: add c16, c16, #0x550
+// DIS-NEXT:   10424: adrp c16, #0x30000
+// DIS-NEXT:   10428: ldr c17, [c16, #0x100]
+// DIS-NEXT:   1042c: add c16, c16, #0x100
 // DIS-NEXT:   10430: ldpbr c29, [c16]
 // DIS-NEXT:   10434: nop
 // DIS-NEXT:   10438: nop
 // DIS-NEXT:   1043c: nop
-// DIS-NEXT:   10440: adrdp c16, #0x20000
-// DIS-NEXT:   10444: add c16, c16, #0x560
+// DIS-NEXT:   10440: adrdp c16, #0x30000
+// DIS-NEXT:   10444: add c16, c16, #0x110
 // DIS-NEXT:   10448: ldr c29, [c16, #0x0]
 // DIS-NEXT:   1044c: ldpbr c29, [c29]

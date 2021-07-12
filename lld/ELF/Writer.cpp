@@ -882,17 +882,9 @@ bool isMorelloDescSection(const OutputSection *sec) {
       config->cheriABIVariant == CHERI_VARIANT_GLOBALS_ABI_FDESC))
     return false;
 
-  // .init_array, .fini_array and .preinit_array goes to the
-  // private data segment.
-  uint32_t type = sec->type;
-  if (type == SHT_INIT_ARRAY || type == SHT_FINI_ARRAY ||
-      type == SHT_PREINIT_ARRAY)
-    return true;
-
-  // .desc.data.rel.ro, .got. .data and .bss goes to the
-  // private data segment.
-  StringRef s = sec->name;
-  return s == ".desc.data.rel.ro" || s == ".got" || s == ".data" || s == ".bss";
+  return (sec->getPhdrFlags() & PF_W) != 0 &&
+         !sec->name.startswith(".data.rel.ro") &&
+         !sec->name.startswith(".gcc_except_table");
 }
 
 // Today's loaders have a feature to make segments read-only after
@@ -903,9 +895,6 @@ bool isMorelloDescSection(const OutputSection *sec) {
 // PT_GNU_RELRO segment.
 bool isRelroSection(const OutputSection *sec) {
   if (!config->zRelro)
-    return false;
-
-  if (isMorelloDescSection(sec))
     return false;
 
   uint64_t flags = sec->flags;
@@ -980,7 +969,8 @@ bool isRelroSection(const OutputSection *sec) {
          s == ".dtors" || s == ".jcr" || s == ".eh_frame" ||
          s == ".fini_array" || s == ".init_array" ||
          s == ".openbsd.randomdata" || s == ".preinit_array" ||
-         s == "__cap_relocs" || s == ".gcc_except_table";
+         s == "__cap_relocs" || s == ".gcc_except_table" ||
+         s == ".desc.data.rel.ro" || s == ".got.plt";
 }
 
 // We compute a rank for each section. The rank indicates where the
@@ -994,7 +984,7 @@ enum RankFlags {
   RF_NOT_ADDR_SET = 1 << 27,
   RF_NOT_ALLOC = 1 << 26,
   RF_MORELLO_DESCDATA = 1 << 25,
-  RF_NOT_MORELLO_DESCDATA_TOP = 1 << 24,
+  RF_MORELLO_DESCDATA_NOT_RO = 1 << 24,
   RF_PARTITION = 1 << 18, // Partition number (8 bits)
   RF_NOT_PART_EHDR = 1 << 17,
   RF_NOT_PART_PHDR = 1 << 16,
@@ -1081,14 +1071,17 @@ static unsigned getSectionRank(const OutputSection *sec) {
     rank |= RF_RODATA;
   }
 
-  if (isMorelloDescSection(sec))
-  {
-    StringRef name = sec->name;
+  // The PT_MORELLO_DESC segment
+  if (isMorelloDescSection(sec)) {
     rank |= RF_MORELLO_DESCDATA;
-    // Morello Descriptor ABI requires .got and .desc.data.rel.ro to be next to
-    // each other and .desc.data.rel.ro to be the start of the segment.
-    if (!(name == ".desc.data.rel.ro") && !(name == ".got"))
-      rank |= RF_NOT_MORELLO_DESCDATA_TOP;
+    if (!isRelroSection(sec))
+      rank |= RF_MORELLO_DESCDATA_NOT_RO;
+    // Start with .desc.data.rel.ro
+    if (sec->name == ".desc.data.rel.ro")
+      return rank;
+    // End with .got*
+    if (sec->name == ".got.plt")
+      return rank;
   }
   // Place RelRo sections first. After considering SHT_NOBITS below, the
   // ordering is PT_LOAD(PT_GNU_RELRO(.data.rel.ro .bss.rel.ro) | .data .bss),
@@ -2670,7 +2663,7 @@ std::vector<PhdrEntry *> Writer<ELFT>::createPhdrs(Partition &part) {
       }
       inMorelloDescPhdr = true;
       // Keep tabs on the start/end of the RO section
-      if (!(sec->flags & SHF_WRITE)) {
+      if (isRelroSection(sec)) {
         if (!inMorelloDescROStart) {
           inMorelloDescROStart = true;
           Out::descROStart = sec;
