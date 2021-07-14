@@ -1684,6 +1684,10 @@ static std::string getElfPtType(unsigned Arch, unsigned Type) {
       if (Type == ELF::PT_ARM_EXIDX)
         return "EXIDX";
       break;
+    case ELF::EM_AARCH64:
+      if (Type == ELF::PT_MORELLO_DESC)
+        return "MORELLO_DESC";
+      break;
     case ELF::EM_MIPS:
     case ELF::EM_MIPS_RS3_LE:
       switch (Type) {
