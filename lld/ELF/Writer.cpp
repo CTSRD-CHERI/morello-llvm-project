@@ -970,7 +970,7 @@ bool isRelroSection(const OutputSection *sec) {
          s == ".fini_array" || s == ".init_array" ||
          s == ".openbsd.randomdata" || s == ".preinit_array" ||
          s == "__cap_relocs" || s == ".gcc_except_table" ||
-         s == ".desc.data.rel.ro" || s == ".got.plt";
+         s == ".desc.data.rel.ro";
 }
 
 // We compute a rank for each section. The rank indicates where the
