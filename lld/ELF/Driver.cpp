@@ -374,11 +374,6 @@ static void checkOptions() {
   if (config->zRetpolineplt && config->zForceIbt)
     error("-z force-ibt may not be used with -z retpolineplt");
 
-  if (config->morelloStaticCapsMode == CapRelocsMode::ElfReloc) {
-    if (config->shared)
-      error("--morello-static-caps=elf only supported for static executables");
-  }
-
   if (config->emachine != EM_AARCH64) {
     if (config->morelloC64Plt)
       error("--morello-c64-plt only supported on AArch64");
@@ -700,10 +695,14 @@ static CapRelocsMode getMorelloStaticCapRelocsMode(opt::InputArgList &args) {
   auto *arg = args.getLastArg(OPT_morello_static_caprelocs_legacy,
                               OPT_morello_static_caprelocs_elf);
   if (!arg)
-    return CapRelocsMode::Legacy;
+    return config->cheriABIVariant == CHERI_VARIANT_GLOBALS_ABI_FDESC
+               ? CapRelocsMode::ElfReloc
+               : CapRelocsMode::Legacy;
   if (arg->getOption().getID() == OPT_morello_static_caprelocs_legacy) {
     return CapRelocsMode::Legacy;
   } else if (arg->getOption().getID() == OPT_morello_static_caprelocs_elf) {
+    if (config->shared)
+      error("--morello-static-caps=elf only supported for static executables");
     return CapRelocsMode::ElfReloc;
   }
   llvm_unreachable("Invalid arg");
@@ -963,7 +962,6 @@ static void readConfigs(opt::InputArgList &args) {
   config->allowUndefinedCapRelocs = args.hasArg(OPT_allow_undefined_cap_relocs);
   config->morelloC64Plt = args.hasArg(OPT_morello_c64_plt);
   config->stripNoteCheri = args.hasArg(OPT_strip_note_cheri);
-  config->morelloStaticCapsMode = getMorelloStaticCapRelocsMode(args);
   config->auxiliaryList = args::getStrings(args, OPT_auxiliary);
   config->bsymbolic = args.hasArg(OPT_Bsymbolic);
   config->bsymbolicFunctions = args.hasArg(OPT_Bsymbolic_functions);
@@ -2160,7 +2158,11 @@ template <class ELFT> void LinkerDriver::link(opt::InputArgList &args) {
   // contain a hint to tweak linker's and loader's behaviors.
   config->andFeatures = getAndFeatures<ELFT>();
 
+  // Infer CHERI ABI variant from input object files.
   config->cheriABIVariant = getCheriABIVariant<ELFT>();
+  // Set morelloStaticCapsMode from CHERI ABI variant or input arguments.
+  config->morelloStaticCapsMode = getMorelloStaticCapRelocsMode(args);
+
   // The Target instance handles target-specific stuff, such as applying
   // relocations or writing a PLT section. It also contains target-dependent
   // values such as a default image base address.
