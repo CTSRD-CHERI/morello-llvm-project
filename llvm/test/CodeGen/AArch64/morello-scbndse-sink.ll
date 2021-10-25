@@ -52,8 +52,8 @@ declare void @foo(i32 addrspace(200)*) addrspace(200)
 
 ; CHECK-LABEL: fun1
 ; CHECK: scbnds
-; CHECK: scbnds
 ; CHECK: bl bar
+; CHECK: scbnds
 ; CHECK: bl foo
 define void @fun1(i32 %n) addrspace(200) {
 entry:

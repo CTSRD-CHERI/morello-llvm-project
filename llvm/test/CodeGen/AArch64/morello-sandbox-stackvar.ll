@@ -1,5 +1,5 @@
 ; RUN: llc -mtriple=arm64 -mattr=+c64,+morello,+use-16-cap-regs -target-abi purecap \
-; RUN:     -opt-safe-stack-ldst=false -o - %s | FileCheck %s
+; RUN:     -cheri-stack-bounds=all-uses -o - %s | FileCheck %s
 
 target datalayout = "e-m:e-i64:64-i128:128-n32:64-S128-pf200:128:128-A200-P200-G200"
 
@@ -41,7 +41,8 @@ entry:
 ; CHECK-NEXT: stp c25, c24, [csp, #128]
 ; CHECK-NEXT: str x19, [csp, #160]
 
-; CHECK: 	add	c0, csp, #40
+; CHECK:	bl	foo
+; CHECK-NEXT:	add	c0, csp, #40
 ; CHECK-NEXT:	add	c1, csp, #36
 ; CHECK-NEXT:	add	c2, csp, #32
 ; CHECK-NEXT:	add	c3, csp, #28
@@ -54,7 +55,6 @@ entry:
 ; CHECK-NEXT:	scbnds	c28, c4, #8
 ; CHECK-NEXT:	scbnds	c29, c5, #4
 
-; CHECK-NEXT:	bl	foo
 ; CHECK-DAG:	mov	c0, c24
 ; CHECK-DAG:	mov	c1, c25
 ; CHECK-DAG:	mov	c2, c26

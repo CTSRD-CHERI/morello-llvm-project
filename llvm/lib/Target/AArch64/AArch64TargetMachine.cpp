@@ -533,9 +533,8 @@ void AArch64PassConfig::addIRPasses() {
   }
   if (EnableRangeChecking)
     addPass(createMorelloRangeChecker());
-  // Add the sandbox pass. Only optimize for C64, since A64 will have a lower
-  addPass(createAArch64Sandbox(TM->getOptLevel() != CodeGenOpt::None,
-                               getAArch64TargetMachine().IsC64()));
+
+  addPass(createCheriBoundAllocasPass());
 
   // Add Control Flow Guard checks.
   if (TM->getTargetTriple().isOSWindows())

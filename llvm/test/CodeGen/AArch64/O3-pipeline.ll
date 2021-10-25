@@ -78,10 +78,10 @@
 ; CHECK-NEXT:       Dominator Tree Construction
 ; CHECK-NEXT:       Interleaved Access Pass
 ; CHECK-NEXT:       Morello range checker
+; CHECK-NEXT:     CHERI bound stack allocations
+; CHECK-NEXT:     FunctionPass Manager
 ; CHECK-NEXT:       Dominator Tree Construction
 ; CHECK-NEXT:       Natural Loop Information
-; CHECK-NEXT:       Scalar Evolution Analysis
-; CHECK-NEXT:       AArch64 sandbox setup
 ; CHECK-NEXT:       CodeGen Prepare
 ; CHECK-NEXT:     Rewrite Symbols
 ; CHECK-NEXT:     FunctionPass Manager

@@ -16,7 +16,7 @@ entry:
 
 ; PCS16: mov w[[REG:[0-9]+]], #2048
 ; PCS16-NEXT: movk w8, #64, lsl #16
-; PCS16: scbndse c{{.*}}, c{{.*}}, x[[REG]]
+; PCS16: scbnds c{{.*}}, c{{.*}}, x[[REG]]
 
   %ss1 = alloca [1048577 x i32], align 4, addrspace(200)
   %0 = bitcast [1048577 x i32] addrspace(200)* %ss1 to i8 addrspace(200)*
@@ -37,11 +37,11 @@ entry:
 ; Here we need more alignment than the stack alignment. We know that the scratch register is c6.
 ; PCS16: alignd	csp, c6, #14
 ; PCS16: mov w[[REG:[0-9]+]], #33554432
-; PCS16: scbndse c{{.*}}, c{{.*}}, x[[REG]]
+; PCS16: scbnds c{{.*}}, c{{.*}}, x[[REG]]
 ;
 ; PCS32: alignd	csp, c9, #11
 ; PCS32: mov w[[REG:[0-9]+]], #33554432
-; PCS32: scbndse c{{.*}}, c{{.*}}, x[[REG]]
+; PCS32: scbnds c{{.*}}, c{{.*}}, x[[REG]]
 
   %s1 = alloca [8388608 x i32], align 4, addrspace(200)
   %0 = bitcast [8388608 x i32] addrspace(200)* %s1 to i8 addrspace(200)*

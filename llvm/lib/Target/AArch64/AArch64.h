@@ -48,7 +48,6 @@ ModulePass *createAArch64PromoteConstantPass();
 FunctionPass *createAArch64ConditionOptimizerPass();
 FunctionPass *createAArch64A57FPLoadBalancing();
 FunctionPass *createAArch64A53Fix835769();
-FunctionPass *createAArch64Sandbox(bool Optimize, bool UseCSPForSafeOps);
 FunctionPass *createAArch64SandboxMemOpLowering();
 FunctionPass *createMorelloRangeChecker();
 ModulePass *createAArch64SandboxGlobalsOpt(TargetMachine *TM);
@@ -93,7 +92,6 @@ void initializeFalkorMarkStridedAccessesLegacyPass(PassRegistry&);
 void initializeLDTLSCleanupPass(PassRegistry&);
 void initializeSVEIntrinsicOptsPass(PassRegistry&);
 void initializeAArch64StackTaggingPass(PassRegistry&);
-void initializeAArch64SandboxPass(PassRegistry&);
 void initializeAArch64StackTaggingPreRAPass(PassRegistry&);
 } // end namespace llvm
 

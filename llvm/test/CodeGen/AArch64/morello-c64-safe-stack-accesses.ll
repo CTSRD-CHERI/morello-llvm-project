@@ -7,8 +7,8 @@ target triple = "aarch64-none--elf"
 define void @fun1(i32 %n) addrspace(200) {
 entry:
 ; CHECK: sub csp, csp, #1200
-; CHECK: add c0, csp, #800
-; CHECK: scbnds c[[ADDRA:[0-9]+]], c0, #25, lsl #4
+; CHECK: add c[[TMPADDRA:[0-9]+]], csp, #800
+; CHECK: scbnds c[[ADDRA:[0-9]+]], c[[TMPADDRA:[0-9]+]], #25, lsl #4
   %a = alloca [100 x i32], align 4, addrspace(200)
   %b = alloca [200 x i32], align 4, addrspace(200)
   %0 = bitcast [100 x i32] addrspace(200)* %a to i8 addrspace(200)*
@@ -71,8 +71,8 @@ entry:
 ; CHECK: mov w[[SIZE:[0-9]+]], #6784
 ; CHECK: movk w[[SIZE]], #6, lsl #16
 ; CHECK: mov c[[TMPADDR:[0-9]+]], csp
-; CHECK: scbndse c[[ADDR:[0-9]+]], c[[TMPADDR]], x[[SIZE]]
-; CHECK: ldr w0, [c[[ADDR]], #8]
+; CHECK: scbnds c[[ADDR:[0-9]+]], c[[TMPADDR]], x[[SIZE]]
+; CHECK: ldr w0, [csp, #8]
   %a = alloca [100000 x i32], align 4, addrspace(200)
   %0 = bitcast [100000 x i32] addrspace(200)* %a to i8 addrspace(200)*
   call void @llvm.lifetime.start.p200i8(i64 400000, i8 addrspace(200)* nonnull %0)

@@ -26,10 +26,7 @@
 ; CHECK-NEXT:       Expand reduction intrinsics
 ; CHECK-NEXT:       AArch64 Stack Tagging
 ; CHECK-NEXT:       Morello range checker
-; CHECK-NEXT:       Dominator Tree Construction
-; CHECK-NEXT:       Natural Loop Information
-; CHECK-NEXT:       Scalar Evolution Analysis
-; CHECK-NEXT:       AArch64 sandbox setup
+; CHECK-NEXT:     CHERI bound stack allocations
 ; CHECK-NEXT:     Rewrite Symbols
 ; CHECK-NEXT:     FunctionPass Manager
 ; CHECK-NEXT:       Exception handling preparation
