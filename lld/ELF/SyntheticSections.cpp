@@ -1191,7 +1191,7 @@ size_t IgotPltSection::getSize() const {
 
 void IgotPltSection::writeTo(uint8_t *buf) {
   if (config->morelloC64Plt) {
-    relocateAlloc(buf - outSecOff, buf - outSecOff + getSize());
+    relocateAlloc(buf, buf + getSize());
     return;
   }
 
