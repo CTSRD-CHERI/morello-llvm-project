@@ -73,7 +73,6 @@
     X(ForwardTemplateReference) \
     X(NameWithTemplateArgs) \
     X(GlobalQualifiedName) \
-    X(StdQualifiedName) \
     X(ExpandedSpecialSubstitution) \
     X(SpecialSubstitution) \
     X(CtorDtorName) \
@@ -1480,21 +1479,6 @@ public:
   }
 };
 
-struct StdQualifiedName : Node {
-  Node *Child;
-
-  StdQualifiedName(Node *Child_) : Node(KStdQualifiedName), Child(Child_) {}
-
-  template<typename Fn> void match(Fn F) const { F(Child); }
-
-  StringView getBaseName() const override { return Child->getBaseName(); }
-
-  void printLeft(OutputBuffer &OB) const override {
-    OB += "std::";
-    Child->print(OB);
-  }
-};
-
 enum class SpecialSubKind {
   allocator,
   basic_string,
@@ -2685,8 +2669,12 @@ AbstractManglingParser<Derived, Alloc>::parseUnscopedName(NameState *State) {
   Node *Result = getDerived().parseUnqualifiedName(State);
   if (Result == nullptr)
     return nullptr;
-  if (IsStd)
-    Result = make<StdQualifiedName>(Result);
+  if (IsStd) {
+    if (auto *Std = make<NameType>("std"))
+      Result = make<NestedName>(Std, Result);
+    else
+      return nullptr;
+  }
 
   return Result;
 }
