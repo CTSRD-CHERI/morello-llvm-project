@@ -1,3 +1,4 @@
+add_subdirectory(CHERI)
 add_subdirectory(IR)
 add_subdirectory(Support)
 add_subdirectory(Frontend)
