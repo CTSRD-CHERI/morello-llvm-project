@@ -360,7 +360,7 @@ bool UnwindLLDB::AddFirstFrame() {
   return true;
 
 unwind_done:
-  Log *log(GetLogIfAllCategoriesSet(LIBLLDB_LOG_UNWIND));
+  Log *log = GetLog(LLDBLog::Unwind);
   if (log) {
     LLDB_LOGF(log, "th%d Unwind of this thread is complete.",
               m_thread.GetIndexID());
@@ -378,7 +378,7 @@ UnwindLLDB::CursorSP UnwindLLDB::GetOneMoreFrame(ABI *abi) {
   if (m_unwind_complete)
     return nullptr;
 
-  Log *log(GetLogIfAllCategoriesSet(LIBLLDB_LOG_UNWIND));
+  Log *log = GetLog(LLDBLog::Unwind);
 
   CursorSP prev_frame = m_frames.back();
   uint32_t cur_idx = m_frames.size();
@@ -574,7 +574,7 @@ void UnwindLLDB::UpdateUnwindPlanForFirstFrameIfInvalid(ABI *abi) {
 }
 
 bool UnwindLLDB::AddOneMoreFrame(ABI *abi) {
-  Log *log(GetLogIfAllCategoriesSet(LIBLLDB_LOG_UNWIND));
+  Log *log = GetLog(LLDBLog::Unwind);
 
   // Frame zero is a little different
   if (m_frames.empty())
@@ -744,7 +744,7 @@ bool UnwindLLDB::SearchForSavedLocationForRegister(
     return result == UnwindLLDB::RegisterSearchResult::eRegisterFound;
   }
 
-  Log *log(GetLogIfAllCategoriesSet(LIBLLDB_LOG_UNWIND));
+  Log *log = GetLog(LLDBLog::Unwind);
   ProcessSP process_sp(m_thread.GetProcess());
   const ABI *abi = process_sp ? process_sp->GetABI().get() : nullptr;
   uint32_t overlay_register_number = LLDB_INVALID_REGNUM;

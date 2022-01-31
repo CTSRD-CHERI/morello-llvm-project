@@ -1239,7 +1239,7 @@ bool SBThread::GetDescription(SBStream &description, bool stop_format) const {
 }
 
 SBValue SBThread::GetSigInfo(SBError &sb_error) const {
-  Log *log(lldb_private::GetLogIfAllCategoriesSet(LIBLLDB_LOG_API));
+  Log *log = GetLog(LLDBLog::API);
   ValueObjectSP siginfo_valobj_sp;
   std::unique_lock<std::recursive_mutex> lock;
   ExecutionContext exe_ctx(m_opaque_sp.get(), lock);

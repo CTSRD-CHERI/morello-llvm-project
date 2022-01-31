@@ -112,7 +112,7 @@ lldb::StateType NativeThreadLinux::GetState() { return m_state; }
 
 bool NativeThreadLinux::GetStopReason(ThreadStopInfo &stop_info,
                                       std::string &description) {
-  Log *log(GetLogIfAllCategoriesSet(LIBLLDB_LOG_THREAD));
+  Log *log = GetLog(LLDBLog::Thread);
 
   description.clear();
 
@@ -309,7 +309,7 @@ Status NativeThreadLinux::SingleStep(uint32_t signo) {
 
 void NativeThreadLinux::SetStoppedBySignal(uint32_t signo,
                                            const siginfo_t *info) {
-  Log *log(GetLogIfAllCategoriesSet(LIBLLDB_LOG_THREAD));
+  Log *log = GetLog(LLDBLog::Thread);
   LLDB_LOGF(log, "NativeThreadLinux::%s called with signal 0x%02" PRIx32,
             __FUNCTION__, signo);
 
@@ -423,7 +423,7 @@ void NativeThreadLinux::SetStopped() {
 }
 
 void NativeThreadLinux::SetStoppedByExec() {
-  Log *log(GetLogIfAllCategoriesSet(LIBLLDB_LOG_THREAD));
+  Log *log = GetLog(LLDBLog::Thread);
   LLDB_LOGF(log, "NativeThreadLinux::%s()", __FUNCTION__);
 
   SetStopped();
@@ -525,7 +525,7 @@ void NativeThreadLinux::SetExited() {
 }
 
 Status NativeThreadLinux::RequestStop() {
-  Log *log(GetLogIfAllCategoriesSet(LIBLLDB_LOG_THREAD));
+  Log *log = GetLog(LLDBLog::Thread);
 
   NativeProcessLinux &process = GetProcess();
 
@@ -551,7 +551,7 @@ Status NativeThreadLinux::RequestStop() {
 }
 
 void NativeThreadLinux::MaybeLogStateChange(lldb::StateType new_state) {
-  Log *log(GetLogIfAllCategoriesSet(LIBLLDB_LOG_THREAD));
+  Log *log = GetLog(LLDBLog::Thread);
   // If we're not logging, we're done.
   if (!log)
     return;

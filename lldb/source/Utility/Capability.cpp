@@ -132,8 +132,7 @@ struct MorelloCapabilityEncoding {
   static void DecodeCapabilityAddressRange(const llvm::APInt &value,
                                            llvm::APInt &base,
                                            llvm::APInt &limit) {
-    Log *log(
-        lldb_private::GetLogIfAllCategoriesSet(LIBLLDB_LOG_DATAFORMATTERS));
+    Log *log = GetLog(LLDBLog::DataFormatters);
 
     int exponent = CapGetEffectiveExponent(value);
     LLDB_LOGF(log, "[DecodeCapabilityAddressRange] exponent = %" PRId32,
@@ -249,8 +248,7 @@ private:
     if (!CapIsInternalExponent(value))
       return 0;
 
-    Log *log(
-        lldb_private::GetLogIfAllCategoriesSet(LIBLLDB_LOG_DATAFORMATTERS));
+    Log *log = GetLog(LLDBLog::DataFormatters);
 
     // Read exponent - this code is inlined from CapGetExponent.
     int NumExpBitsLimit = CAP_LIMIT_EXP_HI_BIT - CAP_LIMIT_LO_BIT + 1;
@@ -299,8 +297,7 @@ private:
   }
 
   static llvm::APInt CapGetTop(const llvm::APInt &value) {
-    Log *log(
-        lldb_private::GetLogIfAllCategoriesSet(LIBLLDB_LOG_DATAFORMATTERS));
+    Log *log = GetLog(LLDBLog::DataFormatters);
 
     llvm::APInt b = CapGetBottom(value);
     llvm::APInt t;

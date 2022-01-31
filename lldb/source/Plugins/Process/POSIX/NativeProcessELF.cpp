@@ -141,7 +141,7 @@ NativeProcessELF::ReadSVR4LibraryInfo(lldb::addr_t link_map_addr) {
 template <>
 llvm::Expected<SVR4LibraryInfo>
 NativeProcessELF::ReadSVR4LibraryInfo<uint64_t[2]>(lldb::addr_t link_map_addr) {
-  Log *log(lldb_private::GetLogIfAnyCategoriesSet(LIBLLDB_LOG_TARGET | LIBLLDB_LOG_PROCESS | LIBLLDB_LOG_PLATFORM));
+  Log *log = GetLog(LLDBLog::Target | LLDBLog::Process | LLDBLog::Platform);
   LLDB_LOGF(log, "Trying to read from link map at %" PRIx64, link_map_addr);
 
   ELFLinkMap<uint64_t[2]> link_map;
