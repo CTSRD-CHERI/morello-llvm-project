@@ -584,7 +584,6 @@ bool AArch64TargetInfo::handleTargetFeatures(std::vector<std::string> &Features,
                                              DiagnosticsEngine &Diags) {
   FPU = FPUMode;
   HasCRC = false;
-  HasCrypto = false;
   HasAES = false;
   HasSHA2 = false;
   HasSHA3 = false;
@@ -609,7 +608,6 @@ bool AArch64TargetInfo::handleTargetFeatures(std::vector<std::string> &Features,
   HasMatmulFP64 = false;
   HasMatmulFP32 = false;
   HasLSE = false;
-  HasHBC = false;
   HasMOPS = false;
 
   ArchKind = llvm::AArch64::ArchKind::INVALID;
@@ -660,8 +658,6 @@ bool AArch64TargetInfo::handleTargetFeatures(std::vector<std::string> &Features,
     }
     if (Feature == "+crc")
       HasCRC = true;
-    if (Feature == "+crypto")
-      HasCrypto = true;
     if (Feature == "+aes")
       HasAES = true;
     if (Feature == "+sha2")
@@ -726,8 +722,6 @@ bool AArch64TargetInfo::handleTargetFeatures(std::vector<std::string> &Features,
       HasRandGen = true;
     if (Feature == "+flagm")
       HasFlagM = true;
-    if (Feature == "+hbc")
-      HasHBC = true;
     if (Feature == "+mops")
       HasMOPS = true;
     if (Feature == "+morello")
