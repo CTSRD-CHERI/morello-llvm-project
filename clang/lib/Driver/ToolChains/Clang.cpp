@@ -6488,7 +6488,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       EnableSLPVec ? options::OPT_O_Group : options::OPT_fslp_vectorize;
   if (Args.hasFlag(options::OPT_fslp_vectorize, SLPVectAliasOption,
                    options::OPT_fno_slp_vectorize, EnableSLPVec))
-    CmdArgs.push_back("-vectorize-slp");
+    // FIXME: CHERIseed workaround
+    // SLP vectorizer can create vectors of capabilities which
+    // CHERISeed cannot cope with.
+    if (!Sanitize.needsCHERIseedRt())
+      CmdArgs.push_back("-vectorize-slp");
 
   ParseMPreferVectorWidth(D, Args, CmdArgs);
 
