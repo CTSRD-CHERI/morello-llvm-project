@@ -24261,7 +24261,7 @@ void DAGCombiner::GatherAllAliases(SDNode *N, SDValue OriginalChain,
       }
       for (unsigned n = Chain.getNumOperands(); n;)
         Chains.push_back(Chain.getOperand(--n));
-      ++Depth;
+      Depth += Chain.getNumOperands();
       continue;
     }
     // Everything else
