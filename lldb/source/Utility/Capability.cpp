@@ -16,7 +16,7 @@
 #include "llvm/ADT/ArrayRef.h"
 // Project includes
 #include "lldb/Utility/Log.h"
-#include "lldb/Utility/Logging.h"
+#include "lldb/Utility/LLDBLog.h"
 #include "lldb/Utility/RegisterValue.h"
 
 using namespace lldb;

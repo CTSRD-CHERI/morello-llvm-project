@@ -1357,7 +1357,8 @@ public:
     }
 
     Stream &strm = result.GetOutputStream();
-    if (!thread_sp->GetDescription(strm, eDescriptionLevelFull, false, false)) {
+    if (!thread_sp->GetDescription(strm, eDescriptionLevelFull, false, false,
+                                   true)) {
       result.AppendErrorWithFormat("error displaying info for thread: \"%d\"\n",
                                    thread_sp->GetIndexID());
       return false;

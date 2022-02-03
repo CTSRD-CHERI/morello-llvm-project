@@ -14,6 +14,7 @@
 #include "lldb/Host/common/NativeThreadProtocol.h"
 #include "lldb/Utility/Capability.h"
 #include "lldb/Utility/LLDBAssert.h"
+#include "lldb/Utility/LLDBLog.h"
 #include "lldb/Utility/Log.h"
 #include "lldb/Utility/State.h"
 #include "lldb/lldb-enumerations.h"
