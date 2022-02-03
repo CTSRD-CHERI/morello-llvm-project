@@ -264,7 +264,8 @@ enum NodeType : unsigned {
   SRHADD,
   URHADD,
 
-  // Unsigned Add Long Pairwise
+  // Add Long Pairwise
+  SADDLP,
   UADDLP,
 
   // udot/sdot instructions
