@@ -407,9 +407,9 @@ public:
 
   Options *GetOptions() override { return &m_option_group; }
 
-  const char *GetRepeatCommand(Args &current_command_args,
-                               uint32_t index) override {
-    return m_cmd_name.c_str();
+  llvm::Optional<std::string> GetRepeatCommand(Args &current_command_args,
+                                               uint32_t index) override {
+    return m_cmd_name;
   }
 
 protected:
@@ -1764,9 +1764,9 @@ public:
 
   ~CommandObjectMemoryHistory() override = default;
 
-  const char *GetRepeatCommand(Args &current_command_args,
-                               uint32_t index) override {
-    return m_cmd_name.c_str();
+  llvm::Optional<std::string> GetRepeatCommand(Args &current_command_args,
+                                               uint32_t index) override {
+    return m_cmd_name;
   }
 
 protected:
@@ -1928,11 +1928,11 @@ protected:
     return false;
   }
 
-  const char *GetRepeatCommand(Args &current_command_args,
-                               uint32_t index) override {
+  llvm::Optional<std::string> GetRepeatCommand(Args &current_command_args,
+                                               uint32_t index) override {
     // If we repeat this command, repeat it without any arguments so we can
     // show the next memory range
-    return m_cmd_name.c_str();
+    return m_cmd_name;
   }
 
   lldb::addr_t m_prev_end_addr;
