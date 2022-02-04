@@ -6,10 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+// UNSUPPORTED: libcpp-has-newlib
 // UNSUPPORTED: c++03
 // UNSUPPORTED: windows
-// UNSUPPORTED: libcpp-has-newlib
-// ADDITIONAL_COMPILE_FLAGS: -D_LIBCPP_DEBUG=0
+// ADDITIONAL_COMPILE_FLAGS: -Wno-macro-redefined -D_LIBCPP_DEBUG=0
 // UNSUPPORTED: libcxx-no-debug-mode
 
 // <list>

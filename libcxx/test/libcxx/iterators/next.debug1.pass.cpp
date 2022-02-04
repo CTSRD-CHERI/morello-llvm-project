@@ -6,10 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+// UNSUPPORTED: libcpp-has-newlib
 // UNSUPPORTED: c++03
 // UNSUPPORTED: windows
-// UNSUPPORTED: libcpp-has-newlib
-// ADDITIONAL_COMPILE_FLAGS: -D_LIBCPP_DEBUG=0
+// ADDITIONAL_COMPILE_FLAGS: -Wno-macro-redefined -D_LIBCPP_DEBUG=0
 // UNSUPPORTED: libcxx-no-debug-mode
 
 // <list>
@@ -28,8 +28,8 @@ int main(int, char**)
 
 
     forward_iterator<int *> it(a+1);
-	std::next(it, 1);  // should work fine
-	std::next(it, 0);  // should work fine
+    std::next(it, 1);  // should work fine
+    std::next(it, 0);  // should work fine
     EXPECT_DEATH( std::next(it, -1) ); // can't go backwards on a FwdIter
 
   return 0;
