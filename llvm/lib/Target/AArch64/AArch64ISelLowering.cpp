@@ -12669,9 +12669,6 @@ SDValue AArch64TargetLowering::LowerVectorSRA_SRL_SHL(SDValue Op,
   unsigned EltSize = VT.getScalarSizeInBits();
 
   switch (Op.getOpcode()) {
-  default:
-    llvm_unreachable("unexpected shift opcode");
-
   case ISD::SHL:
     if (VT.isScalableVector() || useSVEForFixedLengthVectorVT(VT))
       return LowerToPredicatedOp(Op, DAG, AArch64ISD::SHL_PRED);
@@ -12714,7 +12711,7 @@ SDValue AArch64TargetLowering::LowerVectorSRA_SRL_SHL(SDValue Op,
     return NegShiftLeft;
   }
 
-  return SDValue();
+  llvm_unreachable("unexpected shift opcode");
 }
 
 static SDValue EmitVectorComparison(SDValue LHS, SDValue RHS,
