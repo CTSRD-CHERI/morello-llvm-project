@@ -4935,7 +4935,7 @@ void AArch64DAGToDAGISel::Select(SDNode *Node) {
                              true);
         return;
       } else if (VT == MVT::nxv8i16 || VT == MVT::nxv8f16 ||
-                 (VT == MVT::nxv8bf16 && Subtarget->hasBF16())) {
+                 VT == MVT::nxv8bf16) {
         SelectPredicatedLoad(Node, 2, 1, AArch64::LD2H_IMM, AArch64::LD2H,
                              true);
         return;
@@ -4956,7 +4956,7 @@ void AArch64DAGToDAGISel::Select(SDNode *Node) {
                              true);
         return;
       } else if (VT == MVT::nxv8i16 || VT == MVT::nxv8f16 ||
-                 (VT == MVT::nxv8bf16 && Subtarget->hasBF16())) {
+                 VT == MVT::nxv8bf16) {
         SelectPredicatedLoad(Node, 3, 1, AArch64::LD3H_IMM, AArch64::LD3H,
                              true);
         return;
@@ -4977,7 +4977,7 @@ void AArch64DAGToDAGISel::Select(SDNode *Node) {
                              true);
         return;
       } else if (VT == MVT::nxv8i16 || VT == MVT::nxv8f16 ||
-                 (VT == MVT::nxv8bf16 && Subtarget->hasBF16())) {
+                 VT == MVT::nxv8bf16) {
         SelectPredicatedLoad(Node, 4, 1, AArch64::LD4H_IMM, AArch64::LD4H,
                              true);
         return;
@@ -5102,7 +5102,7 @@ void AArch64DAGToDAGISel::Select(SDNode *Node) {
         SelectPredicatedStore(Node, 2, 0, AArch64::ST2B, AArch64::ST2B_IMM);
         return;
       } else if (VT == MVT::nxv8i16 || VT == MVT::nxv8f16 ||
-                 (VT == MVT::nxv8bf16 && Subtarget->hasBF16())) {
+                 VT == MVT::nxv8bf16) {
         SelectPredicatedStore(Node, 2, 1, AArch64::ST2H, AArch64::ST2H_IMM);
         return;
       } else if (VT == MVT::nxv4i32 || VT == MVT::nxv4f32) {
@@ -5119,7 +5119,7 @@ void AArch64DAGToDAGISel::Select(SDNode *Node) {
         SelectPredicatedStore(Node, 3, 0, AArch64::ST3B, AArch64::ST3B_IMM);
         return;
       } else if (VT == MVT::nxv8i16 || VT == MVT::nxv8f16 ||
-                 (VT == MVT::nxv8bf16 && Subtarget->hasBF16())) {
+                 VT == MVT::nxv8bf16) {
         SelectPredicatedStore(Node, 3, 1, AArch64::ST3H, AArch64::ST3H_IMM);
         return;
       } else if (VT == MVT::nxv4i32 || VT == MVT::nxv4f32) {
@@ -5136,7 +5136,7 @@ void AArch64DAGToDAGISel::Select(SDNode *Node) {
         SelectPredicatedStore(Node, 4, 0, AArch64::ST4B, AArch64::ST4B_IMM);
         return;
       } else if (VT == MVT::nxv8i16 || VT == MVT::nxv8f16 ||
-                 (VT == MVT::nxv8bf16 && Subtarget->hasBF16())) {
+                 VT == MVT::nxv8bf16) {
         SelectPredicatedStore(Node, 4, 1, AArch64::ST4H, AArch64::ST4H_IMM);
         return;
       } else if (VT == MVT::nxv4i32 || VT == MVT::nxv4f32) {
@@ -5240,7 +5240,7 @@ void AArch64DAGToDAGISel::Select(SDNode *Node) {
       SelectPredicatedLoad(Node, 2, 0, AArch64::LD2B_IMM, AArch64::LD2B);
       return;
     } else if (VT == MVT::nxv8i16 || VT == MVT::nxv8f16 ||
-               (VT == MVT::nxv8bf16 && Subtarget->hasBF16())) {
+               VT == MVT::nxv8bf16) {
       SelectPredicatedLoad(Node, 2, 1, AArch64::LD2H_IMM, AArch64::LD2H);
       return;
     } else if (VT == MVT::nxv4i32 || VT == MVT::nxv4f32) {
@@ -5257,7 +5257,7 @@ void AArch64DAGToDAGISel::Select(SDNode *Node) {
       SelectPredicatedLoad(Node, 3, 0, AArch64::LD3B_IMM, AArch64::LD3B);
       return;
     } else if (VT == MVT::nxv8i16 || VT == MVT::nxv8f16 ||
-               (VT == MVT::nxv8bf16 && Subtarget->hasBF16())) {
+               VT == MVT::nxv8bf16) {
       SelectPredicatedLoad(Node, 3, 1, AArch64::LD3H_IMM, AArch64::LD3H);
       return;
     } else if (VT == MVT::nxv4i32 || VT == MVT::nxv4f32) {
@@ -5274,7 +5274,7 @@ void AArch64DAGToDAGISel::Select(SDNode *Node) {
       SelectPredicatedLoad(Node, 4, 0, AArch64::LD4B_IMM, AArch64::LD4B);
       return;
     } else if (VT == MVT::nxv8i16 || VT == MVT::nxv8f16 ||
-               (VT == MVT::nxv8bf16 && Subtarget->hasBF16())) {
+               VT == MVT::nxv8bf16) {
       SelectPredicatedLoad(Node, 4, 1, AArch64::LD4H_IMM, AArch64::LD4H);
       return;
     } else if (VT == MVT::nxv4i32 || VT == MVT::nxv4f32) {
