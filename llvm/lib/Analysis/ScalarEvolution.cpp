@@ -5991,6 +5991,23 @@ const SCEV *ScalarEvolution::createNodeForSelectOrPHIInstWithICmpInstCond(
   return getUnknown(I);
 }
 
+const SCEV *ScalarEvolution::createNodeForSelectOrPHIViaUMinSeq(
+    Value *V, Value *Cond, Value *TrueVal, Value *FalseVal) {
+  // For now, only deal with i1-typed `select`s.
+  if (!V->getType()->isIntegerTy(1) || !Cond->getType()->isIntegerTy(1) ||
+      !TrueVal->getType()->isIntegerTy(1) ||
+      !FalseVal->getType()->isIntegerTy(1))
+    return getUnknown(V);
+
+  // i1 cond ? i1 x : i1 0  -->  umin_seq cond, x
+  if (auto *FalseConst = dyn_cast<ConstantInt>(FalseVal)) {
+    if (FalseConst->isZero())
+      return getUMinExpr(getSCEV(Cond), getSCEV(TrueVal), /*Sequential=*/true);
+  }
+
+  return getUnknown(V);
+}
+
 const SCEV *ScalarEvolution::createNodeForSelectOrPHI(Value *V, Value *Cond,
                                                       Value *TrueVal,
                                                       Value *FalseVal) {
@@ -6008,7 +6025,7 @@ const SCEV *ScalarEvolution::createNodeForSelectOrPHI(Value *V, Value *Cond,
     }
   }
 
-  return getUnknown(V);
+  return createNodeForSelectOrPHIViaUMinSeq(V, Cond, TrueVal, FalseVal);
 }
 
 /// Expand GEP instructions into add and multiply operations. This allows them
