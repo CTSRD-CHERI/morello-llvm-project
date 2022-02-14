@@ -76,7 +76,7 @@ int main(int, char**)
     }
     {
         const char str[] = "125e-1";
-        hex(ios);
+        std::hex(ios);
         std::ios_base::iostate err = ios.goodbit;
         cpp17_input_iterator<const char*> iter =
             f.get(cpp17_input_iterator<const char*>(str),
@@ -88,7 +88,7 @@ int main(int, char**)
     }
     {
         const char str[] = "0x125p-1";
-        hex(ios);
+        std::hex(ios);
         std::ios_base::iostate err = ios.goodbit;
         cpp17_input_iterator<const char*> iter =
             f.get(cpp17_input_iterator<const char*>(str),
@@ -100,7 +100,7 @@ int main(int, char**)
     }
     {
         const char str[] = "inf";
-        hex(ios);
+        std::hex(ios);
         std::ios_base::iostate err = ios.goodbit;
         cpp17_input_iterator<const char*> iter =
             f.get(cpp17_input_iterator<const char*>(str),
@@ -112,7 +112,7 @@ int main(int, char**)
     }
     {
         const char str[] = "INF";
-        hex(ios);
+        std::hex(ios);
         std::ios_base::iostate err = ios.goodbit;
         cpp17_input_iterator<const char*> iter =
             f.get(cpp17_input_iterator<const char*>(str),
@@ -124,7 +124,7 @@ int main(int, char**)
     }
     {
         const char str[] = "-inf";
-        hex(ios);
+        std::hex(ios);
         std::ios_base::iostate err = ios.goodbit;
         cpp17_input_iterator<const char*> iter =
             f.get(cpp17_input_iterator<const char*>(str),
@@ -136,7 +136,7 @@ int main(int, char**)
     }
     {
         const char str[] = "-INF";
-        hex(ios);
+        std::hex(ios);
         std::ios_base::iostate err = ios.goodbit;
         cpp17_input_iterator<const char*> iter =
             f.get(cpp17_input_iterator<const char*>(str),
@@ -148,7 +148,7 @@ int main(int, char**)
     }
     {
         const char str[] = "nan";
-        hex(ios);
+        std::hex(ios);
         std::ios_base::iostate err = ios.goodbit;
         cpp17_input_iterator<const char*> iter =
             f.get(cpp17_input_iterator<const char*>(str),
@@ -160,7 +160,7 @@ int main(int, char**)
     }
     {
         const char str[] = "NAN";
-        hex(ios);
+        std::hex(ios);
         std::ios_base::iostate err = ios.goodbit;
         cpp17_input_iterator<const char*> iter =
             f.get(cpp17_input_iterator<const char*>(str),
