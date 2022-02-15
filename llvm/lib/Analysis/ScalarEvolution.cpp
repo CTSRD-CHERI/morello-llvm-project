@@ -211,6 +211,10 @@ static cl::opt<bool> DisableFatPointerSCEV(
     "scalar-evolution-fatpointer-scev-disable", cl::Hidden,
      cl::desc("Disable SCEV for Fat Pointers"), cl::init(false));
 
+static cl::opt<bool> DisableSCEV(
+    "scalar-evolution-disable", cl::Hidden,
+     cl::desc("Disable SCEV"), cl::init(false));
+
 static cl::opt<unsigned>
     MaxCastDepth("scalar-evolution-max-cast-depth", cl::Hidden,
                  cl::desc("Maximum depth of recursive SExt/ZExt/Trunc"),
@@ -6888,6 +6892,9 @@ ScalarEvolution::getLoopProperties(const Loop *L) {
 }
 
 const SCEV *ScalarEvolution::createSCEV(Value *V) {
+  if (DisableSCEV)
+    return getUnknown(V);
+
   if (!isSCEVable(V->getType()))
     return getUnknown(V);
 
@@ -10063,6 +10070,8 @@ bool ScalarEvolution::isKnownPredicate(ICmpInst::Predicate Pred,
 Optional<bool> ScalarEvolution::evaluatePredicate(ICmpInst::Predicate Pred,
                                                   const SCEV *LHS,
                                                   const SCEV *RHS) {
+  if (DisableSCEV)
+    return None;
   if (isKnownPredicate(Pred, LHS, RHS))
     return true;
   else if (isKnownPredicate(ICmpInst::getInversePredicate(Pred), LHS, RHS))
@@ -10082,6 +10091,8 @@ Optional<bool>
 ScalarEvolution::evaluatePredicateAt(ICmpInst::Predicate Pred, const SCEV *LHS,
                                      const SCEV *RHS,
                                      const Instruction *Context) {
+  if (DisableSCEV)
+    return None;
   Optional<bool> KnownWithoutContext = evaluatePredicate(Pred, LHS, RHS);
   if (KnownWithoutContext)
     return KnownWithoutContext;
