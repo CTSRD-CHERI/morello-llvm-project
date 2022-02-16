@@ -11360,6 +11360,10 @@ SDNode *SelectionDAG::isConstantFPBuildVectorOrConstantFP(SDValue N) const {
   if (ISD::isBuildVectorOfConstantFPSDNodes(N.getNode()))
     return N.getNode();
 
+  if ((N.getOpcode() == ISD::SPLAT_VECTOR) &&
+      isa<ConstantFPSDNode>(N.getOperand(0)))
+    return N.getNode();
+
   return nullptr;
 }
 
