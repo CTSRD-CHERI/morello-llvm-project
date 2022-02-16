@@ -7167,13 +7167,12 @@ enum MachineOutlinerMBBFlags {
   UnsafeRegsDead = 0x8
 };
 
-unsigned
-AArch64InstrInfo::findRegisterToSaveLRTo(const outliner::Candidate &C) const {
-  assert(C.LRUWasSet && "LRU wasn't set?");
+Register
+AArch64InstrInfo::findRegisterToSaveLRTo(outliner::Candidate &C) const {
   MachineFunction *MF = C.getMF();
-  const AArch64RegisterInfo *ARI = static_cast<const AArch64RegisterInfo *>(
-      MF->getSubtarget().getRegisterInfo());
-
+  const TargetRegisterInfo &TRI = *MF->getSubtarget().getRegisterInfo();
+  const AArch64RegisterInfo *ARI =
+      static_cast<const AArch64RegisterInfo *>(&TRI);
   // Check if there is an available register across the sequence that we can
   // use.
   for (unsigned Reg : AArch64::GPR64RegClass) {
@@ -7181,12 +7180,11 @@ AArch64InstrInfo::findRegisterToSaveLRTo(const outliner::Candidate &C) const {
         Reg != AArch64::LR &&  // LR is not reserved, but don't use it.
         Reg != AArch64::X16 && // X16 is not guaranteed to be preserved.
         Reg != AArch64::X17 && // Ditto for X17.
-        C.LRU.available(Reg) && C.UsedInSequence.available(Reg))
+        C.isAvailableAcrossAndOutOfSeq(Reg, TRI) &&
+        C.isAvailableInsideSeq(Reg, TRI))
       return Reg;
   }
-
-  // No suitable register. Return 0.
-  return 0u;
+  return Register();
 }
 
 static bool
@@ -7353,10 +7351,8 @@ outliner::OutlinedFunction AArch64InstrInfo::getOutliningCandidateInfo(
     // to compute liveness here.
     if (C.Flags & UnsafeRegsDead)
       return false;
-    C.initLRU(TRI);
-    LiveRegUnits LRU = C.LRU;
-    return (!LRU.available(AArch64::W16) || !LRU.available(AArch64::W17) ||
-            !LRU.available(AArch64::NZCV));
+    return C.isAnyUnavailableAcrossOrOutOfSeq(
+        {AArch64::W16, AArch64::W17, AArch64::NZCV}, TRI);
   };
 
   // Are there any candidates where those registers are live?
@@ -7501,8 +7497,6 @@ outliner::OutlinedFunction AArch64InstrInfo::getOutliningCandidateInfo(
 
     // Check if we have to save LR.
     for (outliner::Candidate &C : RepeatedSequenceLocs) {
-      C.initLRU(TRI);
-
       // If we have a noreturn caller, then we're going to be conservative and
       // say that we have to save LR. If we don't have a ret at the end of the
       // block, then we can't reason about liveness accurately.
@@ -7513,7 +7507,7 @@ outliner::OutlinedFunction AArch64InstrInfo::getOutliningCandidateInfo(
           C.getMF()->getFunction().hasFnAttribute(Attribute::NoReturn);
 
       // Is LR available? If so, we don't need a save.
-      if (C.LRU.available(AArch64::LR) && !IsNoReturn) {
+      if (C.isAvailableAcrossAndOutOfSeq(AArch64::LR, TRI) && !IsNoReturn) {
         NumBytesNoStackCalls += 4;
         C.setCallInfo(MachineOutlinerNoLRSave, 4);
         CandidatesWithoutStackFixups.push_back(C);
@@ -7529,7 +7523,7 @@ outliner::OutlinedFunction AArch64InstrInfo::getOutliningCandidateInfo(
 
       // Is SP used in the sequence at all? If not, we don't have to modify
       // the stack, so we are guaranteed to get the same frame.
-      else if (C.UsedInSequence.available(AArch64::SP)) {
+      else if (C.isAvailableInsideSeq(AArch64::SP, TRI)) {
         NumBytesNoStackCalls += 12;
         C.setCallInfo(MachineOutlinerDefault, 12);
         CandidatesWithoutStackFixups.push_back(C);
@@ -7598,11 +7592,12 @@ outliner::OutlinedFunction AArch64InstrInfo::getOutliningCandidateInfo(
       // LR to (ie one extra stack save/restore).
       //
       if (FlagsSetInAll & MachineOutlinerMBBFlags::HasCalls) {
-        erase_if(RepeatedSequenceLocs, [this](outliner::Candidate &C) {
+        erase_if(RepeatedSequenceLocs, [this, &TRI](outliner::Candidate &C) {
           return (std::any_of(
                      C.front(), std::next(C.back()),
                      [](const MachineInstr &MI) { return MI.isCall(); })) &&
-                 (!C.LRU.available(AArch64::LR) || !findRegisterToSaveLRTo(C));
+                 (!C.isAvailableAcrossAndOutOfSeq(AArch64::LR, TRI) ||
+                  !findRegisterToSaveLRTo(C));
         });
       }
     }
@@ -8136,7 +8131,7 @@ void AArch64InstrInfo::buildOutlinedFrame(
 
 MachineBasicBlock::iterator AArch64InstrInfo::insertOutlinedCall(
     Module &M, MachineBasicBlock &MBB, MachineBasicBlock::iterator &It,
-    MachineFunction &MF, const outliner::Candidate &C) const {
+    MachineFunction &MF, outliner::Candidate &C) const {
 
   // Are we tail calling?
   if (C.CallConstructionID == MachineOutlinerTailCall) {
@@ -8167,8 +8162,8 @@ MachineBasicBlock::iterator AArch64InstrInfo::insertOutlinedCall(
   if (C.CallConstructionID == MachineOutlinerRegSave) {
     // FIXME: This logic should be sunk into a target-specific interface so that
     // we don't have to recompute the register.
-    unsigned Reg = findRegisterToSaveLRTo(C);
-    assert(Reg != 0 && "No callee-saved register available?");
+    Register Reg = findRegisterToSaveLRTo(C);
+    assert(Reg && "No callee-saved register available?");
 
     // LR has to be a live in so that we can save it.
     if (!MBB.isLiveIn(AArch64::LR))
