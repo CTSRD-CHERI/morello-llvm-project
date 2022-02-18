@@ -2575,6 +2575,7 @@ template <typename Derived, typename Alloc> struct AbstractManglingParser {
       Call,        // Function call: expr (expr*)
       CCast,       // C cast: (type)expr
       Conditional, // Conditional: expr ? expr : expr
+      NameOnly,    // Overload only, not allowed in expression.
       // Below do not have operator names
       NamedCast, // Named cast, @<type>(expr)
       OfIdOp,    // alignof, sizeof, typeid
@@ -2884,6 +2885,7 @@ AbstractManglingParser<Derived, Alloc>::parseOperatorEncoding() {
       {"ad", OperatorInfo::Prefix, false, "operator&"},
       {"an", OperatorInfo::Binary, false, "operator&"},
       {"at", OperatorInfo::OfIdOp, /*Type*/ true, "alignof ("},
+      {"aw", OperatorInfo::NameOnly, false, "operator co_await"},
       {"az", OperatorInfo::OfIdOp, /*Type*/ false, "alignof ("},
       {"cc", OperatorInfo::NamedCast, false, "const_cast"},
       {"cl", OperatorInfo::Call, false, "operator()"},
@@ -4583,6 +4585,10 @@ Node *AbstractManglingParser<Derived, Alloc>::parseExpr() {
       if (!Arg)
         return nullptr;
       return make<EnclosingExpr>(Sym, Arg, ")");
+    }
+    case OperatorInfo::NameOnly: {
+      // Not valid as an expression operand.
+      return nullptr;
     }
     }
     DEMANGLE_UNREACHABLE;
