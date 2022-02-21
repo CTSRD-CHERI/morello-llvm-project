@@ -359,7 +359,7 @@ protected:
 
   void StopAsyncThread();
 
-  static lldb::thread_result_t AsyncThread(void *arg);
+  lldb::thread_result_t AsyncThread();
 
   static bool
   MonitorDebugserverProcess(std::weak_ptr<ProcessGDBRemote> process_wp,
