@@ -3135,6 +3135,9 @@ private:
 
   void ControlPrivateStateThread(uint32_t signal);
 
+  Status LaunchPrivate(ProcessLaunchInfo &launch_info, lldb::StateType &state,
+                       lldb::EventSP &event_sp);
+
   Process(const Process &) = delete;
   const Process &operator=(const Process &) = delete;
 };
