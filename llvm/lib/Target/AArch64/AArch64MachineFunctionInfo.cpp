@@ -15,6 +15,7 @@
 
 #include "AArch64MachineFunctionInfo.h"
 #include "AArch64InstrInfo.h"
+#include "llvm/MC/MCAsmInfo.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/Module.h"
@@ -132,4 +133,20 @@ void AArch64FunctionInfo::initCapTableMapping(MachineFunction &MF) {
       CapTableMapping[Global] = std::make_pair(CapTable, ValIdx - 1);
     }
   }
+}
+
+bool AArch64FunctionInfo::needsDwarfUnwindInfo() const {
+  if (!NeedsDwarfUnwindInfo.hasValue())
+    NeedsDwarfUnwindInfo = MF.needsFrameMoves() &&
+                           !MF.getTarget().getMCAsmInfo()->usesWindowsCFI();
+
+  return NeedsDwarfUnwindInfo.getValue();
+}
+
+bool AArch64FunctionInfo::needsAsyncDwarfUnwindInfo() const {
+  if (!NeedsDwarfAsyncUnwindInfo.hasValue())
+    NeedsDwarfAsyncUnwindInfo =
+        needsDwarfUnwindInfo() &&
+        MF.getFunction().getUWTableKind() == UWTableKind::Async;
+  return NeedsDwarfAsyncUnwindInfo.getValue();
 }

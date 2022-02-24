@@ -1201,9 +1201,8 @@ void AArch64FrameLowering::emitPrologue(MachineFunction &MF,
   const TargetInstrInfo *TII = Subtarget.getInstrInfo();
   MachineModuleInfo &MMI = MF.getMMI();
   AArch64FunctionInfo *AFI = MF.getInfo<AArch64FunctionInfo>();
+  bool EmitCFI = AFI->needsDwarfUnwindInfo();
   const bool HasPureCap = MF.getSubtarget<AArch64Subtarget>().hasPureCap();
-  bool needsFrameMoves =
-      MF.needsFrameMoves() && !MF.getTarget().getMCAsmInfo()->usesWindowsCFI();
   bool HasFP = hasFP(MF);
   bool NeedsWinCFI = needsWinCFI(MF);
   bool HasWinCFI = false;
@@ -1240,12 +1239,13 @@ void AArch64FrameLowering::emitPrologue(MachineFunction &MF,
           .addReg(AArch64::LR)
           .addReg(AArch64::SP, RegState::InternalRead);
     MI.setMIFlag(MachineInstr::FrameSetup);
-
-    unsigned CFIIndex =
-        MF.addFrameInst(MCCFIInstruction::createNegateRAState(nullptr));
-    BuildMI(MBB, MBBI, DL, TII->get(TargetOpcode::CFI_INSTRUCTION))
-        .addCFIIndex(CFIIndex)
-        .setMIFlags(MachineInstr::FrameSetup);
+    if (EmitCFI) {
+      unsigned CFIIndex =
+          MF.addFrameInst(MCCFIInstruction::createNegateRAState(nullptr));
+      BuildMI(MBB, MBBI, DL, TII->get(TargetOpcode::CFI_INSTRUCTION))
+          .addCFIIndex(CFIIndex)
+          .setMIFlags(MachineInstr::FrameSetup);
+    }
   }
 
   // We signal the presence of a Swift extended frame to external tools by
@@ -1322,7 +1322,7 @@ void AArch64FrameLowering::emitPrologue(MachineFunction &MF,
       emitFrameOffset(MBB, MBBI, DL, SP, SP,
                       StackOffset::getFixed(-NumBytes), TII,
                       MachineInstr::FrameSetup, false, NeedsWinCFI, &HasWinCFI);
-      if (needsFrameMoves) {
+      if (EmitCFI) {
         // Label used to tie together the PROLOG_LABEL and the MachineMoves.
         MCSymbol *FrameLabel = MMI.getContext().createTempSymbol();
           // Encode the stack size of the leaf function.
@@ -1632,7 +1632,7 @@ void AArch64FrameLowering::emitPrologue(MachineFunction &MF,
     }
   }
 
-  if (needsFrameMoves) {
+  if (EmitCFI) {
     // An example of the prologue:
     //
     //     .globl __foo
@@ -2627,27 +2627,29 @@ bool AArch64FrameLowering::spillCalleeSavedRegisters(
         .addImm(8)
         .setMIFlag(MachineInstr::FrameSetup);
 
+    // This instruction also makes x18 live-in to the entry block.
+    MBB.addLiveIn(AArch64::X18);
+
     if (NeedsWinCFI)
       BuildMI(MBB, MI, DL, TII.get(AArch64::SEH_Nop))
           .setMIFlag(MachineInstr::FrameSetup);
 
-    // Emit a CFI instruction that causes 8 to be subtracted from the value of
-    // x18 when unwinding past this frame.
-    static const char CFIInst[] = {
-        dwarf::DW_CFA_val_expression,
-        18, // register
-        2,  // length
-        static_cast<char>(unsigned(dwarf::DW_OP_breg18)),
-        static_cast<char>(-8) & 0x7f, // addend (sleb128)
-    };
-    unsigned CFIIndex = MF.addFrameInst(MCCFIInstruction::createEscape(
-        nullptr, StringRef(CFIInst, sizeof(CFIInst))));
-    BuildMI(MBB, MI, DL, TII.get(AArch64::CFI_INSTRUCTION))
-        .addCFIIndex(CFIIndex)
-        .setMIFlag(MachineInstr::FrameSetup);
-
-    // This instruction also makes x18 live-in to the entry block.
-    MBB.addLiveIn(AArch64::X18);
+    if (MF.getInfo<AArch64FunctionInfo>()->needsDwarfUnwindInfo()) {
+      // Emit a CFI instruction that causes 8 to be subtracted from the value of
+      // x18 when unwinding past this frame.
+      static const char CFIInst[] = {
+          dwarf::DW_CFA_val_expression,
+          18, // register
+          2,  // length
+          static_cast<char>(unsigned(dwarf::DW_OP_breg18)),
+          static_cast<char>(-8) & 0x7f, // addend (sleb128)
+      };
+      unsigned CFIIndex = MF.addFrameInst(MCCFIInstruction::createEscape(
+          nullptr, StringRef(CFIInst, sizeof(CFIInst))));
+      BuildMI(MBB, MI, DL, TII.get(AArch64::CFI_INSTRUCTION))
+          .addCFIIndex(CFIIndex)
+          .setMIFlag(MachineInstr::FrameSetup);
+    }
   }
 
   if (homogeneousPrologEpilog(MF)) {
