@@ -5060,7 +5060,7 @@ TargetLowering::ParseConstraints(const DataLayout &DL,
     if (OpInfo.CallOperandVal) {
       llvm::Type *OpTy = OpInfo.CallOperandVal->getType();
       if (OpInfo.isIndirect) {
-        OpTy = Call.getAttributes().getParamElementType(ArgNo);
+        OpTy = Call.getParamElementType(ArgNo);
         assert(OpTy && "Indirect opernad must have elementtype attribute");
       }
 
