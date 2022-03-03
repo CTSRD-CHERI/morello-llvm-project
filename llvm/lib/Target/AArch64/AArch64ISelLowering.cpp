@@ -330,7 +330,7 @@ AArch64TargetLowering::AArch64TargetLowering(const TargetMachine &TM,
     }
   }
 
-  if (Subtarget->hasSVE()) {
+  if (Subtarget->hasSVE() || Subtarget->hasStreamingSVE()) {
     // Add legal sve predicate types
     addRegisterClass(MVT::nxv2i1, &AArch64::PPRRegClass);
     addRegisterClass(MVT::nxv4i1, &AArch64::PPRRegClass);
@@ -7388,7 +7388,7 @@ AArch64TargetLowering::LowerCall(CallLoweringInfo &CLI,
     CallOpc = (IsDescABI && !IsLocal) ? AArch64ISD::DescCALL
                                       : AArch64ISD::CCALL;
   }
-  
+
   // Calls with operand bundle "clang.arc.attachedcall" are special. They should
   // be expanded to the call, directly followed by a special marker sequence and
   // a call to an ObjC library function.  Use CALL_RVMARKER to do that.
