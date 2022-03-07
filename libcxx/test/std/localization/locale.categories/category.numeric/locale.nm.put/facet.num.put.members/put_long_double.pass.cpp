@@ -13,7 +13,6 @@
 // iter_type put(iter_type s, ios_base& iob, char_type fill, long double v) const;
 
 // XFAIL: win32-broken-printf-g-precision
-// XFAIL: LIBCXX-AIX-FIXME
 // newlib uses '+nan' instead of 'nan'
 // XFAIL: libcpp-has-newlib
 
@@ -8932,6 +8931,12 @@ void test4()
     char str[200];
     std::locale lc = std::locale::classic();
     std::locale lg(lc, new my_numpunct);
+#ifdef _AIX
+    std::string inf = "INF";
+#else
+    std::string inf = "inf";
+#endif
+
     const my_facet f(1);
     {
         long double v = -INFINITY;
@@ -8952,7 +8957,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -8960,7 +8965,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -8968,7 +8973,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -8976,7 +8981,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -8986,7 +8991,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -8994,7 +8999,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9002,7 +9007,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9010,7 +9015,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -9023,7 +9028,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9031,7 +9036,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9039,7 +9044,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9047,7 +9052,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -9057,7 +9062,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9065,7 +9070,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9073,7 +9078,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9081,7 +9086,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -9097,7 +9102,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9105,7 +9110,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9113,7 +9118,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9121,7 +9126,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -9131,7 +9136,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9139,7 +9144,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9147,7 +9152,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9155,7 +9160,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -9168,7 +9173,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9176,7 +9181,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9184,7 +9189,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9192,7 +9197,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -9202,7 +9207,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9210,7 +9215,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9218,7 +9223,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9226,7 +9231,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -9541,7 +9546,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9549,7 +9554,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9557,7 +9562,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9565,7 +9570,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -9575,7 +9580,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9583,7 +9588,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9591,7 +9596,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9599,7 +9604,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -9612,7 +9617,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9620,7 +9625,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9628,7 +9633,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9636,7 +9641,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -9646,7 +9651,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9654,7 +9659,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9662,7 +9667,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9670,7 +9675,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -9686,7 +9691,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9694,7 +9699,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9702,7 +9707,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9710,7 +9715,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -9720,7 +9725,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9728,7 +9733,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9736,7 +9741,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9744,7 +9749,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -9757,7 +9762,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9765,7 +9770,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9773,7 +9778,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9781,7 +9786,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -9791,7 +9796,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9799,7 +9804,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9807,7 +9812,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -9815,7 +9820,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -10130,7 +10135,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10138,7 +10143,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10146,7 +10151,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10154,7 +10159,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -10164,7 +10169,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10172,7 +10177,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10180,7 +10185,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10188,7 +10193,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -10201,7 +10206,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10209,7 +10214,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10217,7 +10222,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10225,7 +10230,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -10235,7 +10240,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10243,7 +10248,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10251,7 +10256,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10259,7 +10264,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -10275,7 +10280,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10283,7 +10288,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10291,7 +10296,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10299,7 +10304,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -10309,7 +10314,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10317,7 +10322,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10325,7 +10330,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10333,7 +10338,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -10346,7 +10351,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10354,7 +10359,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10362,7 +10367,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10370,7 +10375,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -10380,7 +10385,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf");
+                                    assert(ex == "-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10388,7 +10393,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-inf*********************");
+                                    assert(ex == "-" + inf + "*********************");
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10396,7 +10401,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "*********************-inf");
+                                    assert(ex == "*********************-" + inf);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10404,7 +10409,7 @@ void test4()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "-*********************inf");
+                                    assert(ex == "-*********************" + inf);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -10719,12 +10724,23 @@ void test5()
     std::locale lc = std::locale::classic();
     std::locale lg(lc, new my_numpunct);
     const my_facet f(1);
+#if defined(_AIX)
+    std::string nan= "NaNQ";
+    std::string NaN = "NaNQ";
+    std::string nan_padding25 = "*********************";
+    std::string pnan_sign = "+";
+    std::string pnan_padding25 = "********************";
+#else
+    std::string nan= "nan";
+    std::string NaN = "NAN";
+    std::string nan_padding25 = "**********************";
 #if defined(TEST_HAS_GLIBC) || defined(_WIN32)
     std::string pnan_sign = "+";
     std::string pnan_padding25 = "*********************";
 #else
     std::string pnan_sign = "";
     std::string pnan_padding25 = "**********************";
+#endif
 #endif
     {
         long double v = std::nan("");
@@ -10745,7 +10761,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "nan");
+                                    assert(ex == nan);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10753,7 +10769,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "nan**********************");
+                                    assert(ex == nan + nan_padding25);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10761,7 +10777,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "**********************nan");
+                                    assert(ex == nan_padding25 + nan);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10769,7 +10785,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "**********************nan");
+                                    assert(ex == nan_padding25 + nan);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -10779,7 +10795,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "nan");
+                                    assert(ex == nan);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10787,7 +10803,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "nan**********************");
+                                    assert(ex == nan + nan_padding25);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10795,7 +10811,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "**********************nan");
+                                    assert(ex == nan_padding25 + nan);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10803,7 +10819,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "**********************nan");
+                                    assert(ex == nan_padding25 + nan);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -10816,7 +10832,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "nan");
+                                    assert(ex == nan);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10824,7 +10840,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "nan**********************");
+                                    assert(ex == nan + nan_padding25);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10832,7 +10848,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "**********************nan");
+                                    assert(ex == nan_padding25 + nan);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10840,7 +10856,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "**********************nan");
+                                    assert(ex == nan_padding25 + nan);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -10850,7 +10866,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "nan");
+                                    assert(ex == nan);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10858,7 +10874,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "nan**********************");
+                                    assert(ex == nan + nan_padding25);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10866,7 +10882,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "**********************nan");
+                                    assert(ex == nan_padding25 + nan);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10874,7 +10890,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "**********************nan");
+                                    assert(ex == nan_padding25 + nan);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -10890,7 +10906,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + "nan");
+                                    assert(ex == pnan_sign + nan);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10898,7 +10914,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + "nan" + pnan_padding25);
+                                    assert(ex == pnan_sign + nan + pnan_padding25);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10906,7 +10922,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_padding25 + pnan_sign + "nan");
+                                    assert(ex == pnan_padding25 + pnan_sign + nan);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10914,7 +10930,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + pnan_padding25 + "nan");
+                                    assert(ex == pnan_sign + pnan_padding25 + nan);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -10924,7 +10940,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + "nan");
+                                    assert(ex == pnan_sign + nan);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10932,7 +10948,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + "nan" + pnan_padding25);
+                                    assert(ex == pnan_sign + nan + pnan_padding25);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10940,7 +10956,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_padding25 + pnan_sign + "nan");
+                                    assert(ex == pnan_padding25 + pnan_sign + nan);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10948,7 +10964,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + pnan_padding25 + "nan");
+                                    assert(ex == pnan_sign + pnan_padding25 + nan);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -10961,7 +10977,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + "nan");
+                                    assert(ex == pnan_sign + nan);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10969,7 +10985,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + "nan" + pnan_padding25);
+                                    assert(ex == pnan_sign + nan + pnan_padding25);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10977,7 +10993,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_padding25 + pnan_sign + "nan");
+                                    assert(ex == pnan_padding25 + pnan_sign + nan);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -10985,7 +11001,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + pnan_padding25 + "nan");
+                                    assert(ex == pnan_sign + pnan_padding25 + nan);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -10995,7 +11011,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + "nan");
+                                    assert(ex == pnan_sign + nan);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11003,7 +11019,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + "nan" + pnan_padding25);
+                                    assert(ex == pnan_sign + nan + pnan_padding25);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11011,7 +11027,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_padding25 + pnan_sign + "nan");
+                                    assert(ex == pnan_padding25 + pnan_sign + nan);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11019,7 +11035,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + pnan_padding25 + "nan");
+                                    assert(ex == pnan_sign + pnan_padding25 + nan);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -11038,7 +11054,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "NAN");
+                                    assert(ex == NaN);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11046,7 +11062,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "NAN**********************");
+                                    assert(ex == NaN + nan_padding25);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11054,7 +11070,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "**********************NAN");
+                                    assert(ex == nan_padding25 + NaN);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11062,7 +11078,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "**********************NAN");
+                                    assert(ex == nan_padding25 + NaN);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -11072,7 +11088,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "NAN");
+                                    assert(ex == NaN);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11080,7 +11096,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "NAN**********************");
+                                    assert(ex == NaN + nan_padding25);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11088,7 +11104,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "**********************NAN");
+                                    assert(ex == nan_padding25 + NaN);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11096,7 +11112,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "**********************NAN");
+                                    assert(ex == nan_padding25 + NaN);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -11109,7 +11125,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "NAN");
+                                    assert(ex == NaN);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11117,7 +11133,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "NAN**********************");
+                                    assert(ex == NaN + nan_padding25);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11125,7 +11141,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "**********************NAN");
+                                    assert(ex == nan_padding25 + NaN);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11133,7 +11149,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "**********************NAN");
+                                    assert(ex == nan_padding25 + NaN);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -11143,7 +11159,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "NAN");
+                                    assert(ex == NaN);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11151,7 +11167,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "NAN**********************");
+                                    assert(ex == NaN + nan_padding25);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11159,7 +11175,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "**********************NAN");
+                                    assert(ex == nan_padding25 + NaN);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11167,7 +11183,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == "**********************NAN");
+                                    assert(ex == nan_padding25 + NaN);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -11183,7 +11199,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + "NAN");
+                                    assert(ex == pnan_sign + NaN);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11191,7 +11207,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + "NAN" + pnan_padding25);
+                                    assert(ex == pnan_sign + NaN + pnan_padding25);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11199,7 +11215,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_padding25 + pnan_sign + "NAN");
+                                    assert(ex == pnan_padding25 + pnan_sign + NaN);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11207,7 +11223,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + pnan_padding25 + "NAN");
+                                    assert(ex == pnan_sign + pnan_padding25 + NaN);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -11217,7 +11233,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + "NAN");
+                                    assert(ex == pnan_sign + NaN);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11225,7 +11241,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + "NAN" + pnan_padding25);
+                                    assert(ex == pnan_sign + NaN + pnan_padding25);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11233,7 +11249,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_padding25 + pnan_sign + "NAN");
+                                    assert(ex == pnan_padding25 + pnan_sign + NaN);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11241,7 +11257,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + pnan_padding25 + "NAN");
+                                    assert(ex == pnan_sign + pnan_padding25 + NaN);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -11254,7 +11270,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + "NAN");
+                                    assert(ex == pnan_sign + NaN);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11262,7 +11278,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + "NAN" + pnan_padding25);
+                                    assert(ex == pnan_sign + NaN + pnan_padding25);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11270,7 +11286,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_padding25 + pnan_sign + "NAN");
+                                    assert(ex == pnan_padding25 + pnan_sign + NaN);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11278,7 +11294,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + pnan_padding25 + "NAN");
+                                    assert(ex == pnan_sign + pnan_padding25 + NaN);
                                     assert(ios.width() == 0);
                                 }
                             }
@@ -11288,7 +11304,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + "NAN");
+                                    assert(ex == pnan_sign + NaN);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11296,7 +11312,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + "NAN" + pnan_padding25);
+                                    assert(ex == pnan_sign + NaN + pnan_padding25);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11304,7 +11320,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_padding25 + pnan_sign + "NAN");
+                                    assert(ex == pnan_padding25 + pnan_sign + NaN);
                                     assert(ios.width() == 0);
                                 }
                                 ios.width(25);
@@ -11312,7 +11328,7 @@ void test5()
                                 {
                                     cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
                                     std::string ex(str, base(iter));
-                                    assert(ex == pnan_sign + pnan_padding25 + "NAN");
+                                    assert(ex == pnan_sign + pnan_padding25 + NaN);
                                     assert(ios.width() == 0);
                                 }
                             }
