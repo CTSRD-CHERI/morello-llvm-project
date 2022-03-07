@@ -654,8 +654,6 @@ public:
 
   bool enableEarlyIfConversion() const override;
 
-  bool enableAdvancedRASplitCost() const override { return false; }
-
   std::unique_ptr<PBQPRAConstraint> getCustomPBQPConstraints() const override;
 
   bool isCallingConvWin64(CallingConv::ID CC) const {
