@@ -133,6 +133,8 @@ public:
 
   bool IsScopedEnumerationType();
 
+  bool IsAggregateType();
+
   lldb::SBType
   GetPointerType(lldb::AddressSpace address_space = lldb::eAddressSpaceNormal);
 
