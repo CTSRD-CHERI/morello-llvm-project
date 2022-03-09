@@ -21840,8 +21840,7 @@ SDValue AArch64TargetLowering::LowerToPredicatedOp(SDValue Op,
   auto Pg = getPredicateForVector(DAG, DL, VT);
 
   if (VT.isFixedLengthVector()) {
-    assert(VT.getFixedSizeInBits() <= Subtarget->getMinSVEVectorSizeInBits() &&
-           "Cannot use SVE to lower fixed length predicated op!");
+    assert(isTypeLegal(VT) && "Expected only legal fixed-width types");
     EVT ContainerVT = getContainerForFixedLengthVector(DAG, VT);
 
     // Create list of operands by converting existing ones to scalable types.
@@ -21859,9 +21858,8 @@ SDValue AArch64TargetLowering::LowerToPredicatedOp(SDValue Op,
         continue;
       }
 
-      assert(V.getValueType().getFixedSizeInBits() <=
-                 Subtarget->getMinSVEVectorSizeInBits() &&
-             "Only fixed length vectors are supported!");
+      assert(isTypeLegal(V.getValueType()) &&
+             "Expected only legal fixed-width types");
       Operands.push_back(convertToScalableVector(DAG, ContainerVT, V));
     }
 
