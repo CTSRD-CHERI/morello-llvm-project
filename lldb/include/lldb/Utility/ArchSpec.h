@@ -104,6 +104,17 @@ public:
     eAArch64_abi_descabi = 0x00000001    // Morello Descriptor ABI
   };
 
+  enum RISCVeflags {
+    eRISCV_rvc              = 0x00000001, /// RVC, +c
+    eRISCV_float_abi_soft   = 0x00000000, /// soft float
+    eRISCV_float_abi_single = 0x00000002, /// single precision floating point, +f
+    eRISCV_float_abi_double = 0x00000004, /// double precision floating point, +d
+    eRISCV_float_abi_quad   = 0x00000006, /// quad precision floating point, +q
+    eRISCV_float_abi_mask   = 0x00000006,
+    eRISCV_rve              = 0x00000008, /// RVE, +e
+    eRISCV_tso              = 0x00000010, /// RVTSO (total store ordering)
+  };
+
   enum RISCVSubType {
     eRISCVSubType_unknown,
     eRISCVSubType_riscv32,

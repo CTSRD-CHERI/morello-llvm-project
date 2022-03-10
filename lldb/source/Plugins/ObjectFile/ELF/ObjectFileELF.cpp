@@ -1364,6 +1364,28 @@ size_t ObjectFileELF::GetSectionHeaderInfo(SectionHeaderColl &section_headers,
       arch_spec.SetFlags(ArchSpec::eARM_abi_hard_float);
   }
 
+  if (arch_spec.GetMachine() == llvm::Triple::riscv32 ||
+      arch_spec.GetMachine() == llvm::Triple::riscv64) {
+    uint32_t flags = arch_spec.GetFlags();
+
+    if (header.e_flags & llvm::ELF::EF_RISCV_RVC)
+      flags |= ArchSpec::eRISCV_rvc;
+    if (header.e_flags & llvm::ELF::EF_RISCV_RVE)
+      flags |= ArchSpec::eRISCV_rve;
+
+    if ((header.e_flags & llvm::ELF::EF_RISCV_FLOAT_ABI_SINGLE) ==
+        llvm::ELF::EF_RISCV_FLOAT_ABI_SINGLE)
+      flags |= ArchSpec::eRISCV_float_abi_single;
+    else if ((header.e_flags & llvm::ELF::EF_RISCV_FLOAT_ABI_DOUBLE) ==
+             llvm::ELF::EF_RISCV_FLOAT_ABI_DOUBLE)
+      flags |= ArchSpec::eRISCV_float_abi_double;
+    else if ((header.e_flags & llvm::ELF::EF_RISCV_FLOAT_ABI_QUAD) ==
+             llvm::ELF::EF_RISCV_FLOAT_ABI_QUAD)
+      flags |= ArchSpec::eRISCV_float_abi_quad;
+
+    arch_spec.SetFlags(flags);
+  }
+
   if (arch_spec.GetMachine() == llvm::Triple::aarch64 ||
       arch_spec.GetMachine() == llvm::Triple::aarch64_be) {
     if (header.e_flags & llvm::ELF::EF_AARCH64_CHERI_PURECAP)
