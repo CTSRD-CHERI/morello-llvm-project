@@ -1187,6 +1187,12 @@ enum SaveCoreStyle {
   eSaveCoreStackOnly = 3,
 };
 
+// Type of counter values associated with instructions in a trace.
+enum TraceCounter {
+  // Timestamp counter, like the one offered by Intel CPUs (TSC).
+  eTraceCounterTSC,
+};
+
 } // namespace lldb
 
 #endif // LLDB_LLDB_ENUMERATIONS_H

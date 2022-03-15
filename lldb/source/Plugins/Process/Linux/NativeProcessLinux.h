@@ -20,7 +20,7 @@
 #include "lldb/Utility/FileSpec.h"
 #include "lldb/lldb-types.h"
 
-#include "IntelPTManager.h"
+#include "IntelPTCollector.h"
 #include "NativeThreadLinux.h"
 #include "Plugins/Process/POSIX/NativeProcessELF.h"
 #include "Plugins/Process/Utility/NativeProcessSoftwareSingleStep.h"
@@ -245,7 +245,7 @@ private:
                             size_t &bytes_read, lldb::MemoryContentType type);
 
   /// Manages Intel PT process and thread traces.
-  IntelPTManager m_intel_pt_manager;
+  IntelPTCollector m_intel_pt_collector;
 
   // Handle a clone()-like event.
   bool MonitorClone(NativeThreadLinux &parent, lldb::pid_t child_pid,
