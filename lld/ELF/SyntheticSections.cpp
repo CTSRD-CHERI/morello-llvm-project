@@ -3803,10 +3803,6 @@ bool ARMExidxSyntheticSection::isNeeded() const {
                       [](InputSection *isec) { return isec->isLive(); });
 }
 
-bool ARMExidxSyntheticSection::classof(const SectionBase *d) {
-  return d->kind() == InputSectionBase::Synthetic && d->type == SHT_ARM_EXIDX;
-}
-
 ThunkSection::ThunkSection(OutputSection *os, uint64_t off)
     : SyntheticSection(SHF_ALLOC | SHF_EXECINSTR, SHT_PROGBITS,
                        config->emachine == EM_PPC64 ? 16 : 4, ".text.thunk") {
