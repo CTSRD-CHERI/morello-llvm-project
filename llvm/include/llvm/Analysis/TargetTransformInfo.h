@@ -659,6 +659,10 @@ public:
   /// Return true if the target supports nontemporal load.
   bool isLegalNTLoad(Type *DataType, Align Alignment) const;
 
+  /// \Returns true if the target supports broadcasting a load to a vector of
+  /// type <NumElements x ElementTy>.
+  bool isLegalBroadcastLoad(Type *ElementTy, unsigned NumElements) const;
+
   /// Return true if the target supports masked scatter.
   bool isLegalMaskedScatter(Type *DataType, Align Alignment) const;
   /// Return true if the target supports masked gather.
@@ -1045,11 +1049,14 @@ public:
   /// The exact mask may be passed as Mask, or else the array will be empty.
   /// The index and subtype parameters are used by the subvector insertion and
   /// extraction shuffle kinds to show the insert/extract point and the type of
-  /// the subvector being inserted/extracted.
+  /// the subvector being inserted/extracted. The operands of the shuffle can be
+  /// passed through \p Args, which helps improve the cost estimation in some
+  /// cases, like in broadcast loads.
   /// NOTE: For subvector extractions Tp represents the source type.
   InstructionCost getShuffleCost(ShuffleKind Kind, VectorType *Tp,
                                  ArrayRef<int> Mask = None, int Index = 0,
-                                 VectorType *SubTp = nullptr) const;
+                                 VectorType *SubTp = nullptr,
+                                 ArrayRef<Value *> Args = None) const;
 
   /// Represents a hint about the context in which a cast is used.
   ///
@@ -1550,6 +1557,8 @@ public:
   virtual bool isLegalMaskedLoad(Type *DataType, Align Alignment) = 0;
   virtual bool isLegalNTStore(Type *DataType, Align Alignment) = 0;
   virtual bool isLegalNTLoad(Type *DataType, Align Alignment) = 0;
+  virtual bool isLegalBroadcastLoad(Type *ElementTy,
+                                    unsigned NumElements) const = 0;
   virtual bool isLegalMaskedScatter(Type *DataType, Align Alignment) = 0;
   virtual bool isLegalMaskedGather(Type *DataType, Align Alignment) = 0;
   virtual bool forceScalarizeMaskedGather(VectorType *DataType,
@@ -1660,7 +1669,8 @@ public:
       ArrayRef<const Value *> Args, const Instruction *CxtI = nullptr) = 0;
   virtual InstructionCost getShuffleCost(ShuffleKind Kind, VectorType *Tp,
                                          ArrayRef<int> Mask, int Index,
-                                         VectorType *SubTp) = 0;
+                                         VectorType *SubTp,
+                                         ArrayRef<Value *> Args) = 0;
   virtual InstructionCost getCastInstrCost(unsigned Opcode, Type *Dst,
                                            Type *Src, CastContextHint CCH,
                                            TTI::TargetCostKind CostKind,
@@ -1953,6 +1963,10 @@ public:
   bool isLegalNTLoad(Type *DataType, Align Alignment) override {
     return Impl.isLegalNTLoad(DataType, Alignment);
   }
+  bool isLegalBroadcastLoad(Type *ElementTy,
+                            unsigned NumElements) const override {
+    return Impl.isLegalBroadcastLoad(ElementTy, NumElements);
+  }
   bool isLegalMaskedScatter(Type *DataType, Align Alignment) override {
     return Impl.isLegalMaskedScatter(DataType, Alignment);
   }
@@ -2180,8 +2194,9 @@ public:
   }
   InstructionCost getShuffleCost(ShuffleKind Kind, VectorType *Tp,
                                  ArrayRef<int> Mask, int Index,
-                                 VectorType *SubTp) override {
-    return Impl.getShuffleCost(Kind, Tp, Mask, Index, SubTp);
+                                 VectorType *SubTp,
+                                 ArrayRef<Value *> Args) override {
+    return Impl.getShuffleCost(Kind, Tp, Mask, Index, SubTp, Args);
   }
   InstructionCost getCastInstrCost(unsigned Opcode, Type *Dst, Type *Src,
                                    CastContextHint CCH,
