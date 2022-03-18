@@ -1182,6 +1182,9 @@ DisassemblerLLVMC::DisassemblerLLVMC(const ArchSpec &arch,
   // This should have +v9.3a,+mte. However we need to enable morello
   // as well so use something compatible for now.
   if (triple.isAArch64()) {
+    // features_str += "+v9.3a,+mte,+sm4,+sha2,+sha3,+aes,+fp16fml,+sve2-aes,+"
+    //                 "sve2-sm4,+sve2-sha3,+sve2-bitperm,+f32mm,+f64mm,+tme,+"
+    //                 "ls64,+sme,+sme-f64,+sme-i64,+spe,+rand,+brbe";
     features_str += "+v8.2a,+fp-armv8,+neon,+crypto,+fullfp16,+spe,+morello,";
 
     if (triple.getVendor() == llvm::Triple::Apple)
