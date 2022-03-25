@@ -1714,7 +1714,8 @@ public:
   }
 
   void printLeft(OutputBuffer &OB) const override {
-    bool ParenAll = OB.isGtInsideTemplateArgs() && InfixOperator == ">";
+    bool ParenAll = OB.isGtInsideTemplateArgs() &&
+                    (InfixOperator == ">" || InfixOperator == ">>");
     if (ParenAll)
       OB.printOpen();
     // Assignment is right associative, with special LHS precedence.
