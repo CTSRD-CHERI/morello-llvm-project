@@ -679,6 +679,7 @@ public:
   const char *getCodeCapDirective() const { return CodeCapDirective; }
   unsigned getAssemblerDialect() const { return AssemblerDialect; }
   bool doesAllowAtInName() const { return AllowAtInName; }
+  void setAllowAtInName(bool V) { AllowAtInName = V; }
   bool doesAllowQuestionAtStartOfIdentifier() const {
     return AllowQuestionAtStartOfIdentifier;
   }
