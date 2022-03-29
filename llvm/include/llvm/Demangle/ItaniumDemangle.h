@@ -460,7 +460,7 @@ class PostfixQualifiedType final : public Node {
   const StringView Postfix;
 
 public:
-  PostfixQualifiedType(Node *Ty_, StringView Postfix_)
+  PostfixQualifiedType(const Node *Ty_, StringView Postfix_)
       : Node(KPostfixQualifiedType), Ty(Ty_), Postfix(Postfix_) {}
 
   template<typename Fn> void match(Fn F) const { F(Ty, Postfix); }
@@ -1054,9 +1054,8 @@ class VectorType final : public Node {
   const Node *Dimension;
 
 public:
-  VectorType(const Node *BaseType_, Node *Dimension_)
-      : Node(KVectorType), BaseType(BaseType_),
-        Dimension(Dimension_) {}
+  VectorType(const Node *BaseType_, const Node *Dimension_)
+      : Node(KVectorType), BaseType(BaseType_), Dimension(Dimension_) {}
 
   template<typename Fn> void match(Fn F) const { F(BaseType, Dimension); }
 
@@ -1853,7 +1852,8 @@ class EnclosingExpr : public Node {
   const StringView Postfix;
 
 public:
-  EnclosingExpr(StringView Prefix_, Node *Infix_, Prec Prec_ = Prec::Primary)
+  EnclosingExpr(StringView Prefix_, const Node *Infix_,
+                Prec Prec_ = Prec::Primary)
       : Node(KEnclosingExpr, Prec_), Prefix(Prefix_), Infix(Infix_) {}
 
   template <typename Fn> void match(Fn F) const {
