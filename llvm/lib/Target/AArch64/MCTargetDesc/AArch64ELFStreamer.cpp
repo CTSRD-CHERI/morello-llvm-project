@@ -386,6 +386,7 @@ void AArch64TargetELFStreamer::emitLabel(MCSymbol *Symbol) {
 }
 
 void AArch64TargetELFStreamer::emitDirectiveVariantPCS(MCSymbol *Symbol) {
+  getStreamer().getAssembler().registerSymbol(*Symbol);
   cast<MCSymbolELF>(Symbol)->setOther(ELF::STO_AARCH64_VARIANT_PCS);
 }
 
