@@ -7071,11 +7071,44 @@ SDValue AArch64TargetLowering::LowerGlobalAddress(SDValue Op,
     }
   }
 
-  // Dervive function addresses from PCC
+  // Derive function addresses from PCC
   if (Op.getSimpleValueType() == MVT::iFATPTR128 && dyn_cast<Function>(GV))
     return DAG.getNode(AArch64ISD::CapSealImm, DL, MVT::iFATPTR128,
                        getFatAddr(GN, DAG, OpFlags),
                        DAG.getConstant(1, DL, MVT::i32));
+
+  const GlobalVariable *GVar = dyn_cast<GlobalVariable>(GV);
+  if (Op.getSimpleValueType() == MVT::iFATPTR128 && GVar &&
+      GVar->isConstant() &&
+      getTargetMachine().shouldAssumeDSOLocal(*GVar->getParent(), GVar)) {
+    // We know the size and this is in the PCC range, so build using a scbnds
+    // instruction.
+    SDValue BaseAddr = DAG.getGlobalAddress(GVar, DL, MVT::iFATPTR128, 0);
+    SDValue GlobalAddr =
+        getFatAddr(cast<GlobalAddressSDNode>(BaseAddr), DAG, OpFlags);
+
+    // Clear the write and execute permissions. This results in the immediate
+    // form of clrperm. Clear this before setting the bounds since this might
+    // hide the latency from the matterialization of the allocation length
+    // (if we can't use the immediate form of scbnds).
+    uint64_t PermMask = -1UL & ~((1UL << 16) | (1UL << 15));
+    GlobalAddr = DAG.getNode(ISD::INTRINSIC_WO_CHAIN, DL, MVT::iFATPTR128,
+        DAG.getConstant(Intrinsic::cheri_cap_perms_and, DL, MVT::i64),
+        GlobalAddr, DAG.getIntPtrConstant(PermMask, DL));
+
+    // Set bounds on the allocation.
+    unsigned Size = DAG.getDataLayout().getTypeAllocSize(GVar->getValueType());
+    std::string BoundsDetails = "AArch64 constant global lowering";
+    GlobalAddr = DAG.getCSetBounds(
+        GlobalAddr, DL, DAG.getConstant(Size, DL, MVT::i64), Align(),
+        "AArch64 constant global lowering",
+        cheri::SetBoundsPointerSource::GlobalVar, BoundsDetails);
+
+    // Add the offset if there is any.
+    if (GN->getOffset() != 0)
+      GlobalAddr = DAG.getPointerAdd(DL, GlobalAddr, GN->getOffset());
+    return GlobalAddr;
+  }
 
   if (Op.getSimpleValueType() == MVT::iFATPTR128 && !IsLargeCM) {
     SDNode *CPNode = DAG.getTargetConstantPool(GV, PtrVT, MaybeAlign(), 0).getNode();

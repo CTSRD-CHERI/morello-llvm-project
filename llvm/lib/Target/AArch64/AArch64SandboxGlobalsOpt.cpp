@@ -183,6 +183,9 @@ public:
     if (!GV.getValueType()->isSized())
       return false;
 
+    if (GV.isConstant())
+      return false;
+
     if (!isUsedGlobal(GV))
       return false;
     addGlobalValue(&GV);
