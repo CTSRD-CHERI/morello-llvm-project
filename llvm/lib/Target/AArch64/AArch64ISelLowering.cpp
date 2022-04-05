@@ -21072,13 +21072,13 @@ bool AArch64TargetLowering::shouldInsertFencesForAtomic(
 // Loads and stores less than 128-bits are already atomic; ones above that
 // are doomed anyway, so defer to the default libcall and blame the OS when
 // things go wrong.
-bool AArch64TargetLowering::shouldExpandAtomicStoreInIR(StoreInst *SI) const {
+TargetLoweringBase::AtomicExpansionKind
+AArch64TargetLowering::shouldExpandAtomicStoreInIR(StoreInst *SI) const {
   const DataLayout &DL = SI->getModule()->getDataLayout();
   Type *Ty = SI->getValueOperand()->getType();
-  if (isLegalAtomicType(Ty, DL))
-    return false;
-
-  return !isOpSuitableForLDPSTP(SI);
+  if (isLegalAtomicType(Ty, DL) || isOpSuitableForLDPSTP(SI))
+    return AtomicExpansionKind::None;
+  return AtomicExpansionKind::Expand;
 }
 
 // Loads and stores less than 128-bits are already atomic; ones above that
