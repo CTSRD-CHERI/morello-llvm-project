@@ -1062,5 +1062,5 @@ void DataExtractor::Checksum(llvm::SmallVectorImpl<uint8_t> &dest,
   md5.final(result);
 
   dest.clear();
-  dest.append(result.Bytes.begin(), result.Bytes.end());
+  dest.append(result.begin(), result.end());
 }
