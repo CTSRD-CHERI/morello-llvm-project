@@ -101,6 +101,12 @@
 #undef DECLARE_REGISTER_INFOS_ARM64_STRUCT
 #undef DECLARE_CAPABILITY_REGISTER_INFOS
 
+static lldb_private::RegisterInfo g_register_infos_pauth[] = {
+    DEFINE_EXTENSION_REG(data_mask), DEFINE_EXTENSION_REG(code_mask)};
+
+static lldb_private::RegisterInfo g_register_infos_mte[] = {
+    DEFINE_EXTENSION_REG(mte_ctrl)};
+
 // Number of register sets provided by this context.
 enum {
   k_num_gpr_registers = gpr_w28 - gpr_x0 + 1,

@@ -1062,11 +1062,6 @@ static lldb_private::RegisterInfo g_register_infos_arm64_le[] = {
     {DEFINE_DBG(wcr, 15)}
 };
 // clang-format on
-static lldb_private::RegisterInfo g_register_infos_pauth[] = {
-    DEFINE_EXTENSION_REG(data_mask), DEFINE_EXTENSION_REG(code_mask)};
-
-static lldb_private::RegisterInfo g_register_infos_mte[] = {
-    DEFINE_EXTENSION_REG(mte_ctrl)};
 
 // Mark register as frame pointer.
 static void MarkAsFP(lldb_private::RegisterInfo &fp_reg_info, bool is_capability) {
