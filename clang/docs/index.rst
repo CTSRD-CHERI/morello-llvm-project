@@ -28,6 +28,7 @@ Using Clang as a Compiler
    AddressSanitizer
    ThreadSanitizer
    MemorySanitizer
+   CHERIseed
    UndefinedBehaviorSanitizer
    DataFlowSanitizer
    LeakSanitizer
@@ -94,6 +95,7 @@ Design Documents
    ItaniumMangleAbiTags
    HardwareAssistedAddressSanitizerDesign.rst
    ConstantInterpreter
+   CHERIseedDesign
 
 
 Indices and tables
