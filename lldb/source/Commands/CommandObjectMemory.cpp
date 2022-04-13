@@ -349,7 +349,7 @@ public:
             "Read from the memory of the current target process.", nullptr,
             eCommandRequiresTarget | eCommandProcessMustBePaused),
         m_format_options(eFormatBytesWithASCII, 1, 8),
-
+        m_memory_tag_options(/*note_binary=*/true),
         m_prev_format_options(eFormatBytesWithASCII, 1, 8) {
     CommandArgumentEntry arg1;
     CommandArgumentEntry arg2;
@@ -1152,6 +1152,8 @@ public:
     m_arguments.push_back(arg2);
 
     m_option_group.Append(&m_memory_options);
+    m_option_group.Append(&m_memory_tag_options, LLDB_OPT_SET_ALL,
+                          LLDB_OPT_SET_ALL);
     m_option_group.Finalize();
   }
 
@@ -1316,7 +1318,9 @@ protected:
         DumpDataExtractor(
             data, &result.GetOutputStream(), 0, lldb::eFormatBytesWithASCII, 1,
             dumpbuffer.GetByteSize(), 16,
-            found_location + m_memory_options.m_offset.GetCurrentValue(), 0, 0);
+            found_location + m_memory_options.m_offset.GetCurrentValue(), 0, 0,
+            m_exe_ctx.GetBestExecutionContextScope(),
+            m_memory_tag_options.GetShowTags().GetCurrentValue());
         result.GetOutputStream().EOL();
       }
 
@@ -1359,6 +1363,7 @@ protected:
 
   OptionGroupOptions m_option_group;
   OptionGroupFindMemory m_memory_options;
+  OptionGroupMemoryTag m_memory_tag_options;
 };
 
 #define LLDB_OPTIONS_memory_write
