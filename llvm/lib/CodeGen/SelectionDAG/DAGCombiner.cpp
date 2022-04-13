@@ -2812,7 +2812,8 @@ SDValue DAGCombiner::visitADDSAT(SDNode *N) {
 
   // fold vector ops
   if (VT.isVector()) {
-    // TODO SimplifyVBinOp
+    if (SDValue FoldedVOp = SimplifyVBinOp(N, DL))
+      return FoldedVOp;
 
     // fold (add_sat x, 0) -> x, vector edition
     if (ISD::isConstantSplatVectorAllZeros(N1.getNode()))
@@ -3886,7 +3887,8 @@ SDValue DAGCombiner::visitSUBSAT(SDNode *N) {
 
   // fold vector ops
   if (VT.isVector()) {
-    // TODO SimplifyVBinOp
+    if (SDValue FoldedVOp = SimplifyVBinOp(N, DL))
+      return FoldedVOp;
 
     // fold (sub_sat x, 0) -> x, vector edition
     if (ISD::isConstantSplatVectorAllZeros(N1.getNode()))
