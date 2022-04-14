@@ -495,8 +495,6 @@ let Command = "memory read" in {
     OptionalEnumArg<"TaggedMemory", "TaggedMemoryValues()">,
     Desc<"Read tagged memory (default is the base tagged memory type for the "
     "target architecture).">;
-  def memory_read_show_tags : Option<"show-tags", "\\x01">, Group<1>,
-    Desc<"Include memory tags in output (does not apply to binary output).">;
 }
 
 let Command = "memory find" in {
