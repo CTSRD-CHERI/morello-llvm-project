@@ -2163,6 +2163,10 @@ public:
         m_dumper_options.show_tsc = true;
         break;
       }
+      case 'e': {
+        m_dumper_options.show_events = true;
+        break;
+      }
       case 'C': {
         m_continue = true;
         break;
