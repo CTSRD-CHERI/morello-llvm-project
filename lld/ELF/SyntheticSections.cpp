@@ -1749,7 +1749,8 @@ uint32_t DynamicReloc::getSymIndex(SymbolTableBaseSection *symTab) const {
     warn("DynsymIndex == 0 for " + toString(type) + " relocation against " +
          verboseToString(sym) + "+" + Twine(addend));
   }
-  assert((index != 0 || type != target->gotRel && type != target->pltRel) &&
+  assert((index != 0 || type != target->gotRel && type != target->pltRel ||
+          !mainPart->dynSymTab->getParent()) &&
          "GOT or PLT relocation must refer to symbol in dynamic symbol table");
   return index;
 }
