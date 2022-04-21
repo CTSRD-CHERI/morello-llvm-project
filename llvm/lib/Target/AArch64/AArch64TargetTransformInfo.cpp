@@ -2629,7 +2629,7 @@ InstructionCost AArch64TTIImpl::getShuffleCost(TTI::ShuffleKind Kind,
                                                VectorType *Tp,
                                                ArrayRef<int> Mask, int Index,
                                                VectorType *SubTp,
-                                               ArrayRef<Value *> Args) {
+                                               ArrayRef<const Value *> Args) {
   Kind = improveShuffleKindFromMask(Kind, Mask);
   std::pair<InstructionCost, MVT> LT = TLI->getTypeLegalizationCost(DL, Tp);
   if (Kind == TTI::SK_Broadcast || Kind == TTI::SK_Transpose ||
@@ -2638,9 +2638,7 @@ InstructionCost AArch64TTIImpl::getShuffleCost(TTI::ShuffleKind Kind,
 
     // Check for broadcast loads.
     if (Kind == TTI::SK_Broadcast) {
-      bool IsLoad = !Args.empty() && llvm::all_of(Args, [](const Value *V) {
-        return isa<LoadInst>(V);
-      });
+      bool IsLoad = !Args.empty() && isa<LoadInst>(Args[0]);
       if (IsLoad && LT.second.isVector() &&
           isLegalBroadcastLoad(Tp->getElementType(),
                                LT.second.getVectorElementCount()))
