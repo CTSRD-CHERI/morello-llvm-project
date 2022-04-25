@@ -128,13 +128,10 @@ static constexpr compressed_cap_t kNullCap = {0, 0};
 /// \param[in] value Sets the value field of the resulting capability
 static inline void BuildMaxCap(compressed_cap_t *cap_out, u64 value) {
   cap_out->value = value;
-  cap_out->metadata = 0;
-  if (__cheriseed::Options::EnableCHERISemantics) {
-    external::cc128_cap_t max_cap =
-        external::cc128_make_max_perms_cap(0, value, CC128_MAX_LENGTH);
-    external::cc128_update_perms(&max_cap, permissions::ALL);
-    cap_out->metadata = external::cc128_compress_mem(&max_cap);
-  }
+  external::cc128_cap_t max_cap =
+      external::cc128_make_max_perms_cap(0, value, CC128_MAX_LENGTH);
+  external::cc128_update_perms(&max_cap, permissions::ALL);
+  cap_out->metadata = external::cc128_compress_mem(&max_cap);
 }
 
 /// Generate a maximum capability from a pointer using the CCL.
@@ -161,15 +158,11 @@ static inline bool BuildBoundedCap(compressed_cap_t *cap_out, u64 value,
                                    u64 size,
                                    u64 perms_mask = permissions::ALL) {
   cap_out->value = value;
-  cap_out->metadata = 0;
-  if (__cheriseed::Options::EnableCHERISemantics) {
-    external::cc128_cap_t max_cap =
-        external::cc128_make_max_perms_cap(value, value, value + size);
-    external::cc128_update_perms(&max_cap, permissions::ALL & perms_mask);
-    cap_out->metadata = external::cc128_compress_mem(&max_cap);
-    return external::cc128_is_representable_cap_exact(&max_cap);
-  }
-  return true;
+  external::cc128_cap_t max_cap =
+      external::cc128_make_max_perms_cap(value, value, value + size);
+  external::cc128_update_perms(&max_cap, permissions::ALL & perms_mask);
+  cap_out->metadata = external::cc128_compress_mem(&max_cap);
+  return external::cc128_is_representable_cap_exact(&max_cap);
 }
 
 /// Generate a bounded capability from a pointer using the CCL.
@@ -202,10 +195,7 @@ static inline void UseNullCap(const compressed_cap_t **cap_out) {
 /// \param[in] c_cap The compressed capability to extract permissions from
 /// \returns The permissions field extracted from the compressed metadata
 static inline u64 PermsGet(const compressed_cap_t *c_cap) {
-  if (__cheriseed::Options::EnableCHERISemantics) {
-    return external::cc128_cap_pesbt_extract_perms(c_cap->metadata);
-  }
-  return permissions::ALL;
+  return external::cc128_cap_pesbt_extract_perms(c_cap->metadata);
 }
 
 /// Query a compressed capability for permissions bits
@@ -223,10 +213,8 @@ static inline bool HasPerms(const compressed_cap_t *c_cap, const u64 mask) {
 /// \param[in] c_cap The compressed capability to update with the CCL
 /// \param[in] mask A mask specifying permissions to retain
 static inline void UpdatePermsAnd(compressed_cap_t *c_cap, const u64 mask) {
-  if (__cheriseed::Options::EnableCHERISemantics) {
-    c_cap->metadata = external::cc128_cap_pesbt_deposit_perms(
-        c_cap->metadata, static_cast<u32>(PermsGet(c_cap) & mask));
-  }
+  c_cap->metadata = external::cc128_cap_pesbt_deposit_perms(
+      c_cap->metadata, static_cast<u32>(PermsGet(c_cap) & mask));
 }
 
 /// Returns the alignment mask that should be taken into account to precisely
@@ -269,8 +257,6 @@ static inline bool ExactlyEqual(const compressed_cap_t *c_cap1,
 /// \param[in] c_cap The compressed capability to retrieve the length from
 /// \returns 64 bit length value
 static inline u64 GetLength(const compressed_cap_t *c_cap) {
-  if (!__cheriseed::Options::EnableCHERISemantics)
-    return static_cast<u64>(-1);
   external::cc128_cap_t decom;
   external::cc128_decompress_mem(c_cap->metadata, c_cap->value, true, &decom);
   return decom.length64();
@@ -281,8 +267,6 @@ static inline u64 GetLength(const compressed_cap_t *c_cap) {
 /// \param[in] c_cap The compressed capability to retrieve the base from
 /// \returns 64 bit base value
 static inline u64 GetBase(const compressed_cap_t *c_cap) {
-  if (!__cheriseed::Options::EnableCHERISemantics)
-    return 0u;
   external::cc128_cap_t decom;
   external::cc128_decompress_mem(c_cap->metadata, c_cap->value, true, &decom);
   return decom.base();
@@ -293,8 +277,6 @@ static inline u64 GetBase(const compressed_cap_t *c_cap) {
 /// \param[in] c_cap The compressed capability to retrieve the top from
 /// \returns 64 bit base value
 static inline u64 GetTop(const compressed_cap_t *c_cap) {
-  if (!__cheriseed::Options::EnableCHERISemantics)
-    return static_cast<u64>(-1);
   external::cc128_cap_t decom;
   external::cc128_decompress_mem(c_cap->metadata, c_cap->value, true, &decom);
   return decom.top64();
@@ -305,8 +287,6 @@ static inline u64 GetTop(const compressed_cap_t *c_cap) {
 /// \param[in] c_cap The compressed capability to retrieve the offset from
 /// \returns The offset from the capability's base value
 static inline u64 GetOffset(const compressed_cap_t *c_cap) {
-  if (!__cheriseed::Options::EnableCHERISemantics)
-    return 0u;
   external::cc128_cap_t decom;
   external::cc128_decompress_mem(c_cap->metadata, c_cap->value, true, &decom);
   const external::cc128_offset_t offset = decom.offset();
@@ -324,12 +304,10 @@ static inline u64 GetOffset(const compressed_cap_t *c_cap) {
 /// \returns 64 bit base value
 static inline void SetBounds(compressed_cap_t *c_cap, u64 new_base, u64 new_top,
                              bool &exact_res) {
-  if (__cheriseed::Options::EnableCHERISemantics) {
-    external::cc128_cap_t decom;
-    external::cc128_decompress_mem(c_cap->metadata, c_cap->value, true, &decom);
-    exact_res = external::cc128_setbounds(&decom, new_base, new_top);
-    c_cap->metadata = external::cc128_compress_mem(&decom);
-  }
+  external::cc128_cap_t decom;
+  external::cc128_decompress_mem(c_cap->metadata, c_cap->value, true, &decom);
+  exact_res = external::cc128_setbounds(&decom, new_base, new_top);
+  c_cap->metadata = external::cc128_compress_mem(&decom);
 }
 
 /// Extract the type bits from a compressed metadata
@@ -337,9 +315,6 @@ static inline void SetBounds(compressed_cap_t *c_cap, u64 new_base, u64 new_top,
 /// \param[in] c_cap The compressed capability to retrieve the type from
 /// \returns The type field extracted from the compressed metadata
 static inline u64 GetType(const compressed_cap_t *c_cap) {
-  if (!__cheriseed::Options::EnableCHERISemantics) {
-    return (u64)-1;
-  }
   external::cc128_cap_t decom;
   external::cc128_decompress_mem(c_cap->metadata, c_cap->value, true, &decom);
   return decom.type();
@@ -352,12 +327,8 @@ static inline u64 GetType(const compressed_cap_t *c_cap) {
 /// \returns A boolean, true if it is representable
 static inline bool IsRepresentableWithCursor(const compressed_cap_t *c_cap,
                                              u64 newCursor) {
-  if (!__cheriseed::Options::EnableCHERISemantics)
-    return true;
-
   external::cc128_cap_t decom;
   external::cc128_decompress_mem(c_cap->metadata, c_cap->value, true, &decom);
-
   return external::cc128_is_representable_with_addr(&decom, newCursor);
 }
 

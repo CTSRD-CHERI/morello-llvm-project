@@ -205,6 +205,8 @@ struct InBounds final {
 
   // Top (base + length) is inclusive in acceptable range of a capability
   bool DoCheck(const CheckContext& ctx) const {
+    if (!Options::EnableCHERISemantics)
+      return true;
     return (ctx.Base() <= ctx.Value()) && ((ctx.Value() + size) <= ctx.Top());
   }
 
@@ -225,6 +227,8 @@ struct RequiredPerms final {
   explicit RequiredPerms(const u64 perms) : perms(perms) {}
 
   bool DoCheck(const CheckContext& ctx) {
+    if (!Options::EnableCHERISemantics)
+      return true;
     return ((ctx.Perms() & perms) == perms);
   }
 
