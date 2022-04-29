@@ -948,6 +948,9 @@ bool CompilerInstance::ExecuteAction(FrontendAction &Act) {
   if (!createTarget())
     return false;
 
+  if (!getTarget().validateTarget(getDiagnostics()))
+    return false;
+
   // rewriter project will change target built-in bool type from its default.
   if (getFrontendOpts().ProgramAction == frontend::RewriteObjC)
     getTarget().noSignedCharForObjCBool();

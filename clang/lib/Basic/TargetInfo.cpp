@@ -37,6 +37,8 @@ TargetInfo::TargetInfo(const llvm::Triple &T) : TargetOpts(), Triple(T) {
   HasFloat16 = false;
   HasBFloat16 = false;
   HasStrictFP = false;
+  HasCHERIseed = false;
+  CapSize = 128;
   PointerWidth = PointerAlign = 32;
   BoolWidth = BoolAlign = 8;
   IntWidth = IntAlign = 32;
@@ -480,6 +482,11 @@ void TargetInfo::adjust(DiagnosticsEngine &Diags, LangOptions &Opts) {
   if (Opts.ProtectParens && !checkArithmeticFenceSupported()) {
     Diags.Report(diag::err_opt_not_valid_on_target) << "-fprotect-parens";
     Opts.ProtectParens = false;
+  }
+
+  if (Opts.Sanitize.has(SanitizerKind::CHERIseed)) {
+    HasCHERIseed = true;
+    setDataLayout();
   }
 }
 

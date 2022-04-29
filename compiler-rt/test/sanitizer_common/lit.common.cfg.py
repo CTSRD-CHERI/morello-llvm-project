@@ -23,6 +23,11 @@ elif config.tool_name == "lsan":
 elif config.tool_name == "ubsan":
   tool_cflags = ["-fsanitize=undefined"]
   tool_options = "UBSAN_OPTIONS"
+elif config.tool_name == "cheriseed":
+  # Not yet supported
+  config.unsupported = True
+  tool_cflags = []
+  tool_options = ""
 else:
   lit_config.fatal("Unknown tool for sanitizer_common tests: %r" % config.tool_name)
 

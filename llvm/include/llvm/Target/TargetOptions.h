@@ -130,8 +130,8 @@ namespace llvm {
           EmitAddrsig(false), EmitCallSiteInfo(false),
           SupportsDebugEntryValues(false), EnableDebugEntryValues(false),
           PseudoProbeForProfiling(false), ValueTrackingVariableLocations(false),
-          ForceDwarfFrameSection(false), XRayOmitFunctionIndex(false),
-          DebugStrictDwarf(false),
+          ForceDwarfFrameSection(false), EnableCHERIseed(false),
+          XRayOmitFunctionIndex(false), DebugStrictDwarf(false),
           FPDenormalMode(DenormalMode::IEEE, DenormalMode::IEEE) {}
 
     /// DisableFramePointerElim - This returns true if frame pointer elimination
@@ -315,6 +315,9 @@ namespace llvm {
 
     /// Emit DWARF debug frame section.
     unsigned ForceDwarfFrameSection : 1;
+
+    // Generate CHERI annotations in IR when CHERIseed is enabled.
+    unsigned EnableCHERIseed : 1;
 
     /// Emit XRay Function Index section
     unsigned XRayOmitFunctionIndex : 1;

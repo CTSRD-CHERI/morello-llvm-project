@@ -83,6 +83,71 @@ static bool isAggregateTypeForABI(QualType T) {
          T->isMemberFunctionPointerType();
 }
 
+namespace {
+class CHERICapClassifier {
+  ASTContext &C;
+  mutable llvm::DenseMap<void *, bool> ContainsCapabilities;
+
+public:
+  CHERICapClassifier(ASTContext &Ctx) : C(Ctx) {}
+  bool containsCapabilities(ASTContext &C, const RecordDecl *RD) const;
+  bool containsCapabilities(QualType Ty) const;
+};
+
+bool CHERICapClassifier::containsCapabilities(ASTContext &C,
+                                              const RecordDecl *RD) const {
+  for (auto i = RD->field_begin(), e = RD->field_end(); i != e; ++i) {
+    const QualType Ty = i->getType();
+    if (Ty->isCHERICapabilityType(C))
+      return true;
+    if (const RecordType *RT = Ty->getAs<RecordType>())
+      if (containsCapabilities(C, RT->getDecl()))
+        return true;
+    if (Ty->isArrayType() && containsCapabilities(Ty))
+      return true;
+  }
+
+  // In the case of C++ classes, also check base classes
+  if (const CXXRecordDecl *CRD = dyn_cast<CXXRecordDecl>(RD)) {
+    // Check for the vtable pointer.
+    if (CRD->isDynamicClass() &&
+        C.getTargetInfo().areAllPointersCapabilities()) {
+      const ASTRecordLayout &Layout = C.getASTRecordLayout(RD);
+      if (!Layout.getPrimaryBase())
+        return true;
+    }
+    // Check base classes.
+    for (auto i = CRD->bases_begin(), e = CRD->bases_end(); i != e; ++i) {
+      const QualType Ty = i->getType();
+      if (const RecordType *RT = Ty->getAs<RecordType>())
+        if (containsCapabilities(C, RT->getDecl()))
+          return true;
+    }
+  }
+  return false;
+}
+
+bool CHERICapClassifier::containsCapabilities(QualType Ty) const {
+  // If we've already looked up this type, then return the cached value.
+  auto Cached = ContainsCapabilities.find(Ty.getAsOpaquePtr());
+  if (Cached != ContainsCapabilities.end())
+    return Cached->second;
+  // Don't bother caching the trivial cases.
+  if (Ty->isCHERICapabilityType(C))
+    return true;
+  if (Ty->isArrayType()) {
+    QualType ElTy = QualType(Ty->getBaseElementTypeUnsafe(), 0);
+    return containsCapabilities(ElTy);
+  }
+  const RecordType *RT = Ty->getAs<RecordType>();
+  if (!RT)
+    return false;
+  bool Ret = containsCapabilities(C, RT->getDecl());
+  ContainsCapabilities[Ty.getAsOpaquePtr()] = Ret;
+  return Ret;
+}
+} // namespace
+
 ABIArgInfo ABIInfo::getNaturalAlignIndirect(QualType Ty, bool ByVal,
                                             bool Realign,
                                             llvm::Type *Padding) const {
@@ -2368,7 +2433,7 @@ static unsigned getNativeVectorSizeForAVXABI(X86AVXABILevel AVXLevel) {
 }
 
 /// X86_64ABIInfo - The X86_64 ABI information.
-class X86_64ABIInfo : public SwiftABIInfo {
+class X86_64ABIInfo : public SwiftABIInfo, CHERICapClassifier {
   enum Class {
     Integer = 0,
     SSE,
@@ -2509,10 +2574,10 @@ class X86_64ABIInfo : public SwiftABIInfo {
   bool Has64BitPointers;
 
 public:
-  X86_64ABIInfo(CodeGen::CodeGenTypes &CGT, X86AVXABILevel AVXLevel) :
-      SwiftABIInfo(CGT), AVXLevel(AVXLevel),
-      Has64BitPointers(CGT.getDataLayout().getPointerSize(0) == 8) {
-  }
+  X86_64ABIInfo(CodeGen::CodeGenTypes &CGT, X86AVXABILevel AVXLevel)
+      : SwiftABIInfo(CGT), CHERICapClassifier(CGT.getContext()),
+        AVXLevel(AVXLevel),
+        Has64BitPointers(CGT.getDataLayout().getPointerSize(0) == 8) {}
 
   bool isPassedUsingAVXType(QualType type) const {
     unsigned neededInt, neededSSE;
@@ -2590,10 +2655,11 @@ private:
   bool IsMingw64;
 };
 
-class X86_64TargetCodeGenInfo : public TargetCodeGenInfo {
+class X86_64TargetCodeGenInfo : public CommonCheriTargetCodeGenInfo {
 public:
   X86_64TargetCodeGenInfo(CodeGen::CodeGenTypes &CGT, X86AVXABILevel AVXLevel)
-      : TargetCodeGenInfo(std::make_unique<X86_64ABIInfo>(CGT, AVXLevel)) {}
+      : CommonCheriTargetCodeGenInfo(
+            std::make_unique<X86_64ABIInfo>(CGT, AVXLevel)) {}
 
   const X86_64ABIInfo &getABIInfo() const {
     return static_cast<const X86_64ABIInfo&>(TargetCodeGenInfo::getABIInfo());
@@ -2655,6 +2721,17 @@ public:
                    ('v' << 16) |
                    ('2' << 24);
     return llvm::ConstantInt::get(CGM.Int32Ty, Sig);
+  }
+
+  unsigned getDefaultAS() const override {
+    const TargetInfo &Target = getABIInfo().getContext().getTargetInfo();
+    return Target.areAllPointersCapabilities() ? getCHERICapabilityAS() : 0;
+  }
+
+  unsigned getCHERICapabilityAS() const override { return 200; }
+  bool
+  cheriCapabilityAtomicNeedsLibcall(AtomicExpr::AtomicOp Op) const override {
+    return false;
   }
 
   void setTargetAttributes(const Decl *D, llvm::GlobalValue *GV,
@@ -2981,7 +3058,7 @@ void X86_64ABIInfo::classify(QualType Ty, uint64_t OffsetBase,
     } else if (k == BuiltinType::Int128 || k == BuiltinType::UInt128) {
       Lo = Integer;
       Hi = Integer;
-    } else if (k >= BuiltinType::Bool && k <= BuiltinType::LongLong) {
+    } else if (k >= BuiltinType::Bool && k <= BuiltinType::IntCap) {
       Current = Integer;
     } else if (k == BuiltinType::Float || k == BuiltinType::Double) {
       Current = SSE;
@@ -3413,6 +3490,12 @@ ABIArgInfo X86_64ABIInfo::getIndirectResult(QualType Ty,
     if (Align == 8 && Size <= 64)
       return ABIArgInfo::getDirect(llvm::IntegerType::get(getVMContext(),
                                                           Size));
+
+    // Consider types which contain capabilities to be passed directly with
+    // CHERIseed.
+    if (getTarget().getTargetOpts().HasCHERIseed)
+      if (Size == 128 && containsCapabilities(Ty))
+        return ABIArgInfo::getDirect();
   }
 
   return ABIArgInfo::getIndirect(CharUnits::fromQuantity(Align));
@@ -4127,7 +4210,7 @@ static Address EmitX86_64VAArgFromMemory(CodeGenFunction &CGF,
   llvm::Type *LTy = CGF.ConvertTypeForMem(Ty);
   llvm::Value *Res =
     CGF.Builder.CreateBitCast(overflow_arg_area,
-                              CGF.CGM.getPointerInDefaultAS(LTy));
+                                CGF.CGM.getPointerInDefaultAS(LTy));
 
   // AMD64-ABI 3.5.7p5: Step 9. Set l->overflow_arg_area to:
   // l->overflow_arg_area + sizeof(type).
@@ -5566,70 +5649,6 @@ PPC64TargetCodeGenInfo::initDwarfEHRegSizeTable(CodeGen::CodeGenFunction &CGF,
                                      /*IsAIX*/ false);
 }
 
-namespace {
-class CHERICapClassifier {
-  ASTContext &C;
-  mutable llvm::DenseMap<void*, bool> ContainsCapabilities;
-public:
-  CHERICapClassifier(ASTContext &Ctx) : C(Ctx) {}
-  bool containsCapabilities(ASTContext &C, const RecordDecl *RD) const;
-  bool containsCapabilities(QualType Ty) const;
-};
-
-bool CHERICapClassifier::containsCapabilities(ASTContext &C,
-                                              const RecordDecl *RD) const {
-  for (auto i = RD->field_begin(), e = RD->field_end(); i != e; ++i) {
-    const QualType Ty = i->getType();
-    if (Ty->isCHERICapabilityType(C))
-      return true;
-    if (const RecordType *RT = Ty->getAs<RecordType>())
-      if (containsCapabilities(C, RT->getDecl()))
-        return true;
-    if (Ty->isArrayType() && containsCapabilities(Ty))
-      return true;
-  }
-
-  // In the case of C++ classes, also check base classes
-  if (const CXXRecordDecl *CRD = dyn_cast<CXXRecordDecl>(RD)) {
-    // Check for the vtable pointer.
-    if (CRD->isDynamicClass() &&
-       C.getTargetInfo().areAllPointersCapabilities()) {
-      const ASTRecordLayout &Layout = C.getASTRecordLayout(RD);
-      if (!Layout.getPrimaryBase())
-        return true;
-    }
-    // Check base clases.
-    for (auto i = CRD->bases_begin(), e = CRD->bases_end(); i != e; ++i) {
-      const QualType Ty = i->getType();
-      if (const RecordType *RT = Ty->getAs<RecordType>())
-        if (containsCapabilities(C, RT->getDecl()))
-          return true;
-    }
-  }
-  return false;
-}
-
-bool CHERICapClassifier::containsCapabilities(QualType Ty) const {
-  // If we've already looked up this type, then return the cached value.
-  auto Cached = ContainsCapabilities.find(Ty.getAsOpaquePtr());
-  if (Cached != ContainsCapabilities.end())
-    return Cached->second;
-  // Don't bother caching the trivial cases.
-  if (Ty->isCHERICapabilityType(C))
-      return true;
-  if (Ty->isArrayType()) {
-    QualType ElTy = QualType(Ty->getBaseElementTypeUnsafe(), 0);
-    return containsCapabilities(ElTy);
-  }
-  const RecordType *RT = Ty->getAs<RecordType>();
-  if (!RT)
-    return false;
-  bool Ret = containsCapabilities(C, RT->getDecl());
-  ContainsCapabilities[Ty.getAsOpaquePtr()] = Ret;
-  return Ret;
-}
-}
-
 //===----------------------------------------------------------------------===//
 // AArch64 ABI Implementation
 //===----------------------------------------------------------------------===//
@@ -5848,6 +5867,9 @@ private:
   llvm::Type *shouldPassInCapabilityRegisters(QualType Ty) const {
     uint64_t Size = getContext().getTypeSize(Ty);
     assert(containsCapabilities(Ty) && "Type should contain capabilities");
+    // CHERIseed represents capabilities in memory only.
+    if (getTarget().getTargetOpts().HasCHERIseed && (Size > 128))
+      return nullptr;
     auto *I8 = llvm::Type::getInt8Ty(getVMContext());
     llvm::Type *BaseTy = llvm::PointerType::get(I8, 200);
     llvm::Type *IntTy = llvm::IntegerType::get(getVMContext(), 64);
@@ -5887,7 +5909,8 @@ class AArch64TargetCodeGenInfo : public CommonCheriTargetCodeGenInfo,
 public:
   AArch64TargetCodeGenInfo(CodeGenTypes &CGT, AArch64ABIInfo::ABIKind Kind,
                            bool hasPureCap)
-      : CommonCheriTargetCodeGenInfo(std::make_unique<AArch64ABIInfo>(CGT, Kind, hasPureCap)),
+      : CommonCheriTargetCodeGenInfo(
+            std::make_unique<AArch64ABIInfo>(CGT, Kind, hasPureCap)),
         CHERICapClassifier(CGT.getContext()) {}
 
   StringRef getARCRetainAutoreleasedReturnValueMarker() const override {
@@ -5899,11 +5922,46 @@ public:
   }
 
   bool doesReturnSlotInterfereWithArgs() const override { return false; }
-  uint64_t getLoadPerm() const override { return 1 << 17; }
-  uint64_t getLoadCapPerm() const override { return 1 << 14; }
-  uint64_t getStorePerm() const override { return 1 << 16; }
-  uint64_t getStoreCapPerm() const override { return 1 << 13; }
-  uint64_t getAllPermMask() const override { return (1 << 18) - 1; };
+
+  uint64_t getLoadPerm() const override {
+    const TargetInfo &Target = getABIInfo().getTarget();
+    // CHERIseed uses the common CHERI permissions.
+    if (Target.getTargetOpts().HasCHERIseed)
+      return CommonCheriTargetCodeGenInfo::getLoadPerm();
+    return 1 << 17;
+  }
+
+  uint64_t getLoadCapPerm() const override {
+    const TargetInfo &Target = getABIInfo().getTarget();
+    // CHERIseed uses the common CHERI permissions.
+    if (Target.getTargetOpts().HasCHERIseed)
+      return CommonCheriTargetCodeGenInfo::getLoadCapPerm();
+    return 1 << 14;
+  }
+
+  uint64_t getStorePerm() const override {
+    const TargetInfo &Target = getABIInfo().getTarget();
+    // CHERIseed uses the common CHERI permissions.
+    if (Target.getTargetOpts().HasCHERIseed)
+      return CommonCheriTargetCodeGenInfo::getStorePerm();
+    return 1 << 16;
+  }
+
+  uint64_t getStoreCapPerm() const override {
+    const TargetInfo &Target = getABIInfo().getTarget();
+    // CHERIseed uses the common CHERI permissions.
+    if (Target.getTargetOpts().HasCHERIseed)
+      return CommonCheriTargetCodeGenInfo::getStoreCapPerm();
+    return 1 << 13;
+  }
+
+  uint64_t getAllPermMask() const override {
+    const TargetInfo &Target = getABIInfo().getTarget();
+    // CHERIseed uses the common CHERI permissions.
+    if (Target.getTargetOpts().HasCHERIseed)
+      return CommonCheriTargetCodeGenInfo::getAllPermMask();
+    return (1 << 18) - 1;
+  };
 
   unsigned getDefaultAS() const override {
     const TargetInfo &Target = getABIInfo().getContext().getTargetInfo();
@@ -6354,8 +6412,10 @@ Address AArch64ABIInfo::EmitAAPCScapVAArg(Address VAListAddr,
   }
 
   llvm::Value *StackSizeC = CGF.Builder.getSize(StackSlotSize);
+  llvm::Type *pTy =
+      OnStackPtr->getType()->getScalarType()->getPointerElementType();
   llvm::Value *NewStack =
-      CGF.Builder.CreateInBoundsGEP(OnStackPtr, StackSizeC, "new_stack");
+      CGF.Builder.CreateInBoundsGEP(pTy, OnStackPtr, StackSizeC, "new_stack");
   CGF.Builder.CreateStore(NewStack, VAListAddr);
   return OnStackAddr;
 }

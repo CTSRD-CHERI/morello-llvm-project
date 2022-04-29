@@ -673,6 +673,8 @@ TargetInfo::CreateTargetInfo(DiagnosticsEngine &Diags,
     return nullptr;
   }
   Target->TargetOpts = Opts;
+  Target->CapabilityABI = (Opts->ABI == "purecap");
+  Target->HasCHERIseed = Opts->HasCHERIseed;
 
   // Set the target CPU if specified.
   if (!Opts->CPU.empty() && !Target->setCPU(Opts->CPU)) {

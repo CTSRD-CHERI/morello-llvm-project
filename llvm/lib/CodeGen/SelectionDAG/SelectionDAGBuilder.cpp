@@ -8058,13 +8058,15 @@ void SelectionDAGBuilder::visitCall(const CallInst &I) {
     // can't be a library call.  Don't do the check if marked as nobuiltin for
     // some reason or the call site requires strict floating point semantics.
     LibFunc Func;
+    /// Some transformations are not valid with CHERIseed.
+    const bool HasCHERIseed = DAG.getTarget().Options.EnableCHERIseed;
     if (!I.isNoBuiltin() && !I.isStrictFP() && !F->hasLocalLinkage() &&
         F->hasName() && LibInfo->getLibFunc(*F, Func) &&
         LibInfo->hasOptimizedCodeGen(Func)) {
       switch (Func) {
       default: break;
       case LibFunc_bcmp:
-        if (visitMemCmpBCmpCall(I))
+        if (!HasCHERIseed && visitMemCmpBCmpCall(I))
           return;
         break;
       case LibFunc_copysign:
@@ -8168,35 +8170,35 @@ void SelectionDAGBuilder::visitCall(const CallInst &I) {
           return;
         break;
       case LibFunc_memcmp:
-        if (visitMemCmpBCmpCall(I))
+        if (!HasCHERIseed && visitMemCmpBCmpCall(I))
           return;
         break;
       case LibFunc_mempcpy:
-        if (visitMemPCpyCall(I))
+        if (!HasCHERIseed && visitMemPCpyCall(I))
           return;
         break;
       case LibFunc_memchr:
-        if (visitMemChrCall(I))
+        if (!HasCHERIseed && visitMemChrCall(I))
           return;
         break;
       case LibFunc_strcpy:
-        if (visitStrCpyCall(I, false))
+        if (!HasCHERIseed && visitStrCpyCall(I, false))
           return;
         break;
       case LibFunc_stpcpy:
-        if (visitStrCpyCall(I, true))
+        if (!HasCHERIseed && visitStrCpyCall(I, true))
           return;
         break;
       case LibFunc_strcmp:
-        if (visitStrCmpCall(I))
+        if (!HasCHERIseed && visitStrCmpCall(I))
           return;
         break;
       case LibFunc_strlen:
-        if (visitStrLenCall(I))
+        if (!HasCHERIseed && visitStrLenCall(I))
           return;
         break;
       case LibFunc_strnlen:
-        if (visitStrNLenCall(I))
+        if (!HasCHERIseed && visitStrNLenCall(I))
           return;
         break;
       }

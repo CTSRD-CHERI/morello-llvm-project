@@ -846,13 +846,16 @@ void TargetPassConfig::addIRPasses() {
                                         "\n\n*** Code after LSR ***\n"));
     }
 
-    // The MergeICmpsPass tries to create memcmp calls by grouping sequences of
-    // loads and compares. ExpandMemCmpPass then tries to expand those calls
-    // into optimally-sized loads and compares. The transforms are enabled by a
-    // target lowering hook.
-    if (!DisableMergeICmps)
-      addPass(createMergeICmpsLegacyPass());
-    addPass(createExpandMemCmpPass());
+    // Transforming memcmp is incompatible with CHERIseed.
+    if (!TM->Options.EnableCHERIseed) {
+      // The MergeICmpsPass tries to create memcmp calls by grouping sequences
+      // of loads and compares. ExpandMemCmpPass then tries to expand those
+      // calls into optimally-sized loads and compares. The transforms are
+      // enabled by a target lowering hook.
+      if (!DisableMergeICmps)
+        addPass(createMergeICmpsLegacyPass());
+      addPass(createExpandMemCmpPass());
+    }
   }
 
   // Run GC lowering passes for builtin collectors

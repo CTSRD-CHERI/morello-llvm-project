@@ -94,7 +94,9 @@ public:
   bool needsCfiDiagRt() const;
   bool needsStatsRt() const { return Stats; }
   bool needsScudoRt() const { return Sanitizers.has(SanitizerKind::Scudo); }
-
+  bool needsCHERIseedRt() const {
+    return Sanitizers.has(SanitizerKind::CHERIseed);
+  }
   bool requiresPIE() const;
   bool needsUnwindTables() const;
   bool needsLTO() const;

@@ -17,6 +17,7 @@
 #include "clang/Basic/SourceLocation.h"
 
 namespace llvm {
+class GlobalValue;
 class GlobalVariable;
 class Instruction;
 class MDNode;
@@ -41,6 +42,7 @@ public:
   void reportGlobalToASan(llvm::GlobalVariable *GV, SourceLocation Loc,
                           StringRef Name, QualType Ty, bool IsDynInit = false,
                           bool IsExcluded = false);
+  void reportGlobalToCHERIseed(llvm::GlobalValue *GV, const VarDecl *D);
   void disableSanitizerForGlobal(llvm::GlobalVariable *GV);
   void disableSanitizerForInstruction(llvm::Instruction *I);
 private:

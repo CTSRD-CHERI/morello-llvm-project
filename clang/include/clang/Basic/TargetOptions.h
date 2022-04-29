@@ -91,6 +91,9 @@ public:
   /// * CUDA compilation uses it to control parts of CUDA compilation
   ///   in clang that depend on specific version of the CUDA SDK.
   llvm::VersionTuple SDKVersion;
+
+  /// Indicates if using CHERIseed or not.
+  bool HasCHERIseed;
 };
 
 }  // end namespace clang

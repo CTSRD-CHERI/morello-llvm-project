@@ -54,10 +54,10 @@ extern const char *SanitizerToolName;  // Can be changed by the tool.
 
 extern atomic_uint32_t current_verbosity;
 inline void SetVerbosity(int verbosity) {
-  atomic_store(&current_verbosity, verbosity, memory_order_relaxed);
+  atomic_store(&current_verbosity, static_cast<u32>(verbosity), memory_order_relaxed);
 }
 inline int Verbosity() {
-  return atomic_load(&current_verbosity, memory_order_relaxed);
+  return static_cast<int>(atomic_load(&current_verbosity, memory_order_relaxed));
 }
 
 #if SANITIZER_ANDROID
@@ -390,9 +390,9 @@ inline usize MostSignificantSetBitIndex(usize x) {
   unsigned long up;
 #if !SANITIZER_WINDOWS || defined(__clang__) || defined(__GNUC__)
 # ifdef _WIN64
-  up = SANITIZER_WORDSIZE - 1 - __builtin_clzll(x);
+  up = SANITIZER_WORDSIZE - 1 - static_cast<unsigned long>(__builtin_clzll(x));
 # else
-  up = SANITIZER_WORDSIZE - 1 - __builtin_clzl(x);
+  up = SANITIZER_WORDSIZE - 1 - static_cast<unsigned long>(__builtin_clzl(x));
 # endif
 #elif defined(_WIN64)
   _BitScanReverse64(&up, x);
@@ -413,10 +413,10 @@ inline usize LeastSignificantSetBitIndex(usize x) {
   unsigned long up;
 #if !SANITIZER_WINDOWS || defined(__clang__) || defined(__GNUC__)
 # ifdef _WIN64
-  up = __builtin_ctzll(x);
-# else
-  up = __builtin_ctzl(x);
-# endif
+  up = static_cast<unsigned long>(__builtin_ctzll(x));
+#  else
+  up = static_cast<unsigned long>(__builtin_ctzl(x));
+#  endif
 #elif defined(_WIN64)
   _BitScanForward64(&up, x);
 #else

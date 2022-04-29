@@ -115,6 +115,7 @@ void initializeCalledValuePropagationLegacyPassPass(PassRegistry &);
 void initializeCheckDebugMachineModulePass(PassRegistry &);
 void initializeCheriBoundAllocasPass(PassRegistry &);
 void initializeCheriGetAddressElimPass(PassRegistry &);
+void initializeCHERIseedSanitizerLegacyPassPass(PassRegistry &);
 void initializeCodeGenPreparePass(PassRegistry&);
 void initializeConstantHoistingLegacyPassPass(PassRegistry&);
 void initializeConstantMergeLegacyPassPass(PassRegistry&);

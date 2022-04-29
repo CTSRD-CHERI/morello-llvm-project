@@ -23,7 +23,7 @@ namespace targets {
 
 // RISC-V Target
 class RISCVTargetInfo : public TargetInfo {
-  void setDataLayout() {
+  void setDataLayout() override {
     StringRef Layout;
 
     if (ABI == "ilp32" || ABI == "ilp32f" || ABI == "ilp32d" ||

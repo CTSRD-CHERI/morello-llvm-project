@@ -1,0 +1,37 @@
+set(CHERISEED_LIT_TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
+set(CHERISEED_TESTSUITES)
+set(CHERISEED_TEST_DEPS ${SANITIZER_COMMON_LIT_TEST_DEPS})
+
+set(CHERISEED_TEST_ARCH ${CHERISEED_SUPPORTED_ARCH})
+
+foreach(arch ${CHERISEED_TEST_ARCH})
+  set(CHERISEED_TEST_TARGET_ARCH ${arch})
+  string(TOLOWER "-${arch}" CHERISEED_TEST_CONFIG_SUFFIX)
+  get_test_cc_for_arch(${arch} CHERISEED_TEST_TARGET_CC CHERISEED_TEST_TARGET_CFLAGS)
+  string(TOUPPER ${arch} ARCH_UPPER_CASE)
+  set(CONFIG_NAME ${ARCH_UPPER_CASE}Config)
+
+  configure_lit_site_cfg(
+    ${CMAKE_CURRENT_SOURCE_DIR}/lit.site.cfg.py.in
+    ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_NAME}/lit.site.cfg.py)
+  list(APPEND CHERISEED_TESTSUITES ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_NAME})
+endforeach()
+
+if(NOT COMPILER_RT_STANDALONE_BUILD)
+  list(APPEND CHERISEED_TEST_DEPS cheriseed)
+endif()
+
+# Add unit tests.
+if(COMPILER_RT_INCLUDE_TESTS)
+  configure_lit_site_cfg(
+    ${CMAKE_CURRENT_SOURCE_DIR}/Unit/lit.site.cfg.py.in
+    ${CMAKE_CURRENT_BINARY_DIR}/Unit/lit.site.cfg.py)
+  list(APPEND CHERISEED_TEST_DEPS CHERIseedUnitTests)
+  list(APPEND CHERISEED_TESTSUITES ${CMAKE_CURRENT_BINARY_DIR}/Unit)
+endif()
+
+add_lit_testsuite(check-cheriseed "Running the CHERIseed tests"
+  ${CHERISEED_TESTSUITES}
+  DEPENDS ${CHERISEED_TEST_DEPS})
+set_target_properties(check-cheriseed PROPERTIES FOLDER "Compiler-RT Misc")

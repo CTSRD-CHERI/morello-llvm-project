@@ -2265,6 +2265,12 @@ void Clang::AddX86TargetArgs(const ArgList &Args,
     CmdArgs.push_back("-tune-cpu");
     CmdArgs.push_back(Args.MakeArgString(TuneCPU));
   }
+
+  // CHERIseed requires 'purecap' ABI.
+  if (Arg *A = Args.getLastArg(options::OPT_mabi_EQ)) {
+    CmdArgs.push_back("-target-abi");
+    CmdArgs.push_back(A->getValue());
+  }
 }
 
 void Clang::AddHexagonTargetArgs(const ArgList &Args,

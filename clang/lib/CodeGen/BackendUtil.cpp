@@ -67,6 +67,7 @@
 #include "llvm/Transforms/Instrumentation/AddressSanitizer.h"
 #include "llvm/Transforms/Instrumentation/AddressSanitizerOptions.h"
 #include "llvm/Transforms/Instrumentation/BoundsChecking.h"
+#include "llvm/Transforms/Instrumentation/CHERIseed.h"
 #include "llvm/Transforms/Instrumentation/DataFlowSanitizer.h"
 #include "llvm/Transforms/Instrumentation/GCOVProfiler.h"
 #include "llvm/Transforms/Instrumentation/HWAddressSanitizer.h"
@@ -389,6 +390,11 @@ addPostInlineEntryExitInstrumentationPass(const PassManagerBuilder &Builder,
   PM.add(createPostInlineEntryExitInstrumenterPass());
 }
 
+static void addCHERIseedSanitizerPasses(const PassManagerBuilder &Builder,
+                                        legacy::PassManagerBase &PM) {
+  PM.add(createCHERIseedSanitizerLegacyPass());
+}
+
 static TargetLibraryInfoImpl *createTLII(llvm::Triple &TargetTriple,
                                          const CodeGenOptions &CodeGenOpts) {
   TargetLibraryInfoImpl *TLII = new TargetLibraryInfoImpl(TargetTriple);
@@ -536,6 +542,7 @@ static bool initTargetOptions(DiagnosticsEngine &Diags,
     Options.ExceptionModel = llvm::ExceptionHandling::DwarfCFI;
   if (LangOpts.hasWasmExceptions())
     Options.ExceptionModel = llvm::ExceptionHandling::Wasm;
+  Options.EnableCHERIseed = LangOpts.Sanitize.has(SanitizerKind::CHERIseed);
 
   Options.NoInfsFPMath = LangOpts.NoHonorInfs;
   Options.NoNaNsFPMath = LangOpts.NoHonorNaNs;
@@ -812,6 +819,13 @@ void EmitAssemblyHelper::CreatePasses(legacy::PassManager &MPM,
                            addPostInlineEntryExitInstrumentationPass);
     PMBuilder.addExtension(PassManagerBuilder::EP_EnabledOnOptLevel0,
                            addPostInlineEntryExitInstrumentationPass);
+  }
+
+  if (LangOpts.Sanitize.has(SanitizerKind::CHERIseed)) {
+    PMBuilder.addExtension(PassManagerBuilder::EP_OptimizerLast,
+                           addCHERIseedSanitizerPasses);
+    PMBuilder.addExtension(PassManagerBuilder::EP_EnabledOnOptLevel0,
+                           addCHERIseedSanitizerPasses);
   }
 
   // Set up the per-function pass manager.
@@ -1386,6 +1400,13 @@ void EmitAssemblyHelper::EmitAssemblyWithNewPassManager(
           });
     }
 
+    if (LangOpts.Sanitize.has(SanitizerKind::CHERIseed)) {
+      PB.registerOptimizerLastEPCallback(
+          [](ModulePassManager &MPM, PassBuilder::OptimizationLevel Level) {
+            MPM.addPass(CHERIseedSanitizerPass());
+          });
+    }
+
     // Register callbacks to schedule sanitizer passes at the appropriate part
     // of the pipeline.
     if (LangOpts.Sanitize.has(SanitizerKind::LocalBounds))
@@ -1679,14 +1700,13 @@ void clang::EmitBackendOutput(DiagnosticsEngine &Diags,
 
   // Verify clang's TargetInfo DataLayout against the LLVM TargetMachine's
   // DataLayout.
-  if (AsmHelper.TM) {
-    std::string DLDesc = M->getDataLayout().getStringRepresentation();
-    if (DLDesc != TDesc) {
-      unsigned DiagID = Diags.getCustomDiagID(
-          DiagnosticsEngine::Error, "backend data layout '%0' does not match "
-                                    "expected target description '%1'");
-      Diags.Report(DiagID) << DLDesc << TDesc;
-    }
+  if (AsmHelper.TM &&
+      !AsmHelper.TM->isCompatibleDataLayout(M->getDataLayout())) {
+    unsigned DiagID = Diags.getCustomDiagID(
+        DiagnosticsEngine::Error, "backend data layout '%0' does not match "
+                                  "expected target description '%1'");
+    Diags.Report(DiagID) << M->getDataLayout().getStringRepresentation()
+                         << TDesc;
   }
 }
 

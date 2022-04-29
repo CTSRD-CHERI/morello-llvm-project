@@ -228,7 +228,7 @@ class MUTEX Mutex : CheckedMutex {
     if (UNLIKELY(wake_writer))
       writers_.Post();
     else if (UNLIKELY(wake_readers))
-      readers_.Post(wake_readers);
+      readers_.Post(static_cast<u32>(wake_readers));
   }
 
   void ReadLock() ACQUIRE_SHARED() {

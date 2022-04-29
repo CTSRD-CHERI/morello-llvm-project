@@ -26,7 +26,7 @@ namespace clang {
 namespace targets {
 
 class LLVM_LIBRARY_VISIBILITY MipsTargetInfo : public TargetInfo {
-  void setDataLayout() {
+  void setDataLayout() override {
     StringRef Layout;
     // XXXAR: why do we need this here? can't we use the LLVM one?
     if (ABI == "o32") {

@@ -467,10 +467,15 @@ SanitizerArgs::SanitizerArgs(const ToolChain &TC,
                          SanitizerKind::Leak | SanitizerKind::Thread |
                          SanitizerKind::Memory | SanitizerKind::KernelAddress |
                          SanitizerKind::Scudo | SanitizerKind::SafeStack),
-      std::make_pair(SanitizerKind::MemTag,
-                     SanitizerKind::Address | SanitizerKind::KernelAddress |
-                         SanitizerKind::HWAddress |
-                         SanitizerKind::KernelHWAddress)};
+      std::make_pair(SanitizerKind::MemTag, SanitizerKind::Address |
+                                                SanitizerKind::KernelAddress |
+                                                SanitizerKind::HWAddress |
+                                                SanitizerKind::KernelHWAddress),
+      std::make_pair(SanitizerKind::CHERIseed,
+                     SanitizerKind::Address | SanitizerKind::HWAddress |
+                         SanitizerKind::Leak | SanitizerKind::Thread |
+                         SanitizerKind::Memory | SanitizerKind::KernelAddress |
+                         SanitizerKind::Scudo | SanitizerKind::SafeStack)};
   // Enable toolchain specific default sanitizers if not explicitly disabled.
   SanitizerMask Default = TC.getDefaultSanitizers() & ~AllRemove;
 

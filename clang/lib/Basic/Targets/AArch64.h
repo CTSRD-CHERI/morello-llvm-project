@@ -21,7 +21,6 @@ namespace clang {
 namespace targets {
 
 class LLVM_LIBRARY_VISIBILITY AArch64TargetInfo : public TargetInfo {
-  virtual void setDataLayout() = 0;
   static const TargetInfo::GCCRegAlias GCCRegAliases[];
   static const char *const GCCRegNames[];
 
@@ -59,7 +58,6 @@ class LLVM_LIBRARY_VISIBILITY AArch64TargetInfo : public TargetInfo {
   bool Morello;
   bool C64;
   bool HasMorelloNewVarArg;
-  const unsigned CapSize;
 
   static const Builtin::Info BuiltinInfo[];
 
@@ -105,17 +103,6 @@ public:
   bool handleTargetFeatures(std::vector<std::string> &Features,
                             DiagnosticsEngine &Diags) override;
 
-  bool hasMorello() const { return Morello; }
-  bool hasPureCap() const { return CapabilityABI; }
-  bool hasCapabilities() const override { return Morello || C64; }
-  bool hasC64() const { return C64; }
-  unsigned getIntCapWidth() const override { return CapSize; }
-  unsigned getIntCapAlign() const override { return CapSize; }
-  unsigned getIntCapRange() const override { return 64; }
-  uint64_t getCHERICapabilityWidth() const override { return CapSize; }
-  uint64_t getCHERICapabilityAlign() const override { return CapSize; }
-  uint64_t getPointerRangeForCHERICapability() const override { return 64; }
-
   Optional<unsigned>
   getDWARFAddressSpace(unsigned AddressSpace) const override {
     if (AddressSpace == 200)
@@ -132,15 +119,9 @@ public:
     return false;
   }
 
-  uint64_t getPointerWidthV(unsigned AddrSpace) const override {
-    return (AddrSpace == 200) ? CapSize : PointerWidth;
+  bool SupportsCapabilities() const override {
+    return Morello || TargetInfo::SupportsCapabilities();
   }
-  uint64_t getPointerAlignV(unsigned AddrSpace) const override {
-    return (AddrSpace == 200) ? CapSize : PointerAlign;
-  }
-  uint64_t getPointerRangeV(unsigned) const override { return 64; }
-
-  bool SupportsCapabilities() const override { return Morello; }
 
   bool hasBuiltinAtomic(uint64_t AtomicSizeInBits,
                         uint64_t AlignmentInBits) const override {
@@ -181,6 +162,8 @@ public:
   validateConstraintModifier(StringRef Constraint, char Modifier, unsigned Size,
                              std::string &SuggestedModifier) const override;
   const char *getClobbers() const override;
+
+  bool validateTarget(DiagnosticsEngine &Diags) const override;
 
   StringRef getConstraintRegister(StringRef Constraint,
                                   StringRef Expression) const override {

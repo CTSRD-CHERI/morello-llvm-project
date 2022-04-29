@@ -117,7 +117,7 @@ if(LLVM_BUILD_EXTERNAL_COMPILER_RT AND EXISTS ${COMPILER_RT_SRC_ROOT}/)
                            COMPONENT compiler-rt)
 
   # Add top-level targets that build specific compiler-rt runtimes.
-  set(COMPILER_RT_RUNTIMES fuzzer asan builtins dfsan lsan msan profile tsan ubsan ubsan-minimal)
+  set(COMPILER_RT_RUNTIMES fuzzer asan builtins cheriseed dfsan lsan msan profile tsan ubsan ubsan-minimal)
   foreach(runtime ${COMPILER_RT_RUNTIMES})
     get_ext_project_build_command(build_runtime_cmd ${runtime})
     add_custom_target(${runtime}
@@ -133,9 +133,9 @@ if(LLVM_BUILD_EXTERNAL_COMPILER_RT AND EXISTS ${COMPILER_RT_SRC_ROOT}/)
       FileCheck count not llvm-nm llvm-objdump llvm-symbolizer)
 
     # Add top-level targets for various compiler-rt test suites.
-    set(COMPILER_RT_TEST_SUITES check-fuzzer check-asan check-hwasan check-asan-dynamic check-dfsan
-      check-lsan check-msan check-sanitizer check-tsan check-ubsan check-ubsan-minimal
-      check-profile check-cfi check-cfi-and-supported check-safestack check-gwp_asan)
+    set(COMPILER_RT_TEST_SUITES check-fuzzer check-asan check-hwasan check-asan-dynamic check-cheriseed
+      check-dfsan check-lsan check-msan check-sanitizer check-tsan check-ubsan
+      check-ubsan-minimal check-profile check-cfi check-cfi-and-supported check-safestack check-gwp_asan)
     foreach(test_suite ${COMPILER_RT_TEST_SUITES})
       get_ext_project_build_command(run_test_suite ${test_suite})
       add_custom_target(${test_suite}

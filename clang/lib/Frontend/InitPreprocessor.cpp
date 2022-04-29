@@ -1234,6 +1234,26 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
     Builder.defineMacro("__GLIBCXX_BITSIZE_INT_N_0", "128");
   }
 
+  if (LangOpts.Sanitize.has(SanitizerKind::CHERIseed)) {
+    // Use generic CHERI permissions for CHERIseed.
+    Builder.defineMacro("__CHERI_CAP_PERMISSION_GLOBAL__", Twine(1 << 0));
+    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_EXECUTE__",
+                        Twine(1 << 1));
+    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_LOAD__", Twine(1 << 2));
+    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_STORE__", Twine(1 << 3));
+    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_LOAD_CAPABILITY__",
+                        Twine(1 << 4));
+    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__",
+                        Twine(1 << 5));
+    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_STORE_LOCAL__",
+                        Twine(1 << 6));
+    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_SEAL__", Twine(1 << 7));
+    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_UNSEAL__",
+                        Twine(1 << 9));
+    Builder.defineMacro("__CHERI_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__",
+                        Twine(1 << 10));
+  }
+
   // Get other target #defines.
   TI.getTargetDefines(LangOpts, Builder);
 }

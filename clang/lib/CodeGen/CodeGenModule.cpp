@@ -2718,18 +2718,18 @@ bool CodeGenModule::isInNoSanitizeList(SanitizerMask Kind, llvm::Function *Fn,
 bool CodeGenModule::isInNoSanitizeList(llvm::GlobalVariable *GV,
                                        SourceLocation Loc, QualType Ty,
                                        StringRef Category) const {
-  // For now globals can be ignored only in ASan and KASan.
-  const SanitizerMask EnabledAsanMask =
+  // For now globals can be ignored only in ASan, KASan and CHERIseed.
+  const SanitizerMask EnabledMask =
       LangOpts.Sanitize.Mask &
       (SanitizerKind::Address | SanitizerKind::KernelAddress |
        SanitizerKind::HWAddress | SanitizerKind::KernelHWAddress |
-       SanitizerKind::MemTag);
-  if (!EnabledAsanMask)
+       SanitizerKind::MemTag | SanitizerKind::CHERIseed);
+  if (!EnabledMask)
     return false;
   const auto &NoSanitizeL = getContext().getNoSanitizeList();
-  if (NoSanitizeL.containsGlobal(EnabledAsanMask, GV->getName(), Category))
+  if (NoSanitizeL.containsGlobal(EnabledMask, GV->getName(), Category))
     return true;
-  if (NoSanitizeL.containsLocation(EnabledAsanMask, Loc, Category))
+  if (NoSanitizeL.containsLocation(EnabledMask, Loc, Category))
     return true;
   // Check global type.
   if (!Ty.isNull()) {
@@ -2741,7 +2741,7 @@ bool CodeGenModule::isInNoSanitizeList(llvm::GlobalVariable *GV,
     // Only record types (classes, structs etc.) are ignored.
     if (Ty->isRecordType()) {
       std::string TypeStr = Ty.getAsString(getContext().getPrintingPolicy());
-      if (NoSanitizeL.containsType(EnabledAsanMask, TypeStr, Category))
+      if (NoSanitizeL.containsType(EnabledMask, TypeStr, Category))
         return true;
     }
   }
@@ -4048,6 +4048,8 @@ CodeGenModule::GetOrCreateLLVMGlobal(StringRef MangledName, llvm::Type *Ty,
         GV->setSection(SA->getName());
     }
 
+    SanitizerMD->reportGlobalToCHERIseed(GV, D);
+
     // Handle XCore specific ABI requirements.
     if (getTriple().getArch() == llvm::Triple::xcore &&
         D->getLanguageLinkage() == CLanguageLinkage &&
@@ -4644,6 +4646,7 @@ void CodeGenModule::EmitGlobalVarDefinition(const VarDecl *D,
     EmitCXXGlobalVarDeclInitFunc(D, GV, NeedsGlobalCtor);
 
   SanitizerMD->reportGlobalToASan(GV, *D, NeedsGlobalCtor);
+  SanitizerMD->reportGlobalToCHERIseed(GV, D);
 
   // Emit global variable debug information.
   if (CGDebugInfo *DI = getModuleDebugInfo())
@@ -5520,6 +5523,7 @@ CodeGenModule::GetAddrOfConstantStringFromLiteral(const StringLiteral *S,
 
   SanitizerMD->reportGlobalToASan(GV, S->getStrTokenLoc(0), "<string literal>",
                                   QualType());
+  SanitizerMD->reportGlobalToCHERIseed(GV, nullptr);
 
   return ConstantAddress(castStringLiteralToDefaultAddressSpace(*this, GV),
                          Alignment);
