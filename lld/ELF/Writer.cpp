@@ -832,6 +832,8 @@ bool elf::isMorelloDescSection(const OutputSection *sec) {
 bool elf::isRelroSection(const OutputSection *sec) {
   if (!config->zRelro)
     return false;
+  if (sec->relro)
+    return true;
 
   uint64_t flags = sec->flags;
 
