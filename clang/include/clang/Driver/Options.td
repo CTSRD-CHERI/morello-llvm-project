@@ -554,7 +554,6 @@ def cheri_data_dependent_provenance : Flag<["-"], "cheri-data-dependent-provenan
   Flags<[CC1Option, NoDriverOption, HelpHidden]>, Group<cheri_Group>,
   HelpText<"Use the LHS or NULL provenance of a bitwise-and operation depending on the value of the RHS">,
   MarshallingInfoFlag<LangOpts<"CheriDataDependentProvenance">>;
-
 def cheri_bounds_EQ : Joined<["-"], "cheri-bounds=">, Flags<[CC1Option]>, Group<cheri_Group>,
   HelpText<"Choose when to tighten bounds on capabilities. Choices are: "
            "'conservative' (only stack allocations, default), "
@@ -3568,6 +3567,9 @@ defm aapcs_bitfield_width : BoolOption<"f", "aapcs-bitfield-width",
   BothFlags<[NoXarchOption, CC1Option], " the AAPCS standard requirement stating that"
             " volatile bit-field width is dictated by the field container type. (ARM only).">>,
   Group<m_arm_Features_Group>;
+def mframe_chain : Joined<["-"], "mframe-chain=">,
+  Group<m_arm_Features_Group>, Values<"none,aapcs,aapcs+leaf">,
+  HelpText<"Select the frame chain model used to emit frame records (Arm only).">;
 
 def m16_cap_regs : Flag<["-"], "m16-cap-regs">, Group<m_aarch64_Features_Group>,
   HelpText<"Use 16 capability registers (aarch64 only)">;
