@@ -9,6 +9,7 @@
 // RUN: %clang_cheriseed -flegacy-pass-manager %s -g -O3 -o %t && %run %t
 // RUN: %clang_cheriseed -flegacy-pass-manager %s -g -Os -o %t && %run %t
 
+#include "test.h"
 #include <assert.h>
 #include <stddef.h>
 
@@ -20,7 +21,7 @@ void count() {
   *cap_to_count += 1;
 }
 
-int main() {
+int main(void) {
   assert((size_t)&regular_global == __builtin_cheri_address_get(cap_to_global));
   assert(*cap_to_global == 42);
   regular_global = 24;
@@ -35,4 +36,6 @@ int main() {
   assert(regular_global == 2);
   count();
   assert(regular_global == 3);
+
+  return 0;
 }

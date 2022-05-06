@@ -22,7 +22,27 @@ using namespace __sanitizer;
 namespace __cheriseed {
 namespace libc {
 
-// Some signal numbers
+// Some system call numbers [Linux/arch specific]
+enum SyscallNumber : int {
+#if defined(__aarch64__)
+  IOCTL = 29,
+  KILL = 129,
+  RT_SIGACTION = 134,
+  RT_SIGPROCMASK = 1345,
+#elif defined(__x86_64__)
+  IOCTL = 16,
+  KILL = 62,
+  RT_SIGACTION = 13,
+  RT_SIGPROCMASK = 14,
+#endif
+};  // enum SyscallNumber
+
+#if defined(__aarch64__) || defined(__x86_64__)
+// Number of signals [Linux/arch specific]
+static constexpr int NSIG = 65;
+#endif
+
+// Some signal numbers [Linux specific]
 enum SignalNumber : int {
   SN_NONE = 0,
   SN_SIGTRAP = 5,
@@ -34,46 +54,66 @@ enum SignalNumber : int {
 struct SigInfo final {
   SigInfo(int signo, int code, vaddr addr);
 
-  int SignalNumber() const { return signo; }
+  // Returns signo.
+  int SignalNumber() const;
 
   // Protected: no access for non-friends, there is no error for unused private
   // field.
  protected:
-  int signo;
-  int errno;
-  int code;
-  __cheriseed_cap_t addr;
-  short addr_lsb;
+  struct {
+    int signo;
+    int errno;
+    int code;
+    vaddr addr;
+    short addr_lsb;
+  } hybrid;
+  struct {
+    int signo;
+    int errno;
+    int code;
+    __cheriseed_cap_t addr;
+    short addr_lsb;
+  } purecap;
 };  // struct SigInfo
 
-struct SignalHandler final {
-  // Type of an instrumented signal handler when called from the RT library.
-  using Type = void (*)(int, __cheriseed_cap_t *, __cheriseed_cap_t *);
+// This is sigset_t, used for both libc and kernel.
+struct SigSet final {
+  // Adds a signal to the set.
+  void Add(int sig) {
+    usize bit = static_cast<usize>(sig) - 1;
+    mask[bit / SizeInBits()] |= static_cast<usize>(1) << (bit % SizeInBits());
+  }
+
+  // Protected: no access for non-friends, there is no error for unused private
+  // field.
+ protected:
+  using TY = usize;
+
+  static constexpr usize SizeInBits() { return 8 * sizeof(TY); }
+
+  // libc might use smaller type, but that's fine.
+  TY mask[128 / sizeof(TY)];
+};  // struct SigSet
+
+// The sigaction struct to set and retrieve signal actions.
+struct SigAction final {
+  // This is SA_NODEFER flag.
+  static constexpr int kNoDefer = 0x40000000;
   // SIG_ERR
   static constexpr vaddr kSigErr = static_cast<vaddr>(-1);
   // SIG_DFL
   static constexpr vaddr kSigDfl = static_cast<vaddr>(0);
   // SIG_IGN
   static constexpr vaddr kSigIgn = static_cast<vaddr>(1);
-};  // struct SignalHandler
+  // Type of a signal handler.
+  using HandlerType = void (*)(int, void *, void *);
 
-// This is sigset_t, used for both libc and kernel.
-struct SigSet final {
-  // Protected: no access for non-friends, there is no error for unused private
-  // field.
- protected:
-  // libc might use smaller type, but that's fine.
-  usize mask[128 / sizeof(usize)];
-};  // struct SigSet
+  explicit SigAction();
 
-// The sigaction struct to set and retrieve signal actions.
-struct SigAction final {
-  static constexpr int kNoDefer = 0x40000000;
-
-  explicit SigAction() { handler.value = SignalHandler::kSigErr; }
-
+  // Queries if an action is set for a specific signal.
   static bool GetAction(int signum, SigAction &action);
 
+  // Returns true if handler is valid.
   bool HasHandler() const;
 
   // Calls the signal handler. The only real difference from real signals is
@@ -84,11 +124,21 @@ struct SigAction final {
   // Protected: no access for non-friends, there is no error for unused private
   // field.
  protected:
-  // As passed to the instrumented libc.
-  __cheriseed_cap_t handler;
-  SigSet mask;
-  int flags;
-  __cheriseed_cap_t restorer;
+  SignalHandleMode InvokeHybrid(SigInfo &info);
+  SignalHandleMode InvokePureCap(SigInfo &info);
+
+  struct {
+    vaddr handler;
+    SigSet mask;
+    int flags;
+    vaddr restorer;
+  } hybrid;
+  struct {
+    __cheriseed_cap_t handler;
+    SigSet mask;
+    int flags;
+    __cheriseed_cap_t restorer;
+  } purecap;
 };  // struct SigAction
 
 // Returns the PID of the tracer process, or '0'.

@@ -277,6 +277,14 @@ Please refer to the :doc:`Design Document<CHERIseedDesign>`.
 Limitations
 ===========
 
+Dependency on libshim
+---------------------
+
+CHERIseed requires that libshim is available in both hybrid and pure-capability
+ABIs. This constraint not only gives CHERIseed runtime library a stable
+interface, but ensures that CHERIseed works correctly very early during program
+startup, even before libc is initialized.
+
 Hybrid Mode
 -----------
 

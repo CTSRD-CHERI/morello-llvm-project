@@ -9,6 +9,7 @@
 // RUN: %clang_cheriseed -mabi=purecap -flegacy-pass-manager %s -g -O3 -o %t && %run %t
 // RUN: %clang_cheriseed -mabi=purecap -flegacy-pass-manager %s -g -Os -o %t && %run %t
 
+#include "test.h"
 #include <stdarg.h>
 
 __attribute__((noinline)) long *variadic_arguments(long *result, ...) {

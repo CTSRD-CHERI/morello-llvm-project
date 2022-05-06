@@ -24,25 +24,116 @@
 using namespace __cheriseed;
 using namespace __sanitizer;
 
-// Declaration of instrumented libc functions the runtime uses directly.
-extern "C" int isatty(int fd);
-extern "C" int kill(pid_t pid, int sig);
-extern "C" int sigaction(int, const __cheriseed_cap_t *, __cheriseed_cap_t *);
-extern "C" int sigprocmask(int how, const __cheriseed_cap_t *set,
-                           __cheriseed_cap_t *old);
-extern "C" int sigaddset(__cheriseed_cap_t *, int);
-
-bool __sanitizer::ColorizeReports() {
-  if (!isatty(kStdoutFd))
-    return false;
-
-  const char *flag = common_flags()->color;
-  return internal_strcmp(flag, "always") == 0 ||
-         (internal_strcmp(flag, "auto") == 0);
-}
+using uintptr_t = __UINTPTR_TYPE__;
 
 namespace __cheriseed {
 namespace libc {
+
+// Libshim symbols the RT relies on.
+extern "C" bool __shim_is_pure_capability();
+extern "C" uintptr_t __shim_syscall(uintptr_t, ...);
+
+// Returns true if targeting pure-capability ABI, otherwise false.
+static bool IsPureCapabilityABI() { return __shim_is_pure_capability(); }
+
+// Helper to build a bounded capability.
+static __cheriseed_cap_t BuildBoundedCap(u64 address, u64 size, u64 perms) {
+  __cheriseed_cap_t cap;
+  ccl::BuildBoundedCap(&cap, address, size, perms);
+  return cap;
+}
+
+// Helper to build a bounded capability.
+static __cheriseed_cap_t BuildBoundedCap(void *ptr, u64 size, u64 perms) {
+  return BuildBoundedCap(reinterpret_cast<u64>(ptr), size, perms);
+}
+
+// Helper to invoke a system call.
+struct SystemCall final {
+  // A system call argument
+  struct Argument final {
+    Argument() : data(0) {}
+
+    template <typename I>
+    Argument(I v) : data(static_cast<u64>(v)) {}
+
+    operator uintptr_t() { return static_cast<uintptr_t>(data); }
+
+   private:
+    uintptr_t data;
+  };  // Argument
+
+  // A system call argument, but a capability
+  struct CapArgument final {
+    void operator=(__cheriseed_cap_t value) { data = value; }
+    uintptr_t operator&() { return reinterpret_cast<uintptr_t>(this); }
+    u64 value() { return data.value; }
+
+   private:
+    __cheriseed_cap_t data;
+  };  // CapArgument
+
+  SystemCall(int nr) : num_args(0) {
+    if (IsPureCapabilityABI())
+      Arg(-1UL,
+          ccl::permissions::READ_CAP_PERMS | ccl::permissions::WRITE_CAP_PERMS);
+    Arg(nr);
+  }
+
+  template <typename I>
+  SystemCall &Arg(I arg, u64 perms = ccl::permissions::LOAD) {
+    return BuildArg(static_cast<u64>(arg), sizeof(I), perms);
+  }
+
+  template <typename P>
+  SystemCall &Arg(P *arg, u64 perms = ccl::permissions::LOAD) {
+    return BuildArg(reinterpret_cast<u64>(arg), sizeof(*arg), perms);
+  }
+
+  long Call() {
+    if (!IsPureCapabilityABI())
+      return static_cast<long>(__shim_syscall(args[0], args[1], args[2],
+                                              args[3], args[4], args[5],
+                                              args[6], args[7]));
+
+    __shim_syscall(&args_cap[0], &args_cap[1], &args_cap[2], &args_cap[3],
+                   &args_cap[4], &args_cap[5], &args_cap[6], &args_cap[7]);
+    return static_cast<long>(args_cap[0].value());
+  }
+
+ private:
+  SystemCall &BuildArg(u64 arg, u64 size, u64 perms) {
+    if (UNLIKELY(num_args == kMaxArgs))
+      Trap();
+    if (IsPureCapabilityABI())
+      args_cap[num_args] = BuildBoundedCap(arg, size, perms);
+    else
+      args[num_args] = arg;
+    ++num_args;
+    return *this;
+  }
+
+  static constexpr usize kMaxArgs = 8;
+
+  usize num_args;
+  Argument args[kMaxArgs];
+  CapArgument args_cap[kMaxArgs];
+};  // SystemCall
+
+static bool IsAtty(int fd) {
+  struct {
+    unsigned short _[4];
+  } winsize;
+  static constexpr int TIOCGWINSZ = 0x5413;
+
+  long result =
+      SystemCall(SyscallNumber::IOCTL)
+          .Arg(fd)
+          .Arg(TIOCGWINSZ)
+          .Arg(&winsize, ccl::permissions::LOAD | ccl::permissions::STORE)
+          .Call();
+  return (result == 0);
+}
 
 struct ScopedOpenFd final {
   ScopedOpenFd(const char *path, FileAccessMode mode) {
@@ -68,86 +159,130 @@ struct ScopedOpenFd final {
 
 struct ScopedSigProcMask final {
   ScopedSigProcMask(SigSet &set) {
-    __cheriseed_cap_t cap_set;
-    ccl::BuildBoundedCap(&cap_set, &set, ccl::permissions::READ_CAP_PERMS);
-    ccl::BuildBoundedCap(
-        &cap_old_set_, &old_set_,
-        ccl::permissions::READ_CAP_PERMS | ccl::permissions::WRITE_CAP_PERMS);
-    sigprocmask(kBlock, &cap_set, &cap_old_set_);
+    SystemCall(SyscallNumber::RT_SIGPROCMASK)
+        .Arg(kBlock)
+        .Arg(&set, ccl::permissions::READ_CAP_PERMS)
+        .Arg(&old_set_, ccl::permissions::READ_CAP_PERMS |
+                            ccl::permissions::WRITE_CAP_PERMS)
+        .Arg((NSIG + 1) / 8)
+        .Call();
   }
 
-  ~ScopedSigProcMask() { sigprocmask(kSetMask, &cap_old_set_, nullptr); }
+  ~ScopedSigProcMask() {
+    SystemCall(SyscallNumber::RT_SIGPROCMASK)
+        .Arg(kSetMask)
+        .Arg(&old_set_, ccl::permissions::READ_CAP_PERMS)
+        .Arg(0)
+        .Arg((NSIG + 1) / 8)
+        .Call();
+  }
 
+ private:
   static constexpr int kBlock = 0;
   static constexpr int kSetMask = 2;
 
- private:
   SigSet old_set_;
-  __cheriseed_cap_t cap_old_set_;
 };  // struct ScopedSigProcMask
 
 SigInfo::SigInfo(int signo, int code, vaddr addr) {
-  this->signo = signo;
-  this->errno = 0;
-  this->code = code;
-  ccl::BuildMaxCap(&this->addr, addr);
-  ccl::UpdatePermsAnd(&this->addr, ccl::permissions::READ_CAP_PERMS |
-                                       ccl::permissions::EXECUTE);
-  this->addr_lsb = 0;
-}
-
-bool SigAction::HasHandler() const {
-  const u64 required_perms = ccl::permissions::LOAD | ccl::permissions::EXECUTE;
-  if ((ccl::PermsGet(&handler) & required_perms) != required_perms)
-    return false;
-  // TODO: tag
-
-  switch (handler.value) {
-    default:
-      return true;
-    case SignalHandler::kSigErr:
-    case SignalHandler::kSigDfl:
-    case SignalHandler::kSigIgn:
-      return false;
+  if (IsPureCapabilityABI()) {
+    purecap.signo = signo;
+    purecap.code = code;
+    ccl::BuildMaxCap(&purecap.addr, addr);
+    ccl::UpdatePermsAnd(&purecap.addr, ccl::permissions::READ_CAP_PERMS |
+                                           ccl::permissions::EXECUTE);
+  } else {
+    hybrid.signo = signo;
+    hybrid.code = code;
+    hybrid.addr = addr;
   }
 }
 
+int SigInfo::SignalNumber() const {
+  return IsPureCapabilityABI() ? purecap.signo : hybrid.signo;
+}
+
+SigAction::SigAction() {
+  __sanitizer::internal_memset(this, 0, sizeof(*this));
+  if (IsPureCapabilityABI())
+    purecap.handler.value = kSigErr;
+  else
+    hybrid.handler = kSigErr;
+}
+
 bool SigAction::GetAction(int signum, SigAction &action) {
-  __cheriseed_cap_t cap_action;
-  ccl::BuildBoundedCap(
-      &cap_action, &action,
-      ccl::permissions::READ_CAP_PERMS | ccl::permissions::WRITE_CAP_PERMS);
-  if (0 == sigaction(signum, nullptr, &cap_action))
+  SystemCall sc{SyscallNumber::RT_SIGACTION};
+  sc.Arg(signum).Arg(0);
+  if (IsPureCapabilityABI())
+    sc.Arg(&action.purecap, ccl::permissions::READ_CAP_PERMS |
+                                ccl::permissions::WRITE_CAP_PERMS);
+  else
+    sc.Arg(&action.hybrid);
+  long result = sc.Arg((NSIG + 1) / 8).Call();
+  if (result == 0)
     return true;
   // Failed, poison the handler so that HasHandler() returns false.
-  action.handler.value = SignalHandler::kSigErr;
+  if (IsPureCapabilityABI())
+    action.purecap.handler.value = kSigErr;
+  else
+    action.hybrid.handler = kSigErr;
   return false;
+}
+
+bool SigAction::HasHandler() const {
+  u64 handler;
+  if (IsPureCapabilityABI()) {
+    const u64 required_perms =
+        ccl::permissions::LOAD | ccl::permissions::EXECUTE;
+    if ((ccl::PermsGet(&purecap.handler) & required_perms) != required_perms)
+      return false;
+    // TODO: Check tag when it gets implemented.
+    handler = purecap.handler.value;
+  } else {
+    handler = hybrid.handler;
+  }
+
+  switch (handler) {
+    default:
+      return true;
+    case kSigErr:
+    case kSigDfl:
+    case kSigIgn:
+      return false;
+  }
 }
 
 SignalHandleMode SigAction::Invoke(SigInfo &info) {
   if (!HasHandler())
     return SignalHandleMode::SHM_DEFAULT;
+  return IsPureCapabilityABI() ? InvokePureCap(info) : InvokeHybrid(info);
+}
 
-  __cheriseed_cap_t cap_info;
-  ccl::BuildBoundedCap(
-      &cap_info, &info,
-      ccl::permissions::READ_CAP_PERMS | ccl::permissions::WRITE_CAP_PERMS);
-
-  SignalHandleMode mode = SignalHandleMode::SHM_DEFAULT;
-  __cheriseed_cap_t cap_mode;
-  ccl::BuildBoundedCap(&cap_mode, &mode, ccl::permissions::STORE);
-
+SignalHandleMode SigAction::InvokeHybrid(SigInfo &info) {
   // Create a new set and add the current signo if SA_NODEFER is unset.
-  SigSet set = mask;
-  if ((flags & kNoDefer) == 0) {
-    __cheriseed_cap_t cap_set;
-    ccl::BuildBoundedCap(&cap_set, &set,
-                         ccl::permissions::LOAD | ccl::permissions::STORE);
-    sigaddset(&cap_set, info.SignalNumber());
-  }
+  SigSet set = hybrid.mask;
+  if ((hybrid.flags & kNoDefer) == 0)
+    set.Add(info.SignalNumber());
+  SignalHandleMode mode = SignalHandleMode::SHM_DEFAULT;
+  ScopedSigProcMask scope{set};
+  reinterpret_cast<HandlerType>(hybrid.handler)(info.SignalNumber(), &info,
+                                                &mode);
+  return mode;
+}
 
-  ScopedSigProcMask _{set};
-  reinterpret_cast<SignalHandler::Type>(handler.value)(info.SignalNumber(),
+SignalHandleMode SigAction::InvokePureCap(SigInfo &info) {
+  __cheriseed_cap_t cap_info = BuildBoundedCap(
+      &info, sizeof(info),
+      ccl::permissions::READ_CAP_PERMS | ccl::permissions::WRITE_CAP_PERMS);
+  SignalHandleMode mode = SignalHandleMode::SHM_DEFAULT;
+  __cheriseed_cap_t cap_mode =
+      BuildBoundedCap(&mode, sizeof(mode), ccl::permissions::STORE);
+  // Create a new set and add the current signo if SA_NODEFER is unset.
+  SigSet set = purecap.mask;
+  if ((purecap.flags & kNoDefer) == 0)
+    set.Add(info.SignalNumber());
+  ScopedSigProcMask scope{set};
+  reinterpret_cast<HandlerType>(purecap.handler.value)(info.SignalNumber(),
                                                        &cap_info, &cap_mode);
   return mode;
 }
@@ -169,7 +304,18 @@ pid_t GetTracerPid() {
   return static_cast<pid_t>(internal_atoll(tracer_pid_pos));
 }
 
-void RaiseSigTrap() { kill(0, SignalNumber::SN_SIGTRAP); }
+void RaiseSigTrap() {
+  SystemCall(SyscallNumber::KILL).Arg(0).Arg(SignalNumber::SN_SIGTRAP).Call();
+}
 
 }  // namespace libc
 }  // namespace __cheriseed
+
+bool __sanitizer::ColorizeReports() {
+  if (!__cheriseed::libc::IsAtty(kStdoutFd))
+    return false;
+
+  const char *flag = common_flags()->color;
+  return internal_strcmp(flag, "always") == 0 ||
+         (internal_strcmp(flag, "auto") == 0);
+}

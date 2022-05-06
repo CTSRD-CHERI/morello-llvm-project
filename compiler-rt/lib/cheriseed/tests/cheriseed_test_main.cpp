@@ -14,7 +14,16 @@
 
 #include "cheriseed_test_utils.h"
 
-int main(int argc, char **argv) {
+// Functions required by the runtime library. It is expected that the testing
+// libc has no such symbols exported.
+extern "C" bool __shim_is_pure_capability() { return false; }
+
+extern "C" void* __shim_syscall(void* p1, ...) {
+  (void)p1;
+  return (void*)-1;
+}
+
+int main(int argc, char** argv) {
   testing::GTEST_FLAG(death_test_style) = "threadsafe";
   testing::InitGoogleTest(&argc, argv);
   // gtest captures signals, don't try to call those handlers from the runtime

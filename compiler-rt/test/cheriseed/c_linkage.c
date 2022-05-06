@@ -1,9 +1,8 @@
-// RUN: %clang_cheriseed %s -target aarch64-linux-gnu -o %t && %run %t
-// XFAIL: ! aarch64
-// RUN: %clang_cheriseed -flegacy-pass-manager %s -target aarch64-linux-gnu -o %t && %run %t
-// XFAIL: ! aarch64
-#include <sanitizer/cheriseed_interface.h>
+// RUN: %clang_cheriseed -fuse-ld=lld %s -o %t && %run %t
+// RUN: %clang_cheriseed -flegacy-pass-manager -fuse-ld=lld %s -o %t && %run %t
 
-int main() {
+#include "test.h"
+
+int main(void) {
   return 0;
 }

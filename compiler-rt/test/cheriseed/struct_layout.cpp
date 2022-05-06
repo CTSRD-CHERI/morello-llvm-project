@@ -9,6 +9,7 @@
 // RUN: %clang_cheriseed -flegacy-pass-manager %s -g -O3 -o %t && %run %t | FileCheck %s
 // RUN: %clang_cheriseed -flegacy-pass-manager %s -g -Os -o %t && %run %t | FileCheck %s
 
+#include "test.h"
 #include <assert.h>
 #include <cinttypes>
 #include <cstddef>
@@ -35,7 +36,7 @@ struct S {
   char d;
 };
 
-int main() {
+int main(void) {
   assert(sizeof(S) == 64);
   printf("sizeof(S): %d\n", 64);
 
