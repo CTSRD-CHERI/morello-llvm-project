@@ -6,11 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-// UNSUPPORTED: c++11, c++14
-// UNSUPPORTED: libcpp-has-newlib
-
-// UNSUPPORTED: libcxx-no-debug-mode, c++03, windows
+// REQUIRES: has-unix-headers
+// UNSUPPORTED: libcxx-no-debug-mode, c++03, c++11, c++14
 // ADDITIONAL_COMPILE_FLAGS: -D_LIBCPP_DEBUG=1
+// XFAIL: libcpp-has-newlib
 
 // test container debugging
 
