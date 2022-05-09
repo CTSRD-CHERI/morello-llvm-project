@@ -357,7 +357,7 @@ void aarch64::getMorelloMode(const Driver &D, const llvm::Triple &Triple,
 
   std::vector<StringRef> Features;
   llvm::opt::ArgStringList CmdArgs;
-  getAArch64TargetFeatures(D, Triple, Args, CmdArgs, Features, false, false);
+  getAArch64TargetFeatures(D, Triple, Args, Features, false, false);
 
   // Look through all the features to take what into account what's coming from
   // -march.

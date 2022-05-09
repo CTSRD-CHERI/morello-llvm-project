@@ -348,7 +348,7 @@ static void getTargetFeatures(const Driver &D, const llvm::Triple &Triple,
   case llvm::Triple::aarch64_32:
   case llvm::Triple::aarch64_be:
     aarch64::getAArch64TargetFeatures(D, Triple, Args, Features, ForAS,
-                                      /*WarnOnDeprecatedFeature=*/trues);
+                                      /*WarnOnDeprecatedFeature=*/true);
     break;
   case llvm::Triple::x86:
   case llvm::Triple::x86_64:
