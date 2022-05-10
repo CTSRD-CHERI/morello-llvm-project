@@ -254,7 +254,8 @@ static MCAsmInfo *createAArch64MCAsmInfo(const MCRegisterInfo &MRI,
     MAI = new AArch64MCAsmInfoGNUCOFF();
   else {
     assert(TheTriple.isOSBinFormatELF() && "Invalid target");
-    bool HasPureCap = Options.getABIName().startswith("purecap");
+    bool HasPureCap =
+        Options.getABIName().startswith("purecap") && !Options.HasCHERIseed;
     MAI = new AArch64MCAsmInfoELF(TheTriple, HasPureCap);
   }
 

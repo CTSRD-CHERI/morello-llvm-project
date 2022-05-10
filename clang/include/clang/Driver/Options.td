@@ -5935,6 +5935,9 @@ def dwarf_debug_producer : Separate<["-"], "dwarf-debug-producer">,
 def defsym : Separate<["-"], "defsym">,
   HelpText<"Define a value for a symbol">;
 
+def cheriseed : Flag<["-"], "cheriseed">,
+  HelpText<"CHERIseed is enabled">;
+
 } // let Flags = [CC1AsOption]
 
 //===----------------------------------------------------------------------===//
