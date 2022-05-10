@@ -333,9 +333,11 @@ TEST_MACROS();
 #   include <wctype.h>
 TEST_MACROS();
 #endif
-#include <experimental/algorithm>
+#if __cplusplus >= 201103L
+#   include <experimental/algorithm>
 TEST_MACROS();
-#if !defined(_LIBCPP_HAS_NO_EXPERIMENTAL_COROUTINES)
+#endif
+#if __cplusplus >= 201103L && !defined(_LIBCPP_HAS_NO_EXPERIMENTAL_COROUTINES)
 #   include <experimental/coroutine>
 TEST_MACROS();
 #endif
@@ -347,10 +349,14 @@ TEST_MACROS();
 #   include <experimental/forward_list>
 TEST_MACROS();
 #endif
-#include <experimental/functional>
+#if __cplusplus >= 201103L
+#   include <experimental/functional>
 TEST_MACROS();
-#include <experimental/iterator>
+#endif
+#if __cplusplus >= 201103L
+#   include <experimental/iterator>
 TEST_MACROS();
+#endif
 #if __cplusplus >= 201103L
 #   include <experimental/list>
 TEST_MACROS();
@@ -363,8 +369,10 @@ TEST_MACROS();
 #   include <experimental/memory_resource>
 TEST_MACROS();
 #endif
-#include <experimental/propagate_const>
+#if __cplusplus >= 201103L
+#   include <experimental/propagate_const>
 TEST_MACROS();
+#endif
 #if !defined(_LIBCPP_HAS_NO_LOCALIZATION) && __cplusplus >= 201103L
 #   include <experimental/regex>
 TEST_MACROS();
@@ -373,14 +381,18 @@ TEST_MACROS();
 #   include <experimental/set>
 TEST_MACROS();
 #endif
-#include <experimental/simd>
+#if __cplusplus >= 201103L
+#   include <experimental/simd>
 TEST_MACROS();
+#endif
 #if __cplusplus >= 201103L
 #   include <experimental/string>
 TEST_MACROS();
 #endif
-#include <experimental/type_traits>
+#if __cplusplus >= 201103L
+#   include <experimental/type_traits>
 TEST_MACROS();
+#endif
 #if __cplusplus >= 201103L
 #   include <experimental/unordered_map>
 TEST_MACROS();
@@ -389,8 +401,10 @@ TEST_MACROS();
 #   include <experimental/unordered_set>
 TEST_MACROS();
 #endif
-#include <experimental/utility>
+#if __cplusplus >= 201103L
+#   include <experimental/utility>
 TEST_MACROS();
+#endif
 #if __cplusplus >= 201103L
 #   include <experimental/vector>
 TEST_MACROS();
