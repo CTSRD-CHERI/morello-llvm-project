@@ -716,6 +716,8 @@ public:
   }
 
   BuiltinVaListKind getBuiltinVaListKind() const override {
+    if (areAllPointersCapabilities() && getTargetOpts().HasCHERIseed)
+      return TargetInfo::VoidPtrBuiltinVaList;
     return TargetInfo::X86_64ABIBuiltinVaList;
   }
 

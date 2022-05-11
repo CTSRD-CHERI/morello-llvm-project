@@ -265,6 +265,8 @@ static QualType useFirstFieldIfTransparentUnion(QualType Ty) {
   return Ty;
 }
 
+static bool isEmptyRecord(ASTContext &Context, QualType T, bool AllowArrays);
+
 CGCXXABI &ABIInfo::getCXXABI() const {
   return CGT.getCXXABI();
 }
@@ -298,6 +300,31 @@ bool ABIInfo::isHomogeneousAggregateBaseType(QualType Ty) const {
 bool ABIInfo::isHomogeneousAggregateSmallEnough(const Type *Base,
                                                 uint64_t Members) const {
   return false;
+}
+
+Address ABIInfo::EmitOnStackVAArg(CodeGenFunction &CGF, Address VAListAddr,
+                                  QualType Ty) const {
+  llvm::Type *BaseTy = CGF.ConvertType(Ty);
+  BaseTy = CGF.CGM.getPointerInDefaultAS(BaseTy);
+
+  llvm::Value *OnStackPtr = CGF.Builder.CreateLoad(VAListAddr, "stack");
+  llvm::Value *ArgPtr = CGF.Builder.CreateBitCast(OnStackPtr, BaseTy);
+
+  CharUnits StackSlotSize =
+      CharUnits::fromQuantity(getTarget().getPointerWidth(0) / 8);
+  Address OnStackAddr(ArgPtr, StackSlotSize);
+
+  if (isEmptyRecord(getContext(), Ty, true))
+    return CGF.Builder.CreateElementBitCast(OnStackAddr,
+                                            CGF.ConvertTypeForMem(Ty));
+
+  llvm::Value *StackSizeC = CGF.Builder.getSize(StackSlotSize);
+  llvm::Type *pTy =
+      OnStackPtr->getType()->getScalarType()->getPointerElementType();
+  llvm::Value *NewStack =
+      CGF.Builder.CreateInBoundsGEP(pTy, OnStackPtr, StackSizeC, "new_stack");
+  CGF.Builder.CreateStore(NewStack, VAListAddr);
+  return OnStackAddr;
 }
 
 LLVM_DUMP_METHOD void ABIArgInfo::dump() const {
@@ -5834,9 +5861,6 @@ private:
   Address EmitAAPCSVAArg(Address VAListAddr, QualType Ty,
                          CodeGenFunction &CGF) const;
 
-  Address EmitAAPCScapVAArg(Address VAListAddr, QualType Ty,
-                         CodeGenFunction &CGF) const;
-
   Address EmitVAArg(CodeGenFunction &CGF, Address VAListAddr,
                     QualType Ty) const override {
     llvm::Type *BaseTy = CGF.ConvertType(Ty);
@@ -5845,7 +5869,7 @@ private:
                                "currently not supported");
 
     if (hasPureCap && CGF.getContext().getLangOpts().MorelloNewVarArg)
-      return EmitAAPCScapVAArg(VAListAddr, Ty, CGF);
+      return EmitOnStackVAArg(CGF, VAListAddr, Ty);
     return Kind == Win64 ? EmitMSVAArg(CGF, VAListAddr, Ty)
                          : isDarwinPCS() ? EmitDarwinVAArg(VAListAddr, Ty, CGF)
                                          : EmitAAPCSVAArg(VAListAddr, Ty, CGF);
@@ -6390,34 +6414,6 @@ bool AArch64ABIInfo::isHomogeneousAggregateBaseType(QualType Ty) const {
 bool AArch64ABIInfo::isHomogeneousAggregateSmallEnough(const Type *Base,
                                                        uint64_t Members) const {
   return Members <= 4;
-}
-
-Address AArch64ABIInfo::EmitAAPCScapVAArg(Address VAListAddr,
-                                          QualType Ty,
-                                          CodeGenFunction &CGF) const {
-  llvm::Type *BaseTy = CGF.ConvertType(Ty);
-  BaseTy = CGF.CGM.getPointerInDefaultAS(BaseTy);
-
-  llvm::Value *OnStackPtr = CGF.Builder.CreateLoad(VAListAddr, "stack");
-
-  llvm::Value *ArgPtr = CGF.Builder.CreateBitCast(OnStackPtr, BaseTy);
-
-
-  CharUnits StackSlotSize = CharUnits::fromQuantity(16);
-  Address OnStackAddr(ArgPtr, StackSlotSize);
-
-  if (isEmptyRecord(getContext(), Ty, true)) {
-    return CGF.Builder.CreateElementBitCast(OnStackAddr,
-                                            CGF.ConvertTypeForMem(Ty));
-  }
-
-  llvm::Value *StackSizeC = CGF.Builder.getSize(StackSlotSize);
-  llvm::Type *pTy =
-      OnStackPtr->getType()->getScalarType()->getPointerElementType();
-  llvm::Value *NewStack =
-      CGF.Builder.CreateInBoundsGEP(pTy, OnStackPtr, StackSizeC, "new_stack");
-  CGF.Builder.CreateStore(NewStack, VAListAddr);
-  return OnStackAddr;
 }
 
 Address AArch64ABIInfo::EmitAAPCSVAArg(Address VAListAddr, QualType Ty,

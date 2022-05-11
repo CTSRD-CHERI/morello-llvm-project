@@ -784,6 +784,9 @@ struct CHERIseed final : public InstVisitor<CHERIseed, Value *> {
   Value *visitPtrToIntInst(PtrToIntInst &I);
   Value *visitStoreInst(StoreInst &I);
   Value *visitReturnInst(ReturnInst &I);
+  Value *visitVAStartInst(VAStartInst &I);
+  Value *visitVACopyInst(VACopyInst &I);
+  Value *visitVAEndInst(VAEndInst &I);
 
   // Custom visitors which are not part of InstVisitor<>.
   Value *visitCallInlineAsm(CallInst &I);
@@ -1767,6 +1770,35 @@ Value *CHERIseed::visitReturnInst(ReturnInst &I) {
   Value *Ret = VC.IRB->CreateRet(VC.F->getArg(0));
   DebugPrint::Emit(Ret);
   return Ret;
+}
+
+Value *CHERIseed::visitVAStartInst(VAStartInst &I) {
+  DebugPrint::Visitor("VAStartInst");
+  if (!IsCapability(I.getArgList()->getType()))
+    return Base::visitVAStartInst(I);
+  Value *VASlotCap = VC.F->getArg(VC.F->arg_size() - 1);
+  Value *VAListCap = mapValue(I.getArgList());
+  createRtCall(RtKind::STORE_CAP, VAListCap, VASlotCap);
+  return nullptr;
+}
+
+Value *CHERIseed::visitVACopyInst(VACopyInst &I) {
+  DebugPrint::Visitor("VACopyInst");
+  if (!IsCapability(I.getDest()->getType()))
+    return Base::visitVACopyInst(I);
+  Value *MSrc = mapValue(I.getSrc());
+  Value *MDst = mapValue(I.getDest());
+  Value *AllocaCap = createAlloca(CapTy);
+  Value *VAList = createRtCall(RtKind::LOAD_CAP, MSrc, AllocaCap);
+  createRtCall(RtKind::STORE_CAP, MDst, VAList);
+  return nullptr;
+}
+
+Value *CHERIseed::visitVAEndInst(VAEndInst &I) {
+  DebugPrint::Visitor("VAEndInst");
+  if (!IsCapability(I.getArgList()->getType()))
+    return Base::visitVAEndInst(I);
+  return nullptr;
 }
 
 Value *CHERIseed::visitCallInlineAsm(CallInst &I) {
@@ -3136,7 +3168,11 @@ FunctionType *CHERIseed::createFunctionType(FunctionType *FTy) {
   for (Type *Ty : FTy->params())
     Params.push_back(mapType(Ty));
 
-  return FunctionType::get(RetTy, Params, FTy->isVarArg());
+  bool IsVarArg = !IsPureCap && FTy->isVarArg();
+  if (IsPureCap && FTy->isVarArg())
+    Params.push_back(CapPtrTy);
+
+  return FunctionType::get(RetTy, Params, IsVarArg);
 }
 
 CHERIseed::CallContext CHERIseed::prepareCallArgs(CallInst &I) {

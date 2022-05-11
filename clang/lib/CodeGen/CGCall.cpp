@@ -5594,6 +5594,9 @@ Address CodeGenFunction::EmitVAArg(VAArgExpr *VE, Address &VAListAddr) {
                  ? EmitMSVAListRef(VE->getSubExpr())
                  : EmitVAListRef(VE->getSubExpr());
   QualType Ty = VE->getType();
+  if (getTarget().areAllPointersCapabilities() &&
+      getTarget().getTargetOpts().HasCHERIseed)
+    return CGM.getTypes().getABIInfo().EmitOnStackVAArg(*this, VAListAddr, Ty);
   if (VE->isMicrosoftABI())
     return CGM.getTypes().getABIInfo().EmitMSVAArg(*this, VAListAddr, Ty);
   return CGM.getTypes().getABIInfo().EmitVAArg(*this, VAListAddr, Ty);

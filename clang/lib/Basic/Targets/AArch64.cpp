@@ -665,7 +665,8 @@ AArch64TargetInfo::checkCallingConvention(CallingConv CC) const {
 bool AArch64TargetInfo::isCLZForZeroUndef() const { return false; }
 
 TargetInfo::BuiltinVaListKind AArch64TargetInfo::getBuiltinVaListKind() const {
-  if (areAllPointersCapabilities() && HasMorelloNewVarArg)
+  if (areAllPointersCapabilities() &&
+      (HasMorelloNewVarArg || getTargetOpts().HasCHERIseed))
     return TargetInfo::VoidPtrBuiltinVaList;
   return TargetInfo::AArch64ABIBuiltinVaList;
 }
