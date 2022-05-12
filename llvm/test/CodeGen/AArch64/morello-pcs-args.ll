@@ -52,11 +52,11 @@ entry:
 ; CHECK-LABEL: @quad_args
 ;
 ; CHECK-DAG: subs  [[SUB_HI:x[0-9]+]],  x0,  x2
-; CHECK-DAG: sbcs  [[SUB_LO:x[0-9]+]],  x1,  x3
+; CHECK-DAG: sbc   [[SUB_LO:x[0-9]+]],  x1,  x3
 ; CHECK-DAG: subs  [[SUB_HI]],  [[SUB_HI]],  x4
-; CHECK-DAG: sbcs  [[SUB_LO]],  [[SUB_LO]],  x5
+; CHECK-DAG: sbc   [[SUB_LO]],  [[SUB_LO]],  x5
 ; CHECK-DAG: subs          x0,  [[SUB_HI]],  x6
-; CHECK-DAG: sbcs          x1,  [[SUB_LO]],  x7
+; CHECK-DAG: sbc           x1,  [[SUB_LO]],  x7
 ; CHECK-DAG: ret   c30
 
 define i128 @quad_args(i128 %a0, i128 %a1, i128 %a2, i128 %a3) addrspace(200) {
