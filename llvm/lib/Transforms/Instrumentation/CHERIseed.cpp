@@ -1156,10 +1156,21 @@ protected:
   /// Creates a new alloca on stack.
   ///
   /// \param Ty The Type to allocate.
-  /// \param PtrTy Name of the new allocation.
+  /// \param Name Name of the new allocation.
   ///
   /// \returns Pointer to the resulting Value.
   AllocaInst *createAlloca(Type *Ty, const Twine &Name = "");
+
+  /// Creates a new alloca on stack.
+  ///
+  /// \param Ty The Type to allocate.
+  /// \param ArraySize Size of the array or nullptr.
+  /// \param Align Alignment of the alloca.
+  /// \param Name Name of the new allocation.
+  ///
+  /// \returns Pointer to the resulting Value.
+  AllocaInst *createAlloca(Type *Ty, Value *ArraySize, Align Align,
+                           const Twine &Name);
 
   /// Derives a pointer from a capability.
   ///
@@ -3182,6 +3193,10 @@ CHERIseed::CallContext CHERIseed::prepareCallArgs(CallInst &I) {
   auto &Args = CallCtx.Args;
   auto &Attrs = CallCtx.Attrs;
 
+  // Only the pure-capability ABI uses on-stack variadic argument passing.
+  const unsigned NumFixedArgs =
+      IsPureCap ? I.getFunctionType()->getNumParams() : I.arg_size();
+
   // Get the original attributes of this CallInst.
   AttributeList AttrList = I.getAttributes();
 
@@ -3215,7 +3230,8 @@ CHERIseed::CallContext CHERIseed::prepareCallArgs(CallInst &I) {
   // Handle argument attributes one-by-one.
   unsigned OrigAttrIdx = 0;
   unsigned NewAttrIdx = IdxOffset;
-  for (auto &A : I.args()) {
+  ArrayRef<Use> AllArgs(I.arg_begin(), I.arg_end());
+  for (const Use &A : AllArgs.take_front(NumFixedArgs)) {
     // The mapped value
     Value *MA = mapValue(A);
     // Build attributes of the current attribute inheriting from the original
@@ -3268,6 +3284,52 @@ CHERIseed::CallContext CHERIseed::prepareCallArgs(CallInst &I) {
     Attrs = Attrs.addParamAttributes(Ctx, NewAttrIdx++, AB);
     // Finally, add the argument to the list of arguments.
     Args.push_back(MA);
+  }
+
+  if (I.getFunctionType()->isVarArg() && IsPureCap) {
+    const size_t SlotSize = kCapabilityAlignment;
+    ArrayRef<Use> VarArgs = AllArgs.drop_front(NumFixedArgs);
+    // Create stack slots for variadic arguments
+    AllocaInst *Alloca = nullptr;
+    Value *AllocaSize = ConstantInt::get(AddrSizeTy, VarArgs.size() * SlotSize);
+    if (!VarArgs.empty())
+      Alloca = createAlloca(Int8Ty, AllocaSize, Align(SlotSize), "va_slot");
+    // Create a shadow capability pointing to the stack slot
+    Value *VASlot = createShadowCapOnStack(Alloca, AllocaSize, "va_slot", true);
+    // Copy variadic arguments into the stack slots
+    IntegerType *IdxType = Type::getInt32Ty(I.getContext());
+    unsigned Idx = 0;
+    for (const Use &A : VarArgs) {
+      Value *MA = mapValue(A.get());
+      TypeSize Size = DL.getTypeAllocSize(MA->getType());
+      Value *GEP = VC.IRB->CreateInBoundsGEP(
+          Int8Ty, Alloca, ConstantInt::get(IdxType, Idx++ * SlotSize));
+      DebugPrint::Emit(GEP);
+      if (IsCapability(A->getType())) {
+        Value *BC = VC.IRB->CreateBitCast(GEP, MA->getType());
+        DebugPrint::Emit(BC);
+        createRtCall(RtKind::STORE_CAP_HYBRID, BC, MA);
+      } else if ((Size <= SlotSize) && !ShouldMapType(A->getType())) {
+        // Clear the slot if the type being stored is smaller in size.
+        // It does happen that the caller and callee use mismatched types,
+        // such as 'syscall(1, (char)2);' and then the callee does
+        // 'va_arg(lst, uintptr_t);'.
+        if (Size < SlotSize) {
+          Value *BC = VC.IRB->CreateBitCast(GEP, CapPtrTy);
+          DebugPrint::Emit(BC);
+          Value *Store = VC.IRB->CreateAlignedStore(
+              ConstantAggregateZero::get(CapTy), BC, Align(SlotSize));
+          DebugPrint::Emit(Store);
+        }
+        Value *BC = VC.IRB->CreateBitCast(GEP, MA->getType()->getPointerTo());
+        DebugPrint::Emit(BC);
+        Value *Store = VC.IRB->CreateAlignedStore(MA, BC, Align(SlotSize));
+        DebugPrint::Emit(Store);
+      } else {
+        llvm_unreachable("Not implemented vararg case");
+      }
+    }
+    Args.push_back(VASlot);
   }
 
   return CallCtx;
@@ -3496,9 +3558,16 @@ CallInst *CHERIseed::createRtCall(RtKind Kind, const StringRef Name,
 //
 // %2 = alloca <Ty>, align <guessed>
 AllocaInst *CHERIseed::createAlloca(Type *Ty, const Twine &Name) {
+  return createAlloca(Ty, nullptr, DL.getABITypeAlign(Ty), Name);
+}
+
+// Creates the following sequence:
+//
+// %2 = alloca <Ty>, align <Align>
+AllocaInst *CHERIseed::createAlloca(Type *Ty, Value *ArraySize, Align Align,
+                                    const Twine &Name) {
   AllocaInst *Alloca =
-      new AllocaInst(Ty, DL.getAllocaAddrSpace(),
-                     /* ArraySize */ nullptr, DL.getABITypeAlign(Ty));
+      new AllocaInst(Ty, DL.getAllocaAddrSpace(), ArraySize, Align);
   Alloca->setName(Name);
 
   if (!VC.AllocaIP) {
