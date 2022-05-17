@@ -5789,11 +5789,6 @@ CodeGenModule::GetAddrOfConstantStringFromLiteral(const StringLiteral *S,
   }
 
   auto GV = GenerateStringLiteral(C, LT, *this, GlobalVariableName, Alignment);
-
-  CGDebugInfo *DI = getModuleDebugInfo();
-  if (DI && getCodeGenOpts().hasReducedDebugInfo())
-    DI->AddStringLiteralDebugInfo(GV, S);
-
   if (Entry)
     *Entry = GV;
 
