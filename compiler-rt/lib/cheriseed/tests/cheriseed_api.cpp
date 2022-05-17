@@ -443,3 +443,43 @@ TEST(API, Diff) {
             -reinterpret_cast<uint64_t>(&a[0]));
   ASSERT_EQ(__cheriseed_diff(nullptr, nullptr), 0);
 }
+
+TEST(API, SubsetTest) {
+  //      a:        [42][64]
+  //    cap: |- ... -------- ... -| rwxRW
+  //  a_cap:        |------|        r
+  // a0_cap:        |--|            r
+  // a1_cap:            |--|        r
+  // np_cap:        |------|
+
+  uint16_t a[2] = {42, 64};
+  __cheriseed_cap_t cap = utils::InitCap(&a);
+
+  // All fields equal
+  ASSERT_TRUE(__cheriseed_subset_test(&cap, &cap));
+
+  // All fields narrower
+  __cheriseed_cap_t a_cap;
+  __cheriseed_bounds_set(&a_cap, &cap, 2 * sizeof(uint16_t));
+  __cheriseed_perms_and(&a_cap, &a_cap, ccl::permissions::LOAD);
+  ASSERT_TRUE(__cheriseed_subset_test(&a_cap, &cap));
+
+  // Top wider
+  __cheriseed_cap_t a0_cap;
+  __cheriseed_bounds_set(&a0_cap, &a_cap, sizeof(uint16_t));
+  ASSERT_FALSE(__cheriseed_subset_test(&a_cap, &a0_cap));
+
+  // Base wider
+  __cheriseed_cap_t a1_cap;
+  __cheriseed_address_set(&a1_cap, &a_cap, reinterpret_cast<uint64_t>(&a[1]));
+  __cheriseed_bounds_set(&a1_cap, &a1_cap, sizeof(uint16_t));
+  ASSERT_FALSE(__cheriseed_subset_test(&a_cap, &a1_cap));
+
+  // Perms wider
+  __cheriseed_cap_t np_cap;
+  __cheriseed_perms_and(&np_cap, &a_cap, 0);
+  ASSERT_FALSE(__cheriseed_subset_test(&a_cap, &np_cap));
+
+  // All fields wider
+  ASSERT_FALSE(__cheriseed_subset_test(&cap, &a_cap));
+}

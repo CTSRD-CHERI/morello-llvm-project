@@ -332,6 +332,26 @@ static inline bool IsRepresentableWithCursor(const compressed_cap_t *c_cap,
   return external::cc128_is_representable_with_addr(&decom, newCursor);
 }
 
+/// Test if a capability is a subset of another capability.
+///
+/// \param[in] c_cap_check the compressed capability to check
+/// \param[in] c_cap the compressed capability to check against
+/// \returns A boolean, true if c_cap_check is a subset of c_cap
+static inline bool SubsetTest(const compressed_cap_t *c_cap_check,
+                              const compressed_cap_t *c_cap) {
+  external::cc128_cap_t decom_check;
+  external::cc128_cap_t decom;
+  external::cc128_decompress_mem(c_cap_check->metadata, c_cap_check->value,
+                                 true, &decom_check);
+  external::cc128_decompress_mem(c_cap->metadata, c_cap->value, true, &decom);
+
+  return (decom_check.base() >= decom.base()) &&
+         (decom_check.top() <= decom.top()) &&
+         ((decom_check.permissions() & decom.permissions()) ==
+          decom_check.permissions());
+  // TODO: Compare capability validity
+}
+
 }  // namespace ccl
 
 #endif  // CHERISEED_CCL_INTERFACE_H

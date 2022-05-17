@@ -44,13 +44,22 @@ compiler runtime.
 Compiler Runtime
 ----------------
 
-Provides software implementations of CHERI APIs, using the
-`cheri-compressed-cap <https://github.com/CTSRD-CHERI/cheri-compressed-cap>`_
-library to compress capability permissions and bounds information to a
-64-bit metadata value.
+Provides software implementations of CHERI APIs, as listed in
+`cheriintrin.h <https://git.morello-project.org/morello/llvm-project/-/blob/morello/dev/clang/lib/Headers/cheriintrin.h>`_.
+Most have their functionality defined by the
+`CHERI C/C++ Programming Guide <https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-947.pdf>`_.
+For some that are ommited from the programming guide (e.g. ``subset_test``)
+the functionality has been deduced from the builtin name, while others
+(e.g. ``seal``) are unimplemented, pending inclusion in the programming guide.
 
-It also provides some CHERIseed specific APIs. Some of these are only
-expected to be used by the compiler, such as
+The metadata of CHERIseed capabilities is compressed into a 64-bit
+value using
+`cheri-compressed-cap <https://github.com/CTSRD-CHERI/cheri-compressed-cap>`_.
+This includes bounds and permissions information for the memory pointed
+to by the capability.
+
+The compiler-rt also provides some CHERIseed specific APIs. Some of
+these are only expected to be used by the compiler, such as
 ``__cheriseed_check_access``, to assert that the following action is
 permitted by a given capability's permissions and bounds.
 Other APIs are user-accessible, to tweak the functionality, for

@@ -99,3 +99,8 @@ TEST(UnalignedDeathTest, Diff) {
   TEST_UNALIGNED_CAP(__cheriseed_diff(&uacap, &cap));
   TEST_UNALIGNED_CAP(__cheriseed_diff(&cap, &uacap));
 }
+
+TEST(UnalignedDeathTest, SubsetTest) {
+  TEST_UNALIGNED_CAP(__cheriseed_subset_test(&uacap, &cap));
+  TEST_UNALIGNED_CAP(__cheriseed_subset_test(&cap, &uacap));
+}

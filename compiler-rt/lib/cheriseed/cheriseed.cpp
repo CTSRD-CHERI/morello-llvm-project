@@ -240,7 +240,13 @@ u8 __cheriseed_sealed_get(const __cheriseed_cap_t *cap) { UNIMPLEMENTED(); }
 
 u8 __cheriseed_subset_test(const __cheriseed_cap_t *cap_tested,
                            const __cheriseed_cap_t *cap) {
-  UNIMPLEMENTED();
+  if (!cap_tested)
+    ccl::UseNullCap(&cap_tested);
+  if (!cap)
+    ccl::UseNullCap(&cap);
+  DefaultCapChecks(cap_tested);
+  DefaultCapChecks(cap);
+  return ccl::SubsetTest(cap_tested, cap);
 }
 
 __cheriseed_cap_t *__cheriseed_tag_clear(__cheriseed_cap_t *cap_out,
