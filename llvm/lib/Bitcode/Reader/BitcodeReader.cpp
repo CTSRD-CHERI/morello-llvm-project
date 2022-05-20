@@ -5145,6 +5145,10 @@ Error BitcodeReader::parseFunctionBody(Function *F) {
         }
       }
 
+      // Upgrade the bundles if needed.
+      if (!OperandBundles.empty())
+        UpgradeOperandBundles(OperandBundles);
+
       I = InvokeInst::Create(FTy, Callee, NormalBB, UnwindBB, Ops,
                              OperandBundles);
       ResTypeID = getContainedTypeID(FTyID);
@@ -5241,6 +5245,10 @@ Error BitcodeReader::parseFunctionBody(Function *F) {
           ArgTyIDs.push_back(OpTypeID);
         }
       }
+
+      // Upgrade the bundles if needed.
+      if (!OperandBundles.empty())
+        UpgradeOperandBundles(OperandBundles);
 
       I = CallBrInst::Create(FTy, Callee, DefaultDest, IndirectDests, Args,
                              OperandBundles);
@@ -5852,6 +5860,10 @@ Error BitcodeReader::parseFunctionBody(Function *F) {
           ArgTyIDs.push_back(OpTypeID);
         }
       }
+
+      // Upgrade the bundles if needed.
+      if (!OperandBundles.empty())
+        UpgradeOperandBundles(OperandBundles);
 
       I = CallInst::Create(FTy, Callee, Args, OperandBundles);
       ResTypeID = getContainedTypeID(FTyID);
