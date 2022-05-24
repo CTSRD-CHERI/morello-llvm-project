@@ -18,6 +18,7 @@
 #include "cheriseed_common.h"
 
 using __cheriseed::__cheriseed_cap_t;
+using __cheriseed::__cheriseed_cmpxchg_result_t;
 
 extern "C" {
 
@@ -35,7 +36,7 @@ u64 __cheriseed_address_get(const __cheriseed_cap_t *cap);
 SANITIZER_INTERFACE_ATTRIBUTE
 __cheriseed_cap_t *__cheriseed_address_set(__cheriseed_cap_t *cap_out,
                                            const __cheriseed_cap_t *cap_in,
-                                           u64 addr);
+                                           u64 address);
 SANITIZER_INTERFACE_ATTRIBUTE
 u64 __cheriseed_base_get(const __cheriseed_cap_t *cap);
 
@@ -182,31 +183,74 @@ void __cheriseed_enable_invoke_signal_handlers(int enable);
 // -------------------------------------
 
 SANITIZER_INTERFACE_ATTRIBUTE
+u64 __cheriseed_check_access(const __cheriseed_cap_t *cap, u64 size, u32 perms);
+
+SANITIZER_INTERFACE_ATTRIBUTE
+__cheriseed_cmpxchg_result_t __cheriseed_cmpxchg_cap(
+    __cheriseed_cap_t *cap_to_cap, const __cheriseed_cap_t *cap_expected,
+    const __cheriseed_cap_t *cap_desired, __cheriseed_cap_t *cap_orig,
+    u8 memory_order_success, u8 memory_order_failure);
+
+SANITIZER_INTERFACE_ATTRIBUTE
+__cheriseed_cmpxchg_result_t __cheriseed_cmpxchg_cap_hybrid(
+    __cheriseed_cap_t *cap, const __cheriseed_cap_t *cap_expected,
+    const __cheriseed_cap_t *cap_desired, __cheriseed_cap_t *cap_orig,
+    u8 memory_order_success, u8 memory_order_failure);
+
+SANITIZER_INTERFACE_ATTRIBUTE
 __cheriseed_cap_t *__cheriseed_copy_cap_with_offset(
     __cheriseed_cap_t *cap_out, const __cheriseed_cap_t *cap_in, u64 offset);
 
 SANITIZER_INTERFACE_ATTRIBUTE
-__cheriseed_cap_t *__cheriseed_stack_cap_init(__cheriseed_cap_t *cap, u64 addr,
-                                              u64 size);
-
-SANITIZER_INTERFACE_ATTRIBUTE
-__cheriseed_cap_t *__cheriseed_load_cap(const __cheriseed_cap_t *cap,
+__cheriseed_cap_t *__cheriseed_load_cap(const __cheriseed_cap_t *cap_to_cap,
                                         __cheriseed_cap_t *loaded_cap);
 
 SANITIZER_INTERFACE_ATTRIBUTE
-__cheriseed_cap_t *__cheriseed_load_cap_hybrid(const __cheriseed_cap_t *ptr,
+__cheriseed_cap_t *__cheriseed_load_cap_atomic(
+    const __cheriseed_cap_t *cap_to_cap, __cheriseed_cap_t *loaded_cap,
+    u8 memory_order);
+
+SANITIZER_INTERFACE_ATTRIBUTE
+__cheriseed_cap_t *__cheriseed_load_cap_hybrid(const __cheriseed_cap_t *cap,
                                                __cheriseed_cap_t *loaded_cap);
 
 SANITIZER_INTERFACE_ATTRIBUTE
-void __cheriseed_store_cap(__cheriseed_cap_t *cap,
-                           const __cheriseed_cap_t *stored_cap);
+__cheriseed_cap_t *__cheriseed_load_cap_hybrid_atomic(
+    const __cheriseed_cap_t *cap, __cheriseed_cap_t *loaded_cap,
+    u8 memory_order);
 
 SANITIZER_INTERFACE_ATTRIBUTE
-void __cheriseed_store_cap_hybrid(__cheriseed_cap_t *ptr,
-                                  const __cheriseed_cap_t *stored_cap);
+__cheriseed_cap_t *__cheriseed_rmw_cap(__cheriseed_cap_t *cap_to_cap,
+                                       const __cheriseed_cap_t *cap_value,
+                                       __cheriseed_cap_t *cap_ret, u8 op,
+                                       u8 memory_order);
 
 SANITIZER_INTERFACE_ATTRIBUTE
-u64 __cheriseed_check_access(const __cheriseed_cap_t *cap, u64 size, u32 perms);
+__cheriseed_cap_t *__cheriseed_rmw_cap_hybrid(
+    __cheriseed_cap_t *cap, const __cheriseed_cap_t *cap_value,
+    __cheriseed_cap_t *cap_ret, u8 op, u8 memory_order);
+
+SANITIZER_INTERFACE_ATTRIBUTE
+__cheriseed_cap_t *__cheriseed_stack_cap_init(__cheriseed_cap_t *cap,
+                                              u64 address, u64 size);
+
+SANITIZER_INTERFACE_ATTRIBUTE
+void __cheriseed_store_cap(__cheriseed_cap_t *cap_to_cap,
+                           const __cheriseed_cap_t *cap_to_store);
+
+SANITIZER_INTERFACE_ATTRIBUTE
+void __cheriseed_store_cap_atomic(__cheriseed_cap_t *cap_to_cap,
+                                  const __cheriseed_cap_t *cap_to_store,
+                                  u8 memory_order);
+
+SANITIZER_INTERFACE_ATTRIBUTE
+void __cheriseed_store_cap_hybrid(__cheriseed_cap_t *cap,
+                                  const __cheriseed_cap_t *cap_to_store);
+
+SANITIZER_INTERFACE_ATTRIBUTE
+void __cheriseed_store_cap_hybrid_atomic(__cheriseed_cap_t *cap,
+                                         const __cheriseed_cap_t *cap_to_store,
+                                         u8 memory_order);
 
 SANITIZER_INTERFACE_ATTRIBUTE
 __cheriseed_cap_t *__cheriseed_thread_pointer(__cheriseed_cap_t *cap);

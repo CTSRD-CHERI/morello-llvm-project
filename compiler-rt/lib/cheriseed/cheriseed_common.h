@@ -30,6 +30,12 @@ struct __cheriseed_cap_t final {
   u64 metadata;  // compressed metadata
 } __attribute__((aligned(abi::kCapabilityMinAlignment)));
 
+/// Definition of an aggregate returned by cmpxchg APIs.
+struct __cheriseed_cmpxchg_result_t {
+  __cheriseed_cap_t *cap;
+  u8 result;
+};  // struct __cheriseed_cmpxchg_result_t
+
 // Atomic boolean
 struct AtomicBool final {
   explicit constexpr AtomicBool(const bool value) : val_dont_use(value) {}

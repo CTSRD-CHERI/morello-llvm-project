@@ -149,9 +149,14 @@ define void @atomicrmw_p0(i8* addrspace(200)* %c, i8* %p) {
 
 ; CHECK-LABEL: @atomicrmw_p200
 define void @atomicrmw_p200(i8* addrspace(200)* addrspace(200)* %c, i8* addrspace(200)* %p) {
-; CHECK-NEXT:  %1 = tail call %__cheriseed_cap_t* @__cheriseed_rmw_cap(%__cheriseed_cap_t* %c, %__cheriseed_cap_t* %p, i8 0, i8 2)
+; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
+; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
+; CHECK-NEXT:  %2 = alloca %__cheriseed_cap_t, align 16
+; CHECK-NEXT:  %3 = tail call %__cheriseed_cap_t* @__cheriseed_rmw_cap(
+; CHECK-SAME:     %__cheriseed_cap_t* %c, %__cheriseed_cap_t* %p, %__cheriseed_cap_t* %1, i8 0, i8 2)
   %1 = atomicrmw xchg i8* addrspace(200)* addrspace(200)* %c, i8* addrspace(200)* %p acquire
-; CHECK-NEXT:  %2 = tail call %__cheriseed_cap_t* @__cheriseed_rmw_cap(%__cheriseed_cap_t* %c, %__cheriseed_cap_t* %p, i8 1, i8 0)
+; CHECK-NEXT:  %4 = tail call %__cheriseed_cap_t* @__cheriseed_rmw_cap(
+; CHECK-SAME:     %__cheriseed_cap_t* %c, %__cheriseed_cap_t* %p, %__cheriseed_cap_t* %2, i8 1, i8 0)
   %2 = atomicrmw add i8* addrspace(200)* addrspace(200)* %c, i8* addrspace(200)* %p monotonic
 ; CHECK-NEXT:  ret void
   ret void
@@ -159,9 +164,14 @@ define void @atomicrmw_p200(i8* addrspace(200)* addrspace(200)* %c, i8* addrspac
 
 ; CHECK-LABEL: @atomicrmw_p200_hybrid
 define void @atomicrmw_p200_hybrid(i8* addrspace(200)** %c, i8* addrspace(200)* %p) {
-; CHECK-NEXT:  %1 = tail call %__cheriseed_cap_t* @__cheriseed_rmw_cap_hybrid(%__cheriseed_cap_t* %c, %__cheriseed_cap_t* %p, i8 0, i8 2)
+; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
+; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
+; CHECK-NEXT:  %2 = alloca %__cheriseed_cap_t, align 16
+; CHECK-NEXT:  %3 = tail call %__cheriseed_cap_t* @__cheriseed_rmw_cap_hybrid(
+; CHECK-SAME:     %__cheriseed_cap_t* %c, %__cheriseed_cap_t* %p, %__cheriseed_cap_t* %1, i8 0, i8 2)
   %1 = atomicrmw xchg i8* addrspace(200)** %c, i8* addrspace(200)* %p acquire
-; CHECK-NEXT:  %2 = tail call %__cheriseed_cap_t* @__cheriseed_rmw_cap_hybrid(%__cheriseed_cap_t* %c, %__cheriseed_cap_t* %p, i8 1, i8 0)
+; CHECK-NEXT:  %4 = tail call %__cheriseed_cap_t* @__cheriseed_rmw_cap_hybrid(
+; CHECK-SAME:     %__cheriseed_cap_t* %c, %__cheriseed_cap_t* %p, %__cheriseed_cap_t* %2, i8 1, i8 0)
   %2 = atomicrmw add i8* addrspace(200)** %c, i8* addrspace(200)* %p monotonic
 ; CHECK-NEXT:  ret void
   ret void
@@ -196,7 +206,11 @@ define void @cmpxchg_p0(i8** %p, i8* addrspace(200)* %c, i8* %n) {
 
 ; CHECK-LABEL: @cmpxchg_p200
 define void @cmpxchg_p200(i8 addrspace(200)* addrspace(200)* %c, i8 addrspace(200)* %n) {
-; CHECK-NEXT:  %v1 = tail call { %__cheriseed_cap_t*, i1 } @__cheriseed_cmpxchg_cap(%__cheriseed_cap_t* %c, %__cheriseed_cap_t* null, %__cheriseed_cap_t* %n, i8 0, i8 0)
+; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
+; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
+; CHECK-NEXT:  %v1 = tail call { %__cheriseed_cap_t*, i1 } @__cheriseed_cmpxchg_cap(
+; CHECK-SAME:     %__cheriseed_cap_t* %c, %__cheriseed_cap_t* null, %__cheriseed_cap_t* %n,
+; CHECK-SAME:     %__cheriseed_cap_t* %1, i8 0, i8 0)
   %v1 = cmpxchg i8 addrspace(200)* addrspace(200)* %c, i8 addrspace(200)* null, i8 addrspace(200)* %n monotonic monotonic
 ; CHECK-NEXT:  %v2 = extractvalue { %__cheriseed_cap_t*, i1 } %v1, 0
   %v2 = extractvalue { i8 addrspace(200)*, i1 } %v1, 0
@@ -206,7 +220,11 @@ define void @cmpxchg_p200(i8 addrspace(200)* addrspace(200)* %c, i8 addrspace(20
 
 ; CHECK-LABEL: @cmpxchg_p200_hybrid
 define void @cmpxchg_p200_hybrid(i8 addrspace(200)** %p, i8 addrspace(200)* %n) {
-; CHECK-NEXT:  %v1 = tail call { %__cheriseed_cap_t*, i1 } @__cheriseed_cmpxchg_cap_hybrid(%__cheriseed_cap_t* %p, %__cheriseed_cap_t* null, %__cheriseed_cap_t* %n, i8 5, i8 5)
+; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point" = bitcast i8 0 to i8
+; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
+; CHECK-NEXT:  %v1 = tail call { %__cheriseed_cap_t*, i1 } @__cheriseed_cmpxchg_cap_hybrid(
+; CHECK-SAME:     %__cheriseed_cap_t* %p, %__cheriseed_cap_t* null, %__cheriseed_cap_t* %n,
+; CHECK-SAME:     %__cheriseed_cap_t* %1, i8 5, i8 5)
   %v1 = cmpxchg i8 addrspace(200)** %p, i8 addrspace(200)* null, i8 addrspace(200)* %n seq_cst seq_cst
 ; CHECK-NEXT:  %v2 = extractvalue { %__cheriseed_cap_t*, i1 } %v1, 0
   %v2 = extractvalue { i8 addrspace(200)*, i1 } %v1, 0

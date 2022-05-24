@@ -36,6 +36,14 @@ typedef struct {
   uint64_t metadata;
 } __cheriseed_cap_t __attribute__((aligned(16)));
 
+/// Definition of an aggregate returned by cmpxchg APIs.
+typedef struct {
+  /// Pointer to the capability holding the original value.
+  __cheriseed_cap_t *cap;
+  /// Value indicating if the operation was successful ( @c 1 ) or not ( @c 0 ).
+  uint8_t result;
+} __cheriseed_cmpxchg_result_t;
+
 /// Check that other headers support SEGV_CAPTAGERR
 #ifdef SEGV_CAPTAGERR
 #warning "SEGV_CAPTAGERR is defined, CHERIseed is likely \
@@ -525,6 +533,66 @@ void __cheriseed_enable_invoke_signal_handlers(int enable);
 // APIs used by the compiler
 // -------------------------------------
 
+/// Checks if an access with a capability has the correct permissions
+/// and is in-bounds.
+///
+/// \note This API is defined exclusively by CHERIseed and does not
+/// map to any CHERI intrinsics.
+///
+/// \param[in] cap Pointer to a capability.
+/// \param[in] size The size of the access to be made.
+/// \param[in] perms Requested permissions for the access.
+/// \returns The value of \p cap .
+uint64_t __cheriseed_check_access(const __cheriseed_cap_t *cap, uint64_t size,
+                                  uint32_t perms);
+
+/// As a single atomic operation, compares the capability described by
+/// \p cap_to_cap with the capability pointed to by \p cap_expected . If they
+/// are bitwise-equivalent, \p cap_desired is written to \p cap_to_cap using
+/// \p memory_order_success , otherwise it acts as an atomic load with
+/// \p memory_order_failure .
+///
+/// \param[in] cap_to_cap Pointer to a capability which describes the location
+/// to atomically modify.
+/// \param[in] cap_expected Pointer to a capability which is the expected value
+/// to use during the comparison.
+/// \param[in] cap_desired Pointer to a capability which is the desired value
+/// to write upon success.
+/// \param[in] cap_orig Pointer to a capability which holds the original value
+/// upon success.
+/// \param[in] memory_order_success The memory synchronization ordering if the
+/// comparison succeeds.
+/// \param[in] memory_order_failure The memory synchronization ordering for the
+/// atomic load operation if the comparison fails.
+/// \returns See the description of @c __cheriseed_cmpxchg_result_t .
+__cheriseed_cmpxchg_result_t __cheriseed_cmpxchg_cap(
+    __cheriseed_cap_t *cap_to_cap, const __cheriseed_cap_t *cap_expected,
+    const __cheriseed_cap_t *cap_desired, __cheriseed_cap_t *cap_orig,
+    uint8_t memory_order_success, uint8_t memory_order_failure);
+
+/// As a single atomic operation, compares the capability described by
+/// \p cap with the capability pointed to by \p cap_expected . If they
+/// are bitwise-equivalent, \p cap_desired is written to \p cap using
+/// \p memory_order_success , otherwise it acts as an atomic load with
+/// \p memory_order_failure .
+///
+/// \param[in] cap Pointer to a capability to atomically modify.
+/// \param[in] cap_expected Pointer to a capability which is the expected value
+/// to use during the comparison.
+/// \param[in] cap_desired  Pointer to a capability which is the desired value
+/// to write upon success.
+/// \param[in] cap_orig Pointer to a capability which holds the original value
+/// upon success.
+/// \param[in] memory_order_success The memory synchronization ordering if the
+/// comparison succeeds.
+/// \param[in] memory_order_failure The memory synchronization ordering for the
+/// atomic load operation if the comparison fails.
+/// \returns See the description of @c __cheriseed_cmpxchg_result_t .
+__cheriseed_cmpxchg_result_t __cheriseed_cmpxchg_cap_hybrid(
+    __cheriseed_cap_t *cap, const __cheriseed_cap_t *cap_expected,
+    const __cheriseed_cap_t *cap_desired, __cheriseed_cap_t *cap_orig,
+    uint8_t memory_order_success, uint8_t memory_order_failure);
+
 /// Copy and offset the address of the resulting capability.
 ///
 /// \note This API is defined exclusively by CHERIseed and does not
@@ -539,6 +607,95 @@ __cheriseed_copy_cap_with_offset(__cheriseed_cap_t *cap_out,
                                  const __cheriseed_cap_t *cap_in,
                                  uint64_t offset);
 
+/// Loads a capability from a memory location described by a capability.
+///
+/// \note This API is defined exclusively by CHERIseed and does not
+/// map to any CHERI intrinsics.
+///
+/// \param[in] cap_to_cap Pointer to a capability which describes the capability
+/// to load.
+/// \param[out] loaded_cap Pointer to a capability to write the loaded
+/// capability to.
+/// \returns The second argument, \p loaded_cap .
+__cheriseed_cap_t *__cheriseed_load_cap(const __cheriseed_cap_t *cap_to_cap,
+                                        __cheriseed_cap_t *loaded_cap);
+
+/// Loads a capability from a memory location described by a capability,
+/// accounting for a requested memory ordering constraint.
+///
+/// \note This API is defined exclusively by CHERIseed and does not
+/// map to any CHERI intrinsics.
+///
+/// \param[in] cap_to_cap Pointer to a capability which describes the capability
+/// to load.
+/// \param[out] loaded_cap Pointer to a capability to write the loaded
+/// capability to.
+/// \param[in] memory_order The memory synchronization ordering
+/// requirement.
+/// \returns The second argument, \p loaded_cap .
+__cheriseed_cap_t *
+__cheriseed_load_cap_atomic(const __cheriseed_cap_t *cap_to_cap,
+                            __cheriseed_cap_t *loaded_cap,
+                            uint8_t memory_order);
+
+/// Loads a capability from a memory location described by a pointer.
+///
+/// \note This API is defined exclusively by CHERIseed and does not
+/// map to any CHERI intrinsics.
+///
+/// \param[in] cap A pointer to the capability to load.
+/// \param[out] loaded_cap Pointer to a capability to write the loaded
+/// capability to.
+/// \returns The second argument, \p loaded_cap .
+__cheriseed_cap_t *__cheriseed_load_cap_hybrid(const __cheriseed_cap_t *cap,
+                                               __cheriseed_cap_t *loaded_cap);
+
+/// Loads a capability from a memory location described by a pointer,
+/// accounting for a requested memory ordering constraint.
+///
+/// \note This API is defined exclusively by CHERIseed and does not
+/// map to any CHERI intrinsics.
+///
+/// \param[in] cap A pointer to the capability to load.
+/// \param[out] loaded_cap Pointer to a capability to write the loaded
+/// capability to.
+/// \param[in] memory_order The memory synchronization ordering requirement.
+/// \returns The second argument, \p loaded_cap .
+__cheriseed_cap_t *
+__cheriseed_load_cap_hybrid_atomic(const __cheriseed_cap_t *cap,
+                                   __cheriseed_cap_t *loaded_cap,
+                                   uint8_t memory_order);
+
+/// An atomic read-modify-write operation on a capability described by a
+/// capability.
+///
+/// \param[in] cap_to_cap Pointer to a capability which describes the capability
+/// to atomically modify with \p op .
+/// \param[in] cap_value The RHS value of the operation on the capability.
+/// \param[out] cap_ret Pointer where to write the original value of the
+/// capability.
+/// \param[in] op The enum value for the operation to perform.
+/// \param[in] memory_order The memory synchronization ordering requirement.
+/// \returns The third argument, \p cap_ret .
+__cheriseed_cap_t *__cheriseed_rmw_cap(__cheriseed_cap_t *cap_to_cap,
+                                       const __cheriseed_cap_t *cap_value,
+                                       __cheriseed_cap_t *cap_ret, uint8_t op,
+                                       uint8_t memory_order);
+
+/// An atomic read-modify-write operation on a capability described by a
+/// pointer.
+///
+/// \param[in] cap Pointer to a capability to atomically modify with \p op .
+/// \param[in] cap_value The RHS value of the operation on the capability.
+/// \param[out] cap_ret Pointer where to write the original value of the
+/// capability.
+/// \param[in] op The enum value for the operation to perform
+/// \param[in] memory_order The memory synchronization ordering requirement.
+/// \returns The third argument, \p cap_ret .
+__cheriseed_cap_t *__cheriseed_rmw_cap_hybrid(
+    __cheriseed_cap_t *cap, const __cheriseed_cap_t *cap_value,
+    __cheriseed_cap_t *cap_ret, uint8_t op, uint8_t memory_order);
+
 /// Initialize an on stack capability with another pointer from the stack.
 ///
 /// \note This API is defined exclusively by CHERIseed and does not
@@ -552,69 +709,60 @@ __cheriseed_copy_cap_with_offset(__cheriseed_cap_t *cap_out,
 __cheriseed_cap_t *__cheriseed_stack_cap_init(__cheriseed_cap_t *cap,
                                               uint64_t address, uint64_t size);
 
-/// Loads a capability from a memory location described by a capability.
-///
-/// \note This API is defined exclusively by CHERIseed and does not
-/// map to any CHERI intrinsics.
-///
-/// \param[in] cap Pointer to a capability to load from.
-/// \param[out] loaded_cap Pointer to a capability to write the loaded
-/// capability to.
-/// \returns The second argument, \p loaded_cap .
-__cheriseed_cap_t *__cheriseed_load_cap(const __cheriseed_cap_t *cap,
-                                        __cheriseed_cap_t *loaded_cap);
-
-/// Loads a capability from a memory location described by a pointer.
-///
-/// \note This API is defined exclusively by CHERIseed and does not
-/// map to any CHERI intrinsics.
-///
-/// \param[in] ptr Pointer to load from.
-/// \param[out] loaded_cap Pointer to a capability to write the loaded
-/// capability to.
-/// \returns The second argument, \p loaded_cap .
-__cheriseed_cap_t *__cheriseed_load_cap_hybrid(const __cheriseed_cap_t *ptr,
-                                               __cheriseed_cap_t *loaded_cap);
-
 /// Stores a capability to a memory location described by a capability.
 ///
 /// \note This API is defined exclusively by CHERIseed and does not
 /// map to any CHERI intrinsics.
 ///
-/// \param[in] cap Pointer to a capability to store to.
-/// \param[in] stored_cap Pointer to a capability to store \p cap to.
-void __cheriseed_store_cap(__cheriseed_cap_t *cap,
-                           const __cheriseed_cap_t *stored_cap);
+/// \param[in] cap_to_cap Pointer to a capability which describes where to store
+/// the capability \p cap_to_store .
+/// \param[in] cap_to_store Pointer to a capability to store.
+void __cheriseed_store_cap(__cheriseed_cap_t *cap_to_cap,
+                           const __cheriseed_cap_t *cap_to_store);
+
+/// Stores a capability to a memory location described by a capability,
+/// accounting for a requested memory ordering constraint.
+///
+/// \note This API is defined exclusively by CHERIseed and does not
+/// map to any CHERI intrinsics.
+///
+/// \param[in] cap_to_cap Pointer to a capability which describes where to store
+/// the capability \p cap_to_store .
+/// \param[in] cap_to_store Pointer to a capability to store.
+/// \param[in] memory_order The memory synchronization ordering requirement.
+void __cheriseed_store_cap_atomic(__cheriseed_cap_t *cap_to_cap,
+                                  const __cheriseed_cap_t *cap_to_store,
+                                  uint8_t memory_order);
 
 /// Stores a capability to a memory location described by a pointer.
 ///
 /// \note This API is defined exclusively by CHERIseed and does not
 /// map to any CHERI intrinsics.
 ///
-/// \param[in] ptr Pointer to store to.
-/// \param[in] stored_cap Pointer to a capability to store \p ptr to.
-void __cheriseed_store_cap_hybrid(__cheriseed_cap_t *ptr,
-                                  const __cheriseed_cap_t *stored_cap);
+/// \param[in] cap Pointer to store the capability \p cap_to_store to.
+/// \param[in] cap_to_store Pointer to capability to store.
+void __cheriseed_store_cap_hybrid(__cheriseed_cap_t *cap,
+                                  const __cheriseed_cap_t *cap_to_store);
 
-/// Checks if an access with a capability has the correct permissions
-/// and is in-bounds.
+/// Stores a capability to a memory location described by a pointer,
+/// accounting for a requested memory ordering constraint.
 ///
 /// \note This API is defined exclusively by CHERIseed and does not
 /// map to any CHERI intrinsics.
 ///
-/// \param[in] cap Pointer to a capability.
-/// \param[in] size The size of the access to be made.
-/// \param[in] perms Requested permissions for the access.
-/// \returns The value of \p cap .
-uint64_t __cheriseed_check_access(const __cheriseed_cap_t *cap, uint64_t size,
-                                  uint32_t perms);
+/// \param[in] cap Pointer to store the capability \p cap_to_store to.
+/// \param[in] cap_to_store Pointer to a capability to store.
+/// \param[in] memory_order The memory synchronization ordering requirement.
+void __cheriseed_store_cap_hybrid_atomic(__cheriseed_cap_t *cap,
+                                         const __cheriseed_cap_t *cap_to_store,
+                                         uint8_t memory_order);
 
 /// Returns the thread pointer as a capability.
 ///
 /// \note This API is defined exclusively by CHERIseed and does not
 /// map to any CHERI intrinsics.
 ///
-/// \param[out] cap_out Pointer to a capability.
+/// \param[out] cap Pointer to a capability.
 /// \returns The first argument, \p cap .
 __cheriseed_cap_t *__cheriseed_thread_pointer(__cheriseed_cap_t *cap);
 

@@ -1380,9 +1380,11 @@ Value *CHERIseed::visitAtomicCmpXchgInst(AtomicCmpXchgInst &I) {
         ConstantInt::get(Int8Ty, OrderingToABI(I.getSuccessOrdering()));
     Constant *FailureOrdering =
         ConstantInt::get(Int8Ty, OrderingToABI(I.getFailureOrdering()));
-    return createRtCall(HasCapabilityBase ? RtKind::CMPXCHG_CAP
-                                          : RtKind::CMPXCHG_CAP_HYBRID,
-                        MBase, MCmp, MNew, SuccessOrdering, FailureOrdering);
+    Value *AllocaOrigCap = createAlloca(CapTy);
+    DebugPrint::Emit(AllocaOrigCap);
+    return createRtCall(
+        HasCapabilityBase ? RtKind::CMPXCHG_CAP : RtKind::CMPXCHG_CAP_HYBRID,
+        MBase, MCmp, MNew, AllocaOrigCap, SuccessOrdering, FailureOrdering);
   }
 
   // Compare-exchange some other type through a capability.
@@ -1417,9 +1419,10 @@ Value *CHERIseed::visitAtomicRMWInst(AtomicRMWInst &I) {
     Constant *Op = ConstantInt::get(Int8Ty, AtomicRMWOpToABI(I.getOperation()));
     Constant *Ordering =
         ConstantInt::get(Int8Ty, OrderingToABI(I.getOrdering()));
+    Value *AllocCap = createAlloca(CapTy);
     return createRtCall(HasCapabilityBase ? RtKind::RMW_CAP
                                           : RtKind::RMW_CAP_HYBRID,
-                        MAddr, MVal, Op, Ordering);
+                        MAddr, MVal, AllocCap, Op, Ordering);
   }
 
   // Otherwise, do a regular atomic operation through a capability.
@@ -3481,13 +3484,13 @@ CallInst *CHERIseed::createRtCall(RtKind Kind, const StringRef Name,
     RtName = "cmpxchg_cap";
     FTy = FunctionType::get(
         StructType::get(Ctx, {CapPtrTy, Type::getInt1Ty(Ctx)}, false),
-        {CapPtrTy, CapPtrTy, CapPtrTy, Int8Ty, Int8Ty}, false);
+        {CapPtrTy, CapPtrTy, CapPtrTy, CapPtrTy, Int8Ty, Int8Ty}, false);
     break;
   case RtKind::CMPXCHG_CAP_HYBRID:
     RtName = "cmpxchg_cap_hybrid";
     FTy = FunctionType::get(
         StructType::get(Ctx, {CapPtrTy, Type::getInt1Ty(Ctx)}, false),
-        {CapPtrTy, CapPtrTy, CapPtrTy, Int8Ty, Int8Ty}, false);
+        {CapPtrTy, CapPtrTy, CapPtrTy, CapPtrTy, Int8Ty, Int8Ty}, false);
     break;
   case RtKind::COPY_CAP_WITH_OFFSET:
     RtName = "copy_cap_with_offset";
@@ -3523,13 +3526,13 @@ CallInst *CHERIseed::createRtCall(RtKind Kind, const StringRef Name,
     break;
   case RtKind::RMW_CAP:
     RtName = "rmw_cap";
-    FTy = FunctionType::get(CapPtrTy, {CapPtrTy, CapPtrTy, Int8Ty, Int8Ty},
-                            false);
+    FTy = FunctionType::get(
+        CapPtrTy, {CapPtrTy, CapPtrTy, CapPtrTy, Int8Ty, Int8Ty}, false);
     break;
   case RtKind::RMW_CAP_HYBRID:
     RtName = "rmw_cap_hybrid";
-    FTy = FunctionType::get(CapPtrTy, {CapPtrTy, CapPtrTy, Int8Ty, Int8Ty},
-                            false);
+    FTy = FunctionType::get(
+        CapPtrTy, {CapPtrTy, CapPtrTy, CapPtrTy, Int8Ty, Int8Ty}, false);
     break;
   case RtKind::STACK_CAP_INIT:
     RtName = "stack_cap_init";
