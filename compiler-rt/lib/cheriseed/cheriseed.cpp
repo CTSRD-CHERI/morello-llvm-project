@@ -15,10 +15,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "cheriseed_ccl_interface.h"
 #include "cheriseed_errors.h"
 #include "cheriseed_interface_internal.h"
 
+using namespace __cheriseed;
 using namespace __cheriseed::abi;
 using namespace __cheriseed::error;
 
@@ -27,42 +27,104 @@ namespace __cheriseed {
 AtomicBool Options::EnableCHERISemantics{false};
 AtomicBool Options::EnableSignalHandlers{true};
 
-}  // namespace __cheriseed
-
-// -------------------------------------
-// Runtime Error Checker functions
-// -------------------------------------
-
+// Triggers an unimplemented fault.
 #undef UNIMPLEMENTED
-#define UNIMPLEMENTED()                                      \
-  {                                                          \
-    CheckContext(nullptr).add(NotImplemented(__FUNCTION__)); \
-    __sanitizer::Die();                                      \
+#define UNIMPLEMENTED()                                         \
+  {                                                             \
+    CheckContext(LocalCap()).add(NotImplemented(__FUNCTION__)); \
+    __sanitizer::Die();                                         \
   }
 
-// Inlining is important for retrieval of the caller's address.
-// This function performs mandatory checks on an input capability.
-ALWAYS_INLINE
-static CheckContext DefaultCapChecks(const __cheriseed_cap_t *cap) {
-  return CheckContext(cap).add(CapabilityAddress()).add(CapabilityAlignment());
+// TODO: Move this to sanitizer_atomic, but that's not so easy because of the
+// many platforms.
+struct atomic_uint128_t {
+  typedef u128 Type;
+  volatile ALIGNED(16) Type val_dont_use;
+};  // struct atomic_uint128_t
+
+// Make sure alignments match.
+static_assert(alignof(atomic_uint128_t) == alignof(__cheriseed_cap_t),
+              "Alignment mismatch");
+
+LocalCap::LocalCap(const __cheriseed_cap_t *ptr, memory_order memory_order,
+                   bool allow_nullcap) {
+  if (UNLIKELY(allow_nullcap && !ptr)) {
+    // The null capability has a value of 0, and 0 metadata by definition.
+    SetValue(0);
+    SetMetadata(0);
+    return;
+  }
+
+  SetAddress(ptr);
+  CheckContext(*this).add(CapabilityAddress()).add(CapabilityAlignment());
+  const u128 bits = __sanitizer::atomic_load(
+      reinterpret_cast<const atomic_uint128_t *>(ptr), memory_order);
+  SetValue(static_cast<u64>(bits));
+  SetMetadata(static_cast<u64>(bits >> 64));
 }
+
+__cheriseed_cap_t *LocalCap::Store(__cheriseed_cap_t *ptr,
+                                   memory_order memory_order) const {
+  LocalCap local_cap;
+  local_cap.SetAddress(ptr);
+  CheckContext(local_cap).add(CapabilityAddress()).add(CapabilityAlignment());
+  atomic_uint128_t *atomic_cap =
+      reinterpret_cast<atomic_uint128_t *>(local_cap.GetAddress());
+  u128 bits =
+      static_cast<u128>(GetMetadata()) << 64 | static_cast<u128>(GetValue());
+  __sanitizer::atomic_store(atomic_cap, bits, memory_order);
+  return ptr;
+}
+
+const LocalCap &LocalCap::RequirePermissions(u64 perms) const {
+  CheckContext(*this).add(RequiredPerms(perms));
+  return *this;
+}
+
+const LocalCap &LocalCap::RequireBounds(u64 size) const {
+  CheckContext(*this).add(InBounds(size));
+  return *this;
+}
+
+// Sets a permissions bit in the ccl representation if the corresponding bit is
+// set in the check_access permission mask.
+static u64 CheckAccessPermsToCCL(u32 in_perms) {
+#define BIT_CONVERTER(__perm) \
+  (in_perms & Permissions::__perm) ? ccl::permissions::__perm : 0
+
+  u32 out_perms = 0;
+  out_perms |= BIT_CONVERTER(LOAD);
+  out_perms |= BIT_CONVERTER(STORE);
+  out_perms |= BIT_CONVERTER(EXECUTE);
+  return out_perms;
+
+#undef BIT_CONVERTER
+}
+
+static memory_order IRToCppOrdering(u8 ordering) {
+  // Detect if the common header is changed.
+  static_assert((1 << 0) == memory_order::memory_order_relaxed,
+                "Unexpected value for relaxed ordering");
+  static_assert((1 << 1) == memory_order::memory_order_consume,
+                "Unexpected value for consume ordering");
+  static_assert((1 << 2) == memory_order::memory_order_acquire,
+                "Unexpected value for acquire ordering");
+  static_assert((1 << 3) == memory_order::memory_order_release,
+                "Unexpected value for release ordering");
+  static_assert((1 << 4) == memory_order::memory_order_acq_rel,
+                "Unexpected value for acq_rel ordering");
+  static_assert((1 << 5) == memory_order::memory_order_seq_cst,
+                "Unexpected value for seq_cst ordering");
+
+  // We trust in the compiler to generate proper ordering values.
+  return static_cast<memory_order>(1 << ordering);
+}
+
+}  // namespace __cheriseed
 
 // -------------------------------------
 // Mappings of CHERI intrinsics
 // -------------------------------------
-
-ALWAYS_INLINE static __cheriseed_cap_t *__cheriseed_bounds_set_common(
-    __cheriseed_cap_t *cap_out, const __cheriseed_cap_t *cap_in, u64 length,
-    bool &exact_res) {
-  if (!cap_in)
-    ccl::UseNullCap(&cap_in);
-  DefaultCapChecks(cap_in);
-  *cap_out = *cap_in;
-  // All fields of cap_out metadata will be the same as cap_in, except the
-  // narrowed bounds
-  ccl::SetBounds(cap_out, cap_in->value, cap_in->value + length, exact_res);
-  return cap_out;
-}
 
 __cheriseed_cap_t *__cheriseed_bounded_stack_cap(
     __cheriseed_cap_t *cap_out, const __cheriseed_cap_t *cap_in, u64 ptr) {
@@ -70,51 +132,42 @@ __cheriseed_cap_t *__cheriseed_bounded_stack_cap(
 }
 
 u64 __cheriseed_address_get(const __cheriseed_cap_t *cap) {
-  if (!cap)
-    ccl::UseNullCap(&cap);
-  DefaultCapChecks(cap);
-  return cap->value;
+  return LocalCap(AllowNullCap(cap)).GetValue();
 }
 
 __cheriseed_cap_t *__cheriseed_address_set(__cheriseed_cap_t *cap_out,
                                            const __cheriseed_cap_t *cap_in,
                                            u64 address) {
-  DefaultCapChecks(cap_out);
-  if (!cap_in)
-    ccl::UseNullCap(&cap_in);
-  DefaultCapChecks(cap_in);
-  // TODO:  Representability check?
-  cap_out->metadata = cap_in->metadata;
-  cap_out->value = address;
-  return cap_out;
+  LocalCap local_cap{AllowNullCap(cap_in)};
+  ccl::methods::SetValue(local_cap, address);
+  return local_cap.Store(cap_out);
 }
 
-u64 __cheriseed_base_get(const __cheriseed_cap_t *cap) {
-  if (!cap)
-    ccl::UseNullCap(&cap);
-  DefaultCapChecks(cap);
-  return ccl::GetBase(cap);
+u64 __cheriseed_base_get(const __cheriseed_cap_t *cap_in) {
+  return ccl::methods::GetBase(LocalCap(AllowNullCap(cap_in)));
 }
 
 __cheriseed_cap_t *__cheriseed_bounds_set(__cheriseed_cap_t *cap_out,
                                           const __cheriseed_cap_t *cap_in,
                                           u64 length) {
-  DefaultCapChecks(cap_out);
-  // In this function the is_exact value isn't used
-  bool is_exact = false;
-  return __cheriseed_bounds_set_common(cap_out, cap_in, length, is_exact);
+  LocalCap local_cap{AllowNullCap(cap_in)};
+  bool is_exact = false;  // Discarded, not used.
+  ccl::methods::SetBounds(local_cap, local_cap.GetValue(),
+                          local_cap.GetValue() + length, is_exact);
+  return local_cap.Store(cap_out);
 }
 
 __cheriseed_cap_t *__cheriseed_bounds_set_exact(__cheriseed_cap_t *cap_out,
                                                 const __cheriseed_cap_t *cap_in,
                                                 u64 length) {
-  DefaultCapChecks(cap_out);
+  LocalCap local_cap{AllowNullCap(cap_in)};
   bool is_exact = false;
-  cap_out = __cheriseed_bounds_set_common(cap_out, cap_in, length, is_exact);
+  ccl::methods::SetBounds(local_cap, local_cap.GetValue(),
+                          local_cap.GetValue() + length, is_exact);
   // TODO:
   //  - invalidate capability.
   //  - Optionally exit with an error if feature is enabled
-  return cap_out;
+  return local_cap.Store(cap_out);
 }
 
 __cheriseed_cap_t *__cheriseed_build(__cheriseed_cap_t *cap_out,
@@ -139,26 +192,16 @@ __cheriseed_cap_t *__cheriseed_copy_to_high(__cheriseed_cap_t *cap_out,
   UNIMPLEMENTED();
 }
 
-u64 __cheriseed_diff(const __cheriseed_cap_t *cap_left,
-                     const __cheriseed_cap_t *cap_right) {
-  if (!cap_left)
-    ccl::UseNullCap(&cap_left);
-  if (!cap_right)
-    ccl::UseNullCap(&cap_right);
-  DefaultCapChecks(cap_left);
-  DefaultCapChecks(cap_right);
-  return (cap_left->value - cap_right->value);
+u64 __cheriseed_diff(const __cheriseed_cap_t *cap_lhs,
+                     const __cheriseed_cap_t *cap_rhs) {
+  return (LocalCap(AllowNullCap(cap_lhs)).GetValue() -
+          LocalCap(AllowNullCap(cap_rhs)).GetValue());
 }
 
-u8 __cheriseed_equal_exact(const __cheriseed_cap_t *cap_left,
-                           const __cheriseed_cap_t *cap_right) {
-  if (!cap_left)
-    ccl::UseNullCap(&cap_left);
-  if (!cap_right)
-    ccl::UseNullCap(&cap_right);
-  DefaultCapChecks(cap_left);
-  DefaultCapChecks(cap_right);
-  return ccl::ExactlyEqual(cap_left, cap_right);
+u8 __cheriseed_equal_exact(const __cheriseed_cap_t *cap_lhs,
+                           const __cheriseed_cap_t *cap_rhs) {
+  return ccl::methods::ExactlyEqual(LocalCap(AllowNullCap(cap_lhs)),
+                                    LocalCap(AllowNullCap(cap_rhs)));
 }
 
 u64 __cheriseed_flags_get(const __cheriseed_cap_t *cap) { UNIMPLEMENTED(); }
@@ -169,48 +212,30 @@ __cheriseed_cap_t *__cheriseed_flags_set(__cheriseed_cap_t *cap_out,
   UNIMPLEMENTED();
 }
 
-u64 __cheriseed_length_get(const __cheriseed_cap_t *cap) {
-  if (!cap)
-    ccl::UseNullCap(&cap);
-  DefaultCapChecks(cap);
-  return ccl::GetLength(cap);
+u64 __cheriseed_length_get(const __cheriseed_cap_t *cap_in) {
+  return ccl::methods::GetLength(LocalCap(AllowNullCap(cap_in)));
 }
 
 u64 __cheriseed_load_tags(const __cheriseed_cap_t *cap) { UNIMPLEMENTED(); }
 
-u64 __cheriseed_offset_get(const __cheriseed_cap_t *cap) {
-  if (!cap)
-    ccl::UseNullCap(&cap);
-  DefaultCapChecks(cap);
-  return ccl::GetOffset(cap);
+u64 __cheriseed_offset_get(const __cheriseed_cap_t *cap_in) {
+  return ccl::methods::GetOffset(LocalCap(AllowNullCap(cap_in)));
 }
 
 __cheriseed_cap_t *__cheriseed_offset_set(__cheriseed_cap_t *cap_out,
                                           const __cheriseed_cap_t *cap_in,
                                           u64 offset) {
-  DefaultCapChecks(cap_out);
-  if (!cap_in)
-    ccl::UseNullCap(&cap_in);
-  DefaultCapChecks(cap_in);
-  u64 new_cursor = ccl::GetBase(cap_in) + offset;
-  if (!ccl::IsRepresentableWithCursor(cap_in, new_cursor)) {
-    // TODO: Invalidate capability
-  }
-  cap_out->value = new_cursor;
-  cap_out->metadata = cap_in->metadata;
-  return cap_out;
+  LocalCap local_cap{AllowNullCap(cap_in)};
+  ccl::methods::SetValue(local_cap, ccl::methods::GetBase(local_cap) + offset);
+  return local_cap.Store(cap_out);
 }
 
 __cheriseed_cap_t *__cheriseed_perms_and(__cheriseed_cap_t *cap_out,
                                          const __cheriseed_cap_t *cap_in,
                                          u64 mask) {
-  DefaultCapChecks(cap_out);
-  if (!cap_in)
-    ccl::UseNullCap(&cap_in);
-  DefaultCapChecks(cap_in);
-  *cap_out = *cap_in;
-  ccl::UpdatePermsAnd(cap_out, mask);
-  return cap_out;
+  LocalCap local_cap{AllowNullCap(cap_in)};
+  ccl::methods::PermsAnd(local_cap, mask);
+  return local_cap.Store(cap_out);
 }
 
 void __cheriseed_perms_check(const __cheriseed_cap_t *cap, u64 mask) {
@@ -218,10 +243,7 @@ void __cheriseed_perms_check(const __cheriseed_cap_t *cap, u64 mask) {
 }
 
 u64 __cheriseed_perms_get(const __cheriseed_cap_t *cap) {
-  if (!cap)
-    ccl::UseNullCap(&cap);
-  DefaultCapChecks(cap);
-  return ccl::PermsGet(cap);
+  return ccl::methods::GetPerms(LocalCap(AllowNullCap(cap)));
 }
 
 __cheriseed_cap_t *__cheriseed_seal(__cheriseed_cap_t *cap_out,
@@ -238,13 +260,8 @@ u8 __cheriseed_sealed_get(const __cheriseed_cap_t *cap) { UNIMPLEMENTED(); }
 
 u8 __cheriseed_subset_test(const __cheriseed_cap_t *cap_tested,
                            const __cheriseed_cap_t *cap) {
-  if (!cap_tested)
-    ccl::UseNullCap(&cap_tested);
-  if (!cap)
-    ccl::UseNullCap(&cap);
-  DefaultCapChecks(cap_tested);
-  DefaultCapChecks(cap);
-  return ccl::SubsetTest(cap_tested, cap);
+  return ccl::methods::SubsetTest(LocalCap(AllowNullCap(cap_tested)),
+                                  LocalCap(AllowNullCap(cap)));
 }
 
 __cheriseed_cap_t *__cheriseed_tag_clear(__cheriseed_cap_t *cap_out,
@@ -268,33 +285,33 @@ __cheriseed_cap_t *__cheriseed_type_copy(__cheriseed_cap_t *cap_out,
 }
 
 u64 __cheriseed_type_get(const __cheriseed_cap_t *cap) {
-  DefaultCapChecks(cap);
-  return ccl::GetType(cap);
+  return ccl::methods::GetType(LocalCap(AllowNullCap(cap)));
 }
+
 __cheriseed_cap_t *__cheriseed_unseal(__cheriseed_cap_t *cap_out,
                                       const __cheriseed_cap_t *cap_in,
                                       const __cheriseed_cap_t *cap_unseal) {
   UNIMPLEMENTED();
 }
 
-__cheriseed_cap_t *__cheriseed_ddc_get(__cheriseed_cap_t *cap) {
-  DefaultCapChecks(cap);
-  ccl::BuildMaxCap(cap, 0);
-  return cap;
+__cheriseed_cap_t *__cheriseed_ddc_get(__cheriseed_cap_t *cap_out) {
+  LocalCap local_cap;
+  ccl::methods::BuildMaxCap(local_cap, 0);
+  return local_cap.Store(cap_out);
 }
 
-__cheriseed_cap_t *__cheriseed_pcc_get(__cheriseed_cap_t *cap) {
-  DefaultCapChecks(cap);
-  ccl::BuildMaxCap(cap, GET_CALLER_PC());
-  return cap;
+__cheriseed_cap_t *__cheriseed_pcc_get(__cheriseed_cap_t *cap_out) {
+  LocalCap local_cap;
+  ccl::methods::BuildMaxCap(local_cap, GET_CALLER_PC());
+  return local_cap.Store(cap_out);
 }
 
 u64 __cheriseed_representable_alignment_mask(u64 length) {
-  return ccl::GetAlignmentMask(length);
+  return ccl::methods::GetAlignmentMask(length);
 }
 
 u64 __cheriseed_round_representable_length(u64 length) {
-  return ccl::GetRepresentableLength(length);
+  return ccl::methods::GetRepresentableLength(length);
 }
 
 void __cheriseed_stack_cap_get(__cheriseed_cap_t *cap) { UNIMPLEMENTED(); }
@@ -304,11 +321,10 @@ void __cheriseed_stack_cap_get(__cheriseed_cap_t *cap) { UNIMPLEMENTED(); }
 // -------------------------------------
 
 void __cheriseed_enable_cheri_semantics(int enable) {
-  __cheriseed::Options::EnableCHERISemantics = (enable != 0);
+  Options::EnableCHERISemantics = (enable != 0);
 }
 
 __cheriseed_cap_t *__cheriseed_strerror(__cheriseed_cap_t *result, int code) {
-  DefaultCapChecks(result);
   const char *str;
   usize length;
   switch (code) {
@@ -333,15 +349,18 @@ __cheriseed_cap_t *__cheriseed_strerror(__cheriseed_cap_t *result, int code) {
       length = sizeof(kSegvCapPermErr);
       break;
   }
-  ccl::BuildBoundedCap(result, reinterpret_cast<u64>(str), length,
-                       ccl::permissions::LOAD);
-  return result;
+
+  LocalCap local_cap;
+  ccl::methods::BuildBoundedCap(local_cap, reinterpret_cast<u64>(str), length,
+                                ccl::permissions::LOAD);
+  return local_cap.Store(result);
 }
 
-int __cheriseed_set_signal_handle_mode(__cheriseed_cap_t *context, int mode) {
-  DefaultCapChecks(context)
-      .add(RequiredPerms(ccl::permissions::STORE))
-      .add(InBounds(sizeof(SignalHandleMode)));
+int __cheriseed_set_signal_handle_mode(const __cheriseed_cap_t *context,
+                                       int mode) {
+  LocalCap local_cap(context);
+  local_cap.RequirePermissions(ccl::permissions::STORE)
+      .RequireBounds(sizeof(SignalHandleMode));
   switch (mode) {
     default:
       return 1;
@@ -351,39 +370,26 @@ int __cheriseed_set_signal_handle_mode(__cheriseed_cap_t *context, int mode) {
     case SignalHandleMode::SHM_WARNING:
       break;
   }
-  *reinterpret_cast<int *>(context->value) = mode;
+
+  *reinterpret_cast<SignalHandleMode *>(local_cap.GetValue()) =
+      static_cast<SignalHandleMode>(mode);
   return 0;
 }
 
 void __cheriseed_enable_invoke_signal_handlers(int enable) {
-  __cheriseed::Options::EnableSignalHandlers = (enable != 0);
+  Options::EnableSignalHandlers = (enable != 0);
 }
 
 // -------------------------------------
 // APIs used by the compiler
 // -------------------------------------
 
-// Set a permissions bit in the ccl representation if the corresponding bit is
-// set in the check_access permissions mask
-#define BIT_CONVERTER(__perm) \
-  (in_perms & Permissions::__perm) ? ccl::permissions::__perm : 0
-
-static u64 CheckAccessPermsToCCL(u32 in_perms) {
-  u32 out_perms = 0;
-  out_perms |= BIT_CONVERTER(LOAD);
-  out_perms |= BIT_CONVERTER(STORE);
-  out_perms |= BIT_CONVERTER(EXECUTE);
-  return out_perms;
-}
-
-#undef BIT_CONVERTER
-
 u64 __cheriseed_check_access(const __cheriseed_cap_t *cap, u64 size,
                              u32 perms) {
-  DefaultCapChecks(cap)
-      .add(RequiredPerms(CheckAccessPermsToCCL(perms)))
-      .add(InBounds(size));
-  return cap->value;
+  return LocalCap(cap)
+      .RequirePermissions(CheckAccessPermsToCCL(perms))
+      .RequireBounds(size)
+      .GetValue();
 }
 
 __cheriseed_cmpxchg_result_t __cheriseed_cmpxchg_cap(
@@ -402,59 +408,46 @@ __cheriseed_cmpxchg_result_t __cheriseed_cmpxchg_cap_hybrid(
 
 __cheriseed_cap_t *__cheriseed_copy_cap_with_offset(
     __cheriseed_cap_t *cap_out, const __cheriseed_cap_t *cap_in, u64 offset) {
-  DefaultCapChecks(cap_out);
-  // Might copy nullcap with offset.
-  if (cap_in != nullptr) {
-    DefaultCapChecks(cap_in);
-    cap_out->metadata = cap_in->metadata;
-    cap_out->value = cap_in->value + offset;
-  } else {
-    cap_out->metadata = 0;
-    cap_out->value = offset;
-  }
-  return cap_out;
+  LocalCap local_cap{AllowNullCap(cap_in)};
+  ccl::methods::SetValue(local_cap, local_cap.GetValue() + offset);
+  return local_cap.Store(cap_out);
 }
 
 __cheriseed_cap_t *__cheriseed_load_cap(const __cheriseed_cap_t *cap_to_cap,
                                         __cheriseed_cap_t *loaded_cap) {
-  DefaultCapChecks(cap_to_cap)
-      .add(RequiredPerms(ccl::permissions::LOAD))
-      .add(InBounds(sizeof(__cheriseed_cap_t)));
-  DefaultCapChecks(loaded_cap);
-  const __cheriseed_cap_t *src_cap;
-  if (cap_to_cap->value != 0)
-    src_cap = reinterpret_cast<__cheriseed_cap_t *>(cap_to_cap->value);
-  else
-    ccl::UseNullCap(&src_cap);
-  DefaultCapChecks(src_cap);
-  *loaded_cap = *src_cap;
-  // cap must permit Load and Load Capability, otherwise capability is silently
-  // cleared
-  if (!ccl::HasPerms(src_cap,
-                     ccl::permissions::LOAD | ccl::permissions::LOAD_CAP)) {
-    // Invalidate loaded_cap
-  }
-  return loaded_cap;
+  // All capability loads should be atomic, with default memory order
+  return __cheriseed_load_cap_atomic(cap_to_cap, loaded_cap,
+                                     kIRRelaxedOrdering);
 }
 
-__cheriseed_cap_t *__cheriseed_load_cap_atomic(const __cheriseed_cap_t *cap,
-                                               __cheriseed_cap_t *loaded_cap,
-                                               u8 memory_order) {
-  UNIMPLEMENTED();
+__cheriseed_cap_t *__cheriseed_load_cap_atomic(
+    const __cheriseed_cap_t *cap_to_cap, __cheriseed_cap_t *loaded_cap,
+    u8 memory_order) {
+  LocalCap local_cap(cap_to_cap);
+  local_cap.RequirePermissions(ccl::permissions::LOAD)
+      .RequireBounds(sizeof(__cheriseed_cap_t));
+  if (!ccl::methods::HasPerms(
+          local_cap, ccl::permissions::LOAD | ccl::permissions::LOAD_CAP)) {
+    // Invalidate dereferenced
+  }
+  __cheriseed_cap_t *deref_cap =
+      reinterpret_cast<__cheriseed_cap_t *>(local_cap.GetValue());
+  return LocalCap(AllowNullCap(deref_cap), IRToCppOrdering(memory_order))
+      .Store(loaded_cap);
 }
 
 __cheriseed_cap_t *__cheriseed_load_cap_hybrid(const __cheriseed_cap_t *cap,
                                                __cheriseed_cap_t *loaded_cap) {
-  DefaultCapChecks(cap);
-  DefaultCapChecks(loaded_cap);
-  *loaded_cap = *cap;
-  return loaded_cap;
+  // All capability loads should be atomic, with default memory order
+  return __cheriseed_load_cap_hybrid_atomic(cap, loaded_cap,
+                                            kIRRelaxedOrdering);
 }
 
 __cheriseed_cap_t *__cheriseed_load_cap_hybrid_atomic(
     const __cheriseed_cap_t *cap, __cheriseed_cap_t *loaded_cap,
     u8 memory_order) {
-  UNIMPLEMENTED();
+  return LocalCap(AllowNullCap(cap), IRToCppOrdering(memory_order))
+      .Store(loaded_cap);
 }
 
 __cheriseed_cap_t *__cheriseed_rmw_cap(__cheriseed_cap_t *cap_to_cap,
@@ -470,55 +463,50 @@ __cheriseed_cap_t *__cheriseed_rmw_cap_hybrid(
   UNIMPLEMENTED();
 }
 
-__cheriseed_cap_t *__cheriseed_stack_cap_init(__cheriseed_cap_t *cap,
+__cheriseed_cap_t *__cheriseed_stack_cap_init(__cheriseed_cap_t *cap_out,
                                               u64 address, u64 size) {
-  DefaultCapChecks(cap);
-  bool is_exact =
-      ccl::BuildBoundedCap(cap, address, size, ~ccl::permissions::EXECUTE);
+  LocalCap local_cap;
+  bool is_exact = ccl::methods::BuildBoundedCap(local_cap, address, size,
+                                                ~ccl::permissions::EXECUTE);
   if (!is_exact) {
-    // TODO invalidate capability if not exact?
+    // TODO: invalidate capability if not exact?
   }
-  return cap;
+  return local_cap.Store(cap_out);
 }
 
 void __cheriseed_store_cap(__cheriseed_cap_t *cap_to_cap,
                            const __cheriseed_cap_t *cap_to_store) {
-  // TODO if cap_to_store is valid
-  DefaultCapChecks(cap_to_cap)
-      .add(RequiredPerms(ccl::permissions::STORE_CAP | ccl::permissions::STORE))
-      .add(InBounds(sizeof(__cheriseed_cap_t)));
-  if (!cap_to_store)
-    ccl::UseNullCap(&cap_to_store);
-  DefaultCapChecks(cap_to_store);
-  __cheriseed_cap_t *target =
-      reinterpret_cast<__cheriseed_cap_t *>(cap_to_cap->value);
-  DefaultCapChecks(target);
-  *target = *cap_to_store;
+  // All capability stores should be atomic, with default memory order
+  __cheriseed_store_cap_atomic(cap_to_cap, cap_to_store, kIRRelaxedOrdering);
 }
 
 void __cheriseed_store_cap_atomic(__cheriseed_cap_t *cap_to_cap,
                                   const __cheriseed_cap_t *cap_to_store,
                                   u8 memory_order) {
-  UNIMPLEMENTED();
+  LocalCap local_cap(cap_to_cap);
+  local_cap
+      .RequirePermissions(ccl::permissions::STORE_CAP | ccl::permissions::STORE)
+      .RequireBounds(sizeof(__cheriseed_cap_t));
+  __cheriseed_cap_t *deref_cap =
+      reinterpret_cast<__cheriseed_cap_t *>(local_cap.GetValue());
+  LocalCap(AllowNullCap(cap_to_store))
+      .Store(deref_cap, IRToCppOrdering(memory_order));
 }
 
 void __cheriseed_store_cap_hybrid(__cheriseed_cap_t *cap,
                                   const __cheriseed_cap_t *cap_to_store) {
-  DefaultCapChecks(cap);
-  if (!cap_to_store)
-    ccl::UseNullCap(&cap_to_store);
-  DefaultCapChecks(cap_to_store);
-  *cap = *cap_to_store;
+  // All capability stores should be atomic, with default memory order
+  __cheriseed_store_cap_hybrid_atomic(cap, cap_to_store, kIRRelaxedOrdering);
 }
 
 void __cheriseed_store_cap_hybrid_atomic(__cheriseed_cap_t *cap,
                                          const __cheriseed_cap_t *cap_to_store,
                                          u8 memory_order) {
-  UNIMPLEMENTED();
+  LocalCap(AllowNullCap(cap_to_store))
+      .Store(cap, IRToCppOrdering(memory_order));
 }
 
 __cheriseed_cap_t *__cheriseed_thread_pointer(__cheriseed_cap_t *cap) {
-  DefaultCapChecks(cap);
   // Many compilers are unable to lower __builtin_thread_pointer()
   u64 tp;
 #if defined(__aarch64__)
@@ -528,7 +516,8 @@ __cheriseed_cap_t *__cheriseed_thread_pointer(__cheriseed_cap_t *cap) {
 #else
 #error "Unsupported architecture"
 #endif
+  LocalCap local_cap;
+  ccl::methods::BuildMaxCap(local_cap, tp);
   // TODO: restrict bounds and permissions
-  ccl::BuildMaxCap(cap, tp);
-  return cap;
+  return local_cap.Store(cap);
 }

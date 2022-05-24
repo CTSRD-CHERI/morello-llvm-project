@@ -24,51 +24,55 @@ static constexpr int kExitCode = 1;
 TEST(CheckDeathTest, NormalExit) { EXPECT_NORMAL_EXIT(exit(0)); }
 
 TEST(CheckDeathTest, CapabilityAddress) {
-  EXPECT_EXIT(CheckContext(nullptr).add(CapabilityAddress()),
+  LocalCap local_cap;
+
+  local_cap.SetAddress(nullptr);
+  EXPECT_EXIT(CheckContext(local_cap).add(CapabilityAddress()),
               testing::ExitedWithCode(kExitCode),
               CHECK_ADDRESS_ERROR_MESSAGE_PATTERN);
-
 #if defined(SANITIZER_LINUX)
-  EXPECT_EXIT(CheckContext(reinterpret_cast<__cheriseed_cap_t*>(
-                               __cheriseed::abi::kCapabilityMinAlignment))
-                  .add(CapabilityAddress()),
+  local_cap.SetAddress(reinterpret_cast<const __cheriseed_cap_t *>(
+      __cheriseed::abi::kCapabilityMinAlignment));
+  EXPECT_EXIT(CheckContext(local_cap).add(CapabilityAddress()),
               testing::ExitedWithCode(kExitCode),
               CHECK_ADDRESS_ERROR_MESSAGE_PATTERN);
 #endif
 
 #if defined(__aarch64__)
-  EXPECT_EXIT(
-      CheckContext(reinterpret_cast<__cheriseed_cap_t*>((uint64_t)1 << 55))
-          .add(CapabilityAddress()),
-      testing::ExitedWithCode(kExitCode), CHECK_ADDRESS_ERROR_MESSAGE_PATTERN);
+  local_cap.SetAddress(
+      reinterpret_cast<const __cheriseed_cap_t *>((vaddr)1 << 55));
+  EXPECT_EXIT(CheckContext(local_cap).add(CapabilityAddress()),
+              testing::ExitedWithCode(kExitCode),
+              CHECK_ADDRESS_ERROR_MESSAGE_PATTERN);
 #endif
 }
 
 TEST(CheckDeathTest, CapabilityAlignment) {
-  EXPECT_EXIT(CheckContext(reinterpret_cast<__cheriseed_cap_t*>(1))
-                  .add(CapabilityAlignment()),
+  LocalCap local_cap;
+  local_cap.SetAddress(reinterpret_cast<const __cheriseed_cap_t *>(1));
+  EXPECT_EXIT(CheckContext(local_cap).add(CapabilityAlignment()),
               testing::ExitedWithCode(kExitCode),
               CHECK_ALIGNMENT_ERROR_MESSAGE_PATTERN);
 }
 
 TEST(CheckDeathTest, NotImplemented) {
-  EXPECT_EXIT(CheckContext(nullptr).add(NotImplemented("")),
+  EXPECT_EXIT(CheckContext(LocalCap()).add(NotImplemented("")),
               testing::ExitedWithCode(kExitCode),
               CHECK_NOT_IMPLEMENTED_ERROR_MESSAGE_PATTERN);
 }
 
 TEST(CheckDeathTest, InBounds) {
-  __cheriseed_cap_t cap = utils::InitCap(0, 0);
+  __cheriseed_cap_t cap;
   __cheriseed_bounds_set(&cap, nullptr, 0);
-  EXPECT_EXIT(CheckContext(&cap).add(InBounds(UINT64_MAX)),
+  EXPECT_EXIT(CheckContext(LocalCap(&cap)).add(InBounds(UINT64_MAX)),
               testing::ExitedWithCode(kExitCode),
               CHECK_IN_BOUNDS_ERROR_MESSAGE_PATTERN);
 }
 
 TEST(CheckDeathTest, RequiredPerms) {
-  __cheriseed_cap_t cap = utils::InitCap(0, 0);
+  __cheriseed_cap_t cap;
   __cheriseed_perms_and(&cap, nullptr, 0);
-  EXPECT_EXIT(CheckContext(&cap).add(RequiredPerms(0xF)),
+  EXPECT_EXIT(CheckContext(LocalCap(&cap)).add(RequiredPerms(0xF)),
               testing::ExitedWithCode(kExitCode),
               CHECK_REQUIRED_PERMS_ERROR_MESSAGE_PATTERN);
 }

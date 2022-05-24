@@ -24,10 +24,10 @@
 using namespace __cheriseed::abi;
 using namespace __sanitizer;
 
-using uintptr_t = __UINTPTR_TYPE__;
-
 namespace __cheriseed {
 namespace libc {
+
+using uintptr_t = __UINTPTR_TYPE__;
 
 // Libshim symbols the RT relies on.
 extern "C" bool __shim_is_pure_capability();
@@ -45,14 +45,14 @@ static bool HasCancellationPoints() {
 }
 
 // Helper to build a bounded capability.
-static __cheriseed_cap_t BuildBoundedCap(u64 address, u64 size, u64 perms) {
-  __cheriseed_cap_t cap;
-  ccl::BuildBoundedCap(&cap, address, size, perms);
-  return cap;
+static LocalCap BuildBoundedCap(u64 address, u64 size, u64 perms) {
+  LocalCap local_cap;
+  ccl::methods::BuildBoundedCap(local_cap, address, size, perms);
+  return local_cap;
 }
 
 // Helper to build a bounded capability.
-static __cheriseed_cap_t BuildBoundedCap(void *ptr, u64 size, u64 perms) {
+static LocalCap BuildBoundedCap(void *ptr, u64 size, u64 perms) {
   return BuildBoundedCap(reinterpret_cast<u64>(ptr), size, perms);
 }
 
@@ -73,9 +73,9 @@ struct SystemCall final {
 
   // A system call argument, but a capability
   struct CapArgument final {
-    void operator=(__cheriseed_cap_t value) { data = value; }
     uintptr_t operator&() { return reinterpret_cast<uintptr_t>(this); }
-    u64 value() { return data.value; }
+    u64 Value() { return LocalCap(&data).GetValue(); }
+    __cheriseed_cap_t *Data() { return &data; }
 
    private:
     __cheriseed_cap_t data;
@@ -85,9 +85,11 @@ struct SystemCall final {
     if (IsPureCapabilityABI())
       Arg(-1UL,
           ccl::permissions::READ_CAP_PERMS | ccl::permissions::WRITE_CAP_PERMS);
+
     // This is always a non-cancellable system call.
     if (HasCancellationPoints())
       BuildArg(0, 0, 0);
+
     Arg(nr);
   }
 
@@ -112,26 +114,28 @@ struct SystemCall final {
 
     if (HasCancellationPoints())
       __shim_syscall(/* indirect result */ &args_cap[0], /* cp */ &args_cap[1],
-                     /* nr */ args_cap[2].value(),
+                     /* nr */ args_cap[2].Value(),
                      /* arg1 */ &args_cap[3], &args_cap[4], &args_cap[5],
                      &args_cap[6], &args_cap[7], /* arg6 */ &args_cap[8]);
     else
       __shim_syscall(/* indirect result */ &args_cap[0],
-                     /* nr */ args_cap[1].value(), /* arg1 */ &args_cap[2],
+                     /* nr */ args_cap[1].Value(), /* arg1 */ &args_cap[2],
                      &args_cap[3], &args_cap[4], &args_cap[5], &args_cap[6],
                      /* arg6 */ &args_cap[7], /* unused */ &args_cap[8]);
 
-    return static_cast<long>(args_cap[0].value());
+    return static_cast<long>(args_cap[0].Value());
   }
 
  private:
   SystemCall &BuildArg(u64 arg, u64 size, u64 perms) {
     if (UNLIKELY(num_args == kMaxArgs))
       Trap();
+
     if (IsPureCapabilityABI())
-      args_cap[num_args] = BuildBoundedCap(arg, size, perms);
+      BuildBoundedCap(arg, size, perms).Store(args_cap[num_args].Data());
     else
       args[num_args] = arg;
+
     ++num_args;
     return *this;
   }
@@ -211,9 +215,11 @@ SigInfo::SigInfo(int signo, int code, vaddr addr) {
   if (IsPureCapabilityABI()) {
     purecap.signo = signo;
     purecap.code = code;
-    ccl::BuildMaxCap(&purecap.addr, addr);
-    ccl::UpdatePermsAnd(&purecap.addr, ccl::permissions::READ_CAP_PERMS |
-                                           ccl::permissions::EXECUTE);
+    LocalCap local_cap;
+    ccl::methods::BuildMaxCap(local_cap, addr);
+    ccl::methods::PermsAnd(local_cap, ccl::permissions::READ_CAP_PERMS |
+                                          ccl::permissions::EXECUTE);
+    local_cap.Store(&purecap.addr);
   } else {
     hybrid.signo = signo;
     hybrid.code = code;
@@ -225,10 +231,15 @@ int SigInfo::SignalNumber() const {
   return IsPureCapabilityABI() ? purecap.signo : hybrid.signo;
 }
 
+void *SigInfo::operator&() {
+  return IsPureCapabilityABI() ? reinterpret_cast<void *>(&purecap)
+                               : reinterpret_cast<void *>(&hybrid);
+}
+
 SigAction::SigAction() {
   __sanitizer::internal_memset(this, 0, sizeof(*this));
   if (IsPureCapabilityABI())
-    purecap.handler.value = kSigErr;
+    LocalCap(kSigErr, 0).Store(&purecap.handler);
   else
     hybrid.handler = kSigErr;
 }
@@ -241,14 +252,17 @@ bool SigAction::GetAction(int signum, SigAction &action) {
                                 ccl::permissions::WRITE_CAP_PERMS);
   else
     sc.Arg(&action.hybrid);
+
   long result = sc.Arg((NSIG + 1) / 8).Call();
   if (result == 0)
     return true;
+
   // Failed, poison the handler so that HasHandler() returns false.
   if (IsPureCapabilityABI())
-    action.purecap.handler.value = kSigErr;
+    LocalCap(kSigErr, 0).Store(&action.purecap.handler);
   else
     action.hybrid.handler = kSigErr;
+
   return false;
 }
 
@@ -257,10 +271,11 @@ bool SigAction::HasHandler() const {
   if (IsPureCapabilityABI()) {
     const u64 required_perms =
         ccl::permissions::LOAD | ccl::permissions::EXECUTE;
-    if ((ccl::PermsGet(&purecap.handler) & required_perms) != required_perms)
+    LocalCap local_cap(&purecap.handler);
+    if ((ccl::methods::GetPerms(local_cap) & required_perms) != required_perms)
       return false;
     // TODO: Check tag when it gets implemented.
-    handler = purecap.handler.value;
+    handler = local_cap.GetValue();
   } else {
     handler = hybrid.handler;
   }
@@ -286,7 +301,9 @@ SignalHandleMode SigAction::InvokeHybrid(SigInfo &info) {
   SigSet set = hybrid.mask;
   if ((hybrid.flags & kNoDefer) == 0)
     set.Add(info.SignalNumber());
+
   SignalHandleMode mode = SignalHandleMode::SHM_DEFAULT;
+
   ScopedSigProcMask scope{set};
   reinterpret_cast<HandlerType>(hybrid.handler)(info.SignalNumber(), &info,
                                                 &mode);
@@ -294,19 +311,26 @@ SignalHandleMode SigAction::InvokeHybrid(SigInfo &info) {
 }
 
 SignalHandleMode SigAction::InvokePureCap(SigInfo &info) {
-  __cheriseed_cap_t cap_info = BuildBoundedCap(
+  // Prepare 2nd argument
+  __cheriseed_cap_t cap_info;
+  BuildBoundedCap(
       &info, sizeof(info),
-      ccl::permissions::READ_CAP_PERMS | ccl::permissions::WRITE_CAP_PERMS);
+      ccl::permissions::READ_CAP_PERMS | ccl::permissions::WRITE_CAP_PERMS)
+      .Store(&cap_info);
+  // Prepare 3rd argument
   SignalHandleMode mode = SignalHandleMode::SHM_DEFAULT;
-  __cheriseed_cap_t cap_mode =
-      BuildBoundedCap(&mode, sizeof(mode), ccl::permissions::STORE);
+  __cheriseed_cap_t cap_mode;
+  BuildBoundedCap(&mode, sizeof(mode), ccl::permissions::STORE)
+      .Store(&cap_mode);
   // Create a new set and add the current signo if SA_NODEFER is unset.
   SigSet set = purecap.mask;
   if ((purecap.flags & kNoDefer) == 0)
     set.Add(info.SignalNumber());
+
   ScopedSigProcMask scope{set};
-  reinterpret_cast<HandlerType>(purecap.handler.value)(info.SignalNumber(),
-                                                       &cap_info, &cap_mode);
+
+  reinterpret_cast<HandlerType>(LocalCap(&purecap.handler).GetValue())(
+      info.SignalNumber(), &cap_info, &cap_mode);
   return mode;
 }
 

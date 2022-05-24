@@ -42,10 +42,6 @@ TEST(InvalidAddressDeathTest, BoundsSet) {
   TEST_INVALID_ADDRESS_CAP(__cheriseed_bounds_set(nullptr, &cap, 0));
 }
 
-TEST(InvalidAddressDeathTest, TypeGet) {
-  TEST_INVALID_ADDRESS_CAP(__cheriseed_type_get(nullptr));
-}
-
 TEST(InvalidAddressDeathTest, StackCapInit) {
   TEST_INVALID_ADDRESS_CAP(__cheriseed_stack_cap_init(nullptr, 0, 0));
 }

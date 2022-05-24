@@ -90,9 +90,11 @@ static constexpr __uint128_t UINT128_MIN = (__uint128_t)0;
 
 // clang-format on
 
+#if !defined(CHERISEED_UNIT_TESTING)
+
 /// Helper to create a capability on stack in the tests.
 template <typename T>
-__cheriseed_cap_t InitCap(T *address) {
+static inline __cheriseed_cap_t InitCap(T *address) {
   __cheriseed_cap_t cap;
   // Set maximum permissions metadata
   __cheriseed_ddc_get(&cap);
@@ -156,17 +158,13 @@ static inline void ValueNotEquals(const __cheriseed_cap_t *cap, T *value) {
   ASSERT_NE(reinterpret_cast<T *>(cap->value), value);
 }
 
-};  // namespace utils
+#define ASSERT_CAPABILITY_METADATA_EQ(__a, __b) MetadataEquals((__a), (__b))
+#define ASSERT_CAPABILITY_METADATA_NE(__a, __b) MetadataNotEquals((__a), (__b))
+#define ASSERT_CAPABILITY_VALUE_EQ(__a, __b) ValueEquals((__a), (__b))
+#define ASSERT_CAPABILITY_VALUE_NE(__a, __b) ValueNotEquals((__a), (__b))
 
-#define ASSERT_CAPABILITY_METADATA_EQ(__a, __b) \
-  utils::MetadataEquals((__a), (__b))
-
-#define ASSERT_CAPABILITY_METADATA_NE(__a, __b) \
-  utils::MetadataNotEquals((__a), (__b))
-
-#define ASSERT_CAPABILITY_VALUE_EQ(__a, __b) utils::ValueEquals((__a), (__b))
-
-#define ASSERT_CAPABILITY_VALUE_NE(__a, __b) utils::ValueNotEquals((__a), (__b))
+#endif  // !CHERISEED_UNIT_TESTING
+};      // namespace utils
 
 // Handle a test exiting when we expect it not to
 #define EXPECT_NORMAL_EXIT(__expr) \

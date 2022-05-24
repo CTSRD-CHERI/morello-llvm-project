@@ -14,9 +14,8 @@
 
 #include "cheriseed_errors.h"
 
-#include "cheriseed_ccl_interface.h"
-
 using namespace __cheriseed::abi;
+using namespace __cheriseed::libc;
 using namespace __sanitizer;
 
 namespace __cheriseed {
@@ -137,25 +136,12 @@ void MessageBuilder::WriteToStderr() {
 }
 
 // Prevents recursive terminations.
-atomic_uint32_t CheckContext::is_terminating;
-
-vaddr CheckContext::Base() const { return ccl::GetBase(cap); }
-
-vaddr CheckContext::Top() const { return ccl::GetTop(cap); }
-
-vaddr CheckContext::Value() const { return cap->value; }
-
-vaddr CheckContext::Metadata() const { return cap->metadata; }
-
-u64 CheckContext::Perms() const { return ccl::PermsGet(cap); }
-
-bool CheckContext::IsTagged() const { return true; }
+__sanitizer::atomic_uint32_t CheckContext::IsTerminating{0};
 
 // Based on
 // https://github.com/CTSRD-CHERI/cheri-c-programming/wiki/Displaying-Capabilities
 void CheckContext::PrintCapability(MessageBuilder& builder) const {
-  if (!IsTagged() && (Value() == ccl::kNullCap.value) &&
-      (Metadata() == ccl::kNullCap.metadata)) {
+  if (!IsTagged() && (Value() == 0) && (Metadata() == 0)) {
     builder << "  " << MessageBuilder::Hex(0) << " (null capability)\n\n";
     return;
   }
@@ -178,14 +164,14 @@ void CheckContext::Initialize() {
 
 static SignalHandleMode TryCallSignalHandler(int signo, SignalCode code,
                                              vaddr pc) {
-  if (signo == libc::SignalNumber::SN_NONE)
+  if (signo == SignalNumber::SN_NONE)
     return SignalHandleMode::SHM_DEFAULT;
 
-  libc::SigAction action;
-  if (!libc::SigAction::GetAction(signo, action))
+  SigAction action;
+  if (!SigAction::GetAction(signo, action))
     return SignalHandleMode::SHM_DEFAULT;
 
-  libc::SigInfo info{signo, code, pc};
+  SigInfo info{signo, code, pc};
   return action.Invoke(info);
 }
 
@@ -231,7 +217,7 @@ void CheckContext::Terminate(MessageBuilder& reason, int signo,
   if (ignore_signal)
     return;
   // Try to raise SIGTRAP if being debugged.
-  const pid_t tracer_pid = libc::GetTracerPid();
+  const pid_t tracer_pid = GetTracerPid();
   if (tracer_pid != 0) {
     if (print_cause) {
       MessageBuilder builder;
@@ -241,10 +227,10 @@ void CheckContext::Terminate(MessageBuilder& reason, int signo,
               << ", sending SIGTRAP.\n";
       builder.WriteToStderr();
     }
-    libc::RaiseSigTrap();
+    RaiseSigTrap();
   }
   // Terminate the program.
-  Die();
+  __sanitizer::Die();
 }
 
 void CapabilityAddress::ReportError(const CheckContext& ctx,
@@ -280,5 +266,6 @@ void RequiredPerms::ReportError(const CheckContext& ctx,
   builder << "Missing permission(s):\n";
   PermsToString(builder, (perms & ~ctx.Perms()), /* explain */ true);
 }
+
 }  // namespace error
 }  // namespace __cheriseed

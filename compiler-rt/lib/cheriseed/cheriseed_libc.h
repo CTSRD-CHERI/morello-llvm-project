@@ -55,6 +55,8 @@ struct SigInfo final {
   // Returns signo.
   int SignalNumber() const;
 
+  void *operator&();
+
   // Protected: no access for non-friends, there is no error for unused private
   // field.
  protected:

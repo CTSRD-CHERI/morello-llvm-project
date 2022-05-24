@@ -53,8 +53,9 @@ TEST(API, CopyCapWithOffset) {
   __cheriseed_cap_t *cap2_ptr =
       __cheriseed_copy_cap_with_offset(&cap2, &cap1, sizeof(uint32_t));
   ASSERT_EQ(cap2_ptr, &cap2);
-  ASSERT_CAPABILITY_METADATA_EQ(&cap1, cap2_ptr);
-  ASSERT_EQ(cap1.value + sizeof(uint32_t), cap2.value);
+  ASSERT_CAPABILITY_METADATA_EQ(&cap2, &cap1);
+  ASSERT_CAPABILITY_VALUE_EQ(&cap2,
+                             __cheriseed_address_get(&cap1) + sizeof(uint32_t));
 }
 
 TEST(API, DDCGetPerms) {
@@ -82,7 +83,7 @@ TEST(API, DDCGetLength) {
   // MIN( UINT64_MAX, length );
   ASSERT_EQ(__cheriseed_length_get(&ddc), UINT64_MAX);
   ASSERT_CAPABILITY_METADATA_EQ(&ddc, &ddc_old);
-  ASSERT_CAPABILITY_VALUE_EQ(&ddc, ddc_old.value);
+  ASSERT_CAPABILITY_VALUE_EQ(&ddc, __cheriseed_address_get(&ddc_old));
 }
 
 TEST(API, PCCGetLength) {
@@ -94,7 +95,7 @@ TEST(API, PCCGetLength) {
   // MIN( UINT64_MAX, length );
   ASSERT_EQ(__cheriseed_length_get(&pcc), UINT64_MAX);
   ASSERT_CAPABILITY_METADATA_EQ(&pcc, &pcc_old);
-  ASSERT_CAPABILITY_VALUE_EQ(&pcc, pcc_old.value);
+  ASSERT_CAPABILITY_VALUE_EQ(&pcc, __cheriseed_address_get(&pcc_old));
 }
 
 TEST(API, DDCGetBase) {
@@ -104,7 +105,7 @@ TEST(API, DDCGetBase) {
 
   ASSERT_EQ(__cheriseed_base_get(&ddc), 0u);
   ASSERT_CAPABILITY_METADATA_EQ(&ddc, &ddc_old);
-  ASSERT_CAPABILITY_VALUE_EQ(&ddc, ddc_old.value);
+  ASSERT_CAPABILITY_VALUE_EQ(&ddc, __cheriseed_address_get(&ddc_old));
 }
 
 TEST(API, PCCGetBase) {
@@ -114,7 +115,7 @@ TEST(API, PCCGetBase) {
 
   ASSERT_EQ(__cheriseed_base_get(&pcc), 0u);
   ASSERT_CAPABILITY_METADATA_EQ(&pcc, &pcc_old);
-  ASSERT_CAPABILITY_VALUE_EQ(&pcc, pcc_old.value);
+  ASSERT_CAPABILITY_VALUE_EQ(&pcc, __cheriseed_address_get(&pcc_old));
 }
 
 TEST(API, StackCapInit) {
@@ -154,9 +155,9 @@ TEST(API, LoadStoreCap) {
 }
 
 TEST(API, LoadStoreCapHybrid) {
-  __cheriseed_cap_t ones{1, 1};
-  __cheriseed_cap_t dst{UINT64_TEST, UINT64_TEST};
-  __cheriseed_cap_t src{UINT64_TEST, UINT64_TEST};
+  __cheriseed_cap_t ones = utils::InitCap(1, 1);
+  __cheriseed_cap_t dst = utils::InitCap(UINT64_TEST, UINT64_TEST);
+  __cheriseed_cap_t src = utils::InitCap(UINT64_TEST, UINT64_TEST);
 
   __cheriseed_store_cap_hybrid(&dst, &ones);
   ASSERT_CAPABILITY_METADATA_EQ(&dst, (uint64_t)1);
@@ -348,7 +349,7 @@ TEST(API, OffsetSet_FromBase) {
   // Tighten bounds
   __cheriseed_bounds_set(&cap_a1, &cap_a, 2 * sizeof(uint32_t));
   // base and value of cap_a1 are now equal to &a (offset 0)
-  ASSERT_EQ(cap_a1.value, __cheriseed_base_get(&cap_a1));
+  ASSERT_CAPABILITY_VALUE_EQ(&cap_a1, __cheriseed_base_get(&cap_a1));
   // This value is within bounds and representable
   __cheriseed_offset_set(&cap_a1, &cap_a1, sizeof(uint32_t));
   // offset value is correctly retrievable
@@ -358,7 +359,7 @@ TEST(API, OffsetSet_FromBase) {
   ASSERT_CAPABILITY_VALUE_EQ(
       &cap_a1, __cheriseed_base_get(&cap_a1) + __cheriseed_offset_get(&cap_a1));
   // cap_a base/length should be unchanged since __cheriseed_bounds_set call
-  ASSERT_EQ(__cheriseed_base_get(&cap_a1), cap_a.value);
+  ASSERT_CAPABILITY_VALUE_EQ(&cap_a, __cheriseed_base_get(&cap_a1));
   ASSERT_EQ(__cheriseed_length_get(&cap_a1), 2 * sizeof(uint32_t));
 
   // Expectation of how this function would be used
@@ -372,7 +373,7 @@ TEST(API, OffsetSet_AboveTop) {
   // Tighten bounds of cap_a1
   __cheriseed_bounds_set(&cap_a1, &cap_a, 2 * sizeof(uint32_t));
   // base and value of cap_a1 are now equal to &a (offset 0)
-  ASSERT_EQ(cap_a1.value, __cheriseed_base_get(&cap_a1));
+  ASSERT_CAPABILITY_VALUE_EQ(&cap_a1, __cheriseed_base_get(&cap_a1));
 
   // This value is out-of-bounds, but still representable
   __cheriseed_offset_set(&cap_a1, &cap_a1, 3 * sizeof(uint32_t));
@@ -382,7 +383,7 @@ TEST(API, OffsetSet_AboveTop) {
   ASSERT_CAPABILITY_VALUE_EQ(
       &cap_a1, __cheriseed_base_get(&cap_a1) + __cheriseed_offset_get(&cap_a1));
   // cap_a base/length should be unchanged since __cheriseed_bounds_set call
-  ASSERT_EQ(__cheriseed_base_get(&cap_a1), cap_a.value);
+  ASSERT_CAPABILITY_VALUE_EQ(&cap_a, __cheriseed_base_get(&cap_a1));
   ASSERT_EQ(__cheriseed_length_get(&cap_a1), 2 * sizeof(uint32_t));
   // TODO cap_a should still be valid
 }
@@ -394,14 +395,15 @@ TEST(API, OffsetSet_Round) {
   // Tighten bounds of cap_b
   __cheriseed_bounds_set(&cap_b, &cap_a, sizeof(uint32_t));
   // base and value of cap_b are now equal to &a (offset is 0)
-  ASSERT_EQ(cap_b.value, __cheriseed_base_get(&cap_b));
+  ASSERT_CAPABILITY_VALUE_EQ(&cap_b, __cheriseed_base_get(&cap_b));
   // This value is out-of-bounds and not representable.
   __cheriseed_offset_set(&cap_b, &cap_b, UINT64_TEST);
 
   // The output cursor should still be input cursor + requested offset.
   // This behaviour is useful for debugging, instead of preserving the offset
   // from a base that has been altered by rounding.
-  ASSERT_CAPABILITY_VALUE_EQ(&cap_b, cap_a.value + UINT64_TEST);
+  ASSERT_CAPABILITY_VALUE_EQ(&cap_b,
+                             __cheriseed_address_get(&cap_a) + UINT64_TEST);
   // The property of cursor = base + offset should still hold
   ASSERT_CAPABILITY_VALUE_EQ(
       &cap_b, __cheriseed_base_get(&cap_b) + __cheriseed_offset_get(&cap_b));

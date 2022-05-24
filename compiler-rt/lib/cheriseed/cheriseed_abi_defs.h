@@ -20,6 +20,9 @@ namespace abi {
 // Minimum expected alignment of a capability.
 static constexpr __sanitizer::u8 kCapabilityMinAlignment = 16;
 
+// The value for relaxed ordering in the IR.
+static constexpr __sanitizer::u8 kIRRelaxedOrdering = 0;
+
 // These permissions bits are used as the arguments for the function
 // __cheriseed_check_access as a platform independent representation.
 enum Permissions : __sanitizer::u32 {
@@ -59,4 +62,4 @@ enum SignalHandleMode : int {
 }  // namespace abi
 }  // namespace __cheriseed
 
-#endif
+#endif  // CHERISEED_ABI_DEFS_H

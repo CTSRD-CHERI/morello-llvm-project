@@ -15,6 +15,7 @@
 #ifndef CHERISEED_ERRORS_H
 #define CHERISEED_ERRORS_H
 
+#include "cheriseed_ccl_interface.h"
 #include "cheriseed_libc.h"
 #include "sanitizer_common/sanitizer_common.h"
 
@@ -85,7 +86,7 @@ struct MessageBuilder final {
 
 // Helper to perform various property checks.
 struct CheckContext {
-  explicit CheckContext(const __cheriseed_cap_t* cap) : cap(cap) {}
+  explicit CheckContext(const LocalCap& local_cap) : local_cap(local_cap) {}
 
   template <typename P>
   ALWAYS_INLINE CheckContext& add(P&& property) {
@@ -97,15 +98,15 @@ struct CheckContext {
   }
 
   // Returns the address of the capability itself.
-  vaddr CapabilityAddress() const { return reinterpret_cast<vaddr>(cap); }
+  vaddr CapabilityAddress() const { return local_cap.GetAddress(); }
 
   // Methods to retrieve fields of the capability.
-  vaddr Base() const;
-  vaddr Top() const;
-  vaddr Value() const;
-  vaddr Metadata() const;
-  u64 Perms() const;
-  bool IsTagged() const;
+  vaddr Value() const { return local_cap.GetValue(); }
+  vaddr Metadata() const { return local_cap.GetMetadata(); }
+  bool IsTagged() const { return true; }
+  vaddr Base() const { return ccl::methods::GetBase(local_cap); }
+  vaddr Top() const { return ccl::methods::GetTop(local_cap); }
+  u64 Perms() const { return ccl::methods::GetPerms(local_cap); }
 
   void PrintCapability(MessageBuilder& builder) const;
 
@@ -113,8 +114,8 @@ struct CheckContext {
   template <typename P>
   NOINLINE void BeginTerminate(P& property) {
     // Make sure that recursive aborts are not allowed.
-    if (atomic_fetch_add(&is_terminating, 1,
-                         memory_order::memory_order_relaxed) > 0)
+    if (UNLIKELY(atomic_fetch_add(&IsTerminating, 1,
+                                  memory_order::memory_order_relaxed) > 0))
       __sanitizer::Trap();
     // Fully initialize the checker's context.
     Initialize();
@@ -124,18 +125,18 @@ struct CheckContext {
     // Try to terminate.
     Terminate(reason, P::SignalNumber(), P::Code());
     // Not aborting in the end.
-    atomic_fetch_sub(&is_terminating, 1, memory_order::memory_order_relaxed);
+    atomic_fetch_sub(&IsTerminating, 1, memory_order::memory_order_relaxed);
   }
 
   void Initialize();
   NOINLINE void Terminate(MessageBuilder& builder, int signo,
                           abi::SignalCode code) const;
 
-  const __cheriseed_cap_t* const cap;
+  const LocalCap& local_cap;
   vaddr pc;
   u64 tid;
 
-  static __sanitizer::atomic_uint32_t is_terminating;
+  static __sanitizer::atomic_uint32_t IsTerminating;
 };  // struct CheckContext
 
 // Note: not using base class and virtual functions here because those are
@@ -146,6 +147,7 @@ struct CheckContext {
 
 // Checks that the pointer to a capability has a valid address.
 struct CapabilityAddress final {
+  ALWAYS_INLINE
   bool DoCheck(const CheckContext& ctx) const {
     const vaddr cap_addr = ctx.CapabilityAddress();
     bool failed = (cap_addr == 0);
@@ -173,6 +175,7 @@ struct CapabilityAddress final {
 
 // Checks that a capability is sufficiently aligned.
 struct CapabilityAlignment final {
+  ALWAYS_INLINE
   bool DoCheck(const CheckContext& ctx) const {
     return (ctx.CapabilityAddress() % abi::kCapabilityMinAlignment) == 0;
   }
@@ -207,6 +210,7 @@ struct InBounds final {
   explicit InBounds(u64 size) : size(size) {}
 
   // Top (base + length) is inclusive in acceptable range of a capability
+  ALWAYS_INLINE
   bool DoCheck(const CheckContext& ctx) const {
     if (!Options::EnableCHERISemantics)
       return true;
@@ -227,8 +231,9 @@ struct InBounds final {
 // Checks that a capability has all required permissions to perform an action
 // which requires at least 'perms'.
 struct RequiredPerms final {
-  explicit RequiredPerms(const u64 perms) : perms(perms) {}
+  explicit RequiredPerms(u64 perms) : perms(perms) {}
 
+  ALWAYS_INLINE
   bool DoCheck(const CheckContext& ctx) {
     if (!Options::EnableCHERISemantics)
       return true;

@@ -113,244 +113,269 @@ static constexpr u64 ALL = FOREACH_CCL_PERMISSION(PERM_ALL_BUILDER) 0;
 
 }  // namespace permissions
 
-// This is necessary for macro expansion
-using cc128_length_t = external::cc128_length_t;
-using compressed_cap_t = __cheriseed::__cheriseed_cap_t;
+/// Interface to the cheri-compressed-cap library.
+struct methods {
+  /// This is necessary for macro expansion
+  using cc128_length_t = external::cc128_length_t;
 
-// The null capability has a value of 0, and 0 metadata by definition
-static constexpr compressed_cap_t kNullCap = {0, 0};
+  /// Generates a maximum capability from a value using the CCL. The
+  /// permissions of a "maximum" capability will only include the subset
+  /// of CCL permissions currently supported by cheriseed.
+  ///
+  /// \param[out] local_cap Reference to an object that will contain the maximum
+  /// capability.
+  /// \param[in] value Sets the value field of the resulting capability.
+  static inline void BuildMaxCap(LocalCap &local_cap, u64 value) {
+    external::cc128_cap_t max_cap =
+        external::cc128_make_max_perms_cap(0, value, CC128_MAX_LENGTH);
+    external::cc128_update_perms(&max_cap, permissions::ALL);
+    local_cap.SetValue(value);
+    local_cap.SetMetadata(external::cc128_compress_mem(&max_cap));
+  }
 
-/// Generate a maximum capability from a value using the CCL. The
-/// permissions of a "maximum" capability will only include the subset
-/// of CCL permissions currently supported by cheriseed.
-///
-/// \param[out] cap_out A pointer that will contain the max capability
-/// \param[in] value Sets the value field of the resulting capability
-static inline void BuildMaxCap(compressed_cap_t *cap_out, u64 value) {
-  cap_out->value = value;
-  external::cc128_cap_t max_cap =
-      external::cc128_make_max_perms_cap(0, value, CC128_MAX_LENGTH);
-  external::cc128_update_perms(&max_cap, permissions::ALL);
-  cap_out->metadata = external::cc128_compress_mem(&max_cap);
-}
+  /// Generates a maximum capability from a pointer using the CCL.
+  /// The address provided will be cast to an unsigned 64 bit int
+  ///
+  /// \param[out] local_cap Reference to an object that will contain the maximum
+  /// capability.
+  /// \param[in] ptr Sets the value field of the resulting capability.
+  template <typename T>
+  static inline void BuildMaxCap(LocalCap &local_cap, T *ptr) {
+    BuildMaxCap(local_cap, reinterpret_cast<u64>(ptr));
+  }
 
-/// Generate a maximum capability from a pointer using the CCL.
-/// The address provided will be cast to an unsigned 64 bit int
-///
-/// \param[out] cap_out A pointer that will contain the max capability
-/// \param[in] ptr Sets the value field of the resulting capability
-template <typename T>
-static inline void BuildMaxCap(compressed_cap_t *cap_out, T *ptr) {
-  BuildMaxCap(cap_out, reinterpret_cast<u64>(ptr));
-}
+  /// Generates a bounded capability using the CCL. The base will be the
+  /// same as the input value, and the top equal to value + size.
+  /// A permissions mask can optionally be provided, otherwise the perms
+  /// will be set to maximum.
+  ///
+  /// \param[out] local_cap Reference to an object that will contain the output
+  /// capability.
+  /// \param[in] value Sets the value/base fields of the resulting capability.
+  /// \param[in] size Sets the top field of the resulting capability.
+  /// \param[in] perms Sets the permissions field of the resulting
+  /// capability.
+  /// \returns True if resulting bounded capability is exact, else false.
+  static inline bool BuildBoundedCap(LocalCap &local_cap, u64 value, u64 size,
+                                     u64 perms = permissions::ALL) {
+    external::cc128_cap_t max_cap =
+        external::cc128_make_max_perms_cap(value, value, value + size);
+    external::cc128_update_perms(&max_cap, permissions::ALL & perms);
+    local_cap.SetValue(value);
+    local_cap.SetMetadata(external::cc128_compress_mem(&max_cap));
+    return external::cc128_is_representable_cap_exact(&max_cap);
+  }
 
-/// Generate a bounded capability using the CCL. The base will be the
-/// same as the input value, and the top equal to value + size.
-/// A permissions mask can optionally be provided, otherwise the perms
-/// will be set to maximum.
-///
-/// \param[out] cap_out A pointer that will contain the output capability
-/// \param[in] value Sets the value/base fields of the resulting capability
-/// \param[in] size Sets the top field of the resulting capability
-/// \param[in] perms_mask Sets the permissions field of the resulting capability
-/// \returns True if resulting bounded capability is exact, else false
-static inline bool BuildBoundedCap(compressed_cap_t *cap_out, u64 value,
-                                   u64 size,
-                                   u64 perms_mask = permissions::ALL) {
-  cap_out->value = value;
-  external::cc128_cap_t max_cap =
-      external::cc128_make_max_perms_cap(value, value, value + size);
-  external::cc128_update_perms(&max_cap, permissions::ALL & perms_mask);
-  cap_out->metadata = external::cc128_compress_mem(&max_cap);
-  return external::cc128_is_representable_cap_exact(&max_cap);
-}
+  /// Generates a bounded capability from a pointer using the CCL.
+  /// The address provided will be cast to an unsigned 64 bit int,
+  /// and used as the cursor and the base. The size will be the size
+  /// of the pointer type.
+  /// A permissions mask can optionally be provided, otherwise the perms
+  /// will be set to maximum.
+  ///
+  /// \param[out] local_cap Reference to an object that will contain the maximum
+  /// capability.
+  /// \param[in] ptr Used as the value field of the resulting capability.
+  /// \param[in] perms Sets the permissions field of the resulting
+  /// capability.
+  /// \returns True if resulting bounded capability is exact, else false.
+  template <typename T>
+  static inline bool BuildBoundedCap(LocalCap &local_cap, T *ptr,
+                                     u64 perms = permissions::ALL) {
+    return BuildBoundedCap(local_cap, reinterpret_cast<u64>(ptr), sizeof(T),
+                           perms);
+  }
 
-/// Generate a bounded capability from a pointer using the CCL.
-/// The address provided will be cast to an unsigned 64 bit int,
-/// and used as the cursor and the base. The size will be the size
-/// of the pointer type.
-/// A permissions mask can optionally be provided, otherwise the perms
-/// will be set to maximum.
-///
-/// \param[out] cap_out A pointer that will contain the max capability
-/// \param[in] ptr Used as the value field of the resulting capability
-/// \param[in] perms_mask Sets the permissions field of the resulting capability
-/// \returns True if resulting bounded capability is exact, else false
-template <typename T>
-static inline bool BuildBoundedCap(compressed_cap_t *cap_out, T *ptr,
-                                   u64 perms_mask = permissions::ALL) {
-  return BuildBoundedCap(cap_out, reinterpret_cast<u64>(ptr), sizeof(T),
-                         perms_mask);
-}
+  /// Extracts the permissions bits from a compressed metadata.
+  ///
+  /// \param[in] local_cap The compressed capability to extract permissions
+  /// from.
+  /// \returns The permissions field extracted from the compressed metadata.
+  static inline u64 GetPerms(const LocalCap &local_cap) {
+    return external::cc128_cap_pesbt_extract_perms(local_cap.GetMetadata());
+  }
 
-/// Set a capability pointer to the address of the global null capability
-///
-/// \param[out] cap_out Will point to the address of the Null Capability
-static inline void UseNullCap(const compressed_cap_t **cap_out) {
-  *cap_out = &kNullCap;
-}
+  /// Queries a compressed capability for permissions bits.
+  ///
+  /// \param[in] local_cap The compressed capability to extract permissions
+  /// from.
+  /// \param[in] mask The permission bits that must be present to return true.
+  /// \returns True if all permissions in mask are present in local_cap, else
+  /// false.
+  static inline bool HasPerms(const LocalCap &local_cap, const u64 mask) {
+    return ((GetPerms(local_cap) & mask) == mask);
+  }
 
-/// Extract the permissions bits from a compressed metadata
-///
-/// \param[in] c_cap The compressed capability to extract permissions from
-/// \returns The permissions field extracted from the compressed metadata
-static inline u64 PermsGet(const compressed_cap_t *c_cap) {
-  return external::cc128_cap_pesbt_extract_perms(c_cap->metadata);
-}
+  /// Sets the permissions field of a compressed metadata to bitwise AND with
+  /// some mask.
+  ///
+  /// \param[in] local_cap The compressed capability whose permissions to
+  /// update.
+  /// \param[in] mask A mask specifying permissions to retain.
+  static inline void PermsAnd(LocalCap &local_cap, const u64 mask) {
+    local_cap.SetMetadata(external::cc128_cap_pesbt_deposit_perms(
+        local_cap.GetMetadata(), static_cast<u32>(GetPerms(local_cap) & mask)));
+  }
 
-/// Query a compressed capability for permissions bits
-///
-/// \param[in] c_cap The compressed capability to extract permissions from
-/// \param[in] mask The permission bits that must be present to return true
-/// \returns True if all permissions in mask are present in c_cap, else false
-static inline bool HasPerms(const compressed_cap_t *c_cap, const u64 mask) {
-  return ((PermsGet(c_cap) & mask) == mask);
-}
+  /// Returns the alignment mask that should be taken into account to precisely
+  /// represent a capability with bounds "length" apart.
+  ///
+  /// \param[in] length The desired allocation length.
+  /// \returns A 64 bit mask.
+  static inline u64 GetAlignmentMask(u64 length) {
+    return external::cc128_get_alignment_mask(length);
+  }
 
-/// Set the permissions field of a compressed metadata to bitwise AND with some
-/// mask
-///
-/// \param[in] c_cap The compressed capability to update with the CCL
-/// \param[in] mask A mask specifying permissions to retain
-static inline void UpdatePermsAnd(compressed_cap_t *c_cap, const u64 mask) {
-  c_cap->metadata = external::cc128_cap_pesbt_deposit_perms(
-      c_cap->metadata, static_cast<u32>(PermsGet(c_cap) & mask));
-}
+  /// Rounds a proposed bounds length to a rounded size that can be precisely
+  /// represented.
+  ///
+  /// \param[in] length A proposed bounds length for a capability.
+  /// \returns A rounded bounds length that can be precisely represented.
+  static inline u64 GetRepresentableLength(u64 length) {
+    return external::cc128_get_representable_length(length);
+  }
 
-/// Returns the alignment mask that should be taken into account to precisely
-/// represent a capability with bounds "length" apart.
-///
-/// \param[in] length The desired allocation length
-/// \returns A 64 bit mask
-static inline u64 GetAlignmentMask(u64 length) {
-  return external::cc128_get_alignment_mask(length);
-}
+  /// Compares two compressed capabilities for equality.
+  ///
+  /// \param[in] local_cap_1 First compressed capability to compare.
+  /// \param[in] local_cap_2 Second compressed capability to compare.
+  /// \returns Single boolean, true if exactly equal, false otherwise.
+  static inline bool ExactlyEqual(const LocalCap &local_cap_1,
+                                  const LocalCap &local_cap_2) {
+    external::cc128_cap_t decom_cap_1;
+    external::cc128_cap_t decom_cap_2;
+    external::cc128_decompress_mem(local_cap_1.GetMetadata(),
+                                   local_cap_1.GetValue(), true, &decom_cap_1);
+    external::cc128_decompress_mem(local_cap_2.GetMetadata(),
+                                   local_cap_2.GetValue(), true, &decom_cap_2);
+    return external::cc128_exactly_equal(&decom_cap_1, &decom_cap_2);
+  }
 
-/// Rounds a proposed bounds length to a rounded size that can be precisely
-/// represented,
-///
-/// \param[in] length A proposed bounds length for a capability
-/// \returns A rounded bounds length that can be precisely represented
-static inline u64 GetRepresentableLength(u64 length) {
-  return external::cc128_get_representable_length(length);
-}
+  /// Retrieves the length field of a compressed cap. This field is 128 bits so
+  /// length64 returns min(length, UINT64_MAX).
+  ///
+  /// \param[in] local_cap The compressed capability to retrieve the length
+  /// from.
+  /// \returns 64 bit length value.
+  static inline u64 GetLength(const LocalCap &local_cap) {
+    external::cc128_cap_t decom;
+    external::cc128_decompress_mem(local_cap.GetMetadata(),
+                                   local_cap.GetValue(), true, &decom);
+    return decom.length64();
+  }
 
-/// Compare two compressed capabilities for equality
-///
-/// \param[in] c_cap1 First compressed capability
-/// \param[in] c_cap2 Second compressed capability
-/// \returns Single boolean, true if exactly equal, false otherwise
-static inline bool ExactlyEqual(const compressed_cap_t *c_cap1,
-                                const compressed_cap_t *c_cap2) {
-  external::cc128_cap_t dc_cap1;
-  external::cc128_cap_t dc_cap2;
-  external::cc128_decompress_mem(c_cap1->metadata, c_cap1->value, true,
-                                 &dc_cap1);
-  external::cc128_decompress_mem(c_cap2->metadata, c_cap2->value, true,
-                                 &dc_cap2);
-  return external::cc128_exactly_equal(&dc_cap1, &dc_cap2);
-}
+  /// Retrieves the base field of a compressed cap.
+  ///
+  /// \param[in] local_cap The compressed capability to retrieve the base from.
+  /// \returns 64 bit base value.
+  static inline u64 GetBase(const LocalCap &local_cap) {
+    external::cc128_cap_t decom;
+    external::cc128_decompress_mem(local_cap.GetMetadata(),
+                                   local_cap.GetValue(), true, &decom);
+    return decom.base();
+  }
 
-/// Retrieve the length field of a compressed cap. This field is 128 bits so
-/// length64 returns min(length,UINT64_MAX).
-///
-/// \param[in] c_cap The compressed capability to retrieve the length from
-/// \returns 64 bit length value
-static inline u64 GetLength(const compressed_cap_t *c_cap) {
-  external::cc128_cap_t decom;
-  external::cc128_decompress_mem(c_cap->metadata, c_cap->value, true, &decom);
-  return decom.length64();
-}
+  /// Retrieves the calculated top value of a compressed cap.
+  ///
+  /// \param[in] local_cap The compressed capability to retrieve the top from.
+  /// \returns 64 bit base value.
+  static inline u64 GetTop(const LocalCap &local_cap) {
+    external::cc128_cap_t decom;
+    external::cc128_decompress_mem(local_cap.GetMetadata(),
+                                   local_cap.GetValue(), true, &decom);
+    return decom.top64();
+  }
 
-/// Retrieve the base field of a compressed cap.
-///
-/// \param[in] c_cap The compressed capability to retrieve the base from
-/// \returns 64 bit base value
-static inline u64 GetBase(const compressed_cap_t *c_cap) {
-  external::cc128_cap_t decom;
-  external::cc128_decompress_mem(c_cap->metadata, c_cap->value, true, &decom);
-  return decom.base();
-}
+  /// Extracts the offset from a compressed metadata.
+  ///
+  /// \param[in] local_cap The compressed capability to retrieve the offset
+  /// from.
+  /// \returns The offset from the capability's base value.
+  static inline u64 GetOffset(const LocalCap &local_cap) {
+    external::cc128_cap_t decom;
+    external::cc128_decompress_mem(local_cap.GetMetadata(),
+                                   local_cap.GetValue(), true, &decom);
+    const external::cc128_offset_t offset = decom.offset();
+    // Create equivalent to offset64() which doesn't exist
+    return offset > CC128_MAX_ADDR ? CC128_MAX_ADDR : (u64)offset;
+  }
 
-/// Retrieve the calculated top value of a compressed cap.
-///
-/// \param[in] c_cap The compressed capability to retrieve the top from
-/// \returns 64 bit base value
-static inline u64 GetTop(const compressed_cap_t *c_cap) {
-  external::cc128_cap_t decom;
-  external::cc128_decompress_mem(c_cap->metadata, c_cap->value, true, &decom);
-  return decom.top64();
-}
+  /// Tests if a capability is representable with a given cursor.
+  ///
+  /// \param[in] local_cap The compressed capability to test.
+  /// \param[in] cursor The requested new cursor to test.
+  /// \returns True if the capability is representable, otherwise false.
+  static inline bool IsRepresentableWithCursor(const LocalCap &local_cap,
+                                               u64 cursor) {
+    external::cc128_cap_t decom;
+    external::cc128_decompress_mem(local_cap.GetMetadata(),
+                                   local_cap.GetValue(), true, &decom);
+    return external::cc128_is_representable_with_addr(&decom, cursor);
+  }
 
-/// Extracts the offset from a compressed metadata
-///
-/// \param[in] c_cap The compressed capability to retrieve the offset from
-/// \returns The offset from the capability's base value
-static inline u64 GetOffset(const compressed_cap_t *c_cap) {
-  external::cc128_cap_t decom;
-  external::cc128_decompress_mem(c_cap->metadata, c_cap->value, true, &decom);
-  const external::cc128_offset_t offset = decom.offset();
-  // Create equivalent to offset64() which doesn't exist
-  return offset > CC128_MAX_ADDR ? CC128_MAX_ADDR : (u64)offset;
-}
+  /// Sets the value of a capability.
+  ///
+  /// \param[in] local_cap The compressed capability to update.
+  /// \param[in] value The requested value to set.
+  static inline void SetValue(LocalCap &local_cap, u64 value) {
+    if (!IsRepresentableWithCursor(local_cap, value)) {
+      // TODO: Invalidate capability
+    }
+    local_cap.SetValue(value);
+  }
 
-/// Set the bounds of a compressed capability
-///
-/// \param[in] c_cap The compressed capability to update
-/// \param[in] new_base The requested base value
-/// \param[in] new_top The requested top value
-/// \param[out] isExact Bool set true only if the output metadata has exactly
-///             the requested bounds, otherwise false
-/// \returns 64 bit base value
-static inline void SetBounds(compressed_cap_t *c_cap, u64 new_base, u64 new_top,
-                             bool &exact_res) {
-  external::cc128_cap_t decom;
-  external::cc128_decompress_mem(c_cap->metadata, c_cap->value, true, &decom);
-  exact_res = external::cc128_setbounds(&decom, new_base, new_top);
-  c_cap->metadata = external::cc128_compress_mem(&decom);
-}
+  /// Sets the bounds of a compressed capability.
+  ///
+  /// \param[in] local_cap The compressed capability to update.
+  /// \param[in] base The requested base value.
+  /// \param[in] top The requested top value.
+  /// \param[out] is_exact Bool set true only if the output metadata has exactly
+  ///             the requested bounds, otherwise false.
+  /// \returns 64 bit base value.
+  static inline void SetBounds(LocalCap &local_cap, u64 base, u64 top,
+                               bool &is_exact) {
+    external::cc128_cap_t decom;
+    external::cc128_decompress_mem(local_cap.GetMetadata(),
+                                   local_cap.GetValue(), true, &decom);
+    is_exact = external::cc128_setbounds(&decom, base, top);
+    local_cap.SetMetadata(external::cc128_compress_mem(&decom));
+  }
 
-/// Extract the type bits from a compressed metadata
-///
-/// \param[in] c_cap The compressed capability to retrieve the type from
-/// \returns The type field extracted from the compressed metadata
-static inline u64 GetType(const compressed_cap_t *c_cap) {
-  external::cc128_cap_t decom;
-  external::cc128_decompress_mem(c_cap->metadata, c_cap->value, true, &decom);
-  return decom.type();
-}
+  /// Extracts the type bits from a compressed metadata.
+  ///
+  /// \param[in] local_cap The compressed capability to retrieve the type from.
+  /// \returns The type field extracted from the compressed metadata.
+  static inline u64 GetType(const LocalCap &local_cap) {
+    external::cc128_cap_t decom;
+    external::cc128_decompress_mem(local_cap.GetMetadata(),
+                                   local_cap.GetValue(), true, &decom);
+    return decom.type();
+  }
 
-/// Test if a capability is representable with a given cursor
-///
-/// \param[in] c_cap The compressed capability to test
-/// \param[in] new_cursor The requested new cursor to test
-/// \returns A boolean, true if it is representable
-static inline bool IsRepresentableWithCursor(const compressed_cap_t *c_cap,
-                                             u64 newCursor) {
-  external::cc128_cap_t decom;
-  external::cc128_decompress_mem(c_cap->metadata, c_cap->value, true, &decom);
-  return external::cc128_is_representable_with_addr(&decom, newCursor);
-}
+  /// Tests if a capability is a subset of another capability.
+  ///
+  /// \param[in] local_cap_check the compressed capability to check.
+  /// \param[in] local_cap the compressed capability to check against.
+  /// \returns True if local_cap_check is a subset of local_cap, otherwise
+  /// false.
+  static inline bool SubsetTest(const LocalCap &local_cap_check,
+                                const LocalCap &local_cap) {
+    external::cc128_cap_t decom_check;
+    external::cc128_cap_t decom;
+    external::cc128_decompress_mem(local_cap_check.GetMetadata(),
+                                   local_cap_check.GetValue(), true,
+                                   &decom_check);
+    external::cc128_decompress_mem(local_cap.GetMetadata(),
+                                   local_cap.GetValue(), true, &decom);
 
-/// Test if a capability is a subset of another capability.
-///
-/// \param[in] c_cap_check the compressed capability to check
-/// \param[in] c_cap the compressed capability to check against
-/// \returns A boolean, true if c_cap_check is a subset of c_cap
-static inline bool SubsetTest(const compressed_cap_t *c_cap_check,
-                              const compressed_cap_t *c_cap) {
-  external::cc128_cap_t decom_check;
-  external::cc128_cap_t decom;
-  external::cc128_decompress_mem(c_cap_check->metadata, c_cap_check->value,
-                                 true, &decom_check);
-  external::cc128_decompress_mem(c_cap->metadata, c_cap->value, true, &decom);
+    return (decom_check.base() >= decom.base()) &&
+           (decom_check.top() <= decom.top()) &&
+           ((decom_check.permissions() & decom.permissions()) ==
+            decom_check.permissions());
+    // TODO: Compare capability validity
+  }
 
-  return (decom_check.base() >= decom.base()) &&
-         (decom_check.top() <= decom.top()) &&
-         ((decom_check.permissions() & decom.permissions()) ==
-          decom_check.permissions());
-  // TODO: Compare capability validity
-}
+};  // struct methods
 
 }  // namespace ccl
 

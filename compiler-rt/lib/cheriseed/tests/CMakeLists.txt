@@ -26,6 +26,7 @@ set(CHERISEED_UNITTEST_COMMON_CFLAGS
 set(CHERISEED_NOINST_TEST_SOURCES
   ${COMPILER_RT_GTEST_SOURCE}
   cheriseed_api.cpp
+  cheriseed_atomic_tests.cpp
   cheriseed_check_access.cpp
   cheriseed_check_address.cpp
   cheriseed_check_unaligned.cpp

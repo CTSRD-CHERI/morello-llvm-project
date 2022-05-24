@@ -12,13 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define CHERISEED_UNIT_TESTING
-
-#include "cheriseed_errors.h"
 #include "cheriseed_test_utils.h"
 
 using namespace __cheriseed::abi;
-using namespace __cheriseed::error;
 
 // Tests of __cheriseed_check_access where the permissions are incorrect
 // must assert that the function exited with the correct code and message
