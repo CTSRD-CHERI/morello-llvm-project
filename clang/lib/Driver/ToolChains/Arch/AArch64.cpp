@@ -226,6 +226,14 @@ static bool
 getAArch64EncodingModeFromAbi(const Driver &D, const ArgList &Args,
                               const llvm::Triple &Triple,
                               std::vector<StringRef> &Features) {
+  const bool HasCHERIseed = [&]() -> bool {
+    for (const auto &S : Args.getAllArgValues(options::OPT_fsanitize_EQ)) {
+      if (S == "cheriseed")
+        return true;
+    }
+    return false;
+  }();
+
   const std::array<StringRef, 2> ExtFeatures = { "-morello", "+morello" };
   const auto ItExtFeature =
       std::find_first_of(Features.rbegin(), Features.rend(),
@@ -236,11 +244,12 @@ getAArch64EncodingModeFromAbi(const Driver &D, const ArgList &Args,
 
   // If Morello support has not been enabled, validate that a purecap ABI has
   // not been requested.
-  if ((ItExtFeature == Features.rend() || *ItExtFeature == "-morello") &&
+  if (((ItExtFeature == Features.rend() || *ItExtFeature == "-morello") &&
+       !HasCHERIseed) &&
       Abi == "purecap") {
-      D.Diag(clang::diag::err_target_feature_unsupported_abi)
-          << Abi << "morello";
-      return false;
+    D.Diag(clang::diag::err_target_feature_unsupported_abi)
+        << Abi << "morello or cheriseed";
+    return false;
   }
 
   const std::array<StringRef, 2> ModeFeatures = { "-c64", "+c64" };
@@ -262,7 +271,7 @@ getAArch64EncodingModeFromAbi(const Driver &D, const ArgList &Args,
   // If we don't have an explicit mode set, infer it if an explicit ABI is
   // requested.
   if (MabiArg || Triple.isPurecap()) {
-    if (Abi == "purecap")
+    if ((Abi == "purecap") && !HasCHERIseed)
       Features.push_back("+c64");
     else
       Features.push_back("-c64");
