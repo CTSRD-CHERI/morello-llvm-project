@@ -13,7 +13,7 @@
 // The FVP for now doesn't output to stderr so this doesn't work.
 // Temporarily xfailing this.
 // XFAIL: libcpp-has-newlib
-// XFAIL: libcpp-has-no-wide-characters
+// XFAIL: no-wide-characters
 
 // UNSUPPORTED: executor-has-no-bash
 // FILE_DEPENDENCIES: ../check-stderr.sh
