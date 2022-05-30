@@ -20,9 +20,9 @@ define void @alloca_int(i64 %cnt) addrspace(200) {
 ; CHECK-SAME:     %__cheriseed_cap_t* %int.shadow.cap, i64 %int.addr, i64 4)
   %int = alloca i32, align 4, addrspace(200)
 ; CHECK-NEXT:  %int_array = alloca i32, i64 %cnt, align 4
+; CHECK-NEXT:  %int_array.size = mul i64 %cnt, 4
 ; CHECK-NEXT:  %int_array.addr = ptrtoint i32* %int_array to i64
 ; CHECK-NEXT:  %int_array.shadow.cap = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %int_array.size = mul i64 %cnt, 4
 ; CHECK-NEXT:  %int_array.cap = tail call %__cheriseed_cap_t* @__cheriseed_stack_cap_init(
 ; CHECK-SAME:     %__cheriseed_cap_t* %int_array.shadow.cap, i64 %int_array.addr, i64 %int_array.size)
   %int_array = alloca i32, i64 %cnt, align 4, addrspace(200)

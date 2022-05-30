@@ -1182,6 +1182,19 @@ protected:
   Value *createPtrToCap(Value *Addr, Value *Out = nullptr,
                         bool FromPCC = false);
 
+  /// Creates a capability to a Value on the stack.
+  ///
+  /// \param V The Value to reference with the new capability.
+  /// \param Size Length of the capability to create. If \p V is nullptr Size
+  /// is also set to 0. If nullptr size is derived from the type of \p V.
+  /// \param Name The base name to use for new instructions.
+  /// \param InEntryBlock If true, create the new instruction in the entry
+  /// block.
+  ///
+  /// \returns Pointer to the resulting Value.
+  Value *createShadowCapOnStack(Value *V, Value *Size, StringRef Name,
+                                bool InEntryBlock);
+
   /// Creates a capability to an alloca.
   ///
   /// \param Alloca Pointer to the AllocaInst.
@@ -1189,7 +1202,7 @@ protected:
   /// block.
   ///
   /// \returns Pointer to the resulting Value.
-  Value *createCapToAlloca(AllocaInst *Alloca, bool InEntryBlock = true);
+  Value *createCapToAlloca(AllocaInst *Alloca, bool InEntryBlock);
 
   /// Performs an access check and returns a pointer derived from a capability.
   ///
@@ -3192,7 +3205,7 @@ CHERIseed::CallContext CHERIseed::prepareCallArgs(CallInst &I) {
         DebugPrint::Emit(Alloca);
         // 2. Create a shadow capability to the new alloca slot.
         //    This will be used as an argument to the call.
-        Value *AllocaCap = createCapToAlloca(Alloca);
+        Value *AllocaCap = createCapToAlloca(Alloca, /* InEntryBlock */ true);
 
         // 3. Call memcpy to perform the copy to the allocated stack slot.
         // TODO: add alignment and dereferenceable maybe?
@@ -3506,38 +3519,73 @@ Value *CHERIseed::createPtrToCap(Value *Addr, Value *Out, bool FromPCC) {
   return Cap;
 }
 
-// Creates the following sequence (i8* may vary):
+// Creates the following sequence:
 //
-// %1 = ptrtoint i8* %0 to i64
+// %1 = ptrtoint <typeof(V)> <V> to i64
 // %2 = alloca %__cheriseed_cap_t, align 16
 // %3 = tail call %__cheriseed_cap_t*
-//      @__cheriseed_stack_cap_init(%__cheriseed_cap_t* %2, i64 %1, i64 1)
-Value *CHERIseed::createCapToAlloca(AllocaInst *Alloca, bool InEntryBlock) {
-  // Get the raw address of the allocation.
-  Value *Addr = VC.IRB->CreatePtrToInt(Alloca, AddrSizeTy);
-  if (Alloca->hasName())
-    Addr->setName(Alloca->getName() + std::string(".addr"));
-  DebugPrint::Emit(Addr);
+//      @__cheriseed_stack_cap_init(%__cheriseed_cap_t* %2, i64 %1, i64 <Size>)
+//
+// V must be a pointer type in the default address space, or nullptr. If V is
+// nullptr, Size is ignored and is set to 0.
+Value *CHERIseed::createShadowCapOnStack(Value *V, Value *Size, StringRef Name,
+                                         bool InEntryBlock) {
+  // Get the raw address of V, or '0'.
+  Value *Addr;
+  if (V) {
+    Twine AddrName = !Name.empty() ? Name + std::string(".addr") : "";
+    Addr = VC.IRB->CreatePtrToInt(V, AddrSizeTy, AddrName);
+    DebugPrint::Emit(Addr);
+    // If Size is nullptr derive the size from types available.
+    if (!Size)
+      Size = ConstantInt::get(
+          AddrSizeTy,
+          DL.getTypeAllocSize(V->getType()->getPointerElementType()));
+  } else {
+    Addr = ConstantInt::get(AddrSizeTy, 0);
+    Size = Addr;
+  }
 
   // Create shadow capability on the stack.
   AllocaInst *ShadowCap;
-  if (InEntryBlock)
-    ShadowCap = createAlloca(CapTy);
-  else
-    ShadowCap = VC.IRB->CreateAlloca(CapTy, DL.getAllocaAddrSpace());
-  if (Alloca->hasName())
-    ShadowCap->setName(Alloca->getName() + std::string(".shadow.cap"));
-  DebugPrint::Emit(ShadowCap);
+  Twine ShadowCapName = !Name.empty() ? Name + std::string(".shadow.cap") : "";
+  if (InEntryBlock) {
+    ShadowCap = createAlloca(CapTy, ShadowCapName);
+  } else {
+    ShadowCap = VC.IRB->CreateAlloca(CapTy, DL.getAllocaAddrSpace(),
+                                     /* ArraySize */ nullptr, ShadowCapName);
+    DebugPrint::Emit(ShadowCap);
+  }
 
+  // Finally, create an RT call to initialize the new capability on the stack.
+  const std::string RtCallName = !Name.empty() ? Name.str() + ".cap" : "";
+  return createRtCall(RtKind::STACK_CAP_INIT, RtCallName, ShadowCap, Addr,
+                      Size);
+}
+
+// Creates the following sequence:
+//
+// [%m = mul i64 %c, C]
+// %1 = ptrtoint <TY>* %0 to i64
+// %2 = alloca %__cheriseed_cap_t, align 16
+// %3 = tail call %__cheriseed_cap_t*
+//      @__cheriseed_stack_cap_init(%__cheriseed_cap_t* %2, i64 %1, i64 <Size>)
+//
+// where %0 is
+//    %0 = alloca <TY>, ...
+//
+// Size is automatically calculated using the AllocaInst. This might emit an
+// additional Mul instruction, in which case Size is %m.
+Value *CHERIseed::createCapToAlloca(AllocaInst *Alloca, bool InEntryBlock) {
   // This is very similar to 'AllocaInst::getAllocationSizeInBits()',
   // but returns a Value even if this is a variable sized array.
   Value *AllocaSize;
   const uint64_t AllocaTypeSize =
       DL.getTypeAllocSize(Alloca->getAllocatedType());
-  if (ConstantInt *Size = dyn_cast<ConstantInt>(Alloca->getArraySize()))
+  if (ConstantInt *Size = dyn_cast<ConstantInt>(Alloca->getArraySize())) {
     AllocaSize =
         ConstantInt::get(AddrSizeTy, AllocaTypeSize * Size->getZExtValue());
-  else {
+  } else {
     AllocaSize = VC.IRB->CreateMul(
         Alloca->getArraySize(), ConstantInt::get(AddrSizeTy, AllocaTypeSize));
     if (Alloca->hasName())
@@ -3545,11 +3593,8 @@ Value *CHERIseed::createCapToAlloca(AllocaInst *Alloca, bool InEntryBlock) {
     DebugPrint::Emit(AllocaSize);
   }
 
-  // Finally, create an RT call to initialize the new capability on the stack.
-  const std::string RtCallName =
-      Alloca->hasName() ? Alloca->getName().str() + ".cap" : "";
-  return createRtCall(RtKind::STACK_CAP_INIT, RtCallName, ShadowCap, Addr,
-                      AllocaSize);
+  return createShadowCapOnStack(Alloca, AllocaSize, Alloca->getName(),
+                                InEntryBlock);
 }
 
 // Creates the following sequence (i8* may vary):
