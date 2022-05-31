@@ -466,8 +466,8 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br i1 %1, label %init, label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
-; CHECK-NEXT:    %accessor.call.cap = call %__cheriseed_cap_t* @cap()
 ; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_cap_array_shadow_flag, align 1
+; CHECK-NEXT:    %accessor.call.cap = call %__cheriseed_cap_t* @cap()
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -483,8 +483,8 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br i1 %1, label %init, label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
-; CHECK-NEXT:    %accessor.call.cap = call %__cheriseed_cap_t* @cap()
 ; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_ptr_to_cap_shadow_flag, align 1
+; CHECK-NEXT:    %accessor.call.cap = call %__cheriseed_cap_t* @cap()
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -505,12 +505,12 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br label %init
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
+; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_cap_to_cap_shadow_flag, align 1
 ; CHECK-NEXT:    %accessor.call.cap = call %__cheriseed_cap_t* @cap()
 ; CHECK-NEXT:    %3 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
 ; CHECK-NEXT:    %4 = ptrtoint %__cheriseed_cap_t* %accessor.call.cap to i64
 ; CHECK-NEXT:    %5 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %3, %__cheriseed_cap_t* %3, i64 %4)
 ; CHECK-NEXT:    %6 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* @__cheriseed_global_cap_to_cap, %__cheriseed_cap_t* %5, i64 0)
-; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_cap_to_cap_shadow_flag, align 1
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -604,10 +604,10 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br label %init
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
+; CHECK-NEXT:    %3 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
+; CHECK-NEXT:    %4 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* @__cheriseed_shadow_capability_cap_to_cap_as200, %__cheriseed_cap_t* %3, i64 ptrtoint (%__cheriseed_cap_t* @__cheriseed_global_cap_to_cap_as200 to i64))
 ; CHECK-NEXT:    %accessor.call.cap_as200 = call %__cheriseed_cap_t* @cap_as200()
-; CHECK-NEXT:    %3 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* @__cheriseed_global_cap_to_cap_as200, %__cheriseed_cap_t* %accessor.call.cap_as200, i64 0)
-; CHECK-NEXT:    %4 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
-; CHECK-NEXT:    %5 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* @__cheriseed_shadow_capability_cap_to_cap_as200, %__cheriseed_cap_t* %4, i64 ptrtoint (%__cheriseed_cap_t* @__cheriseed_global_cap_to_cap_as200 to i64))
+; CHECK-NEXT:    %5 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* @__cheriseed_global_cap_to_cap_as200, %__cheriseed_cap_t* %accessor.call.cap_as200, i64 0)
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -632,8 +632,8 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br i1 %1, label %init, label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
-; CHECK-NEXT:    %accessor.call.case.2.g = call %com.hascap.s* @case.2.g()
 ; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.2_shadow_flag, align 1
+; CHECK-NEXT:    %accessor.call.case.2.g = call %com.hascap.s* @case.2.g()
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -656,10 +656,10 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br label %init
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
+; CHECK-NEXT:    %3 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
+; CHECK-NEXT:    %4 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* @__cheriseed_shadow_capability_case.3, %__cheriseed_cap_t* %3, i64 ptrtoint (%case.3.s* @__cheriseed_global_case.3 to i64))
 ; CHECK-NEXT:    %accessor.call.case.3.g = call %__cheriseed_cap_t* @case.3.g()
-; CHECK-NEXT:    %3 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* getelementptr inbounds (%case.3.s, %case.3.s* @__cheriseed_global_case.3, i32 0, i32 1), %__cheriseed_cap_t* %accessor.call.case.3.g, i64 0)
-; CHECK-NEXT:    %4 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
-; CHECK-NEXT:    %5 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* @__cheriseed_shadow_capability_case.3, %__cheriseed_cap_t* %4, i64 ptrtoint (%case.3.s* @__cheriseed_global_case.3 to i64))
+; CHECK-NEXT:    %5 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* getelementptr inbounds (%case.3.s, %case.3.s* @__cheriseed_global_case.3, i32 0, i32 1), %__cheriseed_cap_t* %accessor.call.case.3.g, i64 0)
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -679,10 +679,10 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br label %init
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
+; CHECK-NEXT:    %3 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
+; CHECK-NEXT:    %4 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* @__cheriseed_shadow_capability_case.4, %__cheriseed_cap_t* %3, i64 ptrtoint (%case.4.s* @__cheriseed_global_case.4 to i64))
 ; CHECK-NEXT:    %accessor.call.case.4.g = call %__cheriseed_cap_t* @case.4.g()
-; CHECK-NEXT:    %3 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* getelementptr inbounds (%case.4.s, %case.4.s* @__cheriseed_global_case.4, i32 0, i32 1), %__cheriseed_cap_t* %accessor.call.case.4.g, i64 0)
-; CHECK-NEXT:    %4 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
-; CHECK-NEXT:    %5 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* @__cheriseed_shadow_capability_case.4, %__cheriseed_cap_t* %4, i64 ptrtoint (%case.4.s* @__cheriseed_global_case.4 to i64))
+; CHECK-NEXT:    %5 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* getelementptr inbounds (%case.4.s, %case.4.s* @__cheriseed_global_case.4, i32 0, i32 1), %__cheriseed_cap_t* %accessor.call.case.4.g, i64 0)
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -697,9 +697,9 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br i1 %1, label %init, label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
+; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.5_shadow_flag, align 1
 ; CHECK-NEXT:    %accessor.call.case.5.g2 = call %__cheriseed_cap_t* @case.5.g2()
 ; CHECK-NEXT:    %2 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* getelementptr inbounds (%case.5.s, %case.5.s* @__cheriseed_global_case.5, i32 0, i32 1, i32 0), %__cheriseed_cap_t* %accessor.call.case.5.g2, i64 0)
-; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.5_shadow_flag, align 1
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -741,10 +741,10 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br label %init
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
+; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.6_shadow_flag, align 1
 ; CHECK-NEXT:    %3 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
 ; CHECK-NEXT:    %4 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %3, %__cheriseed_cap_t* %3, i64 ptrtoint (i8* @__cheriseed_global_case.6.g to i64))
 ; CHECK-NEXT:    %5 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* getelementptr inbounds (%case.6.s, %case.6.s* @__cheriseed_global_case.6, i32 0, i32 1), %__cheriseed_cap_t* %4, i64 0)
-; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.6_shadow_flag, align 1
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -769,10 +769,10 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br label %init
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
+; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.8_shadow_flag, align 1
 ; CHECK-NEXT:    %3 = tail call %__cheriseed_cap_t* @__cheriseed_pcc_get(%__cheriseed_cap_t* %2)
 ; CHECK-NEXT:    %4 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %3, %__cheriseed_cap_t* %3, i64 ptrtoint (void ()* @case.8.f.2 to i64))
 ; CHECK-NEXT:    %5 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* getelementptr inbounds (%case.8.s, %case.8.s* @__cheriseed_global_case.8, i32 0, i32 3), %__cheriseed_cap_t* %4, i64 0)
-; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.8_shadow_flag, align 1
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -787,9 +787,9 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br i1 %1, label %init, label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
+; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.9_shadow_flag, align 1
 ; CHECK-NEXT:    %accessor.call.case.9.g2 = call %__cheriseed_cap_t* @case.9.g2()
 ; CHECK-NEXT:    %2 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* getelementptr inbounds (%case.9.s, %case.9.s* @__cheriseed_global_case.9, i32 0, i32 1, i64 1), %__cheriseed_cap_t* %accessor.call.case.9.g2, i64 0)
-; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.9_shadow_flag, align 1
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -815,11 +815,11 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br label %init
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
+; CHECK-NEXT:    %4 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
+; CHECK-NEXT:    %5 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* @__cheriseed_shadow_capability_case.11, %__cheriseed_cap_t* %4, i64 ptrtoint (%__cheriseed_cap_t* @__cheriseed_global_case.11 to i64))
 ; CHECK-NEXT:    %accessor.call.case.11.g1 = call %__cheriseed_cap_t* @case.11.g1()
-; CHECK-NEXT:    %4 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %2, %__cheriseed_cap_t* %accessor.call.case.11.g1, i64 8)
-; CHECK-NEXT:    %5 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* @__cheriseed_global_case.11, %__cheriseed_cap_t* %4, i64 0)
-; CHECK-NEXT:    %6 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %3)
-; CHECK-NEXT:    %7 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* @__cheriseed_shadow_capability_case.11, %__cheriseed_cap_t* %6, i64 ptrtoint (%__cheriseed_cap_t* @__cheriseed_global_case.11 to i64))
+; CHECK-NEXT:    %6 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %3, %__cheriseed_cap_t* %accessor.call.case.11.g1, i64 8)
+; CHECK-NEXT:    %7 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* @__cheriseed_global_case.11, %__cheriseed_cap_t* %6, i64 0)
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -834,9 +834,9 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br i1 %1, label %init, label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
+; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.12_shadow_flag, align 1
 ; CHECK-NEXT:    %accessor.call.case.12.a = call i8* @case.12.a()
 ; CHECK-NEXT:    store i8* %accessor.call.case.12.a, i8** getelementptr inbounds (%case.12.s, %case.12.s* @__cheriseed_global_case.12, i32 0, i32 0), align 8
-; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.12_shadow_flag, align 1
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -851,9 +851,9 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br i1 %1, label %init, label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
+; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.13_shadow_flag, align 1
 ; CHECK-NEXT:    %accessor.call.case.13.a = call i8* @case.13.a()
 ; CHECK-NEXT:    store i8* %accessor.call.case.13.a, i8** @__cheriseed_global_case.13, align 8
-; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.13_shadow_flag, align 1
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -873,10 +873,10 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br label %init
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
+; CHECK-NEXT:    %3 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
+; CHECK-NEXT:    %4 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* @__cheriseed_shadow_capability_case.14, %__cheriseed_cap_t* %3, i64 ptrtoint (%__cheriseed_cap_t* @__cheriseed_global_case.14 to i64))
 ; CHECK-NEXT:    %accessor.call.case.14.g = call %__cheriseed_cap_t* @case.14.g()
-; CHECK-NEXT:    %3 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* @__cheriseed_global_case.14, %__cheriseed_cap_t* %accessor.call.case.14.g, i64 0)
-; CHECK-NEXT:    %4 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
-; CHECK-NEXT:    %5 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* @__cheriseed_shadow_capability_case.14, %__cheriseed_cap_t* %4, i64 ptrtoint (%__cheriseed_cap_t* @__cheriseed_global_case.14 to i64))
+; CHECK-NEXT:    %5 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* @__cheriseed_global_case.14, %__cheriseed_cap_t* %accessor.call.case.14.g, i64 0)
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -891,8 +891,8 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br i1 %1, label %init, label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
-; CHECK-NEXT:    %accessor.call.case.15.g = call %0* @case.15.g()
 ; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.15_shadow_flag, align 1
+; CHECK-NEXT:    %accessor.call.case.15.g = call %0* @case.15.g()
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -907,8 +907,8 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br i1 %1, label %init, label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
-; CHECK-NEXT:    %accessor.call.case.16.g = call %case.16.s* @case.16.g()
 ; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.16_shadow_flag, align 1
+; CHECK-NEXT:    %accessor.call.case.16.g = call %case.16.s* @case.16.g()
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -923,8 +923,8 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br i1 %1, label %init, label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
-; CHECK-NEXT:    %accessor.call.case.17.g = call %case.17.s1* @case.17.g()
 ; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.17_shadow_flag, align 1
+; CHECK-NEXT:    %accessor.call.case.17.g = call %case.17.s1* @case.17.g()
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:
@@ -950,11 +950,11 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT:    br label %init
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
+; CHECK-NEXT:    %4 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
+; CHECK-NEXT:    %5 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* @__cheriseed_shadow_capability_case.19, %__cheriseed_cap_t* %4, i64 ptrtoint (%__cheriseed_cap_t* @__cheriseed_global_case.19 to i64))
 ; CHECK-NEXT:    %accessor.call.case.19.g1 = call %__cheriseed_cap_t* @case.19.g1()
-; CHECK-NEXT:    %4 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %2, %__cheriseed_cap_t* @__cheriseed_shadow_capability_case.19.g1, i64 112)
-; CHECK-NEXT:    %5 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* @__cheriseed_global_case.19, %__cheriseed_cap_t* %4, i64 0)
-; CHECK-NEXT:    %6 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %3)
-; CHECK-NEXT:    %7 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* @__cheriseed_shadow_capability_case.19, %__cheriseed_cap_t* %6, i64 ptrtoint (%__cheriseed_cap_t* @__cheriseed_global_case.19 to i64))
+; CHECK-NEXT:    %6 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %3, %__cheriseed_cap_t* @__cheriseed_shadow_capability_case.19.g1, i64 112)
+; CHECK-NEXT:    %7 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* @__cheriseed_global_case.19, %__cheriseed_cap_t* %6, i64 0)
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:

@@ -32,6 +32,7 @@
 ; CHECK-NEXT:    br i1 %1, label %init, label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  init:
+; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.1.g2_shadow_flag, align 1
 ; CHECK-NEXT:    %accessor.call.case.1.a1 = call i8* @case.1.a1()
 ; CHECK-NEXT:    store i8* %accessor.call.case.1.a1, i8** getelementptr inbounds ([5 x i8*], [5 x i8*]* @__cheriseed_global_case.1.g2, i32 0, i64 1), align 8
 ; CHECK-NEXT:    %accessor.call.case.1.a2 = call i8* @case.1.a2()
@@ -40,7 +41,6 @@
 ; CHECK-NEXT:    store i8* %accessor.call.case.1.a3, i8** getelementptr inbounds ([5 x i8*], [5 x i8*]* @__cheriseed_global_case.1.g2, i32 0, i64 3), align 8
 ; CHECK-NEXT:    %accessor.call.case.1.a31 = call i8* @case.1.a3()
 ; CHECK-NEXT:    store i8* %accessor.call.case.1.a31, i8** getelementptr inbounds ([5 x i8*], [5 x i8*]* @__cheriseed_global_case.1.g2, i32 0, i64 4), align 8
-; CHECK-NEXT:    store i8 1, i8* @__cheriseed_global_case.1.g2_shadow_flag, align 1
 ; CHECK-NEXT:    br label %exit
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  exit:

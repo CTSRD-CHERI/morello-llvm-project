@@ -2851,6 +2851,12 @@ void CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
   ScopedAccessorBuilder SAB{VC, IRB, Accessor};
   GlobalVariable *ShadowFlag = nullptr;
 
+  // Begin developing the "init" block.
+  SAB.selectInitBlock();
+
+  if (ShadowCapability)
+    createPtrToCap(SAB->CreatePtrToInt(NGV, AddrSizeTy), ShadowCapability);
+
   if (Analysis.callsAccessors() || Analysis.needsRuntimeInitialization()) {
     // Some sanity checks
     if (!Analysis.isAggregateType())
@@ -2858,13 +2864,13 @@ void CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
 
     // In pure-capability ABI we use the shadow capability to decide if
     // a global is initialized. In all other cases we need a shadow flag.
-    if (!ShadowCapability)
+    if (!ShadowCapability) {
       ShadowFlag = new GlobalVariable(M, Int8Ty, false, GV->getLinkage(),
                                       Constant::getNullValue(Int8Ty),
                                       NGV->getName() + "_shadow_flag");
-
-    // Begin developing the "init" block.
-    SAB.selectInitBlock();
+      Value *SI = SAB->CreateStore(ConstantInt::get(Int8Ty, 1), ShadowFlag);
+      DebugPrint::Emit(SI);
+    }
 
     // First, call all accessor functions one by one. Register all accessors so
     // that their Value can be re-used later in the "init" block.
@@ -3008,7 +3014,6 @@ void CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
 
     // Mark init done
     SAB.selectInitBlock();
-    SAB->CreateStore(ConstantInt::get(Int8Ty, 1), ShadowFlag);
     SAB->CreateBr(SAB.ExitBlock);
   } else if (ShadowCapability) {
     // Develop "init.check" block
@@ -3024,7 +3029,6 @@ void CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
 
     // Mark init done
     SAB.selectInitBlock();
-    createPtrToCap(SAB->CreatePtrToInt(NGV, AddrSizeTy), ShadowCapability);
     SAB->CreateBr(SAB.ExitBlock);
   }
 
