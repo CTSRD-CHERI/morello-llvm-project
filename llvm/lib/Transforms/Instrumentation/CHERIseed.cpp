@@ -866,16 +866,6 @@ protected:
   /// \returns The Value associated with \p V.
   Value *mapValue(Value *V);
 
-  /// Maps callee of a direct call.
-  ///
-  /// This function may map some known library calls differently.
-  ///
-  /// \param F Pointer to the function being called.
-  /// \param Ctx Reference to a call context.
-  ///
-  /// \returns The mapped \p F.
-  Value *mapDirectCallee(Function *F, CallContext &Ctx);
-
   /// Helper structure to collect all GEP indices of a GlobalVariable which
   /// require runtime initialization.
   ///
@@ -1471,7 +1461,7 @@ Value *CHERIseed::visitCallInst(CallInst &I) {
   Value *Callee;
   if (Function *F = dyn_cast<Function>(CalledOP)) {
     // Direct function call
-    Callee = mapDirectCallee(F, Ctx);
+    Callee = mapFunction(F);
   } else if (Argument *A = dyn_cast<Argument>(CalledOP)) {
     // Indirect call via a formal argument.
     Callee = mapValue(A);
@@ -2605,43 +2595,6 @@ Value *CHERIseed::mapValue(Value *V) {
     VC.BB->getInstList().push_back(PV);
     return PV;
   });
-}
-
-Value *CHERIseed::mapDirectCallee(Function *F, CallContext &Ctx) {
-  Function *NF = mapFunction(F);
-  if (!NF->hasName())
-    return NF;
-
-  // The library function 'syscall' in 'unistd.h' is defined as
-  // __INTPTR_TYPE__ syscall(long, ...) in pure-capability ABI.
-  // The types passed as variadic arguments vary.
-  // With CHERIseed, the expectation is that these arguments can be
-  // transparently cast to __INTPTR_TYPE__. This code translates direct calls
-  // to 'syscall' so that all the arguments are of __INTPTR_TYPE__-like type.
-  // This is not possible to fix in libc implementations.
-  if ((NF->getName() == "syscall") && (F->getAddressSpace() == kCapabilityAS)) {
-    // Process arguments after argument 'n'.
-    // mapFunction() inserted an indirect return argument as the 0th,
-    // so 'n' is 1st.
-    for (size_t Idx = 2; Idx < Ctx.Args.size(); ++Idx) {
-      Value *Arg = Ctx.Args[Idx];
-      // Type is either integer or pointer
-      assert(Arg->getType()->isIntOrPtrTy() &&
-             "Expected pointer or integer type");
-      if (!Arg->getType()->isIntegerTy())
-        continue;
-      AllocaInst *AllocCap = createAlloca(CapTy);
-      Value *Param = VC.IRB->CreateSExt(Arg, AddrSizeTy);
-      Ctx.Args[Idx] = createRtCall(RtKind::COPY_CAP_WITH_OFFSET, AllocCap,
-                                   ConstantPointerNull::get(CapPtrTy), Param);
-    }
-
-    // Needs 8 arguments in total.
-    for (size_t Idx = Ctx.Args.size(); Idx <= 7; ++Idx)
-      Ctx.Args.push_back(ConstantPointerNull::get(CapPtrTy));
-  }
-
-  return NF;
 }
 
 Instruction *CHERIseed::mapInstruction(Instruction &I) {
