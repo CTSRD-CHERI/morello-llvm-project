@@ -383,7 +383,9 @@ __cheriseed_cap_t *__cheriseed_stack_cap_init(__cheriseed_cap_t *cap, u64 addr,
 
 __cheriseed_cap_t *__cheriseed_load_cap(const __cheriseed_cap_t *cap,
                                         __cheriseed_cap_t *loaded_cap) {
-  DefaultCapChecks(cap).add(error::RequiredPerms(ccl::permissions::LOAD));
+  DefaultCapChecks(cap)
+      .add(error::RequiredPerms(ccl::permissions::LOAD))
+      .add(error::InBounds(sizeof(__cheriseed_cap_t)));
   DefaultCapChecks(loaded_cap);
   const __cheriseed_cap_t *target_cap;
   if (cap->value != 0)
@@ -412,8 +414,10 @@ __cheriseed_cap_t *__cheriseed_load_cap_hybrid(const __cheriseed_cap_t *ptr,
 void __cheriseed_store_cap(__cheriseed_cap_t *cap,
                            const __cheriseed_cap_t *stored_cap) {
   // TODO if stored_cap is valid
-  DefaultCapChecks(cap).add(error::RequiredPerms(ccl::permissions::STORE_CAP |
-                                                 ccl::permissions::STORE));
+  DefaultCapChecks(cap)
+      .add(error::RequiredPerms(ccl::permissions::STORE_CAP |
+                                ccl::permissions::STORE))
+      .add(error::InBounds(sizeof(__cheriseed_cap_t)));
   if (!stored_cap)
     ccl::UseNullCap(&stored_cap);
   DefaultCapChecks(stored_cap);

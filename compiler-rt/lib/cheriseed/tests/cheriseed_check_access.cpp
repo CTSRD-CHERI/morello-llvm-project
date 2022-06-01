@@ -91,31 +91,38 @@ TEST(CheckAccessDeathTest, BoundsInside) {
 
 TEST(CheckAccessDeathTest, LoadCap) {
   __cheriseed_cap_t target;
-  __cheriseed_cap_t load_from = utils::InitCap(&target);
+  __cheriseed_cap_t load_base = utils::InitCap(&target);
+  __cheriseed_cap_t load_from = load_base;
   __cheriseed_cap_t dst;
 
   // Check with all perms
   EXPECT_GRANTED(__cheriseed_load_cap(&load_from, &dst));
   // Check missing LOAD_CAP
-  __cheriseed_perms_and(&load_from, &load_from, ~ccl::permissions::LOAD_CAP);
+  __cheriseed_perms_and(&load_from, &load_base, ~ccl::permissions::LOAD_CAP);
   EXPECT_GRANTED(__cheriseed_load_cap(&load_from, &dst));
   // Check missing LOAD
-  __cheriseed_perms_and(&load_from, &load_from, ~ccl::permissions::LOAD);
+  __cheriseed_perms_and(&load_from, &load_base, ~ccl::permissions::LOAD);
   EXPECT_DENIED_PERMS(__cheriseed_load_cap(&load_from, &dst));
+  // Check if bounds is enough
+  __cheriseed_bounds_set(&load_from, &load_base, sizeof(__cheriseed_cap_t) - 1);
+  EXPECT_DENIED_BOUNDS(__cheriseed_load_cap(&load_from, &dst));
 }
 
 TEST(CheckAccessDeathTest, StoreCap) {
   __cheriseed_cap_t target;
-  __cheriseed_cap_t store_to = utils::InitCap(&target);
-  __cheriseed_cap_t store_to2;
+  __cheriseed_cap_t store_base = utils::InitCap(&target);
+  __cheriseed_cap_t store_to = store_base;
   __cheriseed_cap_t src;
 
   // Check with all perms
   EXPECT_GRANTED(__cheriseed_store_cap(&store_to, &src));
   // Check missing STORE
-  __cheriseed_perms_and(&store_to2, &store_to, ~ccl::permissions::STORE);
-  EXPECT_DENIED_PERMS(__cheriseed_store_cap(&store_to2, &src));
-  // Check missing STORE_CAP
-  __cheriseed_perms_and(&store_to, &store_to, ~ccl::permissions::STORE_CAP);
+  __cheriseed_perms_and(&store_to, &store_base, ~ccl::permissions::STORE);
   EXPECT_DENIED_PERMS(__cheriseed_store_cap(&store_to, &src));
+  // Check missing STORE_CAP
+  __cheriseed_perms_and(&store_to, &store_base, ~ccl::permissions::STORE_CAP);
+  EXPECT_DENIED_PERMS(__cheriseed_store_cap(&store_to, &src));
+  // Check if bounds is enough
+  __cheriseed_bounds_set(&store_to, &store_base, sizeof(__cheriseed_cap_t) - 1);
+  EXPECT_DENIED_BOUNDS(__cheriseed_store_cap(&store_to, &src));
 }
