@@ -1,31 +1,32 @@
-// RUN: %clang_cheriseed %s -g -O0 -o %t && %run %t | FileCheck %s
-// RUN: %clang_cheriseed %s -g -O1 -o %t && %run %t | FileCheck %s
-// RUN: %clang_cheriseed %s -g -O2 -o %t && %run %t | FileCheck %s
-// RUN: %clang_cheriseed %s -g -O3 -o %t && %run %t | FileCheck %s
-// RUN: %clang_cheriseed %s -g -Os -o %t && %run %t | FileCheck %s
-// RUN: %clang_cheriseed -flegacy-pass-manager %s -g -O0 -o %t && %run %t | FileCheck %s
-// RUN: %clang_cheriseed -flegacy-pass-manager %s -g -O1 -o %t && %run %t | FileCheck %s
-// RUN: %clang_cheriseed -flegacy-pass-manager %s -g -O2 -o %t && %run %t | FileCheck %s
-// RUN: %clang_cheriseed -flegacy-pass-manager %s -g -O3 -o %t && %run %t | FileCheck %s
-// RUN: %clang_cheriseed -flegacy-pass-manager %s -g -Os -o %t && %run %t | FileCheck %s
+// RUN: %clangxx_cheriseed %s -g -O0 -o %t && %run %t | FileCheck %s
+// RUN: %clangxx_cheriseed %s -g -O1 -o %t && %run %t | FileCheck %s
+// RUN: %clangxx_cheriseed %s -g -O2 -o %t && %run %t | FileCheck %s
+// RUN: %clangxx_cheriseed %s -g -O3 -o %t && %run %t | FileCheck %s
+// RUN: %clangxx_cheriseed %s -g -Os -o %t && %run %t | FileCheck %s
+// RUN: %clangxx_cheriseed -flegacy-pass-manager %s -g -O0 -o %t && %run %t | FileCheck %s
+// RUN: %clangxx_cheriseed -flegacy-pass-manager %s -g -O1 -o %t && %run %t | FileCheck %s
+// RUN: %clangxx_cheriseed -flegacy-pass-manager %s -g -O2 -o %t && %run %t | FileCheck %s
+// RUN: %clangxx_cheriseed -flegacy-pass-manager %s -g -O3 -o %t && %run %t | FileCheck %s
+// RUN: %clangxx_cheriseed -flegacy-pass-manager %s -g -Os -o %t && %run %t | FileCheck %s
 
 #include "test.h"
-#include <assert.h>
+
+// Note that this test is NOT pure-capability, therefore usage of 'printf()'
+// is acceptable.
 #include <cinttypes>
-#include <cstddef>
 #include <stdio.h>
 
 #define CHECK_OFFSETOF(__ty, __m, __v)                      \
   {                                                         \
     const size_t offset = offsetof(__ty, __m);              \
-    assert(offset == __v);                                  \
+    TEST_ASSERT(offset == __v);                             \
     printf("offsetof(" #__ty ", " #__m "): %zu\n", offset); \
   }
 
 #define CHECK_ADDRESS_DIFF(__s, __m, __v)                                                               \
   {                                                                                                     \
     const intptr_t addr_diff = reinterpret_cast<intptr_t>(&__s.__m) - reinterpret_cast<intptr_t>(&__s); \
-    assert(addr_diff == __v);                                                                           \
+    TEST_ASSERT(addr_diff == __v);                                                                      \
     printf("runtime offset of " #__s "." #__m ": %zu\n", addr_diff);                                    \
   }
 
@@ -36,8 +37,8 @@ struct S {
   char d;
 };
 
-int main(void) {
-  assert(sizeof(S) == 64);
+TEST_MAIN() {
+  TEST_ASSERT(sizeof(S) == 64);
   printf("sizeof(S): %d\n", 64);
 
   // Check and print offsets of struct members.
@@ -59,20 +60,18 @@ int main(void) {
   s.b = &s.a;
   s.c = &s.d;
   s.d = '1';
-  assert(s.a == 14);
-  assert(*s.b == 14);
-  assert(*s.c == '1');
-  assert(s.d == '1');
+  TEST_ASSERT(s.a == 14);
+  TEST_ASSERT(*s.b == 14);
+  TEST_ASSERT(*s.c == '1');
+  TEST_ASSERT(s.d == '1');
 
   // Modify field through a capability.
   *s.b = 42;
   *s.c = '2';
-  assert(s.a == 42);
-  assert(*s.b == 42);
-  assert(*s.c == '2');
-  assert(s.d == '2');
-
-  return 0;
+  TEST_ASSERT(s.a == 42);
+  TEST_ASSERT(*s.b == 42);
+  TEST_ASSERT(*s.c == '2');
+  TEST_ASSERT(s.d == '2');
 }
 
 // CHECK: sizeof(S): 64
