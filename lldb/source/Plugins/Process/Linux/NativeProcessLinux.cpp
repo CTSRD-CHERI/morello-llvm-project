@@ -948,7 +948,7 @@ Status NativeProcessLinux::Resume(const ResumeActionList &resume_actions) {
 
     case eStateSuspended:
     case eStateStopped:
-      llvm_unreachable("Unexpected state");
+      break;
 
     default:
       return Status("NativeProcessLinux::%s (): unexpected state %s specified "
