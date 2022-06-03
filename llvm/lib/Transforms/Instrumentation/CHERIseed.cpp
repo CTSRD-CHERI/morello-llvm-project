@@ -3290,14 +3290,24 @@ CHERIseed::CallContext CHERIseed::prepareCallArgs(CallInst &I) {
     unsigned Idx = 0;
     for (const Use &A : VarArgs) {
       Value *MA = mapValue(A.get());
+      AttrBuilder AB(AttrList.getParamAttributes(OrigAttrIdx++));
       TypeSize Size = DL.getTypeAllocSize(MA->getType());
       Value *GEP = VC.IRB->CreateInBoundsGEP(
           Int8Ty, Alloca, ConstantInt::get(IdxType, Idx++ * SlotSize));
       DebugPrint::Emit(GEP);
-      if (IsCapability(A->getType())) {
-        Value *BC = VC.IRB->CreateBitCast(GEP, MA->getType());
+      if (AB.contains(Attribute::ByVal) &&
+          (DL.getTypeAllocSize(AB.getByValType())) <= SlotSize) {
+        Type *ByValType = AB.getByValType();
+        Value *BC = VC.IRB->CreateBitCast(GEP, ByValType->getPointerTo());
         DebugPrint::Emit(BC);
-        createRtCall(RtKind::STORE_CAP_HYBRID, BC, MA);
+        Value *Ptr = createCapAccessCheck(MA, ByValType->getPointerTo(),
+                                          getTypeStoreSize(ByValType),
+                                          cheriseed::abi::permissions::LOAD);
+        Value *Load =
+            VC.IRB->CreateAlignedLoad(ByValType, Ptr, Align(SlotSize));
+        DebugPrint::Emit(Load);
+        Value *Store = VC.IRB->CreateAlignedStore(Load, BC, Align(SlotSize));
+        DebugPrint::Emit(Store);
       } else if ((Size <= SlotSize) && !ShouldMapType(A->getType())) {
         // Clear the slot if the type being stored is smaller in size.
         // It does happen that the caller and callee use mismatched types,
@@ -3314,6 +3324,10 @@ CHERIseed::CallContext CHERIseed::prepareCallArgs(CallInst &I) {
         DebugPrint::Emit(BC);
         Value *Store = VC.IRB->CreateAlignedStore(MA, BC, Align(SlotSize));
         DebugPrint::Emit(Store);
+      } else if (IsCapability(A->getType())) {
+        Value *BC = VC.IRB->CreateBitCast(GEP, MA->getType());
+        DebugPrint::Emit(BC);
+        createRtCall(RtKind::STORE_CAP_HYBRID, BC, MA);
       } else {
         llvm_unreachable("Not implemented vararg case");
       }
