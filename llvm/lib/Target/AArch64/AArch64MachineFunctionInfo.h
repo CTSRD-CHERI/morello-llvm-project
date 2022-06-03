@@ -192,6 +192,8 @@ class AArch64FunctionInfo final : public MachineFunctionInfo {
   /// The stack slot where the Swift asynchronous context is stored.
   int SwiftAsyncContextFrameIdx = std::numeric_limits<int>::max();
 
+  bool IsMTETagged = false;
+
   // Captable mappings - these provide the index in the captable for each
   // global (if there is any).
   std::map<const Value *, std::pair<const Value *, unsigned>> CapTableMapping;
@@ -458,6 +460,7 @@ public:
   bool shouldSignReturnAddress(bool SpillsLR) const;
 
   bool shouldSignWithBKey() const { return SignWithBKey; }
+  bool isMTETagged() const { return IsMTETagged; }
 
   bool branchTargetEnforcement() const { return BranchTargetEnforcement; }
 

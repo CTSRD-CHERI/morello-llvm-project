@@ -1604,6 +1604,8 @@ const MCSymbol &FrameEmitterImpl::EmitCIE(const MCDwarfFrameInfo &Frame) {
       Augmentation += "S";
     if (Frame.IsBKeyFrame)
       Augmentation += "B";
+    if (Frame.IsMTETaggedFrame)
+      Augmentation += "G";
   }
   if (Frame.Type == MCCFIProcType::PureCap)
     Augmentation += 'C';
