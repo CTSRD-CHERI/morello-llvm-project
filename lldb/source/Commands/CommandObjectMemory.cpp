@@ -735,7 +735,10 @@ protected:
       addr = aligned;
     }
 
-    ABISP abi = m_exe_ctx.GetProcessPtr()->GetABI();
+    ABISP abi;
+    if (Process *proc = m_exe_ctx.GetProcessPtr())
+      abi = proc->GetABI();
+
     if (abi)
       addr = abi->FixDataAddress(addr);
 
