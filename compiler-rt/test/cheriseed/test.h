@@ -10,6 +10,8 @@ extern "C" {
 // CHERIseed RT has some libshim dependencies.
 bool __shim_is_pure_capability(void) { return true; }
 
+bool __shim_supports_cancellation_points() { return false; }
+
 void *__shim_syscall(void *p1, ...) {
   (void)p1;
   return (void *)-1;

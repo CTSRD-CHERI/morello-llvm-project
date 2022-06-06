@@ -31,10 +31,18 @@ namespace libc {
 
 // Libshim symbols the RT relies on.
 extern "C" bool __shim_is_pure_capability();
-extern "C" uintptr_t __shim_syscall(uintptr_t, ...);
+extern "C" bool __shim_supports_cancellation_points();
+extern "C" uintptr_t __shim_syscall(uintptr_t, uintptr_t, uintptr_t, uintptr_t,
+                                    uintptr_t, uintptr_t, uintptr_t, uintptr_t,
+                                    uintptr_t);
 
 // Returns true if targeting pure-capability ABI, otherwise false.
 static bool IsPureCapabilityABI() { return __shim_is_pure_capability(); }
+
+// Returns true if there is support for POSIX-like cancellation points.
+static bool HasCancellationPoints() {
+  return __shim_supports_cancellation_points();
+}
 
 // Helper to build a bounded capability.
 static __cheriseed_cap_t BuildBoundedCap(u64 address, u64 size, u64 perms) {
@@ -77,6 +85,9 @@ struct SystemCall final {
     if (IsPureCapabilityABI())
       Arg(-1UL,
           ccl::permissions::READ_CAP_PERMS | ccl::permissions::WRITE_CAP_PERMS);
+    // This is always a non-cancellable system call.
+    if (HasCancellationPoints())
+      BuildArg(0, 0, 0);
     Arg(nr);
   }
 
@@ -91,13 +102,25 @@ struct SystemCall final {
   }
 
   long Call() {
+    // Explicitly clear unused arguments.
+    while (num_args < kMaxArgs) BuildArg(0, 0, 0);
+
     if (!IsPureCapabilityABI())
       return static_cast<long>(__shim_syscall(args[0], args[1], args[2],
                                               args[3], args[4], args[5],
-                                              args[6], args[7]));
+                                              args[6], args[7], args[8]));
 
-    __shim_syscall(&args_cap[0], &args_cap[1], &args_cap[2], &args_cap[3],
-                   &args_cap[4], &args_cap[5], &args_cap[6], &args_cap[7]);
+    if (HasCancellationPoints())
+      __shim_syscall(/* indirect result */ &args_cap[0], /* cp */ &args_cap[1],
+                     /* nr */ args_cap[2].value(),
+                     /* arg1 */ &args_cap[3], &args_cap[4], &args_cap[5],
+                     &args_cap[6], &args_cap[7], /* arg6 */ &args_cap[8]);
+    else
+      __shim_syscall(/* indirect result */ &args_cap[0],
+                     /* nr */ args_cap[1].value(), /* arg1 */ &args_cap[2],
+                     &args_cap[3], &args_cap[4], &args_cap[5], &args_cap[6],
+                     /* arg6 */ &args_cap[7], /* unused */ &args_cap[8]);
+
     return static_cast<long>(args_cap[0].value());
   }
 
@@ -113,7 +136,7 @@ struct SystemCall final {
     return *this;
   }
 
-  static constexpr usize kMaxArgs = 8;
+  static constexpr usize kMaxArgs = 9;
 
   usize num_args;
   Argument args[kMaxArgs];

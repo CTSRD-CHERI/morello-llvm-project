@@ -18,6 +18,8 @@
 // libc has no such symbols exported.
 extern "C" bool __shim_is_pure_capability() { return false; }
 
+extern "C" bool __shim_supports_cancellation_points() { return false; }
+
 extern "C" void* __shim_syscall(void* p1, ...) {
   (void)p1;
   return (void*)-1;
