@@ -256,6 +256,8 @@ enum NodeType : unsigned {
   SADDV,
   UADDV,
 
+  // Add Pairwise of two vectors
+  ADDP,
   // Add Long Pairwise
   SADDLP,
   UADDLP,
