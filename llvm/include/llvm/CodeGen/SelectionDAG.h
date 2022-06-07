@@ -1095,7 +1095,8 @@ public:
                      StringRef MoveType = StringRef());
 
   SDValue getMemset(SDValue Chain, const SDLoc &dl, SDValue Dst, SDValue Src,
-                    SDValue Size, Align Alignment, bool isVol, bool isTailCall,
+                    SDValue Size, Align Alignment, bool isVol,
+                    bool AlwaysInline, bool isTailCall,
                     MachinePointerInfo DstPtrInfo,
                     const AAMDNodes &AAInfo = AAMDNodes());
 
