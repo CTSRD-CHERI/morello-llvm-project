@@ -114,7 +114,8 @@ protected:
 
   PacketResult SendWResponse(NativeProcessProtocol *process);
 
-  PacketResult SendStopReplyPacketForThread(lldb::tid_t tid);
+  PacketResult SendStopReplyPacketForThread(NativeProcessProtocol &process,
+                                            lldb::tid_t tid);
 
   PacketResult SendStopReasonForState(lldb::StateType process_state);
 
