@@ -66,14 +66,6 @@ bool AArch64RegisterInfo::regNeedsCFI(unsigned Reg,
   return true;
 }
 
-bool AArch64RegisterInfo::hasSVEArgsOrReturn(const MachineFunction *MF) {
-  const Function &F = MF->getFunction();
-  return isa<ScalableVectorType>(F.getReturnType()) ||
-         any_of(F.args(), [](const Argument &Arg) {
-           return isa<ScalableVectorType>(Arg.getType());
-         });
-}
-
 const MCPhysReg *
 AArch64RegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
   assert(MF && "Invalid MachineFunction pointer.");
@@ -134,7 +126,7 @@ AArch64RegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
     return use32CapRegs ? CSR_AArch64_AAPCS_32Cap_Regs_SaveList
         : CSR_AArch64_AAPCS_16Cap_Regs_SaveList;
   }
-  if (hasSVEArgsOrReturn(MF))
+  if (MF->getInfo<AArch64FunctionInfo>()->isSVECC())
     return CSR_AArch64_SVE_AAPCS_SaveList;
   return CSR_AArch64_AAPCS_SaveList;
 }
