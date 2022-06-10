@@ -28,13 +28,13 @@ void test_message_for_bad_value() {
     const std::error_category& e_cat1 = std::generic_category();
     const std::string msg = e_cat1.message(-1);
     // Exact message format varies by platform.
-    #if defined(_LIBCPP_HAS_NEWLIB)
-    // Newlib doesn't print anything.
-    #elif defined(_AIX)
+#if defined(_LIBCPP_HAS_NEWLIB)
+    // Newlib doessn't print anything.
+#elif defined(_AIX)
     LIBCPP_ASSERT(msg.rfind("Error -1 occurred", 0) == 0);
-    #else
+#else
     LIBCPP_ASSERT(msg.rfind("Unknown error", 0) == 0);
-    #endif
+#endif
     assert(errno == E2BIG);
 }
 
