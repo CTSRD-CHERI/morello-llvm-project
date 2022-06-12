@@ -263,6 +263,22 @@ public:
     return SelectAddrModeXRO(N, Width / 8, Base, Offset, SignExtend, DoShift);
   }
 
+  bool SelectExtractHigh(SDValue N, SDValue &Res) {
+    if (Subtarget->isLittleEndian() && N->getOpcode() == ISD::BITCAST)
+      N = N->getOperand(0);
+    if (N->getOpcode() != ISD::EXTRACT_SUBVECTOR ||
+        !isa<ConstantSDNode>(N->getOperand(1)))
+      return false;
+    EVT VT = N->getValueType(0);
+    EVT LVT = N->getOperand(0).getValueType();
+    unsigned Index = N->getConstantOperandVal(1);
+    if (!VT.is64BitVector() || !LVT.is128BitVector() ||
+        Index != VT.getVectorNumElements())
+      return false;
+    Res = N->getOperand(0);
+    return true;
+  }
+
   template<int Width>
   bool SelectCAddrModeXRO(SDValue N, SDValue &Base, SDValue &Offset,
                          SDValue &SignExtend, SDValue &DoShift) {
