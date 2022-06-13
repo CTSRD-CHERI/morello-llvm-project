@@ -3,7 +3,8 @@ CHERIseed
 =========
 
 .. contents::
-   :local:
+
+  :local:
 
 Introduction
 ============
@@ -28,17 +29,17 @@ and identify potentially unsafe code that would fault on real CHERI
 hardware. CHERIseed does not provide the same security guarantees as
 CHERI hardware, and should not be used as a security-enforcing tool.
 
-CHERIseed is a Work in Progress. Please see the :ref:`CHERIseed_Limitations`
+CHERIseed is a Work in Progress. Please see the :ref:`Limitations <cheriseed.limitations>`
 below for unsupported functionality.
 
 If you would like to contribute to CHERIseed, please read the
-:ref:`Contribution Guide<Contributing>` below.
+:ref:`Contribution Guide <cheriseed.contributing>` below.
 
 Getting Started
 ===============
 
-See `Getting Started: Building and Running Clang <https://clang.llvm.org/get_started.html>`_ for the System
-Requirements and instructions for how to generate a build system for
+See `Getting Started: Building and Running Clang <https://clang.llvm.org/get_started.html>`_
+for the System Requirements and instructions for how to generate a build system for
 CHERIseed-enabled clang with ``CMake``.
 
 To generate the documentation as html use
@@ -51,10 +52,10 @@ recommended, to avoid build errors from other target platforms.
 
 .. note::
 
-  ``clang`` >= 10.0.0 is required. To force CMake to use a particular
+  clang >= 10.0.0 is required. To force CMake to use a particular
   compiler binary use
 
-  ``-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++``
+  -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
 
 Once cmake has finished generating the build files, the targets to
 build are:
@@ -79,9 +80,9 @@ CHERIseed-aware ``libc``. To compile with the pure-capability ABI
 enabled you must first obtain a ported, pure-capability ABI version of
 the following libraries:
 
-* ``musl-libc``: https://git.morello-project.org/morello/musl-libc/-/tree/cheriseed
-* ``libshim``: https://git.morello-project.org/morello/android/platform/external/libshim/-/tree/cheriseed
-* ``libarchcap``: https://git.morello-project.org/morello/android/platform/external/libarchcap/-/tree/cheriseed
+* `musl-libc <https://git.morello-project.org/morello/musl-libc/-/tree/cheriseed>`_
+* `libshim <https://git.morello-project.org/morello/android/platform/external/libshim/-/tree/cheriseed>`_
+* `libarchcap <https://git.morello-project.org/morello/android/platform/external/libarchcap/-/tree/cheriseed>`_
 
 Each should be placed in adjacent directories to ``llvm-project/``.
 
@@ -117,8 +118,8 @@ The result of this should be:
 
 .. code-block:: bash
 
-   > ls ${MUSL_PREFIX}
-   bin  include  lib  share
+  > ls ${MUSL_PREFIX}
+  bin  include  lib  share
 
 You can now compile ``purecap`` source code with the following:
 
@@ -140,7 +141,7 @@ An example C program to demonstrate a violation of capability bounds
 is provided below.
 
 bounds.c
-##############
+########
 
 .. code-block:: C
 
@@ -199,11 +200,12 @@ To retrieve or modify the properties of a capability, see Sections
 `CHERI C/C++ Programming Guide <https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-947.pdf>`_.
 
 .. note::
-   CHERIseed code generation may not be optimal, and performance is not
-   representative of real CHERI hardware.
+
+  CHERIseed code generation may not be optimal, and performance is not
+  representative of real CHERI hardware.
 
 Behavior on a semantic rules violation
---------------------------------------
+======================================
 
 When CHERIseed detects that capability semantics have been violated at
 runtime, a SIGSEV or SIGBUS signal will be raised, depending on the
@@ -221,8 +223,8 @@ When ``SIGBUS`` is raised the following ``si_code`` are possible:
 
 These signals can be trapped by the application.
 
-Configuring CHERIseed Behaviour
-###############################
+Configuring Behaviour
+---------------------
 
 The default behaviour of CHERIseed upon encountering a violation of
 capability semantics is:
@@ -254,7 +256,7 @@ If calling signal handlers is disabled, a violation always results in terminatio
 the application.
 
 The runtime API ``__cheriseed_strerror()`` can be used to return the string
-representation of the new ``SEGV_CAP*`` values, or "UNKNOWN".
+representation of the new ``SEGV_CAP*`` values, or ``UNKNOWN``.
 
 Supported Platforms
 ===================
@@ -270,7 +272,7 @@ Design
 
 Please refer to the :doc:`Design Document<CHERIseedDesign>`.
 
-.. _CHERIseed_Limitations:
+.. _cheriseed.limitations:
 
 Limitations
 ===========
@@ -368,7 +370,7 @@ be used to determine a precisely representable allocation.
 Read more in Section 7.5 of the
 `CHERI C/C++ Programming Guide <https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-947.pdf>`_.
 
-.. _Contributing:
+.. _cheriseed.contributing:
 
 Contributing
 ============
@@ -412,4 +414,4 @@ Please ensure that any patches submitted are:
    patches, as this makes reviewing easier.
 
 Raising issues and submitting patches should be done via the
-Morello `gitlab <https://git.morello-project.org/morello/llvm-project/>`_
+Morello `gitlab <https://git.morello-project.org/morello/llvm-project/>`_.
