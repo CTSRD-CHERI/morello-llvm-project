@@ -21,7 +21,7 @@ target triple = "x86_64-unknown-linux-gnu"
 ; CHECK-SAME:   constant i8* bitcast (%__cheriseed_cap_t* ()* @global_in_section to i8*),
 ; CHECK-SAME:   section "__cheriseed_accessor_SECTION", align 16
 ; CHECK:      @__cheriseed_shadow_capability_global_in_section
-; CHECK-SAME:   global %__cheriseed_cap_t { i128 -1 },
+; CHECK-SAME:   global %__cheriseed_cap_t zeroinitializer,
 ; CHECK-SAME:   section "__cheriseed_shadow_capability_SECTION", align 16
 
 ; ------------------------------------------------------------------------------
@@ -35,7 +35,7 @@ target triple = "x86_64-unknown-linux-gnu"
   i8 addrspace(200)* getelementptr inbounds ([0 x i8], [0 x i8] addrspace(200)* @global_2, i32 0, i32 0)
 }], align 16
 ; CHECK:      @__cheriseed_shadow_capability_global_1 =
-; CHECK-SAME:   internal global %__cheriseed_cap_t { i128 -1 }, align 16
+; CHECK-SAME:   internal global %__cheriseed_cap_t zeroinitializer, align 16
 @global_2 = external addrspace(200) constant [0 x i8], align 1
 
 define void @global_regression() addrspace(200) {

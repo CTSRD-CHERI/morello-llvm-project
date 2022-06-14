@@ -380,6 +380,40 @@ void __cheriseed_enable_invoke_signal_handlers(int enable) {
   Options::EnableSignalHandlers = (enable != 0);
 }
 
+// Symbols to section containing global initialization data. This works well for
+// static linkage. Needs to be removed for cases to handle dynamic linkage.
+extern void *__attribute__((weak)) __start___cheriseed_initializers;
+extern void *__attribute__((weak)) __stop___cheriseed_initializers;
+
+// The following needs to changed for dynamic linkage cases. The changes would
+// include passing __start_* and __stop_* symbols as parameters while calling.
+void __cheriseed_static_init(void) {
+  if (!&__start___cheriseed_initializers)
+    return;
+  CHECK_EQ(0, ((vaddr)&__stop___cheriseed_initializers -
+               (vaddr)&__start___cheriseed_initializers) %
+                  sizeof(__cheriseed_initializer_t));
+
+  __cheriseed_initializer_t *glo_init_start =
+      reinterpret_cast<__cheriseed_initializer_t *>(
+          &__start___cheriseed_initializers);
+  __cheriseed_initializer_t *glo_init_stop =
+      reinterpret_cast<__cheriseed_initializer_t *>(
+          &__stop___cheriseed_initializers);
+
+  for (ssize idx = 0; idx < glo_init_stop - glo_init_start; ++idx) {
+    if (!glo_init_start[idx].cap)
+      continue;
+    LocalCap local_cap;
+    ccl::methods::BuildMaxCap(local_cap, glo_init_start[idx].address);
+    local_cap.Store(glo_init_start[idx].cap);
+  }
+
+  for (ssize idx = 0; idx < glo_init_stop - glo_init_start; ++idx)
+    if (glo_init_start[idx].init)
+      glo_init_start[idx].init();
+}
+
 // -------------------------------------
 // APIs used by the compiler
 // -------------------------------------

@@ -20,16 +20,22 @@
 @zero_global_cap_default = global i32 addrspace(200)* null, align 16
 
 ; CHECK-LABEL: @__cheriseed_global_intlike_global_200 = global i32 42, align 4
-; CHECK-NEXT:  @__cheriseed_shadow_capability_intlike_global_200 = global %__cheriseed_cap_t { i128 -1 }, align 16
+; CHECK-NEXT:  @__cheriseed_shadow_capability_intlike_global_200 = global %__cheriseed_cap_t zeroinitializer, align 16
 @intlike_global_200 = addrspace(200) global i32 42, align 4
 
 ; CHECK-NEXT:  @__cheriseed_global_nonzero_global_cap_default = global %__cheriseed_cap_t zeroinitializer, align 16
-; CHECK-NEXT:  @__cheriseed_global_nonzero_global_cap_default_shadow_flag = global i8 0
 @nonzero_global_cap_default = global i32 addrspace(200)* @intlike_global_200, align 16
 
 ; CHECK-NEXT:  @__cheriseed_global_nonzero_global_cap_default_2 = global %__cheriseed_cap_t zeroinitializer, align 16
-; CHECK-NEXT:  @__cheriseed_global_nonzero_global_cap_default_2_shadow_flag = global i8 0
 @nonzero_global_cap_default_2 = global i32 addrspace(200)* addrspacecast (i32* @intlike_global_default to i32 addrspace(200)*), align 16
+
+; CHECK-LABEL: @"__cheriseed_inits_<stdin>" = internal global [3 x %__cheriseed_initializer_t] [
+; CHECK-SAME: { i64 ptrtoint (%__cheriseed_cap_t* @__cheriseed_shadow_capability_intlike_global_200 to i64),
+; CHECK-SAME:   i64 ptrtoint (i32* @__cheriseed_global_intlike_global_200 to i64),
+; CHECK-SAME:   void ()* null },
+; CHECK-SAME: { i64 0, i64 0, void ()* @__cheriseed_initializer_nonzero_global_cap_default },
+; CHECK-SAME: { i64 0, i64 0, void ()* @__cheriseed_initializer_nonzero_global_cap_default_2 }],
+; CHECK-SAME: section "__cheriseed_initializers", align 8
 
 ; CHECK-LABEL: define void @init(%struct.S* %0)
 define void @init(%struct.S* %0) {
@@ -38,8 +44,6 @@ define void @init(%struct.S* %0) {
 ; CHECK-NEXT:  %3 = alloca %__cheriseed_cap_t, align 16
 ; CHECK-NEXT:  %4 = getelementptr inbounds %struct.S, %struct.S* %0, i64 0, i32 0
   %2 = getelementptr inbounds %struct.S, %struct.S* %0, i64 0, i32 0
-; CHECK-NEXT:  store i8 1, i8* %4, align 1
-  store i8 1, i8* %2, align 1
 ; CHECK-NEXT:  %5 = getelementptr inbounds %struct.S, %struct.S* %0, i64 0, i32 1
   %3 = getelementptr inbounds %struct.S, %struct.S* %0, i64 0, i32 1
 ; CHECK-NEXT:  store i32 2, i32* %5, align 4
@@ -110,3 +114,46 @@ define void @interact_with_globals(i32 addrspace(200)* %0) {
 ; CHECK-NEXT:  ret void
   ret void
 }
+
+; CHECK-LABEL:  define i32* @intlike_global_default() {
+; CHECK-NEXT:    ret i32* @__cheriseed_global_intlike_global_default
+; CHECK-NEXT:  }
+
+; CHECK-NOT:    define internal void @__cheriseed_initializer_intlike_global_default()
+
+; CHECK-LABEL:  define %__cheriseed_cap_t* @zero_global_cap_default() {
+; CHECK-NEXT:    ret %__cheriseed_cap_t* @__cheriseed_global_zero_global_cap_default
+; CHECK-NEXT:  }
+
+; CHECK-NOT:    define internal void @__cheriseed_initializer_zero_global_cap_default()
+
+; CHECK-LABEL:  define %__cheriseed_cap_t* @intlike_global_200() {
+; CHECK-NEXT:    ret %__cheriseed_cap_t* @__cheriseed_shadow_capability_intlike_global_200
+; CHECK-NEXT:  }
+
+; CHECK-NOT:    define internal void @__cheriseed_initializer_intlike_global_200()
+
+; CHECK-LABEL:  define %__cheriseed_cap_t* @nonzero_global_cap_default() {
+; CHECK-NEXT:    ret %__cheriseed_cap_t* @__cheriseed_global_nonzero_global_cap_default
+; CHECK-NEXT:  }
+
+; CHECK-LABEL:  define internal void @__cheriseed_initializer_nonzero_global_cap_default() {
+; CHECK-NEXT:    %gep.intlike_global_200 = call %__cheriseed_cap_t* @intlike_global_200()
+; CHECK-NEXT:    %1 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* @__cheriseed_global_nonzero_global_cap_default, %__cheriseed_cap_t* %gep.intlike_global_200, i64 0)
+; CHECK-NEXT:    ret void
+; CHECK-NEXT:  }
+
+; CHECK-LABEL:  define %__cheriseed_cap_t* @nonzero_global_cap_default_2() {
+; CHECK-NEXT:    ret %__cheriseed_cap_t* @__cheriseed_global_nonzero_global_cap_default_2
+; CHECK-NEXT:  }
+
+; CHECK-LABEL:  define internal void @__cheriseed_initializer_nonzero_global_cap_default_2() {
+; CHECK-NEXT:    %"CHERIseed Alloca Insertion Point" = bitcast i8 0 to i8
+; CHECK-NEXT:    %1 = alloca %__cheriseed_cap_t, align 16
+; CHECK-NEXT:    %2 = call i32* @intlike_global_default()
+; CHECK-NEXT:    %3 = call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %1)
+; CHECK-NEXT:    %4 = ptrtoint i32* %2 to i64
+; CHECK-NEXT:    %5 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %3, %__cheriseed_cap_t* %3, i64 %4)
+; CHECK-NEXT:    %6 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* @__cheriseed_global_nonzero_global_cap_default_2, %__cheriseed_cap_t* %5, i64 0)
+; CHECK-NEXT:    ret void
+; CHECK-NEXT:  }

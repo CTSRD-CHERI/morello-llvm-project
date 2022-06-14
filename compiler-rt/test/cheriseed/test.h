@@ -44,6 +44,8 @@
 void test_main(void);
 
 int main(void) {
+  // Calling initializer routine before running the test.
+  __cheriseed_static_init();
   // Make sure semantics are enabled.
   __cheriseed_enable_cheri_semantics(1);
   // Make sure violations don't trigger the call of a signal handler.

@@ -178,6 +178,9 @@ int __cheriseed_set_signal_handle_mode(__cheriseed_cap_t *context, int mode);
 SANITIZER_INTERFACE_ATTRIBUTE
 void __cheriseed_enable_invoke_signal_handlers(int enable);
 
+SANITIZER_INTERFACE_ATTRIBUTE
+void __cheriseed_static_init(void);
+
 // -------------------------------------
 // APIs used by the compiler
 // -------------------------------------

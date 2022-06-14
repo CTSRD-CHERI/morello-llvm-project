@@ -29,6 +29,7 @@ set(CHERISEED_NOINST_TEST_SOURCES
   cheriseed_atomic_tests.cpp
   cheriseed_check_access.cpp
   cheriseed_check_address.cpp
+  cheriseed_check_global_inits.cpp
   cheriseed_check_unaligned.cpp
   cheriseed_check.cpp
   cheriseed_test_main.cpp)

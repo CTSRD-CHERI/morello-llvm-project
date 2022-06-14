@@ -26,6 +26,9 @@ extern "C" void* __shim_syscall(long nr, ...) {
 }
 
 int main(int argc, char** argv) {
+  // Calling initializer routine before running tests.
+  __cheriseed_static_init();
+
   testing::GTEST_FLAG(death_test_style) = "threadsafe";
   testing::InitGoogleTest(&argc, argv);
   // gtest captures signals, don't try to call those handlers from the runtime

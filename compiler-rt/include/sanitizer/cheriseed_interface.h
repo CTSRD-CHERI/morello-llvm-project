@@ -529,6 +529,12 @@ int __cheriseed_set_signal_handle_mode(void *context, int mode);
 /// otherwise the runtime will try to call them directly.
 void __cheriseed_enable_invoke_signal_handlers(int enable);
 
+/// Performs initialization of capabilities in a static-linked application.
+///
+/// \note This API should be called before accessing any global variables,
+/// ideally early during libc init.
+void __cheriseed_static_init(void);
+
 // -------------------------------------
 // APIs used by the compiler
 // -------------------------------------

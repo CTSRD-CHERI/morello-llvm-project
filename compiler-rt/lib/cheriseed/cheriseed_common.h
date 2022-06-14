@@ -16,6 +16,7 @@
 
 using __sanitizer::memory_order;
 using __sanitizer::pid_t;
+using __sanitizer::ssize;
 using __sanitizer::u32;
 using __sanitizer::u64;
 using __sanitizer::u8;
@@ -51,6 +52,16 @@ struct __cheriseed_cmpxchg_result_t {
   __cheriseed_cap_t *cap;
   u8 result;
 };  // struct __cheriseed_cmpxchg_result_t
+
+/// Internal representation of '__cheriseed_initializers' section tuples.
+struct __cheriseed_initializer_t {
+  // Pointer to a capability.
+  __cheriseed_cap_t *cap;
+  // Address to set for the capability.
+  u64 address;
+  // Function which performs global initialization.
+  void (*init)();
+};  // struct __cheriseed_initializer_t
 
 /// Newtype to wrap pointers which may be nullptr.
 template <typename T>
