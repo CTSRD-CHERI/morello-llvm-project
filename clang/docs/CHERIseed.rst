@@ -82,7 +82,6 @@ the following libraries:
 
 * `musl-libc <https://git.morello-project.org/morello/musl-libc/-/tree/cheriseed>`_
 * `libshim <https://git.morello-project.org/morello/android/platform/external/libshim/-/tree/cheriseed>`_
-* `libarchcap <https://git.morello-project.org/morello/android/platform/external/libarchcap/-/tree/cheriseed>`_
 
 Each should be placed in adjacent directories to ``llvm-project/``.
 
