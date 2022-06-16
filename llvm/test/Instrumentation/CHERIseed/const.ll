@@ -9,6 +9,11 @@
 ; CHECK-NOT: addrspace(200)
 
 ; ------------------------------------------------------------------------------
+; General-purpose function for testing.
+
+declare void @sink(i32, ...)
+
+; ------------------------------------------------------------------------------
 ; Test addspacecast with ConstExpr.
 
 declare void @bar()
@@ -88,6 +93,14 @@ Lc:
 ; ------------------------------------------------------------------------------
 ; Test for ConstantStruct
 
+; CHECK-LABEL: @constant_struct
+define void @constant_struct() {
+; CHECK-NEXT:  call void (i32, ...) @sink(i32 undef, { i64, i64 } { i64 0, i64 1 })
+  call void (i32, ...) @sink(i32 undef, { i64, i64 } { i64 0, i64 1 })
+; CHECK-NEXT:  ret void
+  ret void
+}
+
 ; CHECK-LABEL: { i64, i64 } @return_constant_struct
 define { i64, i64 } @return_constant_struct() {
 ; Note: this is no similar thing to ConstantDataArray,
@@ -98,6 +111,14 @@ define { i64, i64 } @return_constant_struct() {
 
 ; ------------------------------------------------------------------------------
 ; Test for ConstantArray
+
+; CHECK-LABEL: @constant_array
+define void @constant_array() {
+; CHECK-NEXT:  call void (i32, ...) @sink(i32 undef, [2 x i64] [i64 1, i64 undef])
+  call void (i32, ...) @sink(i32 undef, [2 x i64] [i64 1, i64 undef])
+; CHECK-NEXT:  ret void
+  ret void
+}
 
 ; CHECK-LABEL: [2 x i64] @return_constant_array
 define [2 x i64] @return_constant_array() {
@@ -115,6 +136,8 @@ define void @constant_vector() {
   %1 = insertelement <2 x i8> undef, i8 1, i32 0
 ; CHECK-NEXT:  %2 = insertelement <2 x i8> <i8 undef, i8 1>, i8 1, i32 0
   %2 = insertelement <2 x i8> <i8 undef, i8 1>, i8 1, i32 0
+; CHECK-NEXT:  call void (i32, ...) @sink(i32 undef, <2 x i8> <i8 undef, i8 1>)
+  call void (i32, ...) @sink(i32 undef, <2 x i8> <i8 undef, i8 1>)
 ; CHECK-NEXT:  ret void
   ret void
 }

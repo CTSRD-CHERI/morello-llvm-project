@@ -2560,6 +2560,16 @@ Value *CHERIseed::mapValue(Value *V) {
     return MAV;
   }
 
+  if (ConstantArray *CA = dyn_cast<ConstantArray>(V)) {
+    ArrayType *MTy = mapType<ArrayType>(CA->getType());
+    SmallVector<Constant *, 8> Ops;
+    for (Use &U : CA->operands())
+      Ops.push_back(cast<Constant>(mapValue(U)));
+    Value *NCS = ConstantArray::get(MTy, {Ops});
+    VC.insert(V, NCS);
+    return NCS;
+  }
+
   if (ConstantStruct *CS = dyn_cast<ConstantStruct>(V)) {
     StructType *MTy = mapType<StructType>(CS->getType());
     SmallVector<Constant *, 8> Ops;
