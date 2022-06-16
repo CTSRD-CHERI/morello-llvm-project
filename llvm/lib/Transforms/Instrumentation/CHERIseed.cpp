@@ -550,6 +550,7 @@ struct CHERIseed final : public InstVisitor<CHERIseed, Value *> {
     LOAD_CAP_HYBRID,
     LOAD_CAP_HYBRID_ATOMIC,
     PCC_GET,
+    PERMS_AND,
     RMW_CAP,
     RMW_CAP_HYBRID,
     STACK_CAP_INIT,
@@ -1793,6 +1794,12 @@ Value *CHERIseed::visitVAEndInst(VAEndInst &I) {
   DebugPrint::Visitor("VAEndInst");
   if (!IsCapability(I.getArgList()->getType()))
     return Base::visitVAEndInst(I);
+  Value *VAListShadowCap = mapValue(I.getArgList());
+  Value *VAList =
+      createCapAccessCheck(VAListShadowCap, CapPtrTy, kCapabilityAlignment, 0);
+  // FIXME: Replace with TAG_CLEAR once tags are supported
+  createRtCall(RtKind::PERMS_AND, VAList, VAList,
+               ConstantInt::getNullValue(AddrSizeTy));
   return nullptr;
 }
 
@@ -3485,6 +3492,10 @@ CallInst *CHERIseed::createRtCall(RtKind Kind, const StringRef Name,
   case RtKind::PCC_GET:
     RtName = "pcc_get";
     FTy = FunctionType::get(CapPtrTy, {CapPtrTy}, false);
+    break;
+  case RtKind::PERMS_AND:
+    RtName = "perms_and";
+    FTy = FunctionType::get(CapPtrTy, {CapPtrTy, CapPtrTy, AddrSizeTy}, false);
     break;
   case RtKind::RMW_CAP:
     RtName = "rmw_cap";

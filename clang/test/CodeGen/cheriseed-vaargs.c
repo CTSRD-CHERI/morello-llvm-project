@@ -33,11 +33,13 @@ void callee1(int n, ...) {
 // CHECK-NEXT:  tail call void @__cheriseed_store_cap(%__cheriseed_cap_t* [[LST_CAP]], %__cheriseed_cap_t* %new_stack)
 // CHECK-NEXT:  [[V6:%.*]] = tail call %__cheriseed_cap_t* @__cheriseed_load_cap(%__cheriseed_cap_t* %stack, %__cheriseed_cap_t* [[V3]])
 // CHECK-NEXT:  tail call void @__cheriseed_store_cap(%__cheriseed_cap_t* [[CAP_CAP]], %__cheriseed_cap_t* [[V6]])
+// CHECK-NEXT:  [[V7:%.*]] = tail call i64 @__cheriseed_check_access(%__cheriseed_cap_t* [[LST_CAP]], i64 16, i32 0)
+// CHECK-NEXT:  [[V8:%.*]] = inttoptr i64 [[V7]] to %__cheriseed_cap_t*
+// CHECK-NEXT:  [[V9:%.*]] = tail call %__cheriseed_cap_t* @__cheriseed_perms_and(%__cheriseed_cap_t* [[V8]], %__cheriseed_cap_t* [[V8]], i64 0)
 // CHECK-NEXT:  ret void
   va_list lst;
   va_start(lst, n);
   int *__capability cap = va_arg(lst, int *__capability);
-// va_end does nothing and is currently simply discarded.
   va_end(lst);
 }
 
