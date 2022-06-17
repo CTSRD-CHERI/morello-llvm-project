@@ -257,10 +257,12 @@ void freebsd::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   case llvm::Triple::riscv32:
     CmdArgs.push_back("-m");
     CmdArgs.push_back("elf32lriscv");
+    CmdArgs.push_back("-X");
     break;
   case llvm::Triple::riscv64:
     CmdArgs.push_back("-m");
     CmdArgs.push_back("elf64lriscv");
+    CmdArgs.push_back("-X");
     break;
   case llvm::Triple::aarch64:
     // XXX: This is a workaround due to the lack of an ELF flag that
