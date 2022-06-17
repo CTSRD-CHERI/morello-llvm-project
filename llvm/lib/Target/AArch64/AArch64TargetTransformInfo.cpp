@@ -2095,6 +2095,10 @@ AArch64TTIImpl::enableMemCmpExpansion(bool OptSize, bool IsZeroCmp) const {
   return Options;
 }
 
+bool AArch64TTIImpl::prefersVectorizedAddressing() const {
+  return ST->hasSVE();
+}
+
 InstructionCost
 AArch64TTIImpl::getMaskedMemoryOpCost(unsigned Opcode, Type *Src,
                                       Align Alignment, unsigned AddressSpace,
