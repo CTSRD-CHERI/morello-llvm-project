@@ -178,3 +178,23 @@ declare i8* @llvm.thread.pointer.p0i8()
 declare i8 addrspace(200)* @llvm.thread.pointer.p200i8()
 
 ; ------------------------------------------------------------------------------
+; Test @llvm.prefetch
+
+; CHECK-LABEL: @int_prefetch
+define void @int_prefetch(i8* %p, i8 addrspace(200)* %c) {
+; Default address space
+; CHECK-LABEL: call void @llvm.prefetch.p0i8(i8* %p, i32 0, i32 0, i32 0)
+  call void @llvm.prefetch.p0i8(i8* %p, i32 0, i32 0, i32 0)
+; Capability address space
+; CHECK-NEXT:  %1 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %c)
+; CHECK-NEXT:  %2 = inttoptr i64 %1 to i8*
+; CHECK-NEXT:  call void @llvm.prefetch.p0i8(i8* %2, i32 0, i32 0, i32 0)
+  call void @llvm.prefetch.p200i8(i8 addrspace(200)* %c, i32 0, i32 0, i32 0)
+; CHECK-NEXT:  ret void
+  ret void
+}
+
+declare void @llvm.prefetch.p0i8(i8*, i32 immarg, i32 immarg, i32)
+declare void @llvm.prefetch.p200i8(i8 addrspace(200)*, i32 immarg, i32 immarg, i32)
+
+; ------------------------------------------------------------------------------

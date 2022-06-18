@@ -2049,6 +2049,21 @@ Value *CHERIseed::visitMemoryIntrinsicInst(IntrinsicInst &I) {
     NI = createRtCall(RtKind::COPY_CAP_WITH_OFFSET, AllocCap,
                       ConstantPointerNull::get(CapPtrTy), StackAddr);
   } break;
+  case Intrinsic::prefetch: {
+    // Handle @llvm.prefetch.p0i8() the default way.
+    if (!IsCapability(I.getArgOperand(0)->getType())) {
+      NI = cast<CallInst>(Base::visitIntrinsicInst(I));
+      break;
+    }
+    // Handle @llvm.prefetch.p200i8() the default way.
+    // What we want here is to prefetch the memory pointed to by the capability.
+    Value *I8Ptr = createCapToPtr(mapValue(I.getOperand(0)), Int8PtrTy);
+    NI = VC.IRB->CreateCall(
+        Intrinsic::getDeclaration(&M, I.getIntrinsicID(), Int8PtrTy),
+        {I8Ptr, mapValue(I.getOperand(1)), mapValue(I.getOperand(2)),
+         mapValue(I.getOperand(3))});
+    break;
+  }
   }
 
   DebugPrint::Emit(NI);
