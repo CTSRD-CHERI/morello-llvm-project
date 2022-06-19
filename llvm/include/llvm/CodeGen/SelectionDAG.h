@@ -1223,7 +1223,7 @@ public:
       uint64_t Size = 0, const AAMDNodes &AAInfo = AAMDNodes()) {
     // Ensure that codegen never sees alignment 0
     return getMemIntrinsicNode(Opcode, dl, VTList, Ops, MemVT, PtrInfo,
-                               Alignment.getValueOr(getEVTAlign(MemVT)), Flags,
+                               Alignment.value_or(getEVTAlign(MemVT)), Flags,
                                Size, AAInfo);
   }
 
@@ -1304,7 +1304,7 @@ public:
       const AAMDNodes &AAInfo = AAMDNodes(), const MDNode *Ranges = nullptr) {
     // Ensures that codegen never sees a None Alignment.
     return getLoad(AM, ExtType, VT, dl, Chain, Ptr, Offset, PtrInfo, MemVT,
-                   Alignment.getValueOr(getEVTAlign(MemVT)), MMOFlags, AAInfo,
+                   Alignment.value_or(getEVTAlign(MemVT)), MMOFlags, AAInfo,
                    Ranges);
   }
   /// FIXME: Remove once transition to Align is over.
@@ -1338,7 +1338,7 @@ public:
            MachineMemOperand::Flags MMOFlags = MachineMemOperand::MONone,
            const AAMDNodes &AAInfo = AAMDNodes()) {
     return getStore(Chain, dl, Val, Ptr, PtrInfo,
-                    Alignment.getValueOr(getEVTAlign(Val.getValueType())),
+                    Alignment.value_or(getEVTAlign(Val.getValueType())),
                     MMOFlags, AAInfo);
   }
   /// FIXME: Remove once transition to Align is over.
@@ -1364,7 +1364,7 @@ public:
                 MachineMemOperand::Flags MMOFlags = MachineMemOperand::MONone,
                 const AAMDNodes &AAInfo = AAMDNodes()) {
     return getTruncStore(Chain, dl, Val, Ptr, PtrInfo, SVT,
-                         Alignment.getValueOr(getEVTAlign(SVT)), MMOFlags,
+                         Alignment.value_or(getEVTAlign(SVT)), MMOFlags,
                          AAInfo);
   }
   /// FIXME: Remove once transition to Align is over.
@@ -1397,7 +1397,7 @@ public:
             const MDNode *Ranges = nullptr, bool IsExpanding = false) {
     // Ensures that codegen never sees a None Alignment.
     return getLoadVP(AM, ExtType, VT, dl, Chain, Ptr, Offset, Mask, EVL,
-                     PtrInfo, MemVT, Alignment.getValueOr(getEVTAlign(MemVT)),
+                     PtrInfo, MemVT, Alignment.value_or(getEVTAlign(MemVT)),
                      MMOFlags, AAInfo, Ranges, IsExpanding);
   }
   SDValue getLoadVP(ISD::MemIndexedMode AM, ISD::LoadExtType ExtType, EVT VT,
@@ -1457,7 +1457,7 @@ public:
     // Ensures that codegen never sees a None Alignment.
     return getStridedLoadVP(AM, ExtType, VT, DL, Chain, Ptr, Offset, Stride,
                             Mask, EVL, PtrInfo, MemVT,
-                            Alignment.getValueOr(getEVTAlign(MemVT)), MMOFlags,
+                            Alignment.value_or(getEVTAlign(MemVT)), MMOFlags,
                             AAInfo, Ranges, IsExpanding);
   }
   SDValue getStridedLoadVP(ISD::MemIndexedMode AM, ISD::LoadExtType ExtType,
