@@ -7666,7 +7666,7 @@ LegalizerHelper::lowerMemcpy(MachineInstr &MI, Register Dst, Register Src,
     const TargetRegisterInfo *TRI = MF.getSubtarget().getRegisterInfo();
     if (!TRI->hasStackRealignment(MF))
       while (NewAlign > Alignment && DL.exceedsNaturalStackAlignment(NewAlign))
-        NewAlign = NewAlign / 2;
+        NewAlign = NewAlign.previous();
 
     if (NewAlign > Alignment) {
       Alignment = NewAlign;
@@ -7774,7 +7774,7 @@ LegalizerHelper::lowerMemmove(MachineInstr &MI, Register Dst, Register Src,
     const TargetRegisterInfo *TRI = MF.getSubtarget().getRegisterInfo();
     if (!TRI->hasStackRealignment(MF))
       while (NewAlign > Alignment && DL.exceedsNaturalStackAlignment(NewAlign))
-        NewAlign = NewAlign / 2;
+        NewAlign = NewAlign.previous();
 
     if (NewAlign > Alignment) {
       Alignment = NewAlign;
