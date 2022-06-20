@@ -1149,7 +1149,7 @@ Error DWARFDebugFrame::parse(DWARFDataExtractor Data) {
           }
         }
 
-        if (AugmentationLength.hasValue()) {
+        if (AugmentationLength) {
           if (Offset != EndAugmentationOffset)
             return createStringError(errc::invalid_argument,
                                      "parsing augmentation data at 0x%" PRIx64
