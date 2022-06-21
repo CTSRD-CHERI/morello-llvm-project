@@ -58,22 +58,6 @@ define void @init(%struct.S* %0) {
   ret void
 }
 
-; CHECK-LABEL: define i64* @cap_to_ptr(%__cheriseed_cap_t* %0)
-define i64* @cap_to_ptr(i64 addrspace(200)* %0) {
-; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
-; CHECK-NEXT:  %2 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %3 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %2, %__cheriseed_cap_t* %0, i64 0)
-  %2 = bitcast i64 addrspace(200)* %0 to i8 addrspace(200)*
-; CHECK-NEXT:  %4 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %3)
-  %3 = tail call i64 @llvm.cheri.cap.address.get.i64(i8 addrspace(200)* %2)
-; CHECK-NEXT:  %5 = inttoptr i64 %4 to i64*
-  %4 = inttoptr i64 %3 to i64*
-; CHECK-NEXT:  ret i64* %5
-  ret i64* %4
-}
-
-declare i64 @llvm.cheri.cap.address.get.i64(i8 addrspace(200)*)
-
 ; CHECK-LABEL: define void @alloca_cap()
 define void @alloca_cap() {
 ; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16

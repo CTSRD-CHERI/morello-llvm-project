@@ -89,17 +89,15 @@ define void @call_func_ptr_8() {
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
 ; CHECK-NEXT:  %2 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %3 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %4 = tail call %__cheriseed_cap_t* @__cheriseed_pcc_get(%__cheriseed_cap_t* %1)
+; CHECK-NEXT:  %3 = tail call %__cheriseed_cap_t* @__cheriseed_pcc_get(%__cheriseed_cap_t* %1)
   %1 = tail call i8 addrspace(200)* @llvm.cheri.pcc.get()
-; CHECK-NEXT:  %5 = ptrtoint void ()* @call_func_ptr_8_callee to i64
-; CHECK-NEXT:  %6 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %2, %__cheriseed_cap_t* %4, i64 %5)
-; CHECK-NEXT:  %7 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %3, %__cheriseed_cap_t* %6, i64 0)
-; CHECK-NEXT:  %8 = tail call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %7, i64 0, i32 5)
+; CHECK-NEXT:  %4 = ptrtoint void ()* @call_func_ptr_8_callee to i64
+; CHECK-NEXT:  %5 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %2, %__cheriseed_cap_t* %3, i64 %4)
+; CHECK-NEXT:  %6 = tail call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %5, i64 0, i32 5)
   %2 = tail call i8 addrspace(200)* @llvm.cheri.cap.from.pointer.i64(i8 addrspace(200)* %1, i64 ptrtoint (void ()* @call_func_ptr_8_callee to i64))
-; CHECK-NEXT:  %9 = inttoptr i64 %8 to void ()*
+; CHECK-NEXT:  %7 = inttoptr i64 %6 to void ()*
   %3 = bitcast i8 addrspace(200)* %2 to void () addrspace(200)*
-; CHECK-NEXT:  tail call void %9()
+; CHECK-NEXT:  tail call void %7()
   tail call void %3()
 ; CHECK-NEXT:  ret void
   ret void

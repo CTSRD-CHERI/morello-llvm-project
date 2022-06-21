@@ -1434,18 +1434,12 @@ Value *CHERIseed::visitAtomicRMWInst(AtomicRMWInst &I) {
 
 Value *CHERIseed::visitBitCastInst(BitCastInst &I) {
   DebugPrint::Visitor("BitCast");
-  // Make a copy if casting to a capability:
-  //   %4 = bitcast i8 addrspace(200)* %1 to i64 addrspace(200)*
-  // At this point both '%1' and '%4' should be available. Because of the
-  // indirection in CHERIseed's capability representation, bitcasts
-  // should always create new capabilities.
-  // It can't happen that this instruction casts between address spaces.
   if (!IsCapability(I.getDestTy()))
     return Base::visitBitCastInst(I);
-  AllocaInst *AllocCap = createAlloca(CapTy);
-  return createRtCall(RtKind::COPY_CAP_WITH_OFFSET, AllocCap,
-                      mapValue(I.getOperand(0)),
-                      ConstantInt::get(AddrSizeTy, 0));
+  // Capability to capability casts are no-ops.
+  Value *MV = mapValue(I.getOperand(0));
+  DebugPrint::EmitNoop();
+  return MV;
 }
 
 Value *CHERIseed::visitCallInst(CallInst &I) {
