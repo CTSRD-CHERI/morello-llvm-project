@@ -292,12 +292,6 @@ the ``__capability`` attribute will be treated as capabilities, is
 possible but not recommended. Potential use cases for Hybrid
 CHERIseed are still being explored to justify supporting this feature.
 
-Variadic Functions
-------------------
-
-Functions that take a variable number of arguments are not yet supported
-by CHERIseed.
-
 Multi-threading
 ---------------
 

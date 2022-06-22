@@ -128,8 +128,17 @@ global variables are used alongside multi-threading.
 Variadic Arguments
 ------------------
 
-Variadic arguments are not currently supported. This feature is in
-progress and a high priority.
+Variadic arguments are supported in a generic, architecture agnostic
+way. They are *exclusively* passed on-stack via an additional capability
+argument, referred to as ``va_slot``.
+
+The pass modifies the calling convention of variadic functions such that
+the ellipsis (``...``) are replaced by ``va_slot``, which is always the
+last argument of the function call and points to an allocated stack slot
+where the pass stores the 16-byte aligned variadic arguments. Variadic
+arguments ``<=`` 16-bytes are stored directly in the stack slot;
+variadic arguments ``>`` 16-bytes are stored indirectly via a
+capability. ``va_slot`` is NULL if there are no variadic arguments.
 
 Function pointers
 -----------------
@@ -147,26 +156,10 @@ the current signal is blocked, unless SA_NODEFER was set, and the signals set
 in :code:`sigaction.sa_mask` are blocked. The only difference is that the
 runtime will not switch to the alternative signal stack, if set.
 
-Porting to a new architecture
-=============================
-
-This is a short checklist to help porting to other architectures.
-
-1. Variadic arguments
-
-   - Update `ABIInfo::EmitVAArg()`
-   - `__cheriseed_convert_va_start()` for the architecture
-
 Possible directions of future work
 ==================================
 
 This section lists some possible directions of futher development.
-
-Variadic Arguments
-------------------
-
-Remove `__cheriseed_convert_va_start()` and `__cheriseed_va_copy()` and
-implement the equivalent functionality in the respective llvm targets.
 
 Atomics
 -------
