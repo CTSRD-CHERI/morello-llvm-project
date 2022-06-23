@@ -615,6 +615,11 @@ enum CommandArgumentType {
   eArgTypeModuleUUID,
   eArgTypeSaveCoreStyle,
   eArgTypeLogHandler,
+  eArgTypeSEDStylePair,
+  eArgTypeRecognizerID,
+  eArgTypeConnectURL,
+  eArgTypeTargetID,
+  eArgTypeStopHookID,
   eArgTypeLastArg // Always keep this entry as the last entry in this
                   // enumeration!!
 };
