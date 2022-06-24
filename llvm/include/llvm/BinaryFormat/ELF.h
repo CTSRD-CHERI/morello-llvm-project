@@ -1388,6 +1388,9 @@ enum {
 
   // Morello program header types,
   PT_MORELLO_DESC = 0x70001000,
+
+  // RISCV program header types.
+  PT_RISCV_ATTRIBUTES = 0x70000003,
 };
 
 // Segment flag bits.
