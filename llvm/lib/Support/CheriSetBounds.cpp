@@ -16,10 +16,8 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/ManagedStatic.h"
+#include "llvm/Support/Path.h"
 #include "llvm/Support/YAMLParser.h"
-
-#include <sys/file.h>
-#include <unistd.h>
 
 #include "DebugOptions.h"
 
@@ -164,9 +162,11 @@ uint64_t StatsOutputFile::size() {
 }
 
 StatsOutputFile::~StatsOutputFile() {
-  if (flock(FD, LOCK_UN) != 0 && errno != ENOTSUP) {
-    errs() << "WARNING: unlocking statistics FD failed. Should be "
-              "released automatically on exit anyway.\n";
+  if (auto EC = sys::fs::unlockFile(FD)) {
+    if (EC != std::errc::not_supported) {
+      errs() << "WARNING: unlocking statistics FD failed. Should be "
+                "released automatically on exit anyway.\n";
+    }
   }
 }
 
@@ -176,7 +176,7 @@ StatsOutputFile::open(StringRef File, ErrorCallback OnOpenError,
   // raw_fd_ostream has no way of getting the FD and I don't want to change
   // the interface just for this function to enable file locking since
   // that would require a recompile of all of LLVM....
-  int StatsFD = STDERR_FILENO;
+  int StatsFD = -1;
   bool CloseOnStreamDelete = true;
   if (!File.empty()) {
     std::error_code EC = sys::fs::openFileForWrite(
@@ -190,9 +190,11 @@ StatsOutputFile::open(StringRef File, ErrorCallback OnOpenError,
     CloseOnStreamDelete = false;
   }
   assert(StatsFD != -1);
-  if (flock(StatsFD, LOCK_EX) != 0 && errno != ENOTSUP) {
-    // Lock error is not fatal we just get mixed output in the stats file
-    OnLockError(File, std::error_code(errno, std::generic_category()));
+  if (auto EC = sys::fs::lockFile(StatsFD)) {
+    if (EC != std::errc::not_supported) {
+      // Lock error is not fatal we just get mixed output in the stats file
+      OnLockError(File, EC);
+    }
   }
   // can't use make_unique here since the ctor is private
   return std::unique_ptr<StatsOutputFile>(new StatsOutputFile(
