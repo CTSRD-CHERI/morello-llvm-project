@@ -1084,7 +1084,7 @@ public:
                     MachinePointerInfo DstPtrInfo,
                     MachinePointerInfo SrcPtrInfo,
                     const AAMDNodes &AAInfo = AAMDNodes(),
-                    StringRef CopyType = StringRef());
+                    AAResults *AA = nullptr, StringRef CopyType = StringRef());
 
   SDValue getMemmove(SDValue Chain, const SDLoc &dl, SDValue Dst, SDValue Src,
                      SDValue Size, Align Alignment, bool isVol, bool isTailCall,
@@ -1092,7 +1092,7 @@ public:
                      MachinePointerInfo DstPtrInfo,
                      MachinePointerInfo SrcPtrInfo,
                      const AAMDNodes &AAInfo = AAMDNodes(),
-                     StringRef MoveType = StringRef());
+                     AAResults *AA = nullptr, StringRef MoveType = StringRef());
 
   SDValue getMemset(SDValue Chain, const SDLoc &dl, SDValue Dst, SDValue Src,
                     SDValue Size, Align Alignment, bool isVol,
