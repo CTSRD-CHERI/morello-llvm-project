@@ -614,6 +614,7 @@ enum CommandArgumentType {
   eArgTypeColumnNum,
   eArgTypeModuleUUID,
   eArgTypeSaveCoreStyle,
+  eArgTypeLogHandler,
   eArgTypeLastArg // Always keep this entry as the last entry in this
                   // enumeration!!
 };
