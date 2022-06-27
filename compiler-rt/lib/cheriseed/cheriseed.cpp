@@ -143,6 +143,10 @@ __cheriseed_cap_t *__cheriseed_copy_to_high(__cheriseed_cap_t *cap_out,
 
 u64 __cheriseed_diff(const __cheriseed_cap_t *cap_left,
                      const __cheriseed_cap_t *cap_right) {
+  if (!cap_left)
+    ccl::UseNullCap(&cap_left);
+  if (!cap_right)
+    ccl::UseNullCap(&cap_right);
   DefaultCapChecks(cap_left);
   DefaultCapChecks(cap_right);
   return (cap_left->value - cap_right->value);

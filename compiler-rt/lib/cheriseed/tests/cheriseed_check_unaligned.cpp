@@ -94,3 +94,8 @@ TEST(UnalignedDeathTest, UnalignedStore) {
   TEST_UNALIGNED_CAP(__cheriseed_cap_t store_to = utils::InitCap(&uacap);
                      __cheriseed_store_cap(&store_to, &cap));
 }
+
+TEST(UnalignedDeathTest, Diff) {
+  TEST_UNALIGNED_CAP(__cheriseed_diff(&uacap, &cap));
+  TEST_UNALIGNED_CAP(__cheriseed_diff(&cap, &uacap));
+}

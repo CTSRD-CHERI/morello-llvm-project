@@ -428,3 +428,18 @@ TEST(API, OffsetGet) {
   // therefore be the same as the capability value.
   ASSERT_EQ(__cheriseed_offset_get(&cap), reinterpret_cast<uint64_t>(&a));
 }
+
+TEST(API, Diff) {
+  uint8_t a[2];
+  __cheriseed_cap_t cap_a = utils::InitCap(&a[1]);
+  __cheriseed_cap_t cap_b = utils::InitCap(&a[0]);
+
+  ASSERT_EQ(__cheriseed_diff(&cap_a, &cap_a), 0);
+  ASSERT_EQ(__cheriseed_diff(&cap_a, &cap_b), 1);
+  ASSERT_EQ(__cheriseed_diff(&cap_b, &cap_a), -1);
+  ASSERT_EQ(__cheriseed_diff(&cap_a, nullptr),
+            reinterpret_cast<uint64_t>(&a[1]));
+  ASSERT_EQ(__cheriseed_diff(nullptr, &cap_b),
+            -reinterpret_cast<uint64_t>(&a[0]));
+  ASSERT_EQ(__cheriseed_diff(nullptr, nullptr), 0);
+}
