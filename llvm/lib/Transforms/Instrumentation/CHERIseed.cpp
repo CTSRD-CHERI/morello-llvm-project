@@ -2325,8 +2325,11 @@ Constant *CHERIseed::mapGlobalInitializer(Use &U,
         mapType(C->getType(), /* IsArgTy */ false));
   if (auto *C = dyn_cast<ConstantPointerNull>(U))
     return Constant::getNullValue(mapType(C->getType(), /* IsArgTy */ false));
-  if (auto *C = dyn_cast<UndefValue>(U))
+  if (auto *C = dyn_cast<UndefValue>(U)) {
+    if (IsCapability(C->getType()))
+      return Constant::getNullValue(mapType(C->getType(), /* IsArgTy */ false));
     return UndefValue::get(mapType(C->getType(), /* IsArgTy */ false));
+  }
 
   // ConstantExpr types
   if (auto *C = dyn_cast<ConstantExpr>(U)) {
@@ -2471,13 +2474,16 @@ Value *CHERIseed::mapValue(Value *V) {
     // are just simple data values".
     // See 'bool ConstantDataSequential::isElementTypeCompatible(Type *Ty);'
     // Therefore it is safe to use these as-is.
-    if (isa<ConstantPointerNull>(V))
+    if (isa<ConstantPointerNull>(V)) {
       NV = Constant::getNullValue(mapType(V->getType()));
-    else if (isa<UndefValue>(V))
-      NV = UndefValue::get(mapType(V->getType()));
-    else if (isa<ConstantAggregateZero>(V))
+    } else if (isa<UndefValue>(V)) {
+      if (IsCapability(V->getType()))
+        NV = Constant::getNullValue(mapType(V->getType()));
+      else
+        NV = UndefValue::get(mapType(V->getType()));
+    } else if (isa<ConstantAggregateZero>(V)) {
       NV = ConstantAggregateZero::get(mapType(V->getType()));
-    else {
+    } else {
       assert((isa<ConstantInt>(V) || isa<ConstantFP>(V) ||
               isa<ConstantTokenNone>(V) || isa<ConstantDataSequential>(V)) &&
              "Unknown class derived from ConstantData");

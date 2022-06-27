@@ -348,3 +348,29 @@ end:
 }
 
 ; ------------------------------------------------------------------------------
+; Regression test for when a __cheriseed_cap_t * is undef.
+
+define void @capability_is_undef(i1 %bool) {
+; CHECK-LABEL: entry:
+entry:
+  br i1 %bool, label %l1, label %l2
+
+; CHECK-LABEL: l1:
+l1:
+  br label %l2
+
+; CHECK-LABEL: l2:
+l2:
+; CHECK-NEXT:  %phi = phi %__cheriseed_cap_t* [ null, %entry.l2_crit_edge ], [ null, %l1 ]
+; CHECK-NEXT:  %phi.cpy
+  %phi = phi i8 addrspace(200)* [ undef, %entry ], [ undef, %l1 ]
+; CHECK-NEXT:  br label %end
+  br label %end
+
+; CHECK-LABEL: end:
+end:
+; CHECK-NEXT:  ret void
+  ret void
+}
+
+; ------------------------------------------------------------------------------

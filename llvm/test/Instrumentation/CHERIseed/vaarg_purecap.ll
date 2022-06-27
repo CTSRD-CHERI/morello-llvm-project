@@ -62,7 +62,7 @@ define void @caller() addrspace(200) {
 ; i8 addrspace(200)* undef
 ; CHECK-NEXT:  [[AG:%.*]] = getelementptr inbounds i8, i8* [[VA_SLOT]], i32 96
 ; CHECK-NEXT:  [[AB:%.*]] = bitcast i8* [[AG]] to %__cheriseed_cap_t*
-; CHECK-NEXT:  tail call void @__cheriseed_store_cap_hybrid(%__cheriseed_cap_t* [[AB]], %__cheriseed_cap_t* undef)
+; CHECK-NEXT:  tail call void @__cheriseed_store_cap_hybrid(%__cheriseed_cap_t* [[AB]], %__cheriseed_cap_t* null)
 
 ; CHECK-NEXT:  call void @callee(i32 0, %__cheriseed_cap_t* [[VA_SLOT_CAP]])
   call void (i32, ...) @callee(i32 0,
