@@ -21,7 +21,7 @@
 #include "sanitizer_common/sanitizer_file.h"
 #include "sanitizer_common/sanitizer_linux.h"
 
-using namespace __cheriseed;
+using namespace __cheriseed::abi;
 using namespace __sanitizer;
 
 using uintptr_t = __UINTPTR_TYPE__;

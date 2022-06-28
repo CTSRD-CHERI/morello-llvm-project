@@ -12,27 +12,21 @@
 #ifndef CHERISEED_ABI_DEFS_H
 #define CHERISEED_ABI_DEFS_H
 
-#include "sanitizer_common/sanitizer_atomic.h"
-
-using __sanitizer::u32;
-using __sanitizer::u64;
-using __sanitizer::u8;
+#include "sanitizer_common/sanitizer_internal_defs.h"
 
 namespace __cheriseed {
 namespace abi {
 
 // Minimum expected alignment of a capability.
-static constexpr u8 kCapabilityMinAlignment = 16;
+static constexpr __sanitizer::u8 kCapabilityMinAlignment = 16;
 
 // These permissions bits are used as the arguments for the function
 // __cheriseed_check_access as a platform independent representation.
-enum permissions : int {
+enum Permissions : __sanitizer::u32 {
   LOAD = (1 << 0),
   STORE = (1 << 1),
   EXECUTE = (1 << 2)
-};
-
-}  // namespace abi
+};  // enum Permissions
 
 // Possible reasons of a capability violation.
 enum SignalCode : int {
@@ -62,30 +56,7 @@ enum SignalHandleMode : int {
   SHM_WARNING = 4,
 };  // enum SignalHandleMode
 
-// The coarse representation of an in-memory capability.
-struct __cheriseed_cap_t final {
-  u64 value;     // virtual address
-  u64 metadata;  // compressed metadata
-} __attribute__((aligned(abi::kCapabilityMinAlignment)));
-
-// Atomic boolean
-struct AtomicBool final {
-  explicit constexpr AtomicBool(const bool value) : val_dont_use(value) {}
-  void operator=(bool value) { __sanitizer::atomic_store_relaxed(this, value); }
-  operator bool() const { return __sanitizer::atomic_load_relaxed(this); }
-
-  using Type = u8;
-  volatile Type val_dont_use;
-};  // struct AtomicBool
-
-// Runtime configurable features.
-struct Options final {
-  // Enables or disables CHERI semantics.
-  static AtomicBool EnableCHERISemantics;
-  // Enables or disables invocation of signal handlers.
-  static AtomicBool EnableSignalHandlers;
-};  // struct Options
-
+}  // namespace abi
 }  // namespace __cheriseed
 
 #endif

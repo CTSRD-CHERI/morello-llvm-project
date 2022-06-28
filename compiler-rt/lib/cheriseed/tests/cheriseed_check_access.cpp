@@ -17,6 +17,7 @@
 #include "cheriseed_errors.h"
 #include "cheriseed_test_utils.h"
 
+using namespace __cheriseed::abi;
 using namespace __cheriseed::error;
 
 // Tests of __cheriseed_check_access where the permissions are incorrect
@@ -56,27 +57,23 @@ using namespace __cheriseed::error;
   }
 
 TEST(CheckAccessDeathTest, PermsHasNone) {
-  TEST_CHECK_ACCESS(EXPECT_DENIED_PERMS(__cheriseed_check_access(
-      &cap, 0, __cheriseed::abi::permissions::EXECUTE)));
+  TEST_CHECK_ACCESS(EXPECT_DENIED_PERMS(
+      __cheriseed_check_access(&cap, 0, Permissions::EXECUTE)));
 }
 
 TEST(CheckAccessDeathTest, PermsHasSome) {
-  TEST_CHECK_ACCESS(EXPECT_DENIED_PERMS(
-      __cheriseed_check_access(&cap, 0,
-                               (__cheriseed::abi::permissions::LOAD |
-                                __cheriseed::abi::permissions::EXECUTE))));
+  TEST_CHECK_ACCESS(EXPECT_DENIED_PERMS(__cheriseed_check_access(
+      &cap, 0, (Permissions::LOAD | Permissions::EXECUTE))));
 }
 
 TEST(CheckAccessDeathTest, PermsHasExactly) {
-  TEST_CHECK_ACCESS(EXPECT_GRANTED(
-      __cheriseed_check_access(&cap, 0,
-                               (__cheriseed::abi::permissions::LOAD |
-                                __cheriseed::abi::permissions::STORE))));
+  TEST_CHECK_ACCESS(EXPECT_GRANTED(__cheriseed_check_access(
+      &cap, 0, (Permissions::LOAD | Permissions::STORE))));
 }
 
 TEST(CheckAccessDeathTest, PermsHasMore) {
-  TEST_CHECK_ACCESS(EXPECT_GRANTED(
-      __cheriseed_check_access(&cap, 0, __cheriseed::abi::permissions::LOAD)));
+  TEST_CHECK_ACCESS(
+      EXPECT_GRANTED(__cheriseed_check_access(&cap, 0, Permissions::LOAD)));
 }
 
 TEST(CheckAccessDeathTest, BoundsOutside) {

@@ -19,8 +19,8 @@
 #include "cheriseed_errors.h"
 #include "cheriseed_interface_internal.h"
 
-using namespace __sanitizer;
-using namespace __cheriseed;
+using namespace __cheriseed::abi;
+using namespace __cheriseed::error;
 
 namespace __cheriseed {
 
@@ -34,19 +34,17 @@ AtomicBool Options::EnableSignalHandlers{true};
 // -------------------------------------
 
 #undef UNIMPLEMENTED
-#define UNIMPLEMENTED()                                                    \
-  {                                                                        \
-    error::CheckContext(nullptr).add(error::NotImplemented(__FUNCTION__)); \
-    Die();                                                                 \
+#define UNIMPLEMENTED()                                      \
+  {                                                          \
+    CheckContext(nullptr).add(NotImplemented(__FUNCTION__)); \
+    __sanitizer::Die();                                      \
   }
 
 // Inlining is important for retrieval of the caller's address.
 // This function performs mandatory checks on an input capability.
 ALWAYS_INLINE
-static error::CheckContext DefaultCapChecks(const __cheriseed_cap_t *cap) {
-  return error::CheckContext(cap)
-      .add(error::CapabilityAddress())
-      .add(error::CapabilityAlignment());
+static CheckContext DefaultCapChecks(const __cheriseed_cap_t *cap) {
+  return CheckContext(cap).add(CapabilityAddress()).add(CapabilityAlignment());
 }
 
 // -------------------------------------
@@ -306,7 +304,7 @@ void __cheriseed_stack_cap_get(__cheriseed_cap_t *cap) { UNIMPLEMENTED(); }
 // -------------------------------------
 
 void __cheriseed_enable_cheri_semantics(int enable) {
-  Options::EnableCHERISemantics = (enable != 0);
+  __cheriseed::Options::EnableCHERISemantics = (enable != 0);
 }
 
 __cheriseed_cap_t *__cheriseed_strerror(__cheriseed_cap_t *result, int code) {
@@ -342,8 +340,8 @@ __cheriseed_cap_t *__cheriseed_strerror(__cheriseed_cap_t *result, int code) {
 
 int __cheriseed_set_signal_handle_mode(__cheriseed_cap_t *context, int mode) {
   DefaultCapChecks(context)
-      .add(error::RequiredPerms(ccl::permissions::STORE))
-      .add(error::InBounds(sizeof(SignalHandleMode)));
+      .add(RequiredPerms(ccl::permissions::STORE))
+      .add(InBounds(sizeof(SignalHandleMode)));
   switch (mode) {
     default:
       return 1;
@@ -358,7 +356,7 @@ int __cheriseed_set_signal_handle_mode(__cheriseed_cap_t *context, int mode) {
 }
 
 void __cheriseed_enable_invoke_signal_handlers(int enable) {
-  Options::EnableSignalHandlers = (enable != 0);
+  __cheriseed::Options::EnableSignalHandlers = (enable != 0);
 }
 
 // -------------------------------------
@@ -394,8 +392,8 @@ __cheriseed_cap_t *__cheriseed_stack_cap_init(__cheriseed_cap_t *cap, u64 addr,
 __cheriseed_cap_t *__cheriseed_load_cap(const __cheriseed_cap_t *cap,
                                         __cheriseed_cap_t *loaded_cap) {
   DefaultCapChecks(cap)
-      .add(error::RequiredPerms(ccl::permissions::LOAD))
-      .add(error::InBounds(sizeof(__cheriseed_cap_t)));
+      .add(RequiredPerms(ccl::permissions::LOAD))
+      .add(InBounds(sizeof(__cheriseed_cap_t)));
   DefaultCapChecks(loaded_cap);
   const __cheriseed_cap_t *target_cap;
   if (cap->value != 0)
@@ -425,9 +423,8 @@ void __cheriseed_store_cap(__cheriseed_cap_t *cap,
                            const __cheriseed_cap_t *stored_cap) {
   // TODO if stored_cap is valid
   DefaultCapChecks(cap)
-      .add(error::RequiredPerms(ccl::permissions::STORE_CAP |
-                                ccl::permissions::STORE))
-      .add(error::InBounds(sizeof(__cheriseed_cap_t)));
+      .add(RequiredPerms(ccl::permissions::STORE_CAP | ccl::permissions::STORE))
+      .add(InBounds(sizeof(__cheriseed_cap_t)));
   if (!stored_cap)
     ccl::UseNullCap(&stored_cap);
   DefaultCapChecks(stored_cap);
@@ -448,10 +445,8 @@ void __cheriseed_store_cap_hybrid(__cheriseed_cap_t *ptr,
 
 // Set a permissions bit in the ccl representation if the corresponding bit is
 // set in the check_access permissions mask
-#define BIT_CONVERTER(__perm)                        \
-  (in_perms & __cheriseed::abi::permissions::__perm) \
-      ? ccl::permissions::__perm                     \
-      : 0
+#define BIT_CONVERTER(__perm) \
+  (in_perms & Permissions::__perm) ? ccl::permissions::__perm : 0
 
 static u64 CheckAccessPermsToCCL(u32 in_perms) {
   u32 out_perms = 0;
@@ -466,8 +461,8 @@ static u64 CheckAccessPermsToCCL(u32 in_perms) {
 u64 __cheriseed_check_access(const __cheriseed_cap_t *cap, u64 size,
                              u32 perms) {
   DefaultCapChecks(cap)
-      .add(error::RequiredPerms(CheckAccessPermsToCCL(perms)))
-      .add(error::InBounds(size));
+      .add(RequiredPerms(CheckAccessPermsToCCL(perms)))
+      .add(InBounds(size));
   return cap->value;
 }
 

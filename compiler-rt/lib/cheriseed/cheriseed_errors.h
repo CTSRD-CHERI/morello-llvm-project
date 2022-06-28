@@ -18,14 +18,12 @@
 #include "cheriseed_libc.h"
 #include "sanitizer_common/sanitizer_common.h"
 
-using namespace __sanitizer;
-
 namespace __cheriseed {
 namespace error {
 
 // Decorator to create brightly colored reports.
 struct Decorator final {
-  explicit Decorator() : colorize(ColorizeReports()) {}
+  explicit Decorator() : colorize(__sanitizer::ColorizeReports()) {}
 
   const char* Reset() const { return colorize ? "\033[0m" : ""; }
   const char* Red() const { return colorize ? "\033[31m" : ""; }
@@ -82,7 +80,7 @@ struct MessageBuilder final {
   void WriteToStderr();
 
   Decorator D;
-  InternalScopedString message;
+  __sanitizer::InternalScopedString message;
 };
 
 // Helper to perform various property checks.
@@ -115,8 +113,9 @@ struct CheckContext {
   template <typename P>
   NOINLINE void BeginTerminate(P& property) {
     // Make sure that recursive aborts are not allowed.
-    if (atomic_fetch_add(&is_terminating, 1, memory_order_relaxed) > 0)
-      Trap();
+    if (atomic_fetch_add(&is_terminating, 1,
+                         memory_order::memory_order_relaxed) > 0)
+      __sanitizer::Trap();
     // Fully initialize the checker's context.
     Initialize();
     // Get reason for failure.
@@ -125,18 +124,18 @@ struct CheckContext {
     // Try to terminate.
     Terminate(reason, P::SignalNumber(), P::Code());
     // Not aborting in the end.
-    atomic_fetch_sub(&is_terminating, 1, memory_order_relaxed);
+    atomic_fetch_sub(&is_terminating, 1, memory_order::memory_order_relaxed);
   }
 
   void Initialize();
   NOINLINE void Terminate(MessageBuilder& builder, int signo,
-                          SignalCode code) const;
+                          abi::SignalCode code) const;
 
   const __cheriseed_cap_t* const cap;
   vaddr pc;
   u64 tid;
 
-  static atomic_uint32_t is_terminating;
+  static __sanitizer::atomic_uint32_t is_terminating;
 };  // struct CheckContext
 
 // Note: not using base class and virtual functions here because those are
@@ -165,7 +164,9 @@ struct CapabilityAddress final {
 
   void ReportError(const CheckContext& ctx, MessageBuilder& builder) const;
 
-  static constexpr SignalCode Code() { return SignalCode::SC_SEGV_MAPERR; }
+  static constexpr abi::SignalCode Code() {
+    return abi::SignalCode::SC_SEGV_MAPERR;
+  }
 
   static constexpr int SignalNumber() { return libc::SignalNumber::SN_SIGSEGV; }
 };  // struct CapabilityAddress
@@ -178,7 +179,9 @@ struct CapabilityAlignment final {
 
   void ReportError(const CheckContext& ctx, MessageBuilder& builder) const;
 
-  static constexpr SignalCode Code() { return SignalCode::SC_BUS_ADRALN; }
+  static constexpr abi::SignalCode Code() {
+    return abi::SignalCode::SC_BUS_ADRALN;
+  }
 
   static constexpr int SignalNumber() { return libc::SignalNumber::SN_SIGBUS; }
 };  // struct CapabilityAlignment
@@ -189,8 +192,8 @@ struct NotImplemented final {
   bool DoCheck(const CheckContext& ctx) const { return false; }
   void ReportError(const CheckContext& ctx, MessageBuilder& builder) const;
 
-  static constexpr SignalCode Code() {
-    return SignalCode::SC_PROT_NOT_IMPLEMENTED;
+  static constexpr abi::SignalCode Code() {
+    return abi::SignalCode::SC_PROT_NOT_IMPLEMENTED;
   }
 
   static constexpr int SignalNumber() { return libc::SignalNumber::SN_NONE; }
@@ -212,13 +215,13 @@ struct InBounds final {
 
   void ReportError(const CheckContext& ctx, MessageBuilder& builder) const;
 
-  static constexpr SignalCode Code() {
-    return SignalCode::SC_SEGV_CAPBOUNDSERR;
+  static constexpr abi::SignalCode Code() {
+    return abi::SignalCode::SC_SEGV_CAPBOUNDSERR;
   }
 
   static constexpr int SignalNumber() { return libc::SignalNumber::SN_SIGSEGV; }
 
-  const u64 size;
+  const __sanitizer::u64 size;
 };  // struct InBounds
 
 // Checks that a capability has all required permissions to perform an action
@@ -234,7 +237,9 @@ struct RequiredPerms final {
 
   void ReportError(const CheckContext& ctx, MessageBuilder& builder);
 
-  static constexpr SignalCode Code() { return SignalCode::SC_SEGV_CAPPERMERR; }
+  static constexpr abi::SignalCode Code() {
+    return abi::SignalCode::SC_SEGV_CAPPERMERR;
+  }
 
   static constexpr int SignalNumber() { return libc::SignalNumber::SN_SIGSEGV; }
 

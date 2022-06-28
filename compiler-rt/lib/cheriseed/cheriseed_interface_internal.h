@@ -15,9 +15,9 @@
 #ifndef CHERISEED_INTERFACE_INTERNAL_H
 #define CHERISEED_INTERFACE_INTERNAL_H
 
-#include "cheriseed_abi_defs.h"
+#include "cheriseed_common.h"
 
-using namespace __cheriseed;
+using __cheriseed::__cheriseed_cap_t;
 
 extern "C" {
 

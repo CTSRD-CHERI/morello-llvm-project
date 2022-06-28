@@ -15,9 +15,7 @@
 #ifndef CHERISEED_LIBC_H
 #define CHERISEED_LIBC_H
 
-#include "cheriseed_abi_defs.h"
-
-using namespace __sanitizer;
+#include "cheriseed_common.h"
 
 namespace __cheriseed {
 namespace libc {
@@ -119,13 +117,13 @@ struct SigAction final {
   // Calls the signal handler. The only real difference from real signals is
   // that the call is on the current stack. Returns the mode to handle the
   // signal.
-  SignalHandleMode Invoke(SigInfo &info);
+  abi::SignalHandleMode Invoke(SigInfo &info);
 
   // Protected: no access for non-friends, there is no error for unused private
   // field.
  protected:
-  SignalHandleMode InvokeHybrid(SigInfo &info);
-  SignalHandleMode InvokePureCap(SigInfo &info);
+  abi::SignalHandleMode InvokeHybrid(SigInfo &info);
+  abi::SignalHandleMode InvokePureCap(SigInfo &info);
 
   struct {
     vaddr handler;

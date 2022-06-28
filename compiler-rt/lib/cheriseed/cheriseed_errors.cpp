@@ -15,8 +15,8 @@
 #include "cheriseed_errors.h"
 
 #include "cheriseed_ccl_interface.h"
-#include "cheriseed_libc.h"
 
+using namespace __cheriseed::abi;
 using namespace __sanitizer;
 
 namespace __cheriseed {

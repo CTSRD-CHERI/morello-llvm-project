@@ -18,7 +18,7 @@
 #ifndef CHERISEED_CCL_INTERFACE_H
 #define CHERISEED_CCL_INTERFACE_H
 
-#include "cheriseed_abi_defs.h"
+#include "cheriseed_common.h"
 #include "sanitizer_common/sanitizer_libc.h"
 
 // The ccl namespace contains functions allowing manipulation of capabilities,
