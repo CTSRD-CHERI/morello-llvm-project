@@ -181,6 +181,7 @@ public:
     eServerPacketType_QNonStop,
     eServerPacketType_vStopped,
     eServerPacketType_vCtrlC,
+    eServerPacketType_vStdio,
   };
 
   ServerPacketType GetServerPacketType() const;
