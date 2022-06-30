@@ -1041,9 +1041,11 @@ void GDBRemoteCommunicationServerLLGS::EnqueueStopReplyPackets(
     return;
 
   for (NativeThreadProtocol &listed_thread : m_current_process->Threads()) {
-    if (listed_thread.GetID() != thread_to_skip)
-      m_stop_notification_queue.push_back(
-          PrepareStopReplyPacketForThread(listed_thread).GetString().str());
+    if (listed_thread.GetID() != thread_to_skip) {
+      StreamString stop_reply = PrepareStopReplyPacketForThread(listed_thread);
+      if (!stop_reply.Empty())
+        m_stop_notification_queue.push_back(stop_reply.GetString().str());
+    }
   }
 }
 
@@ -1901,9 +1903,11 @@ GDBRemoteCommunicationServerLLGS::Handle_stop_reason(
       // the current thread (for clients that don't actually support multiple
       // stop reasons).
       NativeThreadProtocol *thread = m_current_process->GetCurrentThread();
-      if (thread)
-        m_stop_notification_queue.push_back(
-            PrepareStopReplyPacketForThread(*thread).GetString().str());
+      if (thread) {
+        StreamString stop_reply = PrepareStopReplyPacketForThread(*thread);
+        if (!stop_reply.Empty())
+          m_stop_notification_queue.push_back(stop_reply.GetString().str());
+      }
       EnqueueStopReplyPackets(thread ? thread->GetID()
                                      : LLDB_INVALID_THREAD_ID);
     }
