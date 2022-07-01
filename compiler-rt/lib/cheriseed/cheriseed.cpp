@@ -460,8 +460,8 @@ static u64 CheckAccessPermsToCCL(u32 in_perms) {
 u64 __cheriseed_check_access(const __cheriseed_cap_t *cap, u64 size,
                              u32 perms) {
   DefaultCapChecks(cap)
-      .add(error::InBounds(size))
-      .add(error::RequiredPerms(CheckAccessPermsToCCL(perms)));
+      .add(error::RequiredPerms(CheckAccessPermsToCCL(perms)))
+      .add(error::InBounds(size));
   return cap->value;
 }
 
