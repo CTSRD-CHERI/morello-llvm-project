@@ -14,6 +14,7 @@
 #include "cheriseed_abi_defs.h"
 #include "sanitizer_common/sanitizer_atomic.h"
 
+using __sanitizer::atomic_uint8_t;
 using __sanitizer::memory_order;
 using __sanitizer::pid_t;
 using __sanitizer::ssize;
@@ -128,22 +129,12 @@ struct LocalCap final : public __cheriseed_cap_t {
   friend struct ccl::methods;
 };  // struct LocalCap
 
-// Atomic boolean
-struct AtomicBool final {
-  explicit constexpr AtomicBool(const bool value) : val_dont_use(value) {}
-  void operator=(bool value) { __sanitizer::atomic_store_relaxed(this, value); }
-  operator bool() const { return __sanitizer::atomic_load_relaxed(this); }
-
-  using Type = u8;
-  volatile Type val_dont_use;
-};  // struct AtomicBool
-
 // Runtime configurable features.
 struct Options final {
   // Enables or disables CHERI semantics.
-  static AtomicBool EnableCHERISemantics;
+  static atomic_uint8_t EnableCHERISemantics;
   // Enables or disables invocation of signal handlers.
-  static AtomicBool EnableSignalHandlers;
+  static atomic_uint8_t EnableSignalHandlers;
 };  // struct Options
 
 }  // namespace __cheriseed

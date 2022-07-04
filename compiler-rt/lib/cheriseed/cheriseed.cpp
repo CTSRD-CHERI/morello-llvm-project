@@ -24,8 +24,8 @@ using namespace __cheriseed::error;
 
 namespace __cheriseed {
 
-AtomicBool Options::EnableCHERISemantics{false};
-AtomicBool Options::EnableSignalHandlers{true};
+atomic_uint8_t Options::EnableCHERISemantics{0};
+atomic_uint8_t Options::EnableSignalHandlers{1};
 
 // Triggers an unimplemented fault.
 #undef UNIMPLEMENTED
@@ -320,8 +320,12 @@ void __cheriseed_stack_cap_get(__cheriseed_cap_t *cap) { UNIMPLEMENTED(); }
 // Additional user-accessible APIs
 // -------------------------------------
 
-void __cheriseed_enable_cheri_semantics(int enable) {
-  Options::EnableCHERISemantics = (enable != 0);
+void __cheriseed_enable_cheri_semantics(u8 enable) {
+  atomic_store_relaxed(&Options::EnableCHERISemantics, enable);
+}
+
+void __cheriseed_enable_invoke_signal_handlers(u8 enable) {
+  atomic_store_relaxed(&Options::EnableSignalHandlers, enable);
 }
 
 __cheriseed_cap_t *__cheriseed_strerror(__cheriseed_cap_t *result, int code) {
@@ -374,10 +378,6 @@ int __cheriseed_set_signal_handle_mode(const __cheriseed_cap_t *context,
   *reinterpret_cast<SignalHandleMode *>(local_cap.GetValue()) =
       static_cast<SignalHandleMode>(mode);
   return 0;
-}
-
-void __cheriseed_enable_invoke_signal_handlers(int enable) {
-  Options::EnableSignalHandlers = (enable != 0);
 }
 
 // Symbols to section containing global initialization data. This works well for

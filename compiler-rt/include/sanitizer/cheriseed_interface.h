@@ -501,10 +501,16 @@ __cheriseed_cap_t *__cheriseed_stack_cap_get(__cheriseed_cap_t *cap_out);
 // Additional user-accessible APIs
 // -------------------------------------
 
-/// Enables or disables  CHERI semantics, which are disabled by default.
+/// Enables/disables CHERI semantics, disabled by default.
 ///
 /// \param[in] enable 0: disable, otherwise enable.
-void __cheriseed_enable_cheri_semantics(int enable);
+void __cheriseed_enable_cheri_semantics(uint8_t enable);
+
+/// Enables/disables invocation of signal handlers upon capability violation,
+/// enabled by default.
+///
+/// \param[in] enable 0: disable, otherwise enable.
+void __cheriseed_enable_invoke_signal_handlers(uint8_t enable);
 
 /// Returns the string representation of a capability violation signal.
 ///
@@ -521,13 +527,6 @@ const char *__cheriseed_strerror(int code);
 /// \param[in] mode The preferred mode of handling of the violation.
 /// \returns Zero if mode was valid, otherwise non-zero.
 int __cheriseed_set_signal_handle_mode(void *context, int mode);
-
-/// Enables or disables invocation of signal handlers upon capability
-/// violation.
-///
-/// \param[in] enable Signal handlers will not be called if enable is '0',
-/// otherwise the runtime will try to call them directly.
-void __cheriseed_enable_invoke_signal_handlers(int enable);
 
 /// Performs initialization of capabilities in a static-linked application.
 ///

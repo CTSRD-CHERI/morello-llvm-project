@@ -212,7 +212,7 @@ struct InBounds final {
   // Top (base + length) is inclusive in acceptable range of a capability
   ALWAYS_INLINE
   bool DoCheck(const CheckContext& ctx) const {
-    if (!Options::EnableCHERISemantics)
+    if (!atomic_load_relaxed(&Options::EnableCHERISemantics))
       return true;
     return (ctx.Base() <= ctx.Value()) && ((ctx.Value() + size) <= ctx.Top());
   }
@@ -235,7 +235,7 @@ struct RequiredPerms final {
 
   ALWAYS_INLINE
   bool DoCheck(const CheckContext& ctx) {
-    if (!Options::EnableCHERISemantics)
+    if (!atomic_load_relaxed(&Options::EnableCHERISemantics))
       return true;
     return ((ctx.Perms() & perms) == perms);
   }
