@@ -1181,17 +1181,10 @@ DisassemblerLLVMC::DisassemblerLLVMC(const ArchSpec &arch,
 
   // If any AArch64 variant, enable latest ISA with all extensions.
   if (triple.isAArch64()) {
-    if (false) {
-      features_str += "+v9.3a,";
-      std::vector<llvm::StringRef> features;
-      // Get all possible features
-      llvm::AArch64::getExtensionFeatures(-1, features);
-      features_str += llvm::join(features, ",");
-    } else {
-      // This should have +v9.3a,+mte. However we need to enable Morello
-      // as well so use something compatible for now.
-      features_str += "+v8.2a,+fp-armv8,+neon,+crypto,+fullfp16,+spe,+morello,";
-    }
+    // features_str += "+all,";
+    // This should have +v9.3a,+mte. However we need to enable Morello
+    // as well so use something compatible for now.
+    features_str += "+v8.2a,+fp-armv8,+neon,+crypto,+fullfp16,+spe,+morello,";
 
     if (triple.getVendor() == llvm::Triple::Apple)
       cpu = "apple-latest";
