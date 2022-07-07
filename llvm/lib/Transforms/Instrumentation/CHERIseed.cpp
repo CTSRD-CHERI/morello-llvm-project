@@ -664,9 +664,10 @@ struct CHERIseed final : public InstVisitor<CHERIseed, Value *> {
     CapPermsTy = Type::getInt32Ty(Ctx);
     Type *InitializerFuncTy = PointerType::get(FunctionType::get(VoidTy, false),
                                                DL.getProgramAddressSpace());
-    InitializerTy =
-        StructType::create(Ctx, {AddrSizeTy, AddrSizeTy, InitializerFuncTy},
-                           "__cheriseed_initializer_t");
+    InitializerTy = StructType::create(
+        Ctx,
+        {AddrSizeTy, AddrSizeTy, AddrSizeTy, CapPermsTy, InitializerFuncTy},
+        "__cheriseed_initializer_t");
   }
 
   /// Visits the module this pass is associated with.
@@ -2963,6 +2964,12 @@ Constant *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
 
   VC.IRB->CreateRetVoid();
 
+  const uint64_t BoundsSizeVal = alignTo(DL.getTypeSizeInBits(NGVTy), 8) / 8;
+  // Determine which capabilities should be cleared on the shadow cap
+  uint64_t ClearPermsVal = cheriseed::abi::EXECUTE;
+  if (IsConstant)
+    ClearPermsVal |= cheriseed::abi::STORE;
+
   Constant *Src = ShadowCapability
                       ? ConstantExpr::getPtrToInt(ShadowCapability, AddrSizeTy)
                       : Constant::getNullValue(AddrSizeTy);
@@ -2974,6 +2981,12 @@ Constant *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
                                ? ConstantExpr::getPointerBitCastOrAddrSpaceCast(
                                      VC.F, InitializerFuncTy)
                                : Constant::getNullValue(InitializerFuncTy);
+  Constant *BoundsSize = ShadowCapability
+                             ? ConstantInt::get(AddrSizeTy, BoundsSizeVal)
+                             : Constant::getNullValue(AddrSizeTy);
+  Constant *ClearPerms = ShadowCapability
+                             ? ConstantInt::get(CapPermsTy, ClearPermsVal)
+                             : Constant::getNullValue(CapPermsTy);
   // Remove if function does nothing i.e, just has instruction 'ret void'.
   if (VC.BB->size() == 1)
     VC.F->eraseFromParent();
@@ -2982,8 +2995,9 @@ Constant *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
   if (!ShadowCapability &&
       (InitFunction == Constant::getNullValue(InitializerFuncTy)))
     return nullptr;
-  return ConstantStruct::get(InitializerTy,
-                             ArrayRef<Constant *>({Src, Addr, InitFunction}));
+  return ConstantStruct::get(
+      InitializerTy,
+      ArrayRef<Constant *>({Src, Addr, BoundsSize, ClearPerms, InitFunction}));
 }
 
 void CHERIseed::mapGlobalAlias(GlobalAlias *GA) {

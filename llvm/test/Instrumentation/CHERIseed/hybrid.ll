@@ -32,9 +32,11 @@
 ; CHECK-LABEL: @"__cheriseed_inits_<stdin>" = internal global [3 x %__cheriseed_initializer_t] [
 ; CHECK-SAME: { i64 ptrtoint (%__cheriseed_cap_t* @__cheriseed_shadow_capability_intlike_global_200 to i64),
 ; CHECK-SAME:   i64 ptrtoint (i32* @__cheriseed_global_intlike_global_200 to i64),
-; CHECK-SAME:   void ()* null },
-; CHECK-SAME: { i64 0, i64 0, void ()* @__cheriseed_initializer_nonzero_global_cap_default },
-; CHECK-SAME: { i64 0, i64 0, void ()* @__cheriseed_initializer_nonzero_global_cap_default_2 }],
+; CHECK-SAME:   i64 4, i32 4, void ()* null },
+; CHECK-SAME: { i64 0, i64 0, i64 0, i32 0,
+; CHECK-SAME:   void ()* @__cheriseed_initializer_nonzero_global_cap_default },
+; CHECK-SAME: { i64 0, i64 0, i64 0, i32 0,
+; CHECK-SAME:   void ()* @__cheriseed_initializer_nonzero_global_cap_default_2 }],
 ; CHECK-SAME: section "__cheriseed_initializers", align 8
 
 ; CHECK-LABEL: define void @init(%struct.S* %0)

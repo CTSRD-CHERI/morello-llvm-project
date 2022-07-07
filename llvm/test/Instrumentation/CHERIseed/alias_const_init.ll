@@ -20,7 +20,7 @@
 @case.1.g1 = global i8 1
 
 ; CHECK:      @"__cheriseed_inits_<stdin>" = internal global [1 x %__cheriseed_initializer_t] [
-; CHECK-SAME: { i64 0, i64 0, void ()* @__cheriseed_initializer_case.1.g2 }],
+; CHECK-SAME: { i64 0, i64 0, i64 0, i32 0, void ()* @__cheriseed_initializer_case.1.g2 }],
 ; CHECK-SAME: section "__cheriseed_initializers", align 8
 
 ; CHECK: @case.1.a1 = alias i8* (), i8* ()* @case.1.g1

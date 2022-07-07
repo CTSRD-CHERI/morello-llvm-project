@@ -16,12 +16,12 @@
 
 using namespace utils;
 
-#define INSERT_INTO_SECTION(_cap, _addr, _initFunc)                   \
-  {                                                                   \
-    static __cheriseed::__cheriseed_initializer_t data                \
-        __attribute__((section("__cheriseed_initializers"))) = {      \
-            reinterpret_cast<__cheriseed::__cheriseed_cap_t *>(_cap), \
-            (u64)_addr, (void (*)())_initFunc};                       \
+#define INSERT_INTO_SECTION(_cap, _addr, _size, _masks, _initFunc)       \
+  {                                                                      \
+    static __cheriseed::__cheriseed_initializer_t data                   \
+        __attribute__((section("__cheriseed_initializers"))) = {         \
+            reinterpret_cast<__cheriseed::__cheriseed_cap_t *>(_cap),    \
+            (u64)_addr, (u64)_size, (u32)_masks, (void (*)())_initFunc}; \
   }
 
 // Test helpers
@@ -31,7 +31,7 @@ static void func_2() { a += 1; }
 
 TEST(CheckGlobalInits, ShadowCapInit) {
   static __cheriseed_cap_t cap = utils::InitCap(0, 0);
-  INSERT_INTO_SECTION(&cap, &a, &func_1);
+  INSERT_INTO_SECTION(&cap, &a, 0, 0, &func_1);
 
   ASSERT_CAPABILITY_VALUE_EQ(&cap, 0);
   __cheriseed_static_init();
@@ -40,9 +40,29 @@ TEST(CheckGlobalInits, ShadowCapInit) {
 
 TEST(CheckGlobalInits, InitializerFuncCall) {
   a = 1;
-  INSERT_INTO_SECTION(0, 0, &func_2);
+  INSERT_INTO_SECTION(0, 0, 0, 0, &func_2);
 
   ASSERT_EQ(a, 1);
   __cheriseed_static_init();
   ASSERT_EQ(a, 2);
+}
+
+TEST(CheckGlobalInits, Bounds) {
+  static int t;
+  static __cheriseed_cap_t cap = utils::InitCap(0, 0);
+  INSERT_INTO_SECTION(&cap, &t, sizeof(int), 0, &func_1);
+
+  __cheriseed_static_init();
+  ASSERT_EQ(__cheriseed_length_get(&cap), sizeof(int));
+}
+
+TEST(CheckGlobalInits, Perms) {
+  static int t;
+  static __cheriseed_cap_t cap = utils::InitCap(0, 0);
+  INSERT_INTO_SECTION(&cap, &t, 0, __cheriseed::abi::Permissions::STORE,
+                      &func_1);
+
+  __cheriseed_static_init();
+  ASSERT_EQ(__cheriseed_perms_get(&cap),
+            ccl::permissions::ALL & ~ccl::permissions::STORE);
 }

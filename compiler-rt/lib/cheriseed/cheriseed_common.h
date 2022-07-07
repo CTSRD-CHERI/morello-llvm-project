@@ -59,6 +59,10 @@ struct __cheriseed_initializer_t {
   __cheriseed_cap_t *cap;
   // Address to set for the capability.
   u64 address;
+  // The size of the object pointed to by the capability.
+  u64 size;
+  // Permissions to be cleared.
+  u32 clear_perms;
   // Function which performs global initialization.
   void (*init)();
 };  // struct __cheriseed_initializer_t

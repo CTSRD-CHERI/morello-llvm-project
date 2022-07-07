@@ -405,7 +405,12 @@ void __cheriseed_static_init(void) {
     if (!glo_init_start[idx].cap)
       continue;
     LocalCap local_cap;
-    ccl::methods::BuildMaxCap(local_cap, glo_init_start[idx].address);
+    bool is_exact = ccl::methods::BuildBoundedCap(
+        local_cap, glo_init_start[idx].address, glo_init_start[idx].size,
+        ~CheckAccessPermsToCCL(glo_init_start[idx].clear_perms));
+    if (!is_exact) {
+      // TODO: invalidate capability if not exact
+    }
     local_cap.Store(glo_init_start[idx].cap);
   }
 
