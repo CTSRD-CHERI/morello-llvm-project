@@ -11,7 +11,7 @@
 #include "lldb/Core/AddressRange.h"
 #include "lldb/Core/Module.h"
 #include "lldb/Core/Value.h"
-#include "lldb/Expression/DWARFExpressionList.h"
+#include "lldb/Expression/DWARFExpression.h"
 #include "lldb/Symbol/ArmUnwindInfo.h"
 #include "lldb/Symbol/CallFrameInfo.h"
 #include "lldb/Symbol/DWARFCallFrameInfo.h"
@@ -1748,14 +1748,14 @@ RegisterContextUnwind::SavedLocationForRegister(
                             process->GetByteOrder(),
                             process->GetAddressByteSize());
     ModuleSP opcode_ctx;
-    DWARFExpressionList dwarfexpr(opcode_ctx, dwarfdata, nullptr);
-    dwarfexpr.GetMutableExpressionAtAddress()->SetRegisterKind(
-        unwindplan_registerkind);
+    DWARFExpression dwarfexpr(opcode_ctx, dwarfdata, nullptr);
+    dwarfexpr.SetRegisterKind(unwindplan_registerkind);
     Value cfa_val = Scalar(m_cfa.GetAddress());
     cfa_val.SetValueType(Value::ValueType::LoadAddress);
     Value result;
     Status error;
-    if (dwarfexpr.Evaluate(&exe_ctx, this, &cfa_val, nullptr, result, &error)) {
+    if (dwarfexpr.Evaluate(&exe_ctx, this, 0, &cfa_val, nullptr, result,
+                           &error)) {
       addr_t val;
       val = result.GetScalar().ULongLong();
       if (unwindplan_regloc.IsDWARFExpression()) {
@@ -2230,12 +2230,11 @@ bool RegisterContextUnwind::ReadFrameAddress(
                             process->GetByteOrder(),
                             process->GetAddressByteSize());
     ModuleSP opcode_ctx;
-    DWARFExpressionList dwarfexpr(opcode_ctx, dwarfdata, nullptr);
-    dwarfexpr.GetMutableExpressionAtAddress()->SetRegisterKind(
-        row_register_kind);
+    DWARFExpression dwarfexpr(opcode_ctx, dwarfdata, nullptr);
+    dwarfexpr.SetRegisterKind(row_register_kind);
     Value result;
     Status error;
-    if (dwarfexpr.Evaluate(&exe_ctx, this, nullptr, nullptr, result,
+    if (dwarfexpr.Evaluate(&exe_ctx, this, 0, nullptr, nullptr, result,
                            &error)) {
       address = FrameAddressLLDB(result.GetScalar().ULongLong());
       if (ABISP abi_sp = m_thread.GetProcess()->GetABI())
