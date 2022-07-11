@@ -87,6 +87,11 @@ public:
   size_t DoReadMemory(lldb::addr_t addr, void *buf, size_t size,
                       lldb_private::Status &error) override;
 
+  // We do not implement DoReadMemoryTags. Instead all the work is done in
+  // ReadMemoryTags which avoids having to unpack and repack tags.
+  llvm::Expected<std::vector<lldb::addr_t>> ReadMemoryTags(lldb::addr_t addr,
+                                                           size_t len) override;
+
   lldb::addr_t GetImageInfoAddress() override;
 
   lldb_private::ArchSpec GetArchitecture();
@@ -105,6 +110,8 @@ protected:
   lldb_private::Status
   DoGetMemoryRegionInfo(lldb::addr_t load_addr,
                         lldb_private::MemoryRegionInfo &region_info) override;
+
+  bool SupportsMemoryTagging() override { return !m_core_tag_ranges.IsEmpty(); }
 
 private:
   struct NT_FILE_Entry {
@@ -140,6 +147,9 @@ private:
   // Permissions for all ranges
   VMRangeToPermissions m_core_range_infos;
 
+  // Memory tag ranges found in the core
+  VMRangeToFileOffset m_core_tag_ranges;
+
   // NT_FILE entries found from the NOTE segment
   std::vector<NT_FILE_Entry> m_nt_file_entries;
 
@@ -154,6 +164,10 @@ private:
   // Parse a contiguous address range of the process from LOAD segment
   lldb::addr_t
   AddAddressRangeFromLoadSegment(const elf::ELFProgramHeader &header);
+
+  // Parse a contiguous address range from a memory tag segment
+  lldb::addr_t
+  AddAddressRangeFromMemoryTagSegment(const elf::ELFProgramHeader &header);
 
   llvm::Expected<std::vector<lldb_private::CoreNote>>
   parseSegment(const lldb_private::DataExtractor &segment);
