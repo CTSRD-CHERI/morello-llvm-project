@@ -1433,20 +1433,6 @@ bool TargetLowering::SimplifyDemandedBits(
       return true;
     assert(!Known2.hasConflict() && "Bits known to be one AND zero?");
 
-    // Attempt to avoid multi-use ops if we don't need anything from them.
-    if (!DemandedBits.isAllOnes() || !DemandedElts.isAllOnes()) {
-      SDValue DemandedOp0 = SimplifyMultipleUseDemandedBits(
-          Op0, DemandedBits, DemandedElts, TLO.DAG, Depth + 1);
-      SDValue DemandedOp1 = SimplifyMultipleUseDemandedBits(
-          Op1, DemandedBits, DemandedElts, TLO.DAG, Depth + 1);
-      if (DemandedOp0 || DemandedOp1) {
-        Op0 = DemandedOp0 ? DemandedOp0 : Op0;
-        Op1 = DemandedOp1 ? DemandedOp1 : Op1;
-        SDValue NewOp = TLO.DAG.getNode(Op.getOpcode(), dl, VT, Op0, Op1);
-        return TLO.CombineTo(Op, NewOp);
-      }
-    }
-
     // If all of the demanded bits are known one on one side, return the other.
     // These bits cannot contribute to the result of the 'and'.
     if (DemandedBits.isSubsetOf(Known2.Zero | Known.One))
@@ -1464,6 +1450,20 @@ bool TargetLowering::SimplifyDemandedBits(
     if (ShrinkDemandedOp(Op, BitWidth, DemandedBits, TLO))
       return true;
 
+    // Attempt to avoid multi-use ops if we don't need anything from them.
+    if (!DemandedBits.isAllOnes() || !DemandedElts.isAllOnes()) {
+      SDValue DemandedOp0 = SimplifyMultipleUseDemandedBits(
+          Op0, DemandedBits, DemandedElts, TLO.DAG, Depth + 1);
+      SDValue DemandedOp1 = SimplifyMultipleUseDemandedBits(
+          Op1, DemandedBits, DemandedElts, TLO.DAG, Depth + 1);
+      if (DemandedOp0 || DemandedOp1) {
+        Op0 = DemandedOp0 ? DemandedOp0 : Op0;
+        Op1 = DemandedOp1 ? DemandedOp1 : Op1;
+        SDValue NewOp = TLO.DAG.getNode(Op.getOpcode(), dl, VT, Op0, Op1);
+        return TLO.CombineTo(Op, NewOp);
+      }
+    }
+
     Known &= Known2;
     break;
   }
@@ -1480,6 +1480,19 @@ bool TargetLowering::SimplifyDemandedBits(
       return true;
     assert(!Known2.hasConflict() && "Bits known to be one AND zero?");
 
+    // If all of the demanded bits are known zero on one side, return the other.
+    // These bits cannot contribute to the result of the 'or'.
+    if (DemandedBits.isSubsetOf(Known2.One | Known.Zero))
+      return TLO.CombineTo(Op, Op0);
+    if (DemandedBits.isSubsetOf(Known.One | Known2.Zero))
+      return TLO.CombineTo(Op, Op1);
+    // If the RHS is a constant, see if we can simplify it.
+    if (ShrinkDemandedConstant(Op, DemandedBits, DemandedElts, TLO))
+      return true;
+    // If the operation can be done in a smaller type, do so.
+    if (ShrinkDemandedOp(Op, BitWidth, DemandedBits, TLO))
+      return true;
+
     // Attempt to avoid multi-use ops if we don't need anything from them.
     if (!DemandedBits.isAllOnes() || !DemandedElts.isAllOnes()) {
       SDValue DemandedOp0 = SimplifyMultipleUseDemandedBits(
@@ -1493,19 +1506,6 @@ bool TargetLowering::SimplifyDemandedBits(
         return TLO.CombineTo(Op, NewOp);
       }
     }
-
-    // If all of the demanded bits are known zero on one side, return the other.
-    // These bits cannot contribute to the result of the 'or'.
-    if (DemandedBits.isSubsetOf(Known2.One | Known.Zero))
-      return TLO.CombineTo(Op, Op0);
-    if (DemandedBits.isSubsetOf(Known.One | Known2.Zero))
-      return TLO.CombineTo(Op, Op1);
-    // If the RHS is a constant, see if we can simplify it.
-    if (ShrinkDemandedConstant(Op, DemandedBits, DemandedElts, TLO))
-      return true;
-    // If the operation can be done in a smaller type, do so.
-    if (ShrinkDemandedOp(Op, BitWidth, DemandedBits, TLO))
-      return true;
 
     Known |= Known2;
     break;
@@ -1522,20 +1522,6 @@ bool TargetLowering::SimplifyDemandedBits(
                              Depth + 1))
       return true;
     assert(!Known2.hasConflict() && "Bits known to be one AND zero?");
-
-    // Attempt to avoid multi-use ops if we don't need anything from them.
-    if (!DemandedBits.isAllOnes() || !DemandedElts.isAllOnes()) {
-      SDValue DemandedOp0 = SimplifyMultipleUseDemandedBits(
-          Op0, DemandedBits, DemandedElts, TLO.DAG, Depth + 1);
-      SDValue DemandedOp1 = SimplifyMultipleUseDemandedBits(
-          Op1, DemandedBits, DemandedElts, TLO.DAG, Depth + 1);
-      if (DemandedOp0 || DemandedOp1) {
-        Op0 = DemandedOp0 ? DemandedOp0 : Op0;
-        Op1 = DemandedOp1 ? DemandedOp1 : Op1;
-        SDValue NewOp = TLO.DAG.getNode(Op.getOpcode(), dl, VT, Op0, Op1);
-        return TLO.CombineTo(Op, NewOp);
-      }
-    }
 
     // If all of the demanded bits are known zero on one side, return the other.
     // These bits cannot contribute to the result of the 'xor'.
@@ -1580,6 +1566,20 @@ bool TargetLowering::SimplifyDemandedBits(
     if (!C || !C->isAllOnes())
       if (ShrinkDemandedConstant(Op, DemandedBits, DemandedElts, TLO))
         return true;
+
+    // Attempt to avoid multi-use ops if we don't need anything from them.
+    if (!DemandedBits.isAllOnes() || !DemandedElts.isAllOnes()) {
+      SDValue DemandedOp0 = SimplifyMultipleUseDemandedBits(
+          Op0, DemandedBits, DemandedElts, TLO.DAG, Depth + 1);
+      SDValue DemandedOp1 = SimplifyMultipleUseDemandedBits(
+          Op1, DemandedBits, DemandedElts, TLO.DAG, Depth + 1);
+      if (DemandedOp0 || DemandedOp1) {
+        Op0 = DemandedOp0 ? DemandedOp0 : Op0;
+        Op1 = DemandedOp1 ? DemandedOp1 : Op1;
+        SDValue NewOp = TLO.DAG.getNode(Op.getOpcode(), dl, VT, Op0, Op1);
+        return TLO.CombineTo(Op, NewOp);
+      }
+    }
 
     Known ^= Known2;
     break;
