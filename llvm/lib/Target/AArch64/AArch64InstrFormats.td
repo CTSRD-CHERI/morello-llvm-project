@@ -1311,6 +1311,10 @@ def fpimm0 : FPImmLeaf<fAny, [{
   return Imm.isExactlyValue(+0.0);
 }]>;
 
+def fpimm_minus0 : FPImmLeaf<fAny, [{
+  return Imm.isExactlyValue(-0.0);
+}]>;
+
 def fpimm_half : FPImmLeaf<fAny, [{
   return Imm.isExactlyValue(+0.5);
 }]>;
