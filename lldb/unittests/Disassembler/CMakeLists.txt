@@ -2,6 +2,6 @@ if("ARM" IN_LIST LLVM_TARGETS_TO_BUILD)
   add_subdirectory(ARM)
 endif()
 
-if("AArch64" IN_LIST LLVM_TARGETS_TO_BUILD)
-  add_subdirectory(ARM64)
+if("X86" IN_LIST LLVM_TARGETS_TO_BUILD)
+  add_subdirectory(x86)
 endif()

@@ -1,4 +1,5 @@
-add_lldb_unittest(ARMDisassemblerTests
+add_lldb_unittest(DisassemblerTests
+  TestArm64Disassembly.cpp
   TestArmv7Disassembly.cpp
   LINK_LIBS
     lldbCore
