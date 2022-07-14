@@ -407,7 +407,7 @@ class MUTEX RWMutex {
  private:
   atomic_uint32_t state_;
 
-  enum {
+  enum : u32 {
     kUnlocked = 0,
     kWriteLock = 1,
     kReadLock = 2
