@@ -85,9 +85,7 @@ struct SystemCall final {
 
   SystemCall(int nr) : num_args(0) {
     if (IsPureCapabilityABI())
-      Arg(-1UL,
-          ccl::permissions::READ_CAP_PERMS | ccl::permissions::WRITE_CAP_PERMS);
-
+      BuildArg(-1UL, 0, 0);
     // This is always a non-cancellable system call.
     if (HasCancellationPoints())
       BuildArg(0, 0, 0);
