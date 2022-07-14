@@ -2624,10 +2624,6 @@ Value *SCEVExpander::fixupLCSSAFormFor(Instruction *User, unsigned OpIdx) {
   return User->getOperand(OpIdx);
 }
 
-bool SCEVExpander::isSafeToExpand(const SCEV *S) const {
-  return llvm::isSafeToExpand(S, SE, CanonicalMode);
-}
-
 namespace {
 // Search for a SCEV subexpression that is not safe to expand.  Any expression
 // that may expand to a !isSafeToSpeculativelyExecute value is unsafe, namely
@@ -2683,8 +2679,7 @@ struct SCEVFindUnsafe {
 };
 } // namespace
 
-namespace llvm {
-bool isSafeToExpand(const SCEV *S, ScalarEvolution &SE, bool CanonicalMode) {
+bool SCEVExpander::isSafeToExpand(const SCEV *S) const {
   SCEVFindUnsafe Search(SE, CanonicalMode);
   visitAll(S, Search);
   return !Search.IsUnsafe;
@@ -2741,5 +2736,4 @@ void SCEVExpanderCleaner::cleanup() {
     I->replaceAllUsesWith(UndefValue::get(I->getType()));
     I->eraseFromParent();
   }
-}
 }
