@@ -18,13 +18,13 @@ declare void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* noalias nocapture
 ; CHECK-LABEL: @int_memcpy
 define void @int_memcpy(i8* %dest, i8* %src, i64 %n) {
 ; CHECK-NEXT:  %1 = call i8* @memcpy(i8* align 1 %dest, i8* align 1 %src, i64 %n)
-  tail call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 1 %dest, i8* align 1 %src, i64 %n, i1 false)
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 1 %dest, i8* align 1 %src, i64 %n, i1 false)
 ; CHECK-NEXT:  %2 = call i8* @memcpy(i8* align 1 %dest, i8* align 1 %src, i64 %n)
-  tail call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 1 %dest, i8* align 1 %src, i64 %n, i1 true)
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 1 %dest, i8* align 1 %src, i64 %n, i1 true)
 ; CHECK-NEXT:  %3 = call i8* @memcpy(i8* align 1 %dest, i8* align 1 %src, i64 1)
-  tail call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 1 %dest, i8* align 1 %src, i64 1, i1 false)
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 1 %dest, i8* align 1 %src, i64 1, i1 false)
 ; CHECK-NEXT:  %4 = call i8* @memcpy(i8* align 4 %dest, i8* align 4 %src, i64 %n)
-  tail call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 4 %dest, i8* align 4 %src, i64 %n, i1 false)
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 4 %dest, i8* align 4 %src, i64 %n, i1 false)
 ; CHECK-NEXT:  %5 = call i8* @memcpy(i8* align 4 %dest, i8* align 4 %src, i64 %n)
   %1 = call i8* @memcpy(i8* align 4 %dest, i8* align 4 %src, i64 %n)
 ; CHECK-NEXT:  ret void
@@ -101,10 +101,10 @@ define void @int_stacksave() {
 ; Capability address space
 ; CHECK-LABEL: %2 = call i8* @llvm.stacksave.p0i8()
 ; CHECK-NEXT:  %3 = ptrtoint i8* %2 to i64
-; CHECK-NEXT:  %s2 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-NEXT:  %s2 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
 ; CHECK-SAME:      %__cheriseed_cap_t* %1, %__cheriseed_cap_t* null, i64 %3)
   %s2 = call i8 addrspace(200)* @llvm.stacksave.p200i8()
-; CHECK-NEXT:  %4 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %s2)
+; CHECK-NEXT:  %4 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %s2)
 ; CHECK-NEXT:  %5 = inttoptr i64 %4 to i8*
 ; CHECK-NEXT:  call void @llvm.stackrestore.p0i8(i8* %5)
   call void @llvm.stackrestore.p200i8(i8 addrspace(200)* %s2)
@@ -128,7 +128,7 @@ define void @int_returnaddress() {
 ; Capability address space
 ; CHECK-LABEL: %2 = call i8* @llvm.returnaddress.p0i8(i32 0)
 ; CHECK-NEXT:  %3 = ptrtoint i8* %2 to i64
-; CHECK-NEXT:  %s2 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-NEXT:  %s2 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
 ; CHECK-SAME:      %__cheriseed_cap_t* %1, %__cheriseed_cap_t* null, i64 %3)
   %s2 = call i8 addrspace(200)* @llvm.returnaddress.p200i8(i32 0)
 ; CHECK-NEXT:  ret void
@@ -149,7 +149,7 @@ define void @int_frameaddress() {
 ; Capability address space
 ; CHECK-LABEL: %2 = call i8* @llvm.frameaddress.p0i8(i32 0)
 ; CHECK-NEXT:  %3 = ptrtoint i8* %2 to i64
-; CHECK-NEXT:  %s2 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-NEXT:  %s2 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
 ; CHECK-SAME:      %__cheriseed_cap_t* %1, %__cheriseed_cap_t* null, i64 %3)
   %s2 = call i8 addrspace(200)* @llvm.frameaddress.p200i8(i32 0)
 ; CHECK-NEXT:  ret void
@@ -168,7 +168,7 @@ define void @int_thread_pointer() {
 ; CHECK-LABEL: %s1 = call i8* @llvm.thread.pointer.p0i8()
   %s1 = call i8* @llvm.thread.pointer.p0i8()
 ; Capability address space
-; CHECK-NEXT:  %s2 = tail call %__cheriseed_cap_t* @__cheriseed_thread_pointer(%__cheriseed_cap_t* %1)
+; CHECK-NEXT:  %s2 = call %__cheriseed_cap_t* @__cheriseed_thread_pointer(%__cheriseed_cap_t* %1)
   %s2 = call i8 addrspace(200)* @llvm.thread.pointer.p200i8()
 ; CHECK-NEXT:  ret void
   ret void
@@ -186,7 +186,7 @@ define void @int_prefetch(i8* %p, i8 addrspace(200)* %c) {
 ; CHECK-LABEL: call void @llvm.prefetch.p0i8(i8* %p, i32 0, i32 0, i32 0)
   call void @llvm.prefetch.p0i8(i8* %p, i32 0, i32 0, i32 0)
 ; Capability address space
-; CHECK-NEXT:  %1 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %c)
+; CHECK-NEXT:  %1 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %c)
 ; CHECK-NEXT:  %2 = inttoptr i64 %1 to i8*
 ; CHECK-NEXT:  call void @llvm.prefetch.p0i8(i8* %2, i32 0, i32 0, i32 0)
   call void @llvm.prefetch.p200i8(i8 addrspace(200)* %c, i32 0, i32 0, i32 0)

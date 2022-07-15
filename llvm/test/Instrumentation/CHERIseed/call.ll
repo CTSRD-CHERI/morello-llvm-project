@@ -61,8 +61,8 @@ define void @late_definition(i8 addrspace(200)* %0) {
 
 ; CHECK-LABEL: @call_func_ptr_1
 define void @call_func_ptr_1(void (%struct.S*)* %f) {
-; CHECK-NEXT:  tail call void %f(%struct.S* null)
-  tail call void %f(%struct.S* null)
+; CHECK-NEXT:  call void %f(%struct.S* null)
+  call void %f(%struct.S* null)
 ; CHECK-NEXT:  ret void
   ret void
 }
@@ -74,9 +74,9 @@ define void @call_func_ptr_1(void (%struct.S*)* %f) {
 define void @call_func_ptr_2(i8 addrspace(200)* (i8 addrspace(200)*)* %f, i8 addrspace(200)* %p) {
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %2 = tail call %__cheriseed_cap_t* %f(%__cheriseed_cap_t* returned align 16 %1,
+; CHECK-NEXT:  %2 = call %__cheriseed_cap_t* %f(%__cheriseed_cap_t* returned align 16 %1,
 ; CHECK-SAME:     %__cheriseed_cap_t* %p)
-  tail call i8 addrspace(200)* %f(i8 addrspace(200)* %p)
+  call i8 addrspace(200)* %f(i8 addrspace(200)* %p)
 ; CHECK-NEXT:  ret void
   ret void
 }
@@ -89,16 +89,16 @@ define void @call_func_ptr_8() {
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
 ; CHECK-NEXT:  %2 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %3 = tail call %__cheriseed_cap_t* @__cheriseed_pcc_get(%__cheriseed_cap_t* %1)
-  %1 = tail call i8 addrspace(200)* @llvm.cheri.pcc.get()
+; CHECK-NEXT:  %3 = call %__cheriseed_cap_t* @__cheriseed_pcc_get(%__cheriseed_cap_t* %1)
+  %1 = call i8 addrspace(200)* @llvm.cheri.pcc.get()
 ; CHECK-NEXT:  %4 = ptrtoint void ()* @call_func_ptr_8_callee to i64
-; CHECK-NEXT:  %5 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %2, %__cheriseed_cap_t* %3, i64 %4)
-; CHECK-NEXT:  %6 = tail call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %5, i64 0, i32 5)
-  %2 = tail call i8 addrspace(200)* @llvm.cheri.cap.from.pointer.i64(i8 addrspace(200)* %1, i64 ptrtoint (void ()* @call_func_ptr_8_callee to i64))
+; CHECK-NEXT:  %5 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %2, %__cheriseed_cap_t* %3, i64 %4)
+; CHECK-NEXT:  %6 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %5, i64 0, i32 5)
+  %2 = call i8 addrspace(200)* @llvm.cheri.cap.from.pointer.i64(i8 addrspace(200)* %1, i64 ptrtoint (void ()* @call_func_ptr_8_callee to i64))
 ; CHECK-NEXT:  %7 = inttoptr i64 %6 to void ()*
   %3 = bitcast i8 addrspace(200)* %2 to void () addrspace(200)*
-; CHECK-NEXT:  tail call void %7()
-  tail call void %3()
+; CHECK-NEXT:  call void %7()
+  call void %3()
 ; CHECK-NEXT:  ret void
   ret void
 }
@@ -120,13 +120,13 @@ define void @call_func_ptr_9() addrspace(200) {
 ; CHECK-NEXT:  %2 = alloca %__cheriseed_cap_t, align 16
 ; CHECK-NEXT:  %3 = alloca %__cheriseed_cap_t, align 16
   %1 = alloca void () addrspace(200)*, align 16
-; CHECK-NEXT:  %4 = tail call %__cheriseed_cap_t* @__cheriseed_pcc_get(%__cheriseed_cap_t* %2)
-; CHECK-NEXT:  %5 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %4, %__cheriseed_cap_t* %4, i64 ptrtoint (void ()* @call_func_ptr_9_callee to i64))
-; CHECK-NEXT:  tail call void @__cheriseed_store_cap_hybrid(%__cheriseed_cap_t* %1, %__cheriseed_cap_t* %5)
+; CHECK-NEXT:  %4 = call %__cheriseed_cap_t* @__cheriseed_pcc_get(%__cheriseed_cap_t* %2)
+; CHECK-NEXT:  %5 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %4, %__cheriseed_cap_t* %4, i64 ptrtoint (void ()* @call_func_ptr_9_callee to i64))
+; CHECK-NEXT:  call void @__cheriseed_store_cap_hybrid(%__cheriseed_cap_t* %1, %__cheriseed_cap_t* %5)
   store void () addrspace(200)* @call_func_ptr_9_callee, void () addrspace(200)** %1, align 16
-; CHECK-NEXT:  %6 = tail call %__cheriseed_cap_t* @__cheriseed_load_cap_hybrid(%__cheriseed_cap_t* %1, %__cheriseed_cap_t* %3)
+; CHECK-NEXT:  %6 = call %__cheriseed_cap_t* @__cheriseed_load_cap_hybrid(%__cheriseed_cap_t* %1, %__cheriseed_cap_t* %3)
   %2 = load void () addrspace(200)*, void () addrspace(200)** %1, align 16
-; CHECK-NEXT:  %7 = tail call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %6, i64 0, i32 5)
+; CHECK-NEXT:  %7 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %6, i64 0, i32 5)
 ; CHECK-NEXT:  %8 = inttoptr i64 %7 to void ()*
 ; CHECK-NEXT:  call void %8()
   call void %2()
@@ -144,8 +144,8 @@ declare void @call_func_ptr_9_callee() addrspace(200)
 define void @call_func_ptr_3(void ()** %p) {
 ; CHECK-NEXT:  %1 = load void ()*, void ()** %p, align 4
   %1 = load void ()*, void ()** %p, align 4
-; CHECK-NEXT:  tail call void %1()
-  tail call void %1()
+; CHECK-NEXT:  call void %1()
+  call void %1()
 ; CHECK-NEXT:  ret void
   ret void
 }
@@ -154,8 +154,8 @@ define void @call_func_ptr_3(void ()** %p) {
 define void @call_func_ptr_5(void (%struct.S*)** %p) {
 ; CHECK-NEXT:  %1 = load void (%struct.S*)*, void (%struct.S*)** %p, align 4
   %1 = load void (%struct.S*)*, void (%struct.S*)** %p, align 4
-; CHECK-NEXT:  tail call void %1(%struct.S* null)
-  tail call void %1(%struct.S* null)
+; CHECK-NEXT:  call void %1(%struct.S* null)
+  call void %1(%struct.S* null)
 ; CHECK-NEXT:  ret void
   ret void
 }
@@ -164,12 +164,12 @@ define void @call_func_ptr_5(void (%struct.S*)** %p) {
 define void @call_func_ptr_6(void () addrspace(200)* addrspace(200)* %cap) {
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %2 = tail call %__cheriseed_cap_t* @__cheriseed_load_cap(%__cheriseed_cap_t* %cap, %__cheriseed_cap_t* %1)
+; CHECK-NEXT:  %2 = call %__cheriseed_cap_t* @__cheriseed_load_cap(%__cheriseed_cap_t* %cap, %__cheriseed_cap_t* %1)
   %1 = load void () addrspace(200)*, void () addrspace(200)* addrspace(200)* %cap, align 16
-; CHECK-NEXT:  %3 = tail call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %2, i64 0, i32 5)
+; CHECK-NEXT:  %3 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %2, i64 0, i32 5)
 ; CHECK-NEXT:  %4 = inttoptr i64 %3 to void ()*
-; CHECK-NEXT:  tail call void %4()
-  tail call void %1()
+; CHECK-NEXT:  call void %4()
+  call void %1()
 ; CHECK-NEXT: ret void
   ret void
 }
@@ -178,14 +178,14 @@ define void @call_func_ptr_6(void () addrspace(200)* addrspace(200)* %cap) {
 define void @call_func_ptr_7([4 x void () addrspace(200)*] addrspace(200)* %0){
 ; CHECK-NEXT  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT  %2 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT  %3 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %0, %__cheriseed_cap_t* %2, i64 48)
+; CHECK-NEXT  %3 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %0, %__cheriseed_cap_t* %2, i64 48)
   %2 = getelementptr inbounds [4 x void () addrspace(200)*], [4 x void () addrspace(200)*] addrspace(200)* %0, i64 1, i64 2
-; CHECK-NEXT  %4 = tail call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %3, i64 8, i32 0)
+; CHECK-NEXT  %4 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %3, i64 8, i32 0)
 ; CHECK-NEXT  %5 = inttoptr i64 %4 to void ()**
 ; CHECK-NEXT  %6 = load void ()*, void ()** %5, align 16
   %3 = load void () addrspace(200)*, void () addrspace(200)* addrspace(200)* %2, align 16
-; CHECK-NEXT  tail call void %6()
-  tail call void %3() #2
+; CHECK-NEXT  call void %6()
+  call void %3() #2
 ; CHECK-NEXT  ret void
   ret void
 }
@@ -198,8 +198,8 @@ declare i32 @global_func(...)
 ; CHECK-LABEL: @call_func_ptr_4
 define void @call_func_ptr_4() {
 ; CHECK-NEXT:  %1 = bitcast i32 (...)* @global_func to i32 ()*
-; CHECK-NEXT:  %call = tail call i32 %1()
-  %call = tail call i32 bitcast (i32 (...)* @global_func to i32 ()*)()
+; CHECK-NEXT:  %call = call i32 %1()
+  %call = call i32 bitcast (i32 (...)* @global_func to i32 ()*)()
 ; CHECK-NEXT:  ret void
   ret void
 }
@@ -209,8 +209,8 @@ define void @call_func_ptr_4() {
 
 ; CHECK-LABEL: @mutate_functiontype
 define void @mutate_functiontype() {
-; CHECK-NEXT:  %umul = tail call { i64, i1 } @llvm.umul.with.overflow.i64(i64 1, i64 2)
-  %umul = tail call { i64, i1 } @llvm.umul.with.overflow.i64(i64 1, i64 2)
+; CHECK-NEXT:  %umul = call { i64, i1 } @llvm.umul.with.overflow.i64(i64 1, i64 2)
+  %umul = call { i64, i1 } @llvm.umul.with.overflow.i64(i64 1, i64 2)
 ; CHECK-NEXT:  %umul.ov = extractvalue { i64, i1 } %umul, 1
   %umul.ov = extractvalue { i64, i1 } %umul, 1
 ; CHECK-NEXT:  ret void
@@ -271,7 +271,7 @@ entry:
 ; CHECK-LABEL: if:
 if:
 ; CHECK-NEXT:  %byval_cpy.addr = ptrtoint [42 x i8]* %byval_cpy to i64
-; CHECK-NEXT:  %byval_cpy.cap = tail call %__cheriseed_cap_t* @__cheriseed_stack_cap_init(
+; CHECK-NEXT:  %byval_cpy.cap = call %__cheriseed_cap_t* @__cheriseed_stack_cap_init(
 ; CHECK-SAME:     %__cheriseed_cap_t* %byval_cpy.shadow.cap, i64 %byval_cpy.addr, i64 42)
 ; CHECK-NEXT:  %0 = call %__cheriseed_cap_t* @memcpy_c(%__cheriseed_cap_t* returned %byval_cpy.cap,
 ; CHECK-SAME:     %__cheriseed_cap_t* %byval_cpy.cap, %__cheriseed_cap_t* %s, i64 42)
@@ -283,7 +283,7 @@ if:
 ; CHECK-LABEL: else:
 else:
 ; CHECK-NEXT:  %byval_cpy1.addr = ptrtoint [42 x i8]* %byval_cpy1 to i64
-; CHECK-NEXT:  %byval_cpy1.cap = tail call %__cheriseed_cap_t* @__cheriseed_stack_cap_init(
+; CHECK-NEXT:  %byval_cpy1.cap = call %__cheriseed_cap_t* @__cheriseed_stack_cap_init(
 ; CHECK-SAME:     %__cheriseed_cap_t* %byval_cpy1.shadow.cap, i64 %byval_cpy1.addr, i64 42)
 ; CHECK-NEXT:  %1 = call %__cheriseed_cap_t* @memcpy_c(%__cheriseed_cap_t* returned %byval_cpy1.cap,
 ; CHECK-SAME:     %__cheriseed_cap_t* %byval_cpy1.cap, %__cheriseed_cap_t* %s, i64 42)
@@ -323,12 +323,12 @@ define void @dereferenceable_attribute() {
 define void @call_ptr_to_cap(i8* %0) {
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %2 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %3 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
+; CHECK-NEXT:  %3 = call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
 ; CHECK-NEXT:  %4 = ptrtoint i8* %0 to i64
-; CHECK-NEXT:  %5 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %3, %__cheriseed_cap_t* %3, i64 %4)
+; CHECK-NEXT:  %5 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %3, %__cheriseed_cap_t* %3, i64 %4)
   %2 = addrspacecast i8* %0 to i8 addrspace(200)*
-; CHECK-NEXT:  tail call void @call_ptr_to_cap_callee(%__cheriseed_cap_t* %5)
-  tail call void @call_ptr_to_cap_callee(i8 addrspace(200)* %2)
+; CHECK-NEXT:  call void @call_ptr_to_cap_callee(%__cheriseed_cap_t* %5)
+  call void @call_ptr_to_cap_callee(i8 addrspace(200)* %2)
 ; CHECK-NEXT:  ret void
   ret void
 }
@@ -343,19 +343,19 @@ declare void @call_ptr_to_cap_callee(i8 addrspace(200)*)
 define i8 addrspace(200)* @call_cap_to_ptr_call(i8 addrspace(200)* %0) {
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %3 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %4 = tail call i64 @__cheriseed_to_pointer(%__cheriseed_cap_t* %1,
+; CHECK-NEXT:  %4 = call i64 @__cheriseed_to_pointer(%__cheriseed_cap_t* %1,
 ; CHECK-SAME:     %__cheriseed_cap_t* %1)
-  %2 = tail call i64 @llvm.cheri.cap.to.pointer.i64(i8 addrspace(200)* %0, i8 addrspace(200)* %0)
+  %2 = call i64 @llvm.cheri.cap.to.pointer.i64(i8 addrspace(200)* %0, i8 addrspace(200)* %0)
 ; CHECK-NEXT:  %5 = inttoptr i64 %4 to i8*
   %3 = inttoptr i64 %2 to i8*
-; CHECK-NEXT:  %6 = tail call i8* @call_cap_to_ptr_callee(i8* %5)
-  %4 = tail call i8* @call_cap_to_ptr_callee(i8* %3)
-; CHECK-NEXT:  %7 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %3)
+; CHECK-NEXT:  %6 = call i8* @call_cap_to_ptr_callee(i8* %5)
+  %4 = call i8* @call_cap_to_ptr_callee(i8* %3)
+; CHECK-NEXT:  %7 = call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %3)
 ; CHECK-NEXT:  %8 = ptrtoint i8* %6 to i64
-; CHECK-NEXT:  %9 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(
+; CHECK-NEXT:  %9 = call %__cheriseed_cap_t* @__cheriseed_address_set(
 ; CHECK-SAME:     %__cheriseed_cap_t* %7, %__cheriseed_cap_t* %7, i64 %8)
   %5 = addrspacecast i8* %4 to i8 addrspace(200)*
-; CHECK-NEXT:  %10 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-NEXT:  %10 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
 ; CHECK-SAME:     %__cheriseed_cap_t* %0, %__cheriseed_cap_t* %9, i64 0)
 ; CHECK-NEXT:  ret %__cheriseed_cap_t* %0
   ret i8 addrspace(200)* %5

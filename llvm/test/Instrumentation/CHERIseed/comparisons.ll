@@ -12,14 +12,14 @@
 
 ; CHECK-LABEL: @eq
 define void @eq(i8 addrspace(200)* %0, i8 addrspace(200)* %1) {
-; CHECK-NEXT:  %3 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
-; CHECK-NEXT:  %4 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %1)
+; CHECK-NEXT:  %3 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %4 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %1)
 ; CHECK-NEXT:  %5 = icmp eq i64 %3, %4
   %3 = icmp eq i8 addrspace(200)* %0, %1
-; CHECK-NEXT:  %6 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %6 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
 ; CHECK-NEXT:  %7 = icmp eq i64 %6, 0
   %4 = icmp eq i8 addrspace(200)* %0, null
-; CHECK-NEXT:  %8 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %8 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
 ; CHECK-NEXT:  %9 = icmp eq i64 0, %8
   %5 = icmp eq i8 addrspace(200)* null, %0
 ; CHECK-NEXT:  ret void
@@ -28,14 +28,14 @@ define void @eq(i8 addrspace(200)* %0, i8 addrspace(200)* %1) {
 
 ; CHECK-LABEL: @ne
 define void @ne(i8 addrspace(200)* %0, i8 addrspace(200)* %1) {
-; CHECK-NEXT:  %3 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
-; CHECK-NEXT:  %4 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %1)
+; CHECK-NEXT:  %3 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %4 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %1)
 ; CHECK-NEXT:  %5 = icmp ne i64 %3, %4
   %3 = icmp ne i8 addrspace(200)* %0, %1
-; CHECK-NEXT:  %6 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %6 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
 ; CHECK-NEXT:  %7 = icmp ne i64 %6, 0
   %4 = icmp ne i8 addrspace(200)* %0, null
-; CHECK-NEXT:  %8 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %8 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
 ; CHECK-NEXT:  %9 = icmp ne i64 0, %8
   %5 = icmp ne i8 addrspace(200)* null, %0
 ; CHECK-NEXT:  ret void
@@ -44,14 +44,14 @@ define void @ne(i8 addrspace(200)* %0, i8 addrspace(200)* %1) {
 
 ; CHECK-LABEL: @ult
 define void @ult(i8 addrspace(200)* %0, i8 addrspace(200)* %1) {
-; CHECK-NEXT:  %3 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
-; CHECK-NEXT:  %4 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %1)
+; CHECK-NEXT:  %3 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %4 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %1)
 ; CHECK-NEXT:  %5 = icmp ult i64 %3, %4
   %3 = icmp ult i8 addrspace(200)* %0, %1
-; CHECK-NEXT:  %6 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %6 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
 ; CHECK-NEXT:  %7 = icmp ult i64 %6, 0
   %4 = icmp ult i8 addrspace(200)* %0, null
-; CHECK-NEXT:  %8 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %8 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
 ; CHECK-NEXT:  %9 = icmp ult i64 0, %8
   %5 = icmp ult i8 addrspace(200)* null, %0
 ; CHECK-NEXT:  ret void
@@ -60,14 +60,14 @@ define void @ult(i8 addrspace(200)* %0, i8 addrspace(200)* %1) {
 
 ; CHECK-LABEL: @ugt
 define void @ugt(i8 addrspace(200)* %0, i8 addrspace(200)* %1) {
-; CHECK-NEXT:  %3 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
-; CHECK-NEXT:  %4 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %1)
+; CHECK-NEXT:  %3 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %4 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %1)
 ; CHECK-NEXT:  %5 = icmp ugt i64 %3, %4
   %3 = icmp ugt i8 addrspace(200)* %0, %1
-; CHECK-NEXT:  %6 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %6 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
 ; CHECK-NEXT:  %7 = icmp ugt i64 %6, 0
   %4 = icmp ugt i8 addrspace(200)* %0, null
-; CHECK-NEXT:  %8 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %8 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
 ; CHECK-NEXT:  %9 = icmp ugt i64 0, %8
   %5 = icmp ugt i8 addrspace(200)* null, %0
 ; CHECK-NEXT:  ret void
@@ -76,14 +76,14 @@ define void @ugt(i8 addrspace(200)* %0, i8 addrspace(200)* %1) {
 
 ; CHECK-LABEL: @ule
 define void @ule(i8 addrspace(200)* %0, i8 addrspace(200)* %1) {
-; CHECK-NEXT:  %3 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
-; CHECK-NEXT:  %4 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %1)
+; CHECK-NEXT:  %3 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %4 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %1)
 ; CHECK-NEXT:  %5 = icmp ule i64 %3, %4
   %3 = icmp ule i8 addrspace(200)* %0, %1
-; CHECK-NEXT:  %6 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %6 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
 ; CHECK-NEXT:  %7 = icmp ule i64 %6, 0
   %4 = icmp ule i8 addrspace(200)* %0, null
-; CHECK-NEXT:  %8 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %8 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
 ; CHECK-NEXT:  %9 = icmp ule i64 0, %8
   %5 = icmp ule i8 addrspace(200)* null, %0
 ; CHECK-NEXT:  ret void
@@ -92,14 +92,14 @@ define void @ule(i8 addrspace(200)* %0, i8 addrspace(200)* %1) {
 
 ; CHECK-LABEL: @uge
 define void @uge(i8 addrspace(200)* %0, i8 addrspace(200)* %1) {
-; CHECK-NEXT:  %3 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
-; CHECK-NEXT:  %4 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %1)
+; CHECK-NEXT:  %3 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %4 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %1)
 ; CHECK-NEXT:  %5 = icmp uge i64 %3, %4
   %3 = icmp uge i8 addrspace(200)* %0, %1
-; CHECK-NEXT:  %6 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %6 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
 ; CHECK-NEXT:  %7 = icmp uge i64 %6, 0
   %4 = icmp uge i8 addrspace(200)* %0, null
-; CHECK-NEXT:  %8 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:  %8 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %0)
 ; CHECK-NEXT:  %9 = icmp uge i64 0, %8
   %5 = icmp uge i8 addrspace(200)* null, %0
 ; CHECK-NEXT:  ret void

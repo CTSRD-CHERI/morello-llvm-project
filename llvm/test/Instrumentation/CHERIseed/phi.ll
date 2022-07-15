@@ -112,9 +112,9 @@ entry:
 ; CHECK-SAME:  ; preds = %while.body.while.body_crit_edge, %entry.while.body_crit_edge
 while.body:
 ; CHECK-NEXT:  %v.addr.05 = phi %__cheriseed_cap_t* [ %incdec.ptr, %while.body.while.body_crit_edge ], [ %v, %entry.while.body_crit_edge ]
-; CHECK-NEXT:  %v.addr.05.cpy = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %1, %__cheriseed_cap_t* %v.addr.05, i64 0)
+; CHECK-NEXT:  %v.addr.05.cpy = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %1, %__cheriseed_cap_t* %v.addr.05, i64 0)
   %v.addr.05 = phi i32 addrspace(200)* [ %incdec.ptr, %while.body ], [ %v, %entry ]
-; CHECK-NEXT:  %incdec.ptr = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %0, %__cheriseed_cap_t* %v.addr.05.cpy, i64 4)
+; CHECK-NEXT:  %incdec.ptr = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %0, %__cheriseed_cap_t* %v.addr.05.cpy, i64 4)
   %incdec.ptr = getelementptr inbounds i32, i32 addrspace(200)* %v.addr.05, i64 1
 ; CHECK-NEXT:  %cmp = icmp sgt i32 %n, 1
   %cmp = icmp sgt i32 %n, 1
@@ -145,8 +145,8 @@ entry:
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %0 = alloca %__cheriseed_cap_t, align 16
 ; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %2 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %b)
-; CHECK-NEXT:  %3 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %a)
+; CHECK-NEXT:  %2 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %b)
+; CHECK-NEXT:  %3 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %a)
 ; CHECK-NEXT:  %cmp3 = icmp ugt i64 %2, %3
   %cmp3 = icmp ugt i32 addrspace(200)* %b, %a
 ; CHECK-NEXT:  br i1 %cmp3, label %while.body.lr.ph, label %entry.while.end_crit_edge
@@ -165,12 +165,12 @@ while.body.lr.ph:
 ; CHECK-SAME:  ; preds = %while.body.while.body_crit_edge, %while.body.lr.ph
 while.body:
 ; CHECK-NEXT:  %b.addr = phi %__cheriseed_cap_t* [ %b, %while.body.lr.ph ], [ %incdec.ptr, %while.body.while.body_crit_edge ]
-; CHECK-NEXT:  %b.addr.cpy = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %1, %__cheriseed_cap_t* %b.addr, i64 0)
+; CHECK-NEXT:  %b.addr.cpy = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %1, %__cheriseed_cap_t* %b.addr, i64 0)
   %b.addr = phi i32 addrspace(200)* [ %b, %while.body.lr.ph ], [ %incdec.ptr, %while.body ]
-; CHECK-NEXT:  %incdec.ptr = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %0, %__cheriseed_cap_t* %b.addr.cpy, i64 -4)
+; CHECK-NEXT:  %incdec.ptr = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %0, %__cheriseed_cap_t* %b.addr.cpy, i64 -4)
   %incdec.ptr = getelementptr inbounds i32, i32 addrspace(200)* %b.addr, i64 -1
-; CHECK-NEXT:  %4 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %incdec.ptr)
-; CHECK-NEXT:  %5 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %a)
+; CHECK-NEXT:  %4 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %incdec.ptr)
+; CHECK-NEXT:  %5 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %a)
 ; CHECK-NEXT:  %cmp = icmp ugt i64 %4, %5
   %cmp = icmp ugt i32 addrspace(200)* %incdec.ptr, %a
 ; CHECK-NEXT:  br i1 %cmp, label %while.body.while.body_crit_edge, label %while.body.while.end_crit_edge
@@ -331,10 +331,10 @@ l1:
 ; CHECK-LABEL: l2:
 l2:
 ; CHECK-NEXT:  %phi = phi %__cheriseed_cap_t* [ %a, %entry.l2_crit_edge ], [ %b, %l1 ]
-; CHECK-NEXT:  %phi.cpy = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %0, %__cheriseed_cap_t* %phi, i64 0)
+; CHECK-NEXT:  %phi.cpy = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %0, %__cheriseed_cap_t* %phi, i64 0)
   %phi = phi i8 addrspace(200)* [ %a, %entry ], [ %b, %l1 ]
 ; This was faulty.
-; CHECK-NEXT:  %1 = tail call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %phi.cpy, i64 1, i32 2)
+; CHECK-NEXT:  %1 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %phi.cpy, i64 1, i32 2)
 ; CHECK-NEXT:  %2 = inttoptr i64 %1 to i8*
 ; CHECK-NEXT:  store i8 42, i8* %2
   store i8 42, i8 addrspace(200)* %phi

@@ -49,7 +49,7 @@ define i8 addrspace(200)* @func_3(i8 addrspace(200)* %0) {
 
 ; CHECK-LABEL: @uses_int
 define void @uses_int() {
-; CHECK-NEXT:  %1 = tail call i8* @int()
+; CHECK-NEXT:  %1 = call i8* @int()
 ; CHECK-NEXT:  %2 = load i8, i8* %1, align 1
   %1 = load i8, i8* @int, align 1
 ; CHECK-NEXT:  ret void
@@ -58,7 +58,7 @@ define void @uses_int() {
 
 ; CHECK-LABEL: @uses_alias_int_2
 define void @uses_alias_int_2() {
-; CHECK-NEXT:  %1 = tail call i8* @alias_int_2()
+; CHECK-NEXT:  %1 = call i8* @alias_int_2()
 ; CHECK-NEXT:  %2 = load i8, i8* %1, align 1
   %1 = load i8, i8* @alias_int_2, align 1
 ; CHECK-NEXT:  ret void
@@ -69,8 +69,8 @@ define void @uses_alias_int_2() {
 define void @uses_cap() {
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %2 = tail call %__cheriseed_cap_t* @cap()
-; CHECK-NEXT:  %3 = tail call %__cheriseed_cap_t* @__cheriseed_load_cap_hybrid(%__cheriseed_cap_t* %2, %__cheriseed_cap_t* %1)
+; CHECK-NEXT:  %2 = call %__cheriseed_cap_t* @cap()
+; CHECK-NEXT:  %3 = call %__cheriseed_cap_t* @__cheriseed_load_cap_hybrid(%__cheriseed_cap_t* %2, %__cheriseed_cap_t* %1)
   %1 = load i8 addrspace(200)*, i8 addrspace(200)** @cap, align 16
 ; CHECK-NEXT:  ret void
   ret void
@@ -80,8 +80,8 @@ define void @uses_cap() {
 define void @uses_alias_cap_2() {
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %2 = tail call %__cheriseed_cap_t* @alias_cap_2()
-; CHECK-NEXT:  %3 = tail call %__cheriseed_cap_t* @__cheriseed_load_cap_hybrid(%__cheriseed_cap_t* %2, %__cheriseed_cap_t* %1)
+; CHECK-NEXT:  %2 = call %__cheriseed_cap_t* @alias_cap_2()
+; CHECK-NEXT:  %3 = call %__cheriseed_cap_t* @__cheriseed_load_cap_hybrid(%__cheriseed_cap_t* %2, %__cheriseed_cap_t* %1)
   %1 = load i8 addrspace(200)*, i8 addrspace(200)** @alias_cap_2, align 16
 ; CHECK-NEXT:  ret void
   ret void
@@ -101,7 +101,7 @@ define i8 addrspace(200)* @calls_alias_func_3(i8 addrspace(200)* %0) {
 ; CHECK-NEXT:  %3 = alloca %__cheriseed_cap_t, align 16
 ; CHECK-NEXT:  %4 = call %__cheriseed_cap_t* @alias_func_3(%__cheriseed_cap_t* returned align 16 %3,
 ; CHECK-SAME:     %__cheriseed_cap_t* %1)
-; CHECK-NEXT:  %5 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-NEXT:  %5 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
 ; CHECK-SAME:     %__cheriseed_cap_t* %0, %__cheriseed_cap_t* %4, i64 0)
   %2 = call i8 addrspace(200)* @alias_func_3(i8 addrspace(200)* %0)
 ; CHECK-NEXT:  ret %__cheriseed_cap_t* %0

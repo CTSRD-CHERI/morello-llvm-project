@@ -92,7 +92,7 @@ define void @function_type_deduction_1(i32 addrspace(200)* noalias readnone %0) 
 ; CHECK-LABEL: define %__cheriseed_cap_t* @function_type_deduction_2(
 ; CHECK-SAME:     %__cheriseed_cap_t* returned align 16 %0, %__cheriseed_cap_t* noalias readnone %1)
 define i8 addrspace(200)* @function_type_deduction_2(i8 addrspace(200)* noalias readnone %0) {
-; CHECK-NEXT:  %3 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-NEXT:  %3 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
 ; CHECK-SAME:     %__cheriseed_cap_t* %0, %__cheriseed_cap_t* %1, i64 0)
 ; CHECK-NEXT:  ret %__cheriseed_cap_t* %0
   ret i8 addrspace(200)* %0
@@ -102,7 +102,7 @@ define i8 addrspace(200)* @function_type_deduction_2(i8 addrspace(200)* noalias 
 ; CHECK-LABEL: define %__cheriseed_cap_t* @function_type_deduction_3(
 ; CHECK-SAME:     %__cheriseed_cap_t* returned align 16 %0, %__cheriseed_cap_t* noalias readnone %1)
 define i32 addrspace(200)* @function_type_deduction_3(i32 addrspace(200)* noalias readnone returned %0) {
-; CHECK-NEXT:  %3 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-NEXT:  %3 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
 ; CHECK-SAME:     %__cheriseed_cap_t* %0, %__cheriseed_cap_t* %1, i64 0)
 ; CHECK-NEXT:  ret %__cheriseed_cap_t* %0
   ret i32 addrspace(200)* %0

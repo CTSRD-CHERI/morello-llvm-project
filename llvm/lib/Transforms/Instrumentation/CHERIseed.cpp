@@ -1483,7 +1483,6 @@ Value *CHERIseed::visitCallInst(CallInst &I) {
                                   cheriseed::abi::permissions::LOAD |
                                       cheriseed::abi::permissions::EXECUTE);
   CallInst *NV = VC.IRB->CreateCall(FTy, Callee, Ctx.Args);
-  NV->setTailCallKind(I.getTailCallKind());
   NV->setAttributes(Ctx.Attrs);
   // FIXME: clone other properties when we CreateCall? Elsewhere too.
   DebugPrint::Emit(NV);
@@ -1857,7 +1856,6 @@ Value *CHERIseed::visitCallInlineAsm(CallInst &I) {
       NFTy, IA->getAsmString(), IA->getConstraintString(), IA->hasSideEffects(),
       IA->isAlignStack(), IA->getDialect());
   CallInst *NI = VC.IRB->CreateCall(NIA, Args);
-  NI->setTailCallKind(I.getTailCallKind());
   // FIXME: clone other properties when we CreateCall? Elsewhere too.
   return DebugPrint::Emit(NI);
 }
@@ -2520,7 +2518,6 @@ Value *CHERIseed::mapValue(Value *V) {
       if (!VC.BB)
         return Accessor;
       CallInst *CI = VC.IRB->CreateCall(FunctionCallee(Accessor), {});
-      CI->setTailCall();
       DebugPrint::Emit(CI);
       // FIXME: Mapping the newly created global creates an error in the
       // dominator graph. The mapped value may be used in a code path where it
@@ -2552,7 +2549,6 @@ Value *CHERIseed::mapValue(Value *V) {
     if (!FTy)
       return MGA;
     CallInst *CI = VC.IRB->CreateCall(FTy, MGA, {});
-    CI->setTailCall();
     return DebugPrint::Emit(CI);
   }
 
@@ -3454,7 +3450,6 @@ CallInst *CHERIseed::createRtCall(const StringRef CallName,
                                   ArrayRef<Value *> Args) {
   FunctionCallee FC = getOrInsertLibraryCall(kPrefix + CallName.str(), FTy, {});
   CallInst *CI = VC.IRB->CreateCall(FC, Args);
-  CI->setTailCall();
   CI->setName(Name);
   DebugPrint::Emit(CI);
   return CI;

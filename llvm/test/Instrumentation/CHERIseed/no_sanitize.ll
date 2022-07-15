@@ -18,8 +18,8 @@ define void @use_linker_symbol() {
 ; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
 ; CHECK-NEXT:  %2 = bitcast [0 x i64]* @NoSanitizeGlobal to i8*
   %1 = bitcast [0 x i64]* @NoSanitizeGlobal to i8*
-; CHECK-NEXT:  %3 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %1)
-; CHECK-NEXT:  %4 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %3,
+; CHECK-NEXT:  %3 = call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %1)
+; CHECK-NEXT:  %4 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %3,
 ; CHECK-SAME:     %__cheriseed_cap_t* %3, i64 ptrtoint ([0 x i64]* @NoSanitizeGlobalAS200 to i64))
   %2 = bitcast [0 x i64] addrspace(200)* @NoSanitizeGlobalAS200 to i8 addrspace(200)*
 ; CHECK-NEXT:  ret void

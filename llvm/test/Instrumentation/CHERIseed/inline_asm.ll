@@ -10,24 +10,24 @@
 
 ; CHECK-LABEL: @noarg
 define void @noarg() {
-; CHECK-NEXT:  tail call void asm sideeffect "", ""()
-  tail call void asm sideeffect "", ""()
+; CHECK-NEXT:  call void asm sideeffect "", ""()
+  call void asm sideeffect "", ""()
 ; CHECK-NEXT:  ret void
   ret void
 }
 
 ; CHECK-LABEL: @non_cap_arg
 define void @non_cap_arg(i32 %a, i32 %b) {
-; CHECK-NEXT:  tail call void asm sideeffect "", "=r,r,0"(i32 %b, i32 %a)
-  tail call void asm sideeffect "", "=r,r,0"(i32 %b, i32 %a)
+; CHECK-NEXT:  call void asm sideeffect "", "=r,r,0"(i32 %b, i32 %a)
+  call void asm sideeffect "", "=r,r,0"(i32 %b, i32 %a)
 ; CHECK-NEXT:  ret void
   ret void
 }
 
 ; CHECK-LABEL: @func_ptr_arg
 define void @func_ptr_arg(void ()* %a) {
-; CHECK-NEXT:  tail call void asm sideeffect "", "r"(void ()* %a)
-  tail call void asm sideeffect "", "r"(void ()* %a)
+; CHECK-NEXT:  call void asm sideeffect "", "r"(void ()* %a)
+  call void asm sideeffect "", "r"(void ()* %a)
 ; CHECK-NEXT:  ret void
   ret void
 }

@@ -16,14 +16,14 @@ define void @alloca_int(i64 %cnt) addrspace(200) {
 ; CHECK-NEXT:  %int = alloca i32, align 4
 ; CHECK-NEXT:  %int.addr = ptrtoint i32* %int to i64
 ; CHECK-NEXT:  %int.shadow.cap = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %int.cap = tail call %__cheriseed_cap_t* @__cheriseed_stack_cap_init(
+; CHECK-NEXT:  %int.cap = call %__cheriseed_cap_t* @__cheriseed_stack_cap_init(
 ; CHECK-SAME:     %__cheriseed_cap_t* %int.shadow.cap, i64 %int.addr, i64 4)
   %int = alloca i32, align 4, addrspace(200)
 ; CHECK-NEXT:  %int_array = alloca i32, i64 %cnt, align 4
 ; CHECK-NEXT:  %int_array.size = mul i64 %cnt, 4
 ; CHECK-NEXT:  %int_array.addr = ptrtoint i32* %int_array to i64
 ; CHECK-NEXT:  %int_array.shadow.cap = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %int_array.cap = tail call %__cheriseed_cap_t* @__cheriseed_stack_cap_init(
+; CHECK-NEXT:  %int_array.cap = call %__cheriseed_cap_t* @__cheriseed_stack_cap_init(
 ; CHECK-SAME:     %__cheriseed_cap_t* %int_array.shadow.cap, i64 %int_array.addr, i64 %int_array.size)
   %int_array = alloca i32, i64 %cnt, align 4, addrspace(200)
 ; CHECK-NEXT:  ret void
@@ -35,16 +35,16 @@ define void @alloca_cap() {
 ; CHECK-NEXT:  %cap_to_cap = alloca %__cheriseed_cap_t, align 16
 ; CHECK-NEXT:  %cap_to_cap.addr = ptrtoint %__cheriseed_cap_t* %cap_to_cap to i64
 ; CHECK-NEXT:  %cap_to_cap.shadow.cap = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %cap_to_cap.cap = tail call %__cheriseed_cap_t* @__cheriseed_stack_cap_init(
+; CHECK-NEXT:  %cap_to_cap.cap = call %__cheriseed_cap_t* @__cheriseed_stack_cap_init(
 ; CHECK-SAME:     %__cheriseed_cap_t* %cap_to_cap.shadow.cap, i64 %cap_to_cap.addr, i64 16)
   %cap_to_cap = alloca i32 addrspace(200)*, align 16, addrspace(200)
 ; CHECK-NEXT:  %cap_to_int = alloca i32, align 4
 ; CHECK-NEXT:  %cap_to_int.addr = ptrtoint i32* %cap_to_int to i64
 ; CHECK-NEXT:  %cap_to_int.shadow.cap = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %cap_to_int.cap = tail call %__cheriseed_cap_t* @__cheriseed_stack_cap_init(
+; CHECK-NEXT:  %cap_to_int.cap = call %__cheriseed_cap_t* @__cheriseed_stack_cap_init(
 ; CHECK-SAME:     %__cheriseed_cap_t* %cap_to_int.shadow.cap, i64 %cap_to_int.addr, i64 4)
   %cap_to_int = alloca i32, align 4, addrspace(200)
-; CHECK-NEXT:  tail call void @__cheriseed_store_cap(%__cheriseed_cap_t* %cap_to_cap.cap,
+; CHECK-NEXT:  call void @__cheriseed_store_cap(%__cheriseed_cap_t* %cap_to_cap.cap,
 ; CHECK-SAME:     %__cheriseed_cap_t* %cap_to_int.cap)
   store i32 addrspace(200)* %cap_to_int, i32 addrspace(200)* addrspace(200)* %cap_to_cap, align 16
 ; CHECK-NEXT:  ret void

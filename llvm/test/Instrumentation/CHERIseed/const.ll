@@ -23,10 +23,10 @@ define i32 addrspace(200)* @foo() {
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %2 = alloca %__cheriseed_cap_t, align 16
 ; CHECK-NEXT:  %3 = bitcast void ()* @bar to i32*
-; CHECK-NEXT:  %4 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
+; CHECK-NEXT:  %4 = call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
 ; CHECK-NEXT:  %5 = ptrtoint i32* %3 to i64
-; CHECK-NEXT:  %6 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %4, %__cheriseed_cap_t* %4, i64 %5)
-; CHECK-NEXT:  %7 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %0, %__cheriseed_cap_t* %6, i64 0)
+; CHECK-NEXT:  %6 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %4, %__cheriseed_cap_t* %4, i64 %5)
+; CHECK-NEXT:  %7 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %0, %__cheriseed_cap_t* %6, i64 0)
 ; CHECK-NEXT:  ret %__cheriseed_cap_t* %0
   ret i32 addrspace(200)* addrspacecast (i32* bitcast (void ()* @bar to i32*) to i32 addrspace(200)*)
 }
@@ -168,12 +168,12 @@ entry:
 
 ; CHECK-LABEL: l1:
 l1:
-; CHECK-NEXT:    %2 = tail call { i64 }* @always_map_g()
+; CHECK-NEXT:    %2 = call { i64 }* @always_map_g()
 ; CHECK-NEXT:    %3 = bitcast { i64 }* %2 to i8*
-; CHECK-NEXT:    %4 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:    %4 = call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %0)
 ; CHECK-NEXT:    %5 = ptrtoint i8* %3 to i64
-; CHECK-NEXT:    %6 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %4, %__cheriseed_cap_t* %4, i64 %5)
-; CHECK-NEXT:    %7 = tail call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %6, i64 1, i32 2)
+; CHECK-NEXT:    %6 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %4, %__cheriseed_cap_t* %4, i64 %5)
+; CHECK-NEXT:    %7 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %6, i64 1, i32 2)
 ; CHECK-NEXT:    %8 = inttoptr i64 %7 to i8*
 ; CHECK-NEXT:    store i8 42, i8* %8
   store i8 42, i8 addrspace(200)* addrspacecast (i64* getelementptr inbounds ({ i64 }, { i64 }* @always_map_g, i64 0, i32 0) to i8 addrspace(200)*)
@@ -184,12 +184,12 @@ l1:
 l2:
 ; Ensure that constant expressions are always resolved in-place,
 ; rather than re-use %2, which is defined in a non-dominating block
-; CHECK-NEXT:    %9 = tail call { i64 }* @always_map_g()
+; CHECK-NEXT:    %9 = call { i64 }* @always_map_g()
 ; CHECK-NEXT:    %10 = bitcast { i64 }* %9 to i8*
-; CHECK-NEXT:    %11 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %1)
+; CHECK-NEXT:    %11 = call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %1)
 ; CHECK-NEXT:    %12 = ptrtoint i8* %10 to i64
-; CHECK-NEXT:    %13 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %11, %__cheriseed_cap_t* %11, i64 %12)
-; CHECK-NEXT:    %14 = tail call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %13, i64 1, i32 2)
+; CHECK-NEXT:    %13 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %11, %__cheriseed_cap_t* %11, i64 %12)
+; CHECK-NEXT:    %14 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %13, i64 1, i32 2)
 ; CHECK-NEXT:    %15 = inttoptr i64 %14 to i8*
 ; CHECK-NEXT:    store i8 42, i8* %15
   store i8 42, i8 addrspace(200)* addrspacecast (i64* getelementptr inbounds ({ i64 }, { i64 }* @always_map_g, i64 0, i32 0) to i8 addrspace(200)*)

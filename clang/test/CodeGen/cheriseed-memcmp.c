@@ -8,6 +8,6 @@ int memcmp(const void *s1, const void *s2, unsigned long n);
 // Test that memcmp is not expanded by ExpandMemCmp pass.
 // CHECK-LABEL: no_extend_memcmp:
 int no_extend_memcmp(char *a, char *b) {
-  // CHECK: {{[b, jmp]}} memcmp
+  // CHECK: {{[bl, callq]}} memcmp
   return memcmp(a, b, 4);
 }

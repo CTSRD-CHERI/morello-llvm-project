@@ -13,11 +13,11 @@
 define void @addrspacecast(i8* %0) {
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %2 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %3 = tail call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
+; CHECK-NEXT:  %3 = call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
 ; CHECK-NEXT:  %4 = ptrtoint i8* %0 to i64
-; CHECK-NEXT:  %5 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %3, %__cheriseed_cap_t* %3, i64 %4)
+; CHECK-NEXT:  %5 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %3, %__cheriseed_cap_t* %3, i64 %4)
   %2 = addrspacecast i8* %0 to i8 addrspace(200)*
-; CHECK-NEXT:  %6 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %5)
+; CHECK-NEXT:  %6 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %5)
 ; CHECK-NEXT:  %7 = inttoptr i64 %6 to i8*
   %3 = addrspacecast i8 addrspace(200)* %2 to i8*
 ; CHECK-NEXT:  ret void
@@ -61,9 +61,9 @@ define void @bitcast_3(%struct.BC* %0, %struct.BC* %1) {
   %3 = bitcast %struct.BC* %0 to i8 addrspace(200)**
 ; CHECK-NEXT:  %5 = bitcast %struct.BC* %1 to %__cheriseed_cap_t*
   %4 = bitcast %struct.BC* %1 to i8 addrspace(200)**
-; CHECK-NEXT:  %6 = tail call %__cheriseed_cap_t* @__cheriseed_load_cap_hybrid(%__cheriseed_cap_t* %4, %__cheriseed_cap_t* %3)
+; CHECK-NEXT:  %6 = call %__cheriseed_cap_t* @__cheriseed_load_cap_hybrid(%__cheriseed_cap_t* %4, %__cheriseed_cap_t* %3)
   %5 = load i8 addrspace(200)*, i8 addrspace(200)** %3, align 16
-; CHECK-NEXT:  tail call void @__cheriseed_store_cap_hybrid(%__cheriseed_cap_t* %5, %__cheriseed_cap_t* %6)
+; CHECK-NEXT:  call void @__cheriseed_store_cap_hybrid(%__cheriseed_cap_t* %5, %__cheriseed_cap_t* %6)
   store i8 addrspace(200)* %5, i8 addrspace(200)** %4, align 16
 ; And it is also possible to cast back.
 ; CHECK-NEXT:  %7 = bitcast %__cheriseed_cap_t* %4 to [2 x i64]*
@@ -118,9 +118,9 @@ define void @bitcast_function_alias_2() addrspace(200) {
 ; TODO: This is conservative, optimize later
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %2 = tail call %__cheriseed_cap_t* @__cheriseed_pcc_get(%__cheriseed_cap_t* %1)
-; CHECK-NEXT:  %3 = tail call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %2, %__cheriseed_cap_t* %2, i64 ptrtoint (void (...)* @bitcast_func_alias_2 to i64))
-; CHECK-NEXT:  %4 = tail call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %3, i64 0, i32 5)
+; CHECK-NEXT:  %2 = call %__cheriseed_cap_t* @__cheriseed_pcc_get(%__cheriseed_cap_t* %1)
+; CHECK-NEXT:  %3 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %2, %__cheriseed_cap_t* %2, i64 ptrtoint (void (...)* @bitcast_func_alias_2 to i64))
+; CHECK-NEXT:  %4 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %3, i64 0, i32 5)
 ; CHECK-NEXT:  %5 = inttoptr i64 %4 to void ()*
 ; CHECK-NEXT:  call void %5()
   call addrspace(200) void bitcast (void (...) addrspace(200)* @bitcast_func_alias_2 to void () addrspace(200)*)()
@@ -135,7 +135,7 @@ define void @bitcast_function_alias_2() addrspace(200) {
 define void @ptrtoint(i8* %0, i8 addrspace(200)* %1) {
 ; CHECK-NEXT:  %3 = ptrtoint i8* %0 to i64
   %3 = ptrtoint i8* %0 to i64
-; CHECK-NEXT:  %4 = tail call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %1)
+; CHECK-NEXT:  %4 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %1)
   %4 = ptrtoint i8 addrspace(200)* %1 to i64
 ; CHECK-NEXT:  ret void
   ret void
@@ -161,10 +161,10 @@ define void @inttoptr(i64 %0, i8 %1) {
   %3 = inttoptr i64 %0 to i64*
 ; CHECK-NEXT:  %6 = inttoptr i8 %1 to i8*
   %4 = inttoptr i8 %1 to i8*
-; CHECK-NEXT:  %7 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %3, %__cheriseed_cap_t* null, i64 %0)
+; CHECK-NEXT:  %7 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %3, %__cheriseed_cap_t* null, i64 %0)
   %5 = inttoptr i64 %0 to i8 addrspace(200)*
 ; CHECK-NEXT:  %8 = zext i8 %1 to i64
-; CHECK-NEXT:  %9 = tail call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %4, %__cheriseed_cap_t* null, i64 %8)
+; CHECK-NEXT:  %9 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %4, %__cheriseed_cap_t* null, i64 %8)
   %6 = inttoptr i8 %1 to i8 addrspace(200)*
 ; CHECK-NEXT:  ret void
   ret void
