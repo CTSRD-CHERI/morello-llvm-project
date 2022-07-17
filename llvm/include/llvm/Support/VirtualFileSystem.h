@@ -465,7 +465,6 @@ private:
 namespace detail {
 
 class InMemoryDirectory;
-class InMemoryFile;
 class InMemoryNode;
 
 struct NewInMemoryNodeInfo {
