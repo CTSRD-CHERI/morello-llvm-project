@@ -2169,7 +2169,7 @@ public:
         break;
       }
       case 't': {
-        m_dumper_options.show_tsc = true;
+        m_dumper_options.show_timestamps = true;
         break;
       }
       case 'e': {
