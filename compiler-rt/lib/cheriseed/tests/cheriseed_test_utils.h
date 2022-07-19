@@ -105,6 +105,12 @@ static constexpr __uint128_t UINT128_MIN = (__uint128_t)0;
   "(\n  .*?[rwxRWE].*? \\[.*?[A-Z_]+.*?\\])+\n\n"                              \
   ERROR_MESSAGE_DETAIL_PATTERN
 
+#define CHECK_IS_TAGGED_ERROR_MESSAGE_PATTERN       \
+  ERROR_MESSAGE_HEADER_PATTERN                      \
+  "Capability is untagged at .*?0x[0-9a-f]+.*?\n\n" \
+  ERROR_MESSAGE_CAPABILITY_PATTERN                  \
+  ERROR_MESSAGE_DETAIL_PATTERN
+
 // clang-format on
 
 #if !defined(CHERISEED_UNIT_TESTING)
@@ -176,6 +182,8 @@ static inline void ValueNotEquals(const __cheriseed_cap_t *cap, T *value) {
 #define ASSERT_CAPABILITY_METADATA_NE(__a, __b) MetadataNotEquals((__a), (__b))
 #define ASSERT_CAPABILITY_VALUE_EQ(__a, __b) ValueEquals((__a), (__b))
 #define ASSERT_CAPABILITY_VALUE_NE(__a, __b) ValueNotEquals((__a), (__b))
+#define ASSERT_TAGGED(__a) ASSERT_EQ(__cheriseed_tag_get(__a), (uint8_t)1)
+#define ASSERT_UNTAGGED(__a) ASSERT_EQ(__cheriseed_tag_get(__a), (uint8_t)0)
 
 #endif  // !CHERISEED_UNIT_TESTING
 };      // namespace utils

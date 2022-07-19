@@ -267,5 +267,10 @@ void RequiredPerms::ReportError(const CheckContext& ctx,
   PermsToString(builder, (perms & ~ctx.Perms()), /* explain */ true);
 }
 
+void Tagged::ReportError(const CheckContext& ctx, MessageBuilder& builder) {
+  builder << "Capability is untagged at " << ctx.CapabilityAddress() << ":\n\n";
+  ctx.PrintCapability(builder);
+}
+
 }  // namespace error
 }  // namespace __cheriseed

@@ -131,6 +131,7 @@ struct methods {
     external::cc128_update_perms(&max_cap, permissions::ALL);
     local_cap.SetValue(value);
     local_cap.SetMetadata(external::cc128_compress_mem(&max_cap));
+    local_cap.SetTag();
   }
 
   /// Generates a maximum capability from a pointer using the CCL.
@@ -163,7 +164,10 @@ struct methods {
     external::cc128_update_perms(&max_cap, permissions::ALL & perms);
     local_cap.SetValue(value);
     local_cap.SetMetadata(external::cc128_compress_mem(&max_cap));
-    return external::cc128_is_representable_cap_exact(&max_cap);
+    // TODO: what should we do if not exact?
+    bool is_exact = external::cc128_is_representable_cap_exact(&max_cap);
+    local_cap.SetTag();
+    return is_exact;
   }
 
   /// Generates a bounded capability from a pointer using the CCL.
@@ -245,9 +249,11 @@ struct methods {
     external::cc128_cap_t decom_cap_1;
     external::cc128_cap_t decom_cap_2;
     external::cc128_decompress_mem(local_cap_1.GetMetadata(),
-                                   local_cap_1.GetValue(), true, &decom_cap_1);
+                                   local_cap_1.GetValue(),
+                                   local_cap_1.IsTagged(), &decom_cap_1);
     external::cc128_decompress_mem(local_cap_2.GetMetadata(),
-                                   local_cap_2.GetValue(), true, &decom_cap_2);
+                                   local_cap_2.GetValue(),
+                                   local_cap_2.IsTagged(), &decom_cap_2);
     return external::cc128_exactly_equal(&decom_cap_1, &decom_cap_2);
   }
 
@@ -260,7 +266,8 @@ struct methods {
   static inline u64 GetLength(const LocalCap &local_cap) {
     external::cc128_cap_t decom;
     external::cc128_decompress_mem(local_cap.GetMetadata(),
-                                   local_cap.GetValue(), true, &decom);
+                                   local_cap.GetValue(), local_cap.IsTagged(),
+                                   &decom);
     return decom.length64();
   }
 
@@ -271,7 +278,8 @@ struct methods {
   static inline u64 GetBase(const LocalCap &local_cap) {
     external::cc128_cap_t decom;
     external::cc128_decompress_mem(local_cap.GetMetadata(),
-                                   local_cap.GetValue(), true, &decom);
+                                   local_cap.GetValue(), local_cap.IsTagged(),
+                                   &decom);
     return decom.base();
   }
 
@@ -282,7 +290,8 @@ struct methods {
   static inline u64 GetTop(const LocalCap &local_cap) {
     external::cc128_cap_t decom;
     external::cc128_decompress_mem(local_cap.GetMetadata(),
-                                   local_cap.GetValue(), true, &decom);
+                                   local_cap.GetValue(), local_cap.IsTagged(),
+                                   &decom);
     return decom.top64();
   }
 
@@ -294,7 +303,8 @@ struct methods {
   static inline u64 GetOffset(const LocalCap &local_cap) {
     external::cc128_cap_t decom;
     external::cc128_decompress_mem(local_cap.GetMetadata(),
-                                   local_cap.GetValue(), true, &decom);
+                                   local_cap.GetValue(), local_cap.IsTagged(),
+                                   &decom);
     const external::cc128_offset_t offset = decom.offset();
     // Create equivalent to offset64() which doesn't exist
     return offset > CC128_MAX_ADDR ? CC128_MAX_ADDR : (u64)offset;
@@ -309,7 +319,8 @@ struct methods {
                                                u64 cursor) {
     external::cc128_cap_t decom;
     external::cc128_decompress_mem(local_cap.GetMetadata(),
-                                   local_cap.GetValue(), true, &decom);
+                                   local_cap.GetValue(), local_cap.IsTagged(),
+                                   &decom);
     return external::cc128_is_representable_with_addr(&decom, cursor);
   }
 
@@ -318,9 +329,8 @@ struct methods {
   /// \param[in] local_cap The compressed capability to update.
   /// \param[in] value The requested value to set.
   static inline void SetValue(LocalCap &local_cap, u64 value) {
-    if (!IsRepresentableWithCursor(local_cap, value)) {
-      // TODO: Invalidate capability
-    }
+    if (UNLIKELY(!IsRepresentableWithCursor(local_cap, value)))
+      local_cap.ClearTag();
     local_cap.SetValue(value);
   }
 
@@ -329,15 +339,19 @@ struct methods {
   /// \param[in] local_cap The compressed capability to update.
   /// \param[in] base The requested base value.
   /// \param[in] top The requested top value.
+  /// \param[in] needs_exact True if exact representation is requested.
   /// \param[out] is_exact Bool set true only if the output metadata has exactly
   ///             the requested bounds, otherwise false.
   /// \returns 64 bit base value.
   static inline void SetBounds(LocalCap &local_cap, u64 base, u64 top,
-                               bool &is_exact) {
+                               bool needs_exact, bool &is_exact) {
     external::cc128_cap_t decom;
     external::cc128_decompress_mem(local_cap.GetMetadata(),
-                                   local_cap.GetValue(), true, &decom);
+                                   local_cap.GetValue(), local_cap.IsTagged(),
+                                   &decom);
     is_exact = external::cc128_setbounds(&decom, base, top);
+    if (UNLIKELY(!is_exact && needs_exact))
+      local_cap.ClearTag();
     local_cap.SetMetadata(external::cc128_compress_mem(&decom));
   }
 
@@ -348,7 +362,8 @@ struct methods {
   static inline u64 GetType(const LocalCap &local_cap) {
     external::cc128_cap_t decom;
     external::cc128_decompress_mem(local_cap.GetMetadata(),
-                                   local_cap.GetValue(), true, &decom);
+                                   local_cap.GetValue(), local_cap.IsTagged(),
+                                   &decom);
     return decom.type();
   }
 
@@ -363,16 +378,17 @@ struct methods {
     external::cc128_cap_t decom_check;
     external::cc128_cap_t decom;
     external::cc128_decompress_mem(local_cap_check.GetMetadata(),
-                                   local_cap_check.GetValue(), true,
-                                   &decom_check);
+                                   local_cap_check.GetValue(),
+                                   local_cap_check.IsTagged(), &decom_check);
     external::cc128_decompress_mem(local_cap.GetMetadata(),
-                                   local_cap.GetValue(), true, &decom);
+                                   local_cap.GetValue(), local_cap.IsTagged(),
+                                   &decom);
 
-    return (decom_check.base() >= decom.base()) &&
+    return (decom_check.cr_tag >= decom.cr_tag) &&
+           (decom_check.base() >= decom.base()) &&
            (decom_check.top() <= decom.top()) &&
            ((decom_check.permissions() & decom.permissions()) ==
             decom_check.permissions());
-    // TODO: Compare capability validity
   }
 
 };  // struct methods

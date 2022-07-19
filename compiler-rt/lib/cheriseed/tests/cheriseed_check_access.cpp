@@ -103,10 +103,12 @@ TEST(CheckAccessDeathTest, LoadCap) {
 }
 
 TEST(CheckAccessDeathTest, StoreCap) {
+  u8 x;
   __cheriseed_cap_t target, store_base, store_to, src;
 
   utils::InitCap(&store_base, &target);
   utils::InitCap(&store_to, &target);
+  utils::InitCap(&src, &x);
 
   // Check with all perms
   EXPECT_GRANTED(__cheriseed_store_cap(&store_to, &src));

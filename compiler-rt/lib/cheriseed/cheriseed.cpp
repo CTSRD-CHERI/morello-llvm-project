@@ -55,6 +55,7 @@ LocalCap::LocalCap(Options &Opts, const __cheriseed_cap_t *ptr,
     // The null capability has a value of 0, and 0 metadata by definition.
     SetValue(0);
     SetMetadata(0);
+    ClearTag();
     return;
   }
 
@@ -64,6 +65,7 @@ LocalCap::LocalCap(Options &Opts, const __cheriseed_cap_t *ptr,
       reinterpret_cast<const atomic_uint128_t *>(ptr), memory_order);
   SetValue(static_cast<u64>(bits));
   SetMetadata(static_cast<u64>(bits >> 64));
+  SetTag();
 }
 
 __cheriseed_cap_t *LocalCap::Store(__cheriseed_cap_t *ptr,
@@ -77,6 +79,11 @@ __cheriseed_cap_t *LocalCap::Store(__cheriseed_cap_t *ptr,
       static_cast<u128>(GetMetadata()) << 64 | static_cast<u128>(GetValue());
   __sanitizer::atomic_store(atomic_cap, bits, memory_order);
   return ptr;
+}
+
+const LocalCap &LocalCap::RequireTagged() const {
+  CheckContext(*this).add(Tagged());
+  return *this;
 }
 
 const LocalCap &LocalCap::RequirePermissions(u64 perms) const {
@@ -162,7 +169,9 @@ __cheriseed_cap_t *__cheriseed_bounds_set(__cheriseed_cap_t *cap_out,
   LocalCap local_cap{Opts, AllowNullCap(cap_in)};
   bool is_exact = false;  // Discarded, not used.
   ccl::methods::SetBounds(local_cap, local_cap.GetValue(),
-                          local_cap.GetValue() + length, is_exact);
+                          local_cap.GetValue() + length,
+                          /* needs_exact */ false, is_exact);
+  // TODO: what if not exact?
   return local_cap.Store(cap_out);
 }
 
@@ -171,12 +180,14 @@ __cheriseed_cap_t *__cheriseed_bounds_set_exact(__cheriseed_cap_t *cap_out,
                                                 u64 length) {
   Options Opts;
   LocalCap local_cap{Opts, AllowNullCap(cap_in)};
+  const bool was_tagged = local_cap.IsTagged();
   bool is_exact = false;
   ccl::methods::SetBounds(local_cap, local_cap.GetValue(),
-                          local_cap.GetValue() + length, is_exact);
-  // TODO:
-  //  - invalidate capability.
-  //  - Optionally exit with an error if feature is enabled
+                          local_cap.GetValue() + length, /* needs_exact */ true,
+                          is_exact);
+  if (!is_exact && was_tagged) {
+    // TODO: Optionally exit with an error if feature is enabled
+  }
   return local_cap.Store(cap_out);
 }
 
@@ -287,10 +298,16 @@ u8 __cheriseed_subset_test(const __cheriseed_cap_t *cap_tested,
 
 __cheriseed_cap_t *__cheriseed_tag_clear(__cheriseed_cap_t *cap_out,
                                          const __cheriseed_cap_t *cap_in) {
-  return cap_out;
+  Options Opts;
+  LocalCap local_cap{Opts, AllowNullCap(cap_in)};
+  local_cap.ClearTag();
+  return local_cap.Store(cap_out);
 }
 
-u8 __cheriseed_tag_get(const __cheriseed_cap_t *cap) { return 1; }
+u8 __cheriseed_tag_get(const __cheriseed_cap_t *cap) {
+  Options Opts;
+  return LocalCap(Opts, AllowNullCap(cap)).IsTagged() ? 1 : 0;
+}
 
 u64 __cheriseed_to_pointer(const __cheriseed_cap_t *cap) { UNIMPLEMENTED(); }
 
@@ -396,11 +413,11 @@ __cheriseed_cap_t *__cheriseed_strerror(__cheriseed_cap_t *result, int code) {
   return local_cap.Store(result);
 }
 
-int __cheriseed_set_signal_handle_mode(const __cheriseed_cap_t *context,
-                                       int mode) {
+int __cheriseed_set_signal_handle_mode(__cheriseed_cap_t *context, int mode) {
   Options Opts;
   LocalCap local_cap(Opts, context);
-  local_cap.RequirePermissions(ccl::permissions::STORE)
+  local_cap.RequireTagged()
+      .RequirePermissions(ccl::permissions::STORE)
       .RequireBounds(sizeof(SignalHandleMode));
   switch (mode) {
     default:
@@ -465,6 +482,7 @@ u64 __cheriseed_check_access(const __cheriseed_cap_t *cap, u64 size,
                              u32 perms) {
   Options Opts;
   return LocalCap(Opts, cap)
+      .RequireTagged()
       .RequirePermissions(CheckPermsToCCL(perms))
       .RequireBounds(size)
       .GetValue();
@@ -504,16 +522,19 @@ __cheriseed_cap_t *__cheriseed_load_cap_atomic(
     u8 memory_order) {
   Options Opts;
   LocalCap local_cap(Opts, cap_to_cap);
-  local_cap.RequirePermissions(ccl::permissions::LOAD)
+  local_cap.RequireTagged()
+      .RequirePermissions(ccl::permissions::LOAD)
       .RequireBounds(sizeof(__cheriseed_cap_t));
-  if (!ccl::methods::HasPerms(
-          local_cap, ccl::permissions::LOAD | ccl::permissions::LOAD_CAP)) {
-    // Invalidate dereferenced
-  }
-  __cheriseed_cap_t *deref_cap =
-      reinterpret_cast<__cheriseed_cap_t *>(local_cap.GetValue());
-  return LocalCap(Opts, AllowNullCap(deref_cap), IRToCppOrdering(memory_order))
-      .Store(loaded_cap);
+  // Get the pointed capability.
+  const __cheriseed_cap_t *deref_cap =
+      reinterpret_cast<const __cheriseed_cap_t *>(local_cap.GetValue());
+  LocalCap local_deref_cap{Opts, AllowNullCap(deref_cap),
+                           IRToCppOrdering(memory_order)};
+  // If the source capability has no LOAD_CAP permission, the tag of the loaded
+  // capability is silently cleared.
+  if (!ccl::methods::HasPerms(local_cap, ccl::permissions::LOAD_CAP))
+    local_deref_cap.ClearTag();
+  return local_deref_cap.Store(loaded_cap);
 }
 
 __cheriseed_cap_t *__cheriseed_load_cap_hybrid(const __cheriseed_cap_t *cap,
@@ -567,13 +588,17 @@ void __cheriseed_store_cap_atomic(__cheriseed_cap_t *cap_to_cap,
                                   u8 memory_order) {
   Options Opts;
   LocalCap local_cap(Opts, cap_to_cap);
-  local_cap
-      .RequirePermissions(ccl::permissions::STORE_CAP | ccl::permissions::STORE)
+  local_cap.RequireTagged()
+      .RequirePermissions(ccl::permissions::STORE)
       .RequireBounds(sizeof(__cheriseed_cap_t));
+  LocalCap local_stored_cap{Opts, AllowNullCap(cap_to_store)};
+  // If the stored capability is tagged then STORE_CAP must be present.
+  if (LIKELY(local_stored_cap.IsTagged()))
+    local_cap.RequirePermissions(ccl::permissions::STORE_CAP);
+  // Note: It is allowed to store to invalid memory.
   __cheriseed_cap_t *deref_cap =
       reinterpret_cast<__cheriseed_cap_t *>(local_cap.GetValue());
-  LocalCap(Opts, AllowNullCap(cap_to_store))
-      .Store(deref_cap, IRToCppOrdering(memory_order));
+  local_stored_cap.Store(deref_cap, IRToCppOrdering(memory_order));
 }
 
 void __cheriseed_store_cap_hybrid(__cheriseed_cap_t *cap,

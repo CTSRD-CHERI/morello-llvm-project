@@ -157,16 +157,23 @@ struct MaybeNull {
 /// Shorthand for a capability which may be null.
 using AllowNullCap = MaybeNull<const __cheriseed_cap_t *>;
 
+// Possible tag states.
+enum TagState : u8 {
+  TS_CLEARED = 0,
+  TS_TAGGED = 1,
+};  // enum TagState
+
 /// Class which interacts with the public (opaque) type and creates an
 /// in-flight capability, which then can be modified and written to memory.
 struct LocalCap final : public __cheriseed_cap_t {
   // Note: not all the members are initialized on purpose.
-  explicit LocalCap(Options &Opts) : Opts(Opts) {}
+  explicit LocalCap(Options &Opts) : Opts(Opts) { ClearTag(); }
 
   // Note: not all the members are initialized on purpose.
   LocalCap(Options &Opts, u64 value, u64 metadata) : Opts(Opts) {
     SetValue(value);
     SetMetadata(metadata);
+    ClearTag();
   }
 
   // Note: not all the members are initialized on purpose.
@@ -183,14 +190,18 @@ struct LocalCap final : public __cheriseed_cap_t {
       __cheriseed_cap_t *ptr,
       memory_order memory_order = memory_order::memory_order_relaxed) const;
 
+  const LocalCap &RequireTagged() const;
   const LocalCap &RequirePermissions(u64 perms) const;
   const LocalCap &RequireBounds(u64 size) const;
 
   vaddr GetAddress() const { return address; }
   u64 GetValue() const { return value; }
   u64 GetMetadata() const { return metadata; }
+  bool IsTagged() const { return (tag_state == TagState::TS_TAGGED); }
 
   Options &GetOpts() const { return Opts; }
+
+  void ClearTag() { tag_state = TagState::TS_CLEARED; }
 
 #ifndef CHERISEED_UNIT_TESTING
  private:
@@ -204,12 +215,15 @@ struct LocalCap final : public __cheriseed_cap_t {
 
   void SetValue(u64 value) { this->value = value; }
   void SetMetadata(u64 metadata) { this->metadata = metadata; }
+  void SetTag() { tag_state = TagState::TS_TAGGED; }
 
   /// Semantic configuration options for this capability
   Options &Opts;
 
   /// The address this capability originates from, if any.
   vaddr address;
+  /// The tagged state of this capability.
+  TagState tag_state;
 
   // Allow access to all private methods and members for CCL interface.
   friend struct ccl::methods;

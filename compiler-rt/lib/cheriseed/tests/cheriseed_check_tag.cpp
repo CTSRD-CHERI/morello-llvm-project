@@ -1,0 +1,50 @@
+//===-- cheriseed_check_tag.cpp ---------------------------------*- C++ -*-===//
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+//
+// This file is a part of CHERIseed Runtime Library.
+//
+// Test that some RT calls catch untagged capabilities.
+//
+//===----------------------------------------------------------------------===//
+
+// TODO: Remove "DISABLED_" prefix from test names once tags are implemented.
+
+#include "cheriseed_test_utils.h"
+
+#define TEST_UNTAGGED_CAP(__expr)                        \
+  {                                                      \
+    __cheriseed_cap_t untagged_cap;                      \
+    __cheriseed_tag_clear(&untagged_cap, &untagged_cap); \
+    EXPECT_EXIT(__expr, testing::ExitedWithCode(1),      \
+                CHECK_IS_TAGGED_ERROR_MESSAGE_PATTERN);  \
+  }
+
+TEST(DISABLED_UntaggedDeathTest, SignalHandleMode) {
+  TEST_UNTAGGED_CAP(__cheriseed_set_signal_handle_mode(
+      reinterpret_cast<void*>(&untagged_cap), 0));
+}
+
+TEST(DISABLED_UntaggedDeathTest, CheckAccess) {
+  TEST_UNTAGGED_CAP(__cheriseed_check_access(&untagged_cap, 0, 0));
+}
+
+TEST(DISABLED_UntaggedDeathTest, LoadCap) {
+  TEST_UNTAGGED_CAP(__cheriseed_load_cap(&untagged_cap, nullptr));
+}
+
+TEST(DISABLED_UntaggedDeathTest, LoadCapAtomic) {
+  TEST_UNTAGGED_CAP(__cheriseed_load_cap_atomic(&untagged_cap, nullptr, 0));
+}
+
+TEST(DISABLED_UntaggedDeathTest, StoreCap) {
+  TEST_UNTAGGED_CAP(__cheriseed_store_cap(&untagged_cap, nullptr));
+}
+
+TEST(DISABLED_UntaggedDeathTest, StoreCapAtomic) {
+  TEST_UNTAGGED_CAP(__cheriseed_store_cap_atomic(&untagged_cap, nullptr, 0));
+}

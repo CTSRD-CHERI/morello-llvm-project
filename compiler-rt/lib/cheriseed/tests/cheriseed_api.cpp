@@ -53,6 +53,8 @@ TEST(API, CopyToHigh) {
   utils::InitCap(&cap, 42, 43);
   __cheriseed_copy_to_high(&cap, &cap, UINT64_MAX);
   ASSERT_CAPABILITY_METADATA_EQ(&cap, UINT64_MAX);
+  // TODO: enable if tags work
+  // ASSERT_UNTAGGED(&cap);
 }
 
 TEST(API, CopyCapWithOffset) {
@@ -516,4 +518,20 @@ TEST(API, SubsetTest) {
 
   // All fields wider
   ASSERT_FALSE(__cheriseed_subset_test(&cap, &a_cap));
+}
+
+// TODO: enable if tags work
+TEST(DISABLED_API, TagClear) {
+  uint8_t a;
+  __cheriseed_cap_t cap;
+  utils::InitCap(&cap, &a);
+  __cheriseed_tag_clear(&cap, &cap);
+  ASSERT_EQ(__cheriseed_tag_get(&cap), 0);
+}
+
+TEST(API, TagGet) {
+  uint8_t a;
+  __cheriseed_cap_t cap;
+  utils::InitCap(&cap, &a);
+  ASSERT_EQ(__cheriseed_tag_get(&cap), 1);
 }

@@ -103,7 +103,7 @@ struct CheckContext {
   // Methods to retrieve fields of the capability.
   vaddr Value() const { return local_cap.GetValue(); }
   vaddr Metadata() const { return local_cap.GetMetadata(); }
-  bool IsTagged() const { return true; }
+  bool IsTagged() const { return local_cap.IsTagged(); }
   vaddr Base() const { return ccl::methods::GetBase(local_cap); }
   vaddr Top() const { return ccl::methods::GetTop(local_cap); }
   u64 Perms() const { return ccl::methods::GetPerms(local_cap); }
@@ -255,6 +255,24 @@ struct RequiredPerms final {
 
   const u64 perms;
 };  // struct RequiredPerms
+
+// Checks that a capability is tagged.
+struct Tagged final {
+  ALWAYS_INLINE
+  bool DoCheck(const CheckContext& ctx) {
+    if (!ctx.GetOpts().shouldCheckTag())
+      return true;
+    return ctx.IsTagged();
+  }
+
+  void ReportError(const CheckContext& ctx, MessageBuilder& builder);
+
+  static constexpr abi::SignalCode Code() {
+    return abi::SignalCode::SC_SEGV_CAPTAGERR;
+  }
+
+  static constexpr int SignalNumber() { return libc::SignalNumber::SN_SIGSEGV; }
+};  // struct Tagged
 
 }  // namespace error
 }  // namespace __cheriseed

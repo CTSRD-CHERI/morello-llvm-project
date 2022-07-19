@@ -82,3 +82,12 @@ TEST(CheckDeathTest, RequiredPerms) {
               testing::ExitedWithCode(kExitCode),
               CHECK_REQUIRED_PERMS_ERROR_MESSAGE_PATTERN);
 }
+
+TEST(CheckDeathTest, Tagged) {
+  Options Opts;
+  LocalCap local_cap(Opts);
+  local_cap.ClearTag();
+  EXPECT_EXIT(CheckContext(local_cap).add(Tagged()),
+              testing::ExitedWithCode(kExitCode),
+              CHECK_IS_TAGGED_ERROR_MESSAGE_PATTERN);
+}
