@@ -17,9 +17,6 @@
 
 #include "cheriseed_test_utils.h"
 
-#define TEST_PERMS (uint64_t)(ccl::permissions::ALL & UINT64_TEST)
-#define TEST_PERMS_INV (uint64_t)(ccl::permissions::ALL & ~UINT64_TEST)
-
 // Only for UINT* types.
 using namespace utils;
 
@@ -46,9 +43,7 @@ TEST(API, AddressSet) {
 
 TEST(API, CopyCapWithOffset) {
   uint32_t array[2] = {42, 64};
-
   __cheriseed_cap_t cap1 = utils::InitCap(&array);
-
   __cheriseed_cap_t cap2;
   __cheriseed_cap_t *cap2_ptr =
       __cheriseed_copy_cap_with_offset(&cap2, &cap1, sizeof(uint32_t));
@@ -58,64 +53,64 @@ TEST(API, CopyCapWithOffset) {
                              __cheriseed_address_get(&cap1) + sizeof(uint32_t));
 }
 
-TEST(API, DDCGetPerms) {
+TEST(API, CopyCapWithOffset_CopyNullptr) {
+  __cheriseed_cap_t cap;
+  __cheriseed_copy_cap_with_offset(&cap, nullptr, 42);
+  ASSERT_CAPABILITY_METADATA_EQ(&cap, (uint64_t)0);
+  ASSERT_CAPABILITY_VALUE_EQ(&cap, (uint64_t)42);
+}
+
+TEST(API, DDCGet_Address) {
   __cheriseed_cap_t ddc = utils::InitCap(UINT64_TEST, 0);
   __cheriseed_ddc_get(&ddc);
-
-  ASSERT_EQ(__cheriseed_perms_get(&ddc), ccl::permissions::ALL);
   ASSERT_CAPABILITY_VALUE_EQ(&ddc, (uint64_t)0);
 }
 
-TEST(API, PCCGetPerms) {
+TEST(API, PCCGet_Address) {
   __cheriseed_cap_t pcc = utils::InitCap(UINT64_TEST, 0);
   __cheriseed_pcc_get(&pcc);
-
-  ASSERT_EQ(__cheriseed_perms_get(&pcc), ccl::permissions::ALL);
+  ASSERT_CAPABILITY_VALUE_NE(&pcc, 0);
   ASSERT_CAPABILITY_VALUE_NE(&pcc, UINT64_TEST);
 }
 
-TEST(API, DDCGetLength) {
+TEST(API, DDCGet_Perms) {
   __cheriseed_cap_t ddc = utils::InitCap(UINT64_TEST, 0);
   __cheriseed_ddc_get(&ddc);
-  __cheriseed_cap_t ddc_old = ddc;
+  ASSERT_EQ(__cheriseed_perms_get(&ddc), ccl::permissions::ALL);
+}
 
+TEST(API, PCCGet_Perms) {
+  __cheriseed_cap_t pcc = utils::InitCap(UINT64_TEST, 0);
+  __cheriseed_pcc_get(&pcc);
+  ASSERT_EQ(__cheriseed_perms_get(&pcc), ccl::permissions::ALL);
+}
+
+TEST(API, DDGet_Length) {
+  __cheriseed_cap_t ddc = utils::InitCap(UINT64_TEST, 0);
+  __cheriseed_ddc_get(&ddc);
   // Max Length is 65 bits, but __cheriseed_length_get returns
   // MIN( UINT64_MAX, length );
   ASSERT_EQ(__cheriseed_length_get(&ddc), UINT64_MAX);
-  ASSERT_CAPABILITY_METADATA_EQ(&ddc, &ddc_old);
-  ASSERT_CAPABILITY_VALUE_EQ(&ddc, __cheriseed_address_get(&ddc_old));
 }
 
-TEST(API, PCCGetLength) {
+TEST(API, PCCGet_Length) {
   __cheriseed_cap_t pcc = utils::InitCap(UINT64_TEST, 0);
   __cheriseed_pcc_get(&pcc);
-  __cheriseed_cap_t pcc_old = pcc;
-
   // Max Length is 65 bits, but __cheriseed_length_get returns
   // MIN( UINT64_MAX, length );
   ASSERT_EQ(__cheriseed_length_get(&pcc), UINT64_MAX);
-  ASSERT_CAPABILITY_METADATA_EQ(&pcc, &pcc_old);
-  ASSERT_CAPABILITY_VALUE_EQ(&pcc, __cheriseed_address_get(&pcc_old));
 }
 
-TEST(API, DDCGetBase) {
+TEST(API, DDCGet_Base) {
   __cheriseed_cap_t ddc = utils::InitCap(UINT64_TEST, 0);
   __cheriseed_ddc_get(&ddc);
-  __cheriseed_cap_t ddc_old = ddc;
-
   ASSERT_EQ(__cheriseed_base_get(&ddc), 0u);
-  ASSERT_CAPABILITY_METADATA_EQ(&ddc, &ddc_old);
-  ASSERT_CAPABILITY_VALUE_EQ(&ddc, __cheriseed_address_get(&ddc_old));
 }
 
-TEST(API, PCCGetBase) {
+TEST(API, PCCGet_Base) {
   __cheriseed_cap_t pcc = utils::InitCap(UINT64_TEST, 0);
   __cheriseed_pcc_get(&pcc);
-  __cheriseed_cap_t pcc_old = pcc;
-
   ASSERT_EQ(__cheriseed_base_get(&pcc), 0u);
-  ASSERT_CAPABILITY_METADATA_EQ(&pcc, &pcc_old);
-  ASSERT_CAPABILITY_VALUE_EQ(&pcc, __cheriseed_address_get(&pcc_old));
 }
 
 TEST(API, StackCapInit) {
@@ -145,13 +140,16 @@ TEST(API, LoadStoreCap) {
   ASSERT_CAPABILITY_METADATA_EQ(&dst, UINT64_TEST);
   ASSERT_CAPABILITY_VALUE_EQ(&dst, UINT64_TEST);
 
-  // store_cap can store nullcap too.
+  // if src_cap does not have perms LOAD & LOAD_CAP, dst should be
+  // invalidated
+}
+
+TEST(API, StoreCap_StoreNullptr) {
+  __cheriseed_cap_t dst = utils::InitCap(UINT64_TEST, UINT64_TEST);
+  __cheriseed_cap_t dst_cap = utils::InitCap(&dst);
   __cheriseed_store_cap(&dst_cap, nullptr);
   ASSERT_CAPABILITY_METADATA_EQ(&dst, (uint64_t)0);
   ASSERT_CAPABILITY_VALUE_EQ(&dst, (uint64_t)0);
-
-  // if src_cap does not have perms LOAD & LOAD_CAP, dst should be
-  // invalidated
 }
 
 TEST(API, LoadStoreCapHybrid) {
@@ -195,7 +193,6 @@ TEST(API, PermsAnd) {
   uint16_t a;
   __cheriseed_cap_t cap_a = utils::InitCap(&a);
   __cheriseed_perms_and(&cap_a, &cap_a, ccl::permissions::LOAD);
-
   ASSERT_CAPABILITY_VALUE_EQ(&cap_a, &a);
   ASSERT_EQ(__cheriseed_perms_get(&cap_a), ccl::permissions::LOAD);
 }
@@ -218,10 +215,8 @@ TEST(API, BoundsSet) {
   uint16_t a;
   __cheriseed_cap_t cap = utils::InitCap(&a);
   __cheriseed_cap_t cap_a;
-
   // This length is small enough to not require rounding
   __cheriseed_bounds_set(&cap_a, &cap, sizeof(uint16_t));
-
   // Assert that cap_out has been updated to the expected values
   ASSERT_EQ(__cheriseed_base_get(&cap_a), __cheriseed_address_get(&cap));
   ASSERT_EQ(__cheriseed_length_get(&cap_a), sizeof(uint16_t));
@@ -435,7 +430,6 @@ TEST(API, Diff) {
   uint8_t a[2];
   __cheriseed_cap_t cap_a = utils::InitCap(&a[1]);
   __cheriseed_cap_t cap_b = utils::InitCap(&a[0]);
-
   ASSERT_EQ(__cheriseed_diff(&cap_a, &cap_a), 0);
   ASSERT_EQ(__cheriseed_diff(&cap_a, &cap_b), 1);
   ASSERT_EQ(__cheriseed_diff(&cap_b, &cap_a), -1);

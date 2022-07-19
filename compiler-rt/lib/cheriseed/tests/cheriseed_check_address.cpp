@@ -49,3 +49,18 @@ TEST(InvalidAddressDeathTest, StackCapInit) {
 TEST(InvalidAddressDeathTest, OffsetSet) {
   TEST_INVALID_ADDRESS_CAP(__cheriseed_offset_set(nullptr, &cap, 0));
 }
+
+TEST(InvalidAddressDeathTest, ThreadPointer) {
+  TEST_INVALID_ADDRESS_CAP(__cheriseed_thread_pointer(nullptr));
+}
+
+TEST(InvalidAddressDeathTest, LoadCap) {
+  TEST_INVALID_ADDRESS_CAP(__cheriseed_cap_t cap_to_cap = utils::InitCap(&cap);
+                           __cheriseed_load_cap(&cap_to_cap, nullptr));
+}
+
+TEST(InvalidAddressDeathTest, StoreCap) {
+  TEST_INVALID_ADDRESS_CAP(__cheriseed_cap_t cap_to_null = utils::InitCap(
+                               reinterpret_cast<__cheriseed_cap_t*>(0));
+                           __cheriseed_store_cap(&cap_to_null, nullptr));
+}

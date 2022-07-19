@@ -104,3 +104,7 @@ TEST(UnalignedDeathTest, SubsetTest) {
   TEST_UNALIGNED_CAP(__cheriseed_subset_test(&uacap, &cap));
   TEST_UNALIGNED_CAP(__cheriseed_subset_test(&cap, &uacap));
 }
+
+TEST(UnalignedDeathTest, ThreadPointer) {
+  TEST_UNALIGNED_CAP(__cheriseed_thread_pointer(&uacap));
+}
