@@ -72,6 +72,22 @@ not going to deliver the expected si_code values."
 /// The violation is not fatal, but print the reason to stderr.
 #define CHERISEED_SIGNAL_HANDLE_MODE_WARNING ((int)4)
 
+enum CHERIseedCheck {
+  /// Turn a specific CHERIseed check OFF
+  CHERISEED_CHECK_OFF,
+  /// Turn a specific CHERIseed check ON
+  CHERISEED_CHECK_ON,
+};
+
+/// Bit of checks mask representing permissions
+#define CHERISEED_CHECK_PERMS ((1UL << 32) - 1)
+/// Bit of checks mask representing tag
+#define CHERISEED_CHECK_TAG (1UL << 61)
+/// Bit of checks mask representing bounds
+#define CHERISEED_CHECK_BOUNDS (1UL << 62)
+/// Bit of checks mask representing alignment
+#define CHERISEED_CHECK_ALIGNMENT (1UL << 63)
+
 // -------------------------------------
 // Mappings of CHERI intrinsics
 // -------------------------------------
@@ -501,16 +517,31 @@ __cheriseed_cap_t *__cheriseed_stack_cap_get(__cheriseed_cap_t *cap_out);
 // Additional user-accessible APIs
 // -------------------------------------
 
-/// Enables/disables CHERI semantics, disabled by default.
+/// Enables/disables CHERI semantics, enabled by default.
 ///
 /// \param[in] enable 0: disable, otherwise enable.
-void __cheriseed_enable_cheri_semantics(uint8_t enable);
+void __cheriseed_control_semantics(uint8_t enable);
 
 /// Enables/disables invocation of signal handlers upon capability violation,
 /// enabled by default.
 ///
 /// \param[in] enable 0: disable, otherwise enable.
-void __cheriseed_enable_invoke_signal_handlers(uint8_t enable);
+void __cheriseed_control_invoke_signal_handlers(uint8_t enable);
+
+/// Enables/disables checks, all enabled by default.
+///
+/// Checks are one hot encoded in the 64-bit checks mask. The lower 32-bits
+/// represent permission checks, as per the CHERI_PERM_* macros defined in
+/// cheriintrin.h. The upper 32-bits represent non-permission checks, with the
+/// following currently supported:
+///
+/// Bit 61: Tag checks
+/// Bit 62: Bounds checks
+/// Bit 63: Alignment checks
+///
+/// \param[in] enable 0: disable, otherwise enable.
+/// \param[in] checks: Mask of the checks to enable/disable.
+void __cheriseed_control_checks(uint8_t enable, uint64_t checks);
 
 /// Returns the string representation of a capability violation signal.
 ///

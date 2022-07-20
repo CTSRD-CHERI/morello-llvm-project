@@ -110,6 +110,8 @@ struct CheckContext {
 
   void PrintCapability(MessageBuilder& builder) const;
 
+  Options& GetOpts() const { return local_cap.GetOpts(); }
+
  protected:
   template <typename P>
   NOINLINE void BeginTerminate(P& property) {
@@ -177,6 +179,8 @@ struct CapabilityAddress final {
 struct CapabilityAlignment final {
   ALWAYS_INLINE
   bool DoCheck(const CheckContext& ctx) const {
+    if (!ctx.GetOpts().shouldCheckAlignment())
+      return true;
     return (ctx.CapabilityAddress() % abi::kCapabilityMinAlignment) == 0;
   }
 
@@ -212,7 +216,7 @@ struct InBounds final {
   // Top (base + length) is inclusive in acceptable range of a capability
   ALWAYS_INLINE
   bool DoCheck(const CheckContext& ctx) const {
-    if (!atomic_load_relaxed(&Options::EnableCHERISemantics))
+    if (!ctx.GetOpts().shouldCheckBounds())
       return true;
     return (ctx.Base() <= ctx.Value()) && ((ctx.Value() + size) <= ctx.Top());
   }
@@ -235,9 +239,10 @@ struct RequiredPerms final {
 
   ALWAYS_INLINE
   bool DoCheck(const CheckContext& ctx) {
-    if (!atomic_load_relaxed(&Options::EnableCHERISemantics))
+    u64 mask = 0;
+    if ((mask = ctx.GetOpts().shouldCheckPerms()) == 0)
       return true;
-    return ((ctx.Perms() & perms) == perms);
+    return ((ctx.Perms() & perms & mask) == (perms & mask));
   }
 
   void ReportError(const CheckContext& ctx, MessageBuilder& builder);

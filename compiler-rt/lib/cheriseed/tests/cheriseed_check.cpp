@@ -18,13 +18,15 @@
 #include "cheriseed_test_utils.h"
 
 using namespace __cheriseed::error;
+using __cheriseed::Options;
 
 static constexpr int kExitCode = 1;
 
 TEST(CheckDeathTest, NormalExit) { EXPECT_NORMAL_EXIT(exit(0)); }
 
 TEST(CheckDeathTest, CapabilityAddress) {
-  LocalCap local_cap;
+  Options Opts;
+  LocalCap local_cap(Opts);
 
   local_cap.SetAddress(nullptr);
   EXPECT_EXIT(CheckContext(local_cap).add(CapabilityAddress()),
@@ -48,7 +50,8 @@ TEST(CheckDeathTest, CapabilityAddress) {
 }
 
 TEST(CheckDeathTest, CapabilityAlignment) {
-  LocalCap local_cap;
+  Options Opts;
+  LocalCap local_cap(Opts);
   local_cap.SetAddress(reinterpret_cast<const __cheriseed_cap_t *>(1));
   EXPECT_EXIT(CheckContext(local_cap).add(CapabilityAlignment()),
               testing::ExitedWithCode(kExitCode),
@@ -56,23 +59,26 @@ TEST(CheckDeathTest, CapabilityAlignment) {
 }
 
 TEST(CheckDeathTest, NotImplemented) {
-  EXPECT_EXIT(CheckContext(LocalCap()).add(NotImplemented("")),
+  Options Opts;
+  EXPECT_EXIT(CheckContext(LocalCap(Opts)).add(NotImplemented("")),
               testing::ExitedWithCode(kExitCode),
               CHECK_NOT_IMPLEMENTED_ERROR_MESSAGE_PATTERN);
 }
 
 TEST(CheckDeathTest, InBounds) {
+  Options Opts;
   __cheriseed_cap_t cap;
   __cheriseed_bounds_set(&cap, nullptr, 0);
-  EXPECT_EXIT(CheckContext(LocalCap(&cap)).add(InBounds(UINT64_MAX)),
+  EXPECT_EXIT(CheckContext(LocalCap(Opts, &cap)).add(InBounds(UINT64_MAX)),
               testing::ExitedWithCode(kExitCode),
               CHECK_IN_BOUNDS_ERROR_MESSAGE_PATTERN);
 }
 
 TEST(CheckDeathTest, RequiredPerms) {
+  Options Opts;
   __cheriseed_cap_t cap;
   __cheriseed_perms_and(&cap, nullptr, 0);
-  EXPECT_EXIT(CheckContext(LocalCap(&cap)).add(RequiredPerms(0xF)),
+  EXPECT_EXIT(CheckContext(LocalCap(Opts, &cap)).add(RequiredPerms(0xF)),
               testing::ExitedWithCode(kExitCode),
               CHECK_REQUIRED_PERMS_ERROR_MESSAGE_PATTERN);
 }

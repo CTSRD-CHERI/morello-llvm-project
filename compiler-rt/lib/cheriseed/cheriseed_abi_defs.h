@@ -17,6 +17,11 @@
 namespace __cheriseed {
 namespace abi {
 
+#ifdef CHERISEED_UNIT_TESTING
+#define CHERISEED_CHECK_ON 1
+#define CHERISEED_CHECK_OFF 0
+#endif
+
 // Minimum expected alignment of a capability.
 static constexpr __sanitizer::u8 kCapabilityMinAlignment = 16;
 
@@ -28,7 +33,9 @@ static constexpr __sanitizer::u8 kIRRelaxedOrdering = 0;
 enum Permissions : __sanitizer::u32 {
   LOAD = (1 << 0),
   STORE = (1 << 1),
-  EXECUTE = (1 << 2)
+  EXECUTE = (1 << 2),
+  LOAD_CAP = (1 << 3),
+  STORE_CAP = (1 << 4)
 };  // enum Permissions
 
 // Possible reasons of a capability violation.

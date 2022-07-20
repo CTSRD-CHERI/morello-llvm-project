@@ -17,15 +17,17 @@
 #include "cheriseed_test_utils.h"
 
 using __cheriseed::AllowNullCap;
+using __cheriseed::Options;
 
 TEST(Atomics, ReadWrite) {
-  LocalCap local_cap(UINT64_MAX, UINT64_MAX - 1);
+  Options Opts;
+  LocalCap local_cap(Opts, UINT64_MAX, UINT64_MAX - 1);
 
   // Store compressed capability somewhere...
   __cheriseed_cap_t cap;
   local_cap.Store(&cap);
   // then read it back.
-  LocalCap local_read_cap(&cap);
+  LocalCap local_read_cap(Opts, &cap);
 
   // The values should match.
   ASSERT_EQ(local_cap.GetValue(), local_read_cap.GetValue());
@@ -33,7 +35,8 @@ TEST(Atomics, ReadWrite) {
 }
 
 TEST(Atomics, NullptrPromotion) {
-  LocalCap local_cap{AllowNullCap(nullptr)};
+  Options Opts;
+  LocalCap local_cap{Opts, AllowNullCap(nullptr)};
 
   ASSERT_EQ(local_cap.GetValue(), 0);
   ASSERT_EQ(local_cap.GetMetadata(), 0);

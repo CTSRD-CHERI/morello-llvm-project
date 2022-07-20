@@ -32,6 +32,7 @@ set(CHERISEED_NOINST_TEST_SOURCES
   cheriseed_check_global_inits.cpp
   cheriseed_check_unaligned.cpp
   cheriseed_check.cpp
+  cheriseed_options_tests.cpp
   cheriseed_test_main.cpp)
 
 set(CHERISEED_UNITTEST_COMMON_LINK_FLAGS

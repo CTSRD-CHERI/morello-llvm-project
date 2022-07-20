@@ -167,16 +167,19 @@ void __cheriseed_stack_cap_get(__cheriseed_cap_t *cap);
 // -------------------------------------
 
 SANITIZER_INTERFACE_ATTRIBUTE
-void __cheriseed_enable_cheri_semantics(u8 enable);
+void __cheriseed_control_semantics(u8 enable);
+
+SANITIZER_INTERFACE_ATTRIBUTE
+void __cheriseed_control_invoke_signal_handlers(u8 enable);
+
+SANITIZER_INTERFACE_ATTRIBUTE
+void __cheriseed_control_checks(u8 enable, u64 checks);
 
 SANITIZER_INTERFACE_ATTRIBUTE
 __cheriseed_cap_t *__cheriseed_strerror(__cheriseed_cap_t *result, int code);
 
 SANITIZER_INTERFACE_ATTRIBUTE
 int __cheriseed_set_signal_handle_mode(__cheriseed_cap_t *context, int mode);
-
-SANITIZER_INTERFACE_ATTRIBUTE
-void __cheriseed_enable_invoke_signal_handlers(u8 enable);
 
 SANITIZER_INTERFACE_ATTRIBUTE
 void __cheriseed_static_init(void);

@@ -180,7 +180,7 @@ void CheckContext::Terminate(MessageBuilder& reason, int signo,
   bool print_cause = true;
   bool ignore_signal = false;
   // Try to invoke a signal handler directly, if set.
-  if (atomic_load_relaxed(&Options::EnableSignalHandlers)) {
+  if (GetOpts().shouldInvokeSignalHandlers()) {
     switch (TryCallSignalHandler(signo, code, pc)) {
       default:
         break;
