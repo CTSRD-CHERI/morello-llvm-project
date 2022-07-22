@@ -42,6 +42,10 @@ TEST(InvalidAddressDeathTest, BoundsSet) {
   TEST_INVALID_ADDRESS_CAP(__cheriseed_bounds_set(nullptr, &cap, 0));
 }
 
+TEST(InvalidAddressDeathTest, CopyToHigh) {
+  TEST_INVALID_ADDRESS_CAP(__cheriseed_copy_to_high(nullptr, &cap, 0));
+}
+
 TEST(InvalidAddressDeathTest, StackCapInit) {
   TEST_INVALID_ADDRESS_CAP(__cheriseed_stack_cap_init(nullptr, 0, 0));
 }
@@ -55,12 +59,14 @@ TEST(InvalidAddressDeathTest, ThreadPointer) {
 }
 
 TEST(InvalidAddressDeathTest, LoadCap) {
-  TEST_INVALID_ADDRESS_CAP(__cheriseed_cap_t cap_to_cap = utils::InitCap(&cap);
+  TEST_INVALID_ADDRESS_CAP(__cheriseed_cap_t cap_to_cap;
+                           utils::InitCap(&cap_to_cap, &cap);
                            __cheriseed_load_cap(&cap_to_cap, nullptr));
 }
 
 TEST(InvalidAddressDeathTest, StoreCap) {
-  TEST_INVALID_ADDRESS_CAP(__cheriseed_cap_t cap_to_null = utils::InitCap(
-                               reinterpret_cast<__cheriseed_cap_t*>(0));
-                           __cheriseed_store_cap(&cap_to_null, nullptr));
+  TEST_INVALID_ADDRESS_CAP(
+      __cheriseed_cap_t cap_to_null;
+      utils::InitCap(&cap_to_null, reinterpret_cast<__cheriseed_cap_t*>(0));
+      __cheriseed_store_cap(&cap_to_null, nullptr));
 }

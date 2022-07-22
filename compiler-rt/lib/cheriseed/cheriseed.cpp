@@ -193,13 +193,16 @@ __cheriseed_cap_t *__cheriseed_conditional_seal(
 }
 
 u64 __cheriseed_copy_from_high(const __cheriseed_cap_t *cap) {
-  UNIMPLEMENTED();
+  Options Opts;
+  return LocalCap(Opts, AllowNullCap(cap)).GetMetadata();
 }
 
 __cheriseed_cap_t *__cheriseed_copy_to_high(__cheriseed_cap_t *cap_out,
                                             const __cheriseed_cap_t *cap_in,
                                             u64 value) {
-  UNIMPLEMENTED();
+  Options Opts;
+  LocalCap local_cap{Opts, AllowNullCap(cap_in)};
+  return LocalCap(Opts, local_cap.GetValue(), value).Store(cap_out);
 }
 
 u64 __cheriseed_diff(const __cheriseed_cap_t *cap_lhs,

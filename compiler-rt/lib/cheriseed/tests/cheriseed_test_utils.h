@@ -24,6 +24,23 @@
 #include "cheriseed_ccl_interface.h"
 #include "cheriseed_test_config.h"
 
+#if !defined(CHERISEED_UNIT_TESTING)
+
+/// Define __cheriseed_cap_t for testing purposes. It is still opaque, but
+/// describes a well-sized and well-aligned type now.
+struct __cheriseed_cap_t {
+  __cheriseed_cap_t() {}
+
+ protected:
+  // Disallow copy
+  __cheriseed_cap_t(const __cheriseed_cap_t &) = delete;
+  __cheriseed_cap_t &operator=(__cheriseed_cap_t const &) = delete;
+
+  uint8_t bits[16];
+} ALIGNED(16);  // struct __cheriseed_cap_t
+
+#endif  //  !CHERISEED_UNIT_TESTING
+
 namespace utils {
 
 // Constants for testing with integers of various size.
@@ -94,68 +111,65 @@ static constexpr __uint128_t UINT128_MIN = (__uint128_t)0;
 
 /// Helper to create a capability on stack in the tests.
 template <typename T>
-static inline __cheriseed_cap_t InitCap(T *address) {
-  __cheriseed_cap_t cap;
+static inline void InitCap(__cheriseed_cap_t *cap, T *address) {
   // Set maximum permissions metadata
-  __cheriseed_ddc_get(&cap);
+  __cheriseed_ddc_get(cap);
   // Set value field
-  __cheriseed_address_set(&cap, &cap, reinterpret_cast<uint64_t>(address));
-  return cap;
+  __cheriseed_address_set(cap, cap, reinterpret_cast<uint64_t>(address));
 }
 
 /// Helper to create a capability on stack.
-static inline __cheriseed_cap_t InitCap(uint64_t value, uint64_t metadata) {
-  __cheriseed_cap_t cap;
-  cap.value = value;
-  cap.metadata = metadata;
-  return cap;
+static inline void InitCap(__cheriseed_cap_t *cap, uint64_t value,
+                           uint64_t metadata) {
+  __cheriseed_address_set(cap, cap, value);
+  __cheriseed_copy_to_high(cap, cap, metadata);
 }
 
 /// Checks that two capabilities have the same metadata.
 static inline void MetadataEquals(const __cheriseed_cap_t *cap1,
                                   const __cheriseed_cap_t *cap2) {
-  ASSERT_EQ(cap1->metadata, cap2->metadata);
+  ASSERT_EQ(__cheriseed_copy_from_high(cap1), __cheriseed_copy_from_high(cap2));
 }
 
 /// Checks that a capability has some metadata.
 static inline void MetadataEquals(const __cheriseed_cap_t *cap,
                                   uint64_t metadata) {
-  ASSERT_EQ(cap->metadata, metadata);
+  ASSERT_EQ(__cheriseed_copy_from_high(cap), metadata);
 }
 
 /// Checks that two capabilities have different metadata.
 static inline void MetadataNotEquals(const __cheriseed_cap_t *cap1,
                                      const __cheriseed_cap_t *cap2) {
-  ASSERT_NE(cap1->metadata, cap2->metadata);
+  ASSERT_NE(__cheriseed_copy_from_high(cap1), __cheriseed_copy_from_high(cap2));
 }
 
 /// Checks that a capability has different metadata.
 static inline void MetadataNotEquals(const __cheriseed_cap_t *cap,
                                      uint64_t metadata) {
-  ASSERT_NE(cap->metadata, metadata);
+  ASSERT_NE(__cheriseed_copy_from_high(cap), metadata);
 }
 
 /// Checks that a capability has a specific value.
 static inline void ValueEquals(const __cheriseed_cap_t *cap, uint64_t value) {
-  ASSERT_EQ(cap->value, value);
+  ASSERT_EQ(__cheriseed_address_get(cap), value);
 }
 
 /// Checks that a capability has a specific value.
 template <typename T>
 static inline void ValueEquals(const __cheriseed_cap_t *cap, T *value) {
-  ASSERT_EQ(reinterpret_cast<T *>(cap->value), value);
+  ASSERT_EQ(reinterpret_cast<T *>(__cheriseed_address_get(cap)), value);
 }
 
 /// Checks that a capability has any value but a specific value.
 static inline void ValueNotEquals(const __cheriseed_cap_t *cap,
                                   uint64_t value) {
-  ASSERT_NE(cap->value, value);
+  ASSERT_NE(__cheriseed_address_get(cap), value);
 }
 
 /// Checks that a capability has any value but a specific value.
 template <typename T>
 static inline void ValueNotEquals(const __cheriseed_cap_t *cap, T *value) {
-  ASSERT_NE(reinterpret_cast<T *>(cap->value), value);
+  ASSERT_NE(reinterpret_cast<T *>(__cheriseed_address_get(cap)), value);
 }
 
 #define ASSERT_CAPABILITY_METADATA_EQ(__a, __b) MetadataEquals((__a), (__b))

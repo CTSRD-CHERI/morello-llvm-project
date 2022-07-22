@@ -72,6 +72,15 @@ TEST(UnalignedDeathTest, BoundsSet) {
   TEST_UNALIGNED_CAP(__cheriseed_bounds_set(&cap, &uacap, 0));
 }
 
+TEST(UnalignedDeathTest, CopyFromHigh) {
+  TEST_UNALIGNED_CAP(__cheriseed_copy_from_high(&uacap));
+}
+
+TEST(UnalignedDeathTest, CopyToHigh) {
+  TEST_UNALIGNED_CAP(__cheriseed_copy_to_high(&cap, &uacap, 0));
+  TEST_UNALIGNED_CAP(__cheriseed_copy_to_high(&uacap, &cap, 0));
+}
+
 TEST(UnalignedDeathTest, TypeGet) {
   TEST_UNALIGNED_CAP(__cheriseed_type_get(&uacap));
 }
@@ -86,12 +95,14 @@ TEST(UnalignedDeathTest, OffsetSet) {
 }
 
 TEST(UnalignedDeathTest, UnalignedLoad) {
-  TEST_UNALIGNED_CAP(__cheriseed_cap_t load_from = utils::InitCap(&uacap);
+  TEST_UNALIGNED_CAP(__cheriseed_cap_t load_from;
+                     utils::InitCap(&load_from, &uacap);
                      __cheriseed_load_cap(&load_from, &cap));
 }
 
 TEST(UnalignedDeathTest, UnalignedStore) {
-  TEST_UNALIGNED_CAP(__cheriseed_cap_t store_to = utils::InitCap(&uacap);
+  TEST_UNALIGNED_CAP(__cheriseed_cap_t store_to;
+                     utils::InitCap(&store_to, &uacap);
                      __cheriseed_store_cap(&store_to, &cap));
 }
 

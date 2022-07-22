@@ -26,15 +26,8 @@
 extern "C" {
 #endif
 
-/// \brief Definition of a capability
-///
-/// This structure is how CHERIseed represents a capability in memory.
-typedef struct {
-  /// The current value of the capability.
-  uint64_t value;
-  /// Compressed metadata, which includes bounds, permissions, etc.
-  uint64_t metadata;
-} __cheriseed_cap_t __attribute__((aligned(16)));
+/// The opaque definition of a capability.
+typedef struct __cheriseed_cap_t __cheriseed_cap_t __attribute__((aligned(16)));
 
 /// Definition of an aggregate returned by cmpxchg APIs.
 typedef struct {

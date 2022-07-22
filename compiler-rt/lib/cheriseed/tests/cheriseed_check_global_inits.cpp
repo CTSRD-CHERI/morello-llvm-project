@@ -30,7 +30,8 @@ static void func_1() {}  // Do Nothing
 static void func_2() { a += 1; }
 
 TEST(CheckGlobalInits, ShadowCapInit) {
-  static __cheriseed_cap_t cap = utils::InitCap(0, 0);
+  static __cheriseed_cap_t cap;
+  utils::InitCap(&cap, 0, 0);
   INSERT_INTO_SECTION(&cap, &a, 0, 0, &func_1);
 
   ASSERT_CAPABILITY_VALUE_EQ(&cap, 0);
@@ -49,7 +50,8 @@ TEST(CheckGlobalInits, InitializerFuncCall) {
 
 TEST(CheckGlobalInits, Bounds) {
   static int t;
-  static __cheriseed_cap_t cap = utils::InitCap(0, 0);
+  static __cheriseed_cap_t cap;
+  utils::InitCap(&cap, 0, 0);
   INSERT_INTO_SECTION(&cap, &t, sizeof(int), 0, &func_1);
 
   __cheriseed_static_init();
@@ -58,7 +60,8 @@ TEST(CheckGlobalInits, Bounds) {
 
 TEST(CheckGlobalInits, Perms) {
   static int t;
-  static __cheriseed_cap_t cap = utils::InitCap(0, 0);
+  static __cheriseed_cap_t cap;
+  utils::InitCap(&cap, 0, 0);
   INSERT_INTO_SECTION(&cap, &t, 0, __cheriseed::abi::Permissions::STORE,
                       &func_1);
 

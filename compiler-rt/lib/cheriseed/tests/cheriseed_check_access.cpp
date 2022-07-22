@@ -45,7 +45,8 @@ using namespace __cheriseed::abi;
 #define TEST_CHECK_ACCESS(__OUTCOME)                                           \
   {                                                                            \
     uint32_t a;                                                                \
-    __cheriseed_cap_t cap = utils::InitCap(&a);                                \
+    __cheriseed_cap_t cap;                                                     \
+    utils::InitCap(&cap, &a);                                                  \
     __cheriseed_perms_and(&cap, &cap,                                          \
                           (ccl::permissions::LOAD | ccl::permissions::STORE)); \
     __cheriseed_bounds_set(&cap, &cap, sizeof(uint32_t));                      \
@@ -83,10 +84,10 @@ TEST(CheckAccessDeathTest, BoundsInside) {
 }
 
 TEST(CheckAccessDeathTest, LoadCap) {
-  __cheriseed_cap_t target;
-  __cheriseed_cap_t load_base = utils::InitCap(&target);
-  __cheriseed_cap_t load_from = load_base;
-  __cheriseed_cap_t dst;
+  __cheriseed_cap_t target, load_base, load_from, dst;
+
+  utils::InitCap(&load_base, &target);
+  utils::InitCap(&load_from, &target);
 
   // Check with all perms
   EXPECT_GRANTED(__cheriseed_load_cap(&load_from, &dst));
@@ -102,10 +103,10 @@ TEST(CheckAccessDeathTest, LoadCap) {
 }
 
 TEST(CheckAccessDeathTest, StoreCap) {
-  __cheriseed_cap_t target;
-  __cheriseed_cap_t store_base = utils::InitCap(&target);
-  __cheriseed_cap_t store_to = store_base;
-  __cheriseed_cap_t src;
+  __cheriseed_cap_t target, store_base, store_to, src;
+
+  utils::InitCap(&store_base, &target);
+  utils::InitCap(&store_to, &target);
 
   // Check with all perms
   EXPECT_GRANTED(__cheriseed_store_cap(&store_to, &src));
