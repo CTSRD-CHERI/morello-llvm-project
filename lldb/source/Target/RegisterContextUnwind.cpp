@@ -1955,7 +1955,7 @@ bool RegisterContextUnwind::TryFallbackUnwindPlan() {
 
   addr_t old_caller_pc_value = LLDB_INVALID_ADDRESS;
   addr_t new_caller_pc_value = LLDB_INVALID_ADDRESS;
-  lldb_private::RegisterLocationLLDB regloc;
+  lldb_private::RegisterLocationLLDB regloc = {};
   if (SavedLocationForRegister(pc_regnum.GetAsKind(eRegisterKindLLDB),
                                regloc) ==
       UnwindLLDB::RegisterSearchResult::eRegisterFound) {

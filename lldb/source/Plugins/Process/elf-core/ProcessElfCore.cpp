@@ -616,9 +616,9 @@ llvm::Error ProcessElfCore::parseNetBSDNotes(llvm::ArrayRef<CoreNote> notes) {
   // To be extracted from struct netbsd_elfcore_procinfo
   // Used to sanity check of the LWPs of the process
   uint32_t nlwps = 0;
-  uint32_t signo;  // killing signal
-  uint32_t siglwp; // LWP target of killing signal
-  uint32_t pr_pid;
+  uint32_t signo = 0;  // killing signal
+  uint32_t siglwp = 0; // LWP target of killing signal
+  uint32_t pr_pid = 0;
 
   for (const auto &note : notes) {
     llvm::StringRef name = note.info.n_name;
@@ -770,7 +770,7 @@ llvm::Error ProcessElfCore::parseNetBSDNotes(llvm::ArrayRef<CoreNote> notes) {
 }
 
 llvm::Error ProcessElfCore::parseOpenBSDNotes(llvm::ArrayRef<CoreNote> notes) {
-  ThreadData thread_data;
+  ThreadData thread_data = {};
   for (const auto &note : notes) {
     // OpenBSD per-thread information is stored in notes named "OpenBSD@nnn" so
     // match on the initial part of the string.
