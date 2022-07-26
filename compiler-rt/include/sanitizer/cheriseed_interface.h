@@ -554,9 +554,11 @@ int __cheriseed_set_signal_handle_mode(void *context, int mode);
 
 /// Performs initialization of capabilities in a static-linked application.
 ///
+/// \param[in] sp The stack pointer upon process start.
+///
 /// \note This API should be called before accessing any global variables,
 /// ideally early during libc init.
-void __cheriseed_static_init(void);
+void __cheriseed_static_init(uint64_t sp);
 
 // -------------------------------------
 // APIs used by the compiler

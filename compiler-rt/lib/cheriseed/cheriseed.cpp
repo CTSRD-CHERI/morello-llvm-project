@@ -132,6 +132,124 @@ static memory_order IRToCppOrdering(u8 ordering) {
   return static_cast<memory_order>(1 << ordering);
 }
 
+Environment Environment::From(u64 sp) {
+  // As per ABI sp points to argc.
+  const u64 *ptr = reinterpret_cast<const u64 *>(sp);
+  // In case sp was 0.
+  if (ptr == 0)
+    return Environment(nullptr);
+
+  // Skip 'argc'.
+  ++ptr;
+  // Skip 'argv' entries and the terminating NULL.
+  while (*ptr++)
+    ;
+  // Now 'ptr' points to the first environment variable.
+  EnvArray envp = reinterpret_cast<EnvArray>(ptr);
+
+  return Environment(envp);
+}
+
+Environment::EnvPtr Environment::GetEnv(const char *name) const {
+  if (!envp_start || !name)
+    return nullptr;
+
+  const usize name_length = __sanitizer::internal_strlen(name);
+  if (name_length == 0)
+    return nullptr;
+
+  EnvArray envp = envp_start;
+  while (*envp) {
+    const usize len =
+        __sanitizer::Min(__sanitizer::internal_strlen(*envp), name_length);
+    const int match = __sanitizer::internal_strncmp(*envp, name, len);
+    if (0 == match && ('=' == (*envp)[name_length]))
+      return *envp;
+    ++envp;
+  }
+
+  return nullptr;
+}
+
+void ControlChecksDynamic(const Environment &env) {
+  // Try to find CHERISEED_CHECKS environment variable.
+  Environment::EnvPtr cheriseed_checks_start =
+      env.GetEnv(kDynamicConfigurationEnv);
+  if (!cheriseed_checks_start)
+    return;
+
+  // Skip CHERISEED_CHECKS and the '=' character.
+  const char *cheriseed_checks =
+      cheriseed_checks_start + sizeof(kDynamicConfigurationEnv);
+  // Process the comma separated list of options.
+  while (*cheriseed_checks) {
+    const char *const option_start = cheriseed_checks;
+    // A starting '-' marks if an option is negated.
+    enum CHERIseedCheck enabled_state = CHERISEED_CHECK_ON;
+    if ('-' == *cheriseed_checks) {
+      enabled_state = CHERISEED_CHECK_OFF;
+      // Skip the '-' character.
+      ++cheriseed_checks;
+    }
+
+    // Find the position of the next delimiter character.
+    const char *delimiter =
+        __sanitizer::internal_strchrnul(cheriseed_checks, ',');
+    // Calculate the length of this option.
+    const usize option_length =
+        static_cast<usize>(delimiter - cheriseed_checks);
+    // Grab the current option.
+    const char *const option = cheriseed_checks;
+    // Don't process zero-length options.
+    if (0 == option_length) {
+      DefaultOptions DefOpts;
+      CheckContext(LocalCap(DefOpts))
+          .add(DynamicControlError(cheriseed_checks_start, option_start));
+      break;
+    }
+    // Advance pointer: if there is a delimiter, skip the delimiter itself.
+    cheriseed_checks = *delimiter ? ++delimiter : delimiter;
+
+// Helper macros to make the code a bit more readable.
+#define OPTION(__name) \
+  (0 == __sanitizer::internal_strncmp(__name, option, option_length))
+
+#define CONTROL_CHECK(__check) \
+  __cheriseed_control_checks(enabled_state, __check);
+
+    if OPTION ("ALL") {
+      CONTROL_CHECK(UINT64_MAX);
+    } else if OPTION ("TAG") {
+      CONTROL_CHECK(CHERISEED_CHECK_TAG);
+    } else if OPTION ("BOUNDS") {
+      CONTROL_CHECK(CHERISEED_CHECK_BOUNDS);
+    } else if OPTION ("PERMS") {
+      CONTROL_CHECK(CHERISEED_CHECK_PERMS);
+    } else if OPTION ("ALIGNMENT") {
+      CONTROL_CHECK(CHERISEED_CHECK_ALIGNMENT);
+    } else if OPTION ("LOAD") {
+      CONTROL_CHECK(ccl::permissions::LOAD);
+    } else if OPTION ("STORE") {
+      CONTROL_CHECK(ccl::permissions::STORE);
+    } else if OPTION ("LOAD_CAP") {
+      CONTROL_CHECK(ccl::permissions::LOAD_CAP);
+    } else if OPTION ("STORE_CAP") {
+      CONTROL_CHECK(ccl::permissions::STORE_CAP);
+    } else if OPTION ("EXECUTE") {
+      CONTROL_CHECK(ccl::permissions::EXECUTE);
+    } else {
+      // Unfortunately, the current option is not recognized.
+      DefaultOptions DefOpts;
+      CheckContext(LocalCap(DefOpts))
+          .add(DynamicControlError(cheriseed_checks_start, option_start));
+      break;
+    }
+
+#undef CONTROL_CHECK
+#undef OPTION
+  }
+}
+
 }  // namespace __cheriseed
 
 // -------------------------------------
@@ -441,7 +559,10 @@ extern void *__attribute__((weak)) __stop___cheriseed_initializers;
 
 // The following needs to changed for dynamic linkage cases. The changes would
 // include passing __start_* and __stop_* symbols as parameters while calling.
-void __cheriseed_static_init(void) {
+void __cheriseed_static_init(u64 sp) {
+  Environment env = Environment::From(sp);
+  ControlChecksDynamic(env);
+
   if (!&__start___cheriseed_initializers)
     return;
   CHECK_EQ(0, ((vaddr)&__stop___cheriseed_initializers -

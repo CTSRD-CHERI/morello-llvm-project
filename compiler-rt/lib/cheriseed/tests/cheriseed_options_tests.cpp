@@ -17,7 +17,12 @@
 #include "cheriseed_common.h"
 #include "cheriseed_test_utils.h"
 
+using namespace __cheriseed::abi;
+
+using __cheriseed::ControlChecksDynamic;
+using __cheriseed::Environment;
 using __cheriseed::Options;
+using utils::OnStackArgs;
 
 TEST(Options, CheckAlignmentON) {
   __cheriseed_control_checks(CHERISEED_CHECK_OFF, UINT64_MAX);
@@ -88,3 +93,122 @@ INSTANTIATE_TEST_SUITE_P(CheckPermsON, CheckPermsONTestFixture,
                                          ccl::permissions::EXECUTE,
                                          ccl::permissions::LOAD_CAP,
                                          ccl::permissions::STORE_CAP));
+
+TEST(Options, DynamicConfigurationTag) {
+  EXPECT_TRUE(Options().shouldCheckTag());
+
+  // Turn tag checks off.
+  {
+    const char *checks = "CHERISEED_CHECKS=-TAG";
+    OnStackArgs args(&checks[0]);
+    Environment env = Environment::From(args.GetAddress());
+    ControlChecksDynamic(env);
+  }
+  EXPECT_FALSE(Options().shouldCheckTag());
+
+  // Turn tag checks on.
+  {
+    const char *checks = "CHERISEED_CHECKS=TAG";
+    OnStackArgs args(&checks[0]);
+    Environment env = Environment::From(args.GetAddress());
+    ControlChecksDynamic(env);
+  }
+  EXPECT_TRUE(Options().shouldCheckTag());
+}
+
+TEST(Options, DynamicConfigurationBounds) {
+  EXPECT_TRUE(Options().shouldCheckBounds());
+
+  // Turn bounds checks off.
+  {
+    const char *checks = "CHERISEED_CHECKS=-BOUNDS";
+    OnStackArgs args(&checks[0]);
+    Environment env = Environment::From(args.GetAddress());
+    ControlChecksDynamic(env);
+  }
+  EXPECT_FALSE(Options().shouldCheckBounds());
+
+  // Turn bounds checks on.
+  {
+    const char *checks = "CHERISEED_CHECKS=BOUNDS";
+    OnStackArgs args(&checks[0]);
+    Environment env = Environment::From(args.GetAddress());
+    ControlChecksDynamic(env);
+  }
+  EXPECT_TRUE(Options().shouldCheckBounds());
+}
+
+TEST(Options, DynamicConfigurationPerms) {
+  EXPECT_NE(Options().shouldCheckPerms(), 0);
+
+  // Turn bounds checks off.
+  {
+    const char *checks = "CHERISEED_CHECKS=-PERMS";
+    OnStackArgs args(&checks[0]);
+    Environment env = Environment::From(args.GetAddress());
+    ControlChecksDynamic(env);
+  }
+  EXPECT_EQ(Options().shouldCheckPerms(), 0);
+
+  // Turn bounds checks on.
+  {
+    const char *checks = "CHERISEED_CHECKS=PERMS";
+    OnStackArgs args(&checks[0]);
+    Environment env = Environment::From(args.GetAddress());
+    ControlChecksDynamic(env);
+  }
+  EXPECT_NE(Options().shouldCheckPerms(), 0);
+}
+
+TEST(Options, DynamicConfigurationAlignment) {
+  EXPECT_TRUE(Options().shouldCheckAlignment());
+
+  // Turn bounds checks off.
+  {
+    const char *checks = "CHERISEED_CHECKS=-ALIGNMENT";
+    OnStackArgs args(&checks[0]);
+    Environment env = Environment::From(args.GetAddress());
+    ControlChecksDynamic(env);
+  }
+  EXPECT_FALSE(Options().shouldCheckAlignment());
+
+  // Turn bounds checks on.
+  {
+    const char *checks = "CHERISEED_CHECKS=ALIGNMENT";
+    OnStackArgs args(&checks[0]);
+    Environment env = Environment::From(args.GetAddress());
+    ControlChecksDynamic(env);
+  }
+  EXPECT_TRUE(Options().shouldCheckAlignment());
+}
+
+TEST(Options, DynamicConfigurationAll) {
+  EXPECT_TRUE(Options().shouldCheckTag());
+  EXPECT_TRUE(Options().shouldCheckBounds());
+  EXPECT_TRUE(Options().shouldCheckAlignment());
+  EXPECT_NE(Options().shouldCheckPerms(), 0);
+
+  // Turn all checks off.
+  {
+    const char *checks = "CHERISEED_CHECKS=-ALL";
+    OnStackArgs args(&checks[0]);
+    Environment env = Environment::From(args.GetAddress());
+    ControlChecksDynamic(env);
+  }
+  EXPECT_FALSE(Options().shouldCheckTag());
+  EXPECT_FALSE(Options().shouldCheckBounds());
+  EXPECT_FALSE(Options().shouldCheckAlignment());
+  EXPECT_EQ(Options().shouldCheckPerms(), 0);
+
+  // Turn bounds checks on.
+  {
+    const char *checks = "CHERISEED_CHECKS=ALL";
+    OnStackArgs args(&checks[0]);
+    Environment env = Environment::From(args.GetAddress());
+    ControlChecksDynamic(env);
+  }
+  EXPECT_TRUE(Options().shouldCheckTag());
+  EXPECT_TRUE(Options().shouldCheckBounds());
+  EXPECT_TRUE(Options().shouldCheckAlignment());
+  EXPECT_NE(Options().shouldCheckPerms(), 0);
+}

@@ -246,7 +246,7 @@ struct RequiredPerms final {
     return ((ctx.Perms() & perms & mask) == (perms & mask));
   }
 
-  void ReportError(const CheckContext& ctx, MessageBuilder& builder);
+  void ReportError(const CheckContext& ctx, MessageBuilder& builder) const;
 
   static constexpr abi::SignalCode Code() {
     return abi::SignalCode::SC_SEGV_CAPPERMERR;
@@ -274,6 +274,24 @@ struct Tagged final {
 
   static constexpr int SignalNumber() { return libc::SignalNumber::SN_SIGSEGV; }
 };  // struct Tagged
+
+// Reports a malformed CHERISEED_CHECKS environment variable.
+struct DynamicControlError final {
+  explicit DynamicControlError(const char* const start,
+                               const char* const cursor)
+      : start(start), cursor(cursor) {}
+  bool DoCheck(const CheckContext& ctx) const { return false; }
+  void ReportError(const CheckContext& ctx, MessageBuilder& builder) const;
+
+  static constexpr abi::SignalCode Code() {
+    return abi::SignalCode::SC_PROT_NOT_IMPLEMENTED;
+  }
+
+  static constexpr int SignalNumber() { return libc::SignalNumber::SN_NONE; }
+
+  const char* start;
+  const char* cursor;
+};  // struct DynamicControlError
 
 }  // namespace error
 }  // namespace __cheriseed

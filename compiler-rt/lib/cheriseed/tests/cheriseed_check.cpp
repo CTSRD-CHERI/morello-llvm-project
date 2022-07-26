@@ -19,8 +19,7 @@
 
 using namespace __cheriseed::error;
 using __cheriseed::Options;
-
-static constexpr int kExitCode = 1;
+using utils::kExitCode;
 
 TEST(CheckDeathTest, NormalExit) { EXPECT_NORMAL_EXIT(exit(0)); }
 

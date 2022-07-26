@@ -27,7 +27,7 @@ extern "C" void* __shim_syscall(long nr, ...) {
 
 int main(int argc, char** argv) {
   // Calling initializer routine before running tests.
-  __cheriseed_static_init();
+  __cheriseed_static_init(0);
 
   testing::GTEST_FLAG(death_test_style) = "threadsafe";
   testing::InitGoogleTest(&argc, argv);

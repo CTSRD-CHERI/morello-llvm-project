@@ -259,7 +259,7 @@ void InBounds::ReportError(const CheckContext& ctx,
 }
 
 void RequiredPerms::ReportError(const CheckContext& ctx,
-                                MessageBuilder& builder) {
+                                MessageBuilder& builder) const {
   builder << "Capability is missing required permission(s) at "
           << ctx.CapabilityAddress() << ":\n\n";
   ctx.PrintCapability(builder);
@@ -270,6 +270,19 @@ void RequiredPerms::ReportError(const CheckContext& ctx,
 void Tagged::ReportError(const CheckContext& ctx, MessageBuilder& builder) {
   builder << "Capability is untagged at " << ctx.CapabilityAddress() << ":\n\n";
   ctx.PrintCapability(builder);
+}
+
+void DynamicControlError::ReportError(const CheckContext& ctx,
+                                      MessageBuilder& builder) const {
+  u64 pos = static_cast<u64>(cursor - start);
+  builder << "CHERISEED_CHECKS has an invalid option at position "
+          << static_cast<u64>(pos - sizeof(kDynamicConfigurationEnv))
+          << ":\n\n  " << start << "\n  ";
+  while (pos > 0) {
+    builder << " ";
+    --pos;
+  }
+  builder << MessageBuilder::Attribute("^");
 }
 
 }  // namespace error

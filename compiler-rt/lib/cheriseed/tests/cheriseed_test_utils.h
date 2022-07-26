@@ -43,6 +43,9 @@ struct __cheriseed_cap_t {
 
 namespace utils {
 
+// The error exit code.
+static constexpr int kExitCode = 1;
+
 // Constants for testing with integers of various size.
 static constexpr uint8_t UINT8_TEST = (uint8_t)0xc3;
 static constexpr uint16_t UINT16_TEST = (uint16_t)0xc3c3;
@@ -111,7 +114,29 @@ static constexpr __uint128_t UINT128_MIN = (__uint128_t)0;
   ERROR_MESSAGE_CAPABILITY_PATTERN                  \
   ERROR_MESSAGE_DETAIL_PATTERN
 
+#define CHECK_DYNAMIC_CONFIGURATION_ERROR_PATTERN(__pos, __value, __cursor) \
+  ERROR_MESSAGE_HEADER_PATTERN                                              \
+  "CHERISEED_CHECKS has an invalid option at position " #__pos ":\n\n"      \
+  "  CHERISEED_CHECKS=" __value "\n"                                        \
+  "                   " __cursor "\n"
+
 // clang-format on
+
+// Helper to test dynamic check control.
+struct OnStackArgs {
+  OnStackArgs(const char *env) {
+    argc = 1;
+    argv[0] = nullptr;
+    envp[0] = env;
+    envp[1] = nullptr;
+  }
+
+  u64 GetAddress() const { return reinterpret_cast<u64>(&argc); }
+
+  int argc;
+  const char *argv[1];
+  const char *envp[2];
+};  // struct OnStackArgs
 
 #if !defined(CHERISEED_UNIT_TESTING)
 

@@ -45,7 +45,7 @@ void test_main(void);
 
 int main(void) {
   // Calling initializer routine before running the test.
-  __cheriseed_static_init();
+  __cheriseed_static_init(0);
   // Make sure violations don't trigger the call of a signal handler.
   __cheriseed_control_invoke_signal_handlers(CHERISEED_CHECK_OFF);
   // Call the test.

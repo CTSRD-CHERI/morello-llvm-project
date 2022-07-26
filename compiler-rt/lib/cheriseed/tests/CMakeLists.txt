@@ -33,6 +33,8 @@ set(CHERISEED_NOINST_TEST_SOURCES
   cheriseed_check_tag.cpp
   cheriseed_check_unaligned.cpp
   cheriseed_check.cpp
+  cheriseed_dynamic_configuration.cpp
+  cheriseed_environment.cpp
   cheriseed_options_tests.cpp
   cheriseed_test_main.cpp)
 

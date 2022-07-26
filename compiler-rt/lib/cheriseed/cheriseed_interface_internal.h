@@ -182,7 +182,7 @@ SANITIZER_INTERFACE_ATTRIBUTE
 int __cheriseed_set_signal_handle_mode(__cheriseed_cap_t *context, int mode);
 
 SANITIZER_INTERFACE_ATTRIBUTE
-void __cheriseed_static_init(void);
+void __cheriseed_static_init(u64 sp);
 
 // -------------------------------------
 // APIs used by the compiler

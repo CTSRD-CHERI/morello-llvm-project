@@ -229,6 +229,31 @@ struct LocalCap final : public __cheriseed_cap_t {
   friend struct ccl::methods;
 };  // struct LocalCap
 
+// Helper class to search for environment variables.
+struct Environment {
+  // Type for an environment variable.
+  using EnvPtr = const char *;
+
+  // Creates an Environment instance using a stack pointer.
+  static Environment From(u64 sp);
+
+  // Finds an environment variable by name.
+  EnvPtr GetEnv(const char *Name) const;
+
+ protected:
+  // Type for the environment variable array.
+  using EnvArray = const char *const *;
+
+  // Protected constructor to instantiate an Environment.
+  explicit constexpr Environment(EnvArray envp) : envp_start(envp) {}
+
+  // Pointer to the start of the envrionment variables.
+  const EnvArray envp_start;
+};  // struct Environment
+
+// A dynamic way to control checks using CHERISEED_CHECKS environment variable.
+void ControlChecksDynamic(const Environment &env);
+
 }  // namespace __cheriseed
 
 using __cheriseed::LocalCap;

@@ -39,8 +39,8 @@ Getting Started
 ===============
 
 See `Getting Started: Building and Running Clang <https://clang.llvm.org/get_started.html>`_
-for the System Requirements and instructions for how to generate a build system for
-CHERIseed-enabled clang with ``CMake``.
+for the System Requirements and instructions for how to generate a build system
+for CHERIseed-enabled clang with ``CMake``.
 
 To generate the documentation as html use
 
@@ -148,8 +148,6 @@ bounds.c
   #include <sanitizer/cheriseed_interface.h>
 
   int main(void) {
-    __cheriseed_enable_cheri_semantics(1);
-
     int A[2] = { 1, 2 };
 
     printf("A[0]: %d\n", A[0]);
@@ -158,16 +156,6 @@ bounds.c
 
     return 0;
   }
-
-Note that no semantics checking will take place
-before the enable function has been called.
-
-.. code-block:: C
-
-  __cheriseed_enable_cheri_semantics(1)
-
-This function is defined in ``<sanitizer/cheriseed_interface.h>``,
-hence this header must be included.
 
 When run this should result something similar to:
 
@@ -236,8 +224,38 @@ capability semantics is:
 
 This can be configured at runtime.
 
+The API ``__cheriseed_control_semantics()`` enables or disables all CHERI
+semantics at once. To fine-grain control which checks are performed at
+runtime use ``__cheriseed_control_checks()`` API. The first argument specifies
+if the checks set in the second argument are to be enabled or disabled.
+
+.. note::
+
+  Disabling CHERI semantics for some short scope will likely produce
+  unexpected results.
+
+The environment variable ``CHERISEED_CHECKS`` can be used to control how
+CHERIseed behaves without the need to recompile the application. It takes a
+comma separated list of options which control various checks.
+
+The recognized options are:
+
+* ``TAG``: controls whether tag checks are executed
+* ``BOUNDS``: controls whether bounds checks are executed
+* ``ALIGNMENT``: controls whether alignment of capabilities are checked
+* ``PERMS``: controls whether permission checks are executed
+* ``ALL``: enables all checks
+
+To opt out a check simply prefix it with a ``-`` character.
+
+The API ``__cheriseed_control_checks()`` allows the use of the usual
+CHERI-defined permissions. For example, to control whether
+``__CHERI_CAP_PERMISSION_PERMIT_LOAD__`` is checked, simply use ``[-]LOAD`` as
+a named option. This goes similarly with other permissions which CHERIseed
+implements.
+
 Calling signal handlers can be enabled and disabled using the
-``__cheriseed_enable_invoke_signal_handlers()`` public API.
+``__cheriseed_control_invoke_signal_handlers()`` public API.
 
 If calling signal handlers is enabled, the
 ``__cheriseed_set_signal_handle_mode()`` API can be used to configure
@@ -251,8 +269,8 @@ how the current violation should be handled using a few predefined macros:
 - ``CHERISEED_SIGNAL_HANDLE_MODE_WARNING``: like ignore, but the nature
   of the violation is shown on ``stderr``.
 
-If calling signal handlers is disabled, a violation always results in termination of
-the application.
+If calling signal handlers is disabled, a violation always results in
+termination of the application.
 
 The runtime API ``__cheriseed_strerror()`` can be used to return the string
 representation of the new ``SEGV_CAP*`` values, or ``UNKNOWN``.

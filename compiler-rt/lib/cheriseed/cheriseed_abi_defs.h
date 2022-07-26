@@ -17,16 +17,14 @@
 namespace __cheriseed {
 namespace abi {
 
-#ifdef CHERISEED_UNIT_TESTING
-#define CHERISEED_CHECK_ON 1
-#define CHERISEED_CHECK_OFF 0
-#endif
-
 // Minimum expected alignment of a capability.
 static constexpr __sanitizer::u8 kCapabilityMinAlignment = 16;
 
 // The value for relaxed ordering in the IR.
 static constexpr __sanitizer::u8 kIRRelaxedOrdering = 0;
+
+// The dynamic configuration value as it appears in the 'envp' array.
+static constexpr char kDynamicConfigurationEnv[] = "CHERISEED_CHECKS";
 
 // These permissions bits are used as the arguments for the function
 // __cheriseed_check_access as a platform independent representation.
@@ -65,6 +63,14 @@ enum SignalHandleMode : int {
   // The violation is not fatal, but print the reason to stderr.
   SHM_WARNING = 4,
 };  // enum SignalHandleMode
+
+// Options to control whether a check is on or off.
+enum CHERIseedCheck {
+  /// Turn a specific CHERIseed check OFF
+  CHERISEED_CHECK_OFF,
+  /// Turn a specific CHERIseed check ON
+  CHERISEED_CHECK_ON,
+};  // enum CHERIseedCheck
 
 }  // namespace abi
 }  // namespace __cheriseed
