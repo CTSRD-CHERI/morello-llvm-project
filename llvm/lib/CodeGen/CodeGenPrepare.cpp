@@ -2574,8 +2574,6 @@ struct ExtAddrMode : public TargetLowering::AddrMode {
   }
 };
 
-} // end anonymous namespace
-
 #ifndef NDEBUG
 static inline raw_ostream &operator<<(raw_ostream &OS, const ExtAddrMode &AM) {
   AM.print(OS);
@@ -2622,6 +2620,8 @@ LLVM_DUMP_METHOD void ExtAddrMode::dump() const {
   dbgs() << '\n';
 }
 #endif
+
+} // end anonymous namespace
 
 namespace {
 
