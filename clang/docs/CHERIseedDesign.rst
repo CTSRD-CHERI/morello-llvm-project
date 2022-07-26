@@ -125,14 +125,11 @@ type is and what type is being atomically accessed:
 Global Variables
 ----------------
 
-Global Variables only have a capability generated "lazily" the first
-time they are accessed, then all subsequent accesses will utilise
-function calls to "accessor" functions, of which there is one per
+Global Variables only have a capability generated at the beginning during
+runtime by invoking ``__cheriseed_static_init``, then all subsequent accesses
+will utilise function calls to "accessor" functions, of which there is one per
 global. The generated capability, which functions as a pointer to the
 global variable, is referred to as its "shadow" capability.
-
-Currently this system of lazy initialisation can cause instability if
-global variables are used alongside multi-threading.
 
 Variadic Arguments
 ------------------
