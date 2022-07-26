@@ -22,11 +22,11 @@ movz1:
 # CHECK: Disassembly of section .R_MORELLO_MOVW_SIZE:
 # CHECK-EMPTY:
 # CHECK-NEXT: <movz1>:
-# CHECK-NEXT: 8c 01 80 f2   movk  x12, #12
-# CHECK-NEXT: 8c 01 80 f2   movk  x12, #12
-# CHECK-NEXT: ad 01 a0 f2   movk  x13, #13, lsl #16
-# CHECK-NEXT: ad 01 a0 f2   movk  x13, #13, lsl #16
-# CHECK-NEXT: ce 01 c0 f2   movk  x14, #14, lsl #32
-# CHECK-NEXT: ce 01 c0 f2   movk  x14, #14, lsl #32
-# CHECK-NEXT: ef 01 e0 d2   mov x15, #4222124650659840
-# CHECK-NEXT: f0 01 e0 f2   movk  x16, #15, lsl #48
+# CHECK-NEXT: f280018c   movk  x12, #12
+# CHECK-NEXT: f280018c   movk  x12, #12
+# CHECK-NEXT: f2a001ad   movk  x13, #13, lsl #16
+# CHECK-NEXT: f2a001ad   movk  x13, #13, lsl #16
+# CHECK-NEXT: f2c001ce   movk  x14, #14, lsl #32
+# CHECK-NEXT: f2c001ce   movk  x14, #14, lsl #32
+# CHECK-NEXT: d2e001ef   mov x15, #4222124650659840
+# CHECK-NEXT: f2e001f0   movk  x16, #15, lsl #48

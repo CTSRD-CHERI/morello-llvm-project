@@ -17,10 +17,10 @@
 ; DISASM: Disassembly of section .text:
 ; DISASM-EMPTY:
 ; DISASM-NEXT: <_start>:
-; DISASM-NEXT:   01 00 00 94  	bl	{{.*}} <main>
+; DISASM-NEXT:   94000001  	bl	{{.*}} <main>
 ; DISASM-EMPTY:
 ; DISASM-NEXT: <main>:
-; DISASM-NEXT:   c0 53 c2 c2  	ret	c30
+; DISASM-NEXT:   c2c253c0  	ret	c30
 
 
 

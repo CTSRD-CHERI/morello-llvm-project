@@ -35,23 +35,23 @@ main:
 
 # CHECK: Disassembly of section test:
 # CHECK: <main>:
-# CHECK:       0: 02 00 00 c2                  	str	c2, [x0, #0]
-# CHECK:       4: 02 0c 80 e2                  	stur	c2, [c0, #0]
-# CHECK:       8: 02 00 00 f9                  	str	x2, [x0]
-# CHECK:       c: 02 00 c0 e2                  	stur	x2, [c0, #0]
-# CHECK:      10: 00 04 80 42                  	stp	c0, c1, [x0, #0]
-# CHECK:      14: e0 ff 7f f0                  	adrp	x0, 0xfffff000
+# CHECK:       0: c2000002                  	str	c2, [x0, #0]
+# CHECK:       4: e2800c02                  	stur	c2, [c0, #0]
+# CHECK:       8: f9000002                  	str	x2, [x0]
+# CHECK:       c: e2c00002                  	stur	x2, [c0, #0]
+# CHECK:      10: 42800400                  	stp	c0, c1, [x0, #0]
+# CHECK:      14: f07fffe0                  	adrp	x0, 0xfffff000
 # CHECK: <$c.1>:
-# CHECK:      18: 02 0c 80 e2                  	stur	c2, [x0, #0]
-# CHECK:      1c: 02 00 00 c2                  	str	c2, [c0, #0]
-# CHECK:      20: 02 00 c0 e2                  	stur	x2, [x0, #0]
-# CHECK:      24: 02 00 00 f9                  	str	x2, [c0]
-# CHECK:      28: 00 04 80 42                  	stp	c0, c1, [c0, #0]
-# CHECK:      2c: 00 00 00 90                  	adrdp	c0, 0x0
+# CHECK:      18: e2800c02                  	stur	c2, [x0, #0]
+# CHECK:      1c: c2000002                  	str	c2, [c0, #0]
+# CHECK:      20: e2c00002                  	stur	x2, [x0, #0]
+# CHECK:      24: f9000002                  	str	x2, [c0]
+# CHECK:      28: 42800400                  	stp	c0, c1, [c0, #0]
+# CHECK:      2c: 90000000                  	adrdp	c0, 0x0
 # CHECK: <$x.2>:
-# CHECK:      30: 02 00 00 c2                  	str	c2, [x0, #0]
-# CHECK:      34: 02 0c 80 e2                  	stur	c2, [c0, #0]
-# CHECK:      38: 02 00 00 f9                  	str	x2, [x0]
-# CHECK:      3c: 02 00 c0 e2                  	stur	x2, [c0, #0]
-# CHECK:      40: 00 04 80 42                  	stp	c0, c1, [x0, #0]
-# CHECK:      44: e0 ff 7f f0                  	adrp	x0, 0xfffff000
+# CHECK:      30: c2000002                  	str	c2, [x0, #0]
+# CHECK:      34: e2800c02                  	stur	c2, [c0, #0]
+# CHECK:      38: f9000002                  	str	x2, [x0]
+# CHECK:      3c: e2c00002                  	stur	x2, [c0, #0]
+# CHECK:      40: 42800400                  	stp	c0, c1, [x0, #0]
+# CHECK:      44: f07fffe0                  	adrp	x0, 0xfffff000
