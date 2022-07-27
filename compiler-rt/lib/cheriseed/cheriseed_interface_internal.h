@@ -208,6 +208,11 @@ __cheriseed_cap_t *__cheriseed_copy_cap_with_offset(
     __cheriseed_cap_t *cap_out, const __cheriseed_cap_t *cap_in, u64 offset);
 
 SANITIZER_INTERFACE_ATTRIBUTE
+__cheriseed_cap_t *__cheriseed_generic_cap_init(__cheriseed_cap_t *cap,
+                                                u64 address, u64 size,
+                                                u32 perms_to_clear);
+
+SANITIZER_INTERFACE_ATTRIBUTE
 __cheriseed_cap_t *__cheriseed_load_cap(const __cheriseed_cap_t *cap_to_cap,
                                         __cheriseed_cap_t *loaded_cap);
 

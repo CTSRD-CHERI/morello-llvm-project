@@ -213,11 +213,12 @@ struct NotImplemented final {
 struct InBounds final {
   explicit InBounds(u64 size) : size(size) {}
 
-  // Top (base + length) is inclusive in acceptable range of a capability
   ALWAYS_INLINE
   bool DoCheck(const CheckContext& ctx) const {
     if (!ctx.GetOpts().shouldCheckBounds())
       return true;
+    // Top (base + length) is not inclusive in acceptable range of a capability.
+    // Since size is taken as-is base <= cursor <= top is correct.
     return (ctx.Base() <= ctx.Value()) && ((ctx.Value() + size) <= ctx.Top());
   }
 

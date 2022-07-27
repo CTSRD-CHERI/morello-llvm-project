@@ -118,11 +118,14 @@ define void @bitcast_function_alias_2() addrspace(200) {
 ; TODO: This is conservative, optimize later
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %2 = call %__cheriseed_cap_t* @__cheriseed_pcc_get(%__cheriseed_cap_t* %1)
-; CHECK-NEXT:  %3 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %2, %__cheriseed_cap_t* %2, i64 ptrtoint (void (...)* @bitcast_func_alias_2 to i64))
-; CHECK-NEXT:  %4 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %3, i64 0, i32 5)
-; CHECK-NEXT:  %5 = inttoptr i64 %4 to void ()*
-; CHECK-NEXT:  call void %5()
+; CHECK-NEXT:  %2 = call %__cheriseed_cap_t* @__cheriseed_generic_cap_init(
+; CHECK-SAME:     %__cheriseed_cap_t* %1,
+; CHECK-SAME:     i64 ptrtoint (void (...)* @bitcast_func_alias_2 to i64),
+; CHECK-SAME:     i64 1,
+; CHECK-SAME:     i32 27)
+; CHECK-NEXT:  %3 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %2, i64 1, i32 4)
+; CHECK-NEXT:  %4 = inttoptr i64 %3 to void ()*
+; CHECK-NEXT:  call void %4()
   call addrspace(200) void bitcast (void (...) addrspace(200)* @bitcast_func_alias_2 to void () addrspace(200)*)()
 ; CHECK-NEXT:  ret void
   ret void

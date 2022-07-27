@@ -70,3 +70,7 @@ TEST(InvalidAddressDeathTest, StoreCap) {
       utils::InitCap(&cap_to_null, reinterpret_cast<__cheriseed_cap_t*>(0));
       __cheriseed_store_cap(&cap_to_null, nullptr));
 }
+
+TEST(InvalidAddressDeathTest, GenericCapInit) {
+  TEST_INVALID_ADDRESS_CAP(__cheriseed_generic_cap_init(nullptr, 0, 0, 0));
+}

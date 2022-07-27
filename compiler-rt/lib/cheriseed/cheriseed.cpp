@@ -510,6 +510,19 @@ __cheriseed_cap_t *__cheriseed_copy_cap_with_offset(
   return local_cap.Store(cap_out);
 }
 
+__cheriseed_cap_t *__cheriseed_generic_cap_init(__cheriseed_cap_t *cap,
+                                                u64 address, u64 size,
+                                                u32 perms_to_clear) {
+  Options Opts;
+  LocalCap local_cap{Opts};
+  bool is_exact = ccl::methods::BuildBoundedCap(
+      local_cap, address, size, ~CheckPermsToCCL(perms_to_clear));
+  if (!is_exact) {
+    // TODO: invalidate capability if not exact?
+  }
+  return local_cap.Store(cap);
+}
+
 __cheriseed_cap_t *__cheriseed_load_cap(const __cheriseed_cap_t *cap_to_cap,
                                         __cheriseed_cap_t *loaded_cap) {
   // All capability loads should be atomic, with default memory order

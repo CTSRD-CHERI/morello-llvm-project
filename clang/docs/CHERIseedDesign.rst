@@ -150,8 +150,20 @@ Function pointers
 -----------------
 
 Function pointers are represented as capabilities and they are derived
-from PCC. Currently their bounds are not restricted, so they will
-still be dereferencable at a modified address.
+from PCC. The bounds are restricted in a way so that attempting to dereference
+a function pointer at any other address (skipping instructions) will cause a
+bounds error, for example:
+
+.. code-block:: C
+
+  typedef void (*fun_ptr_t)(void);
+
+  void func(void) {
+    char *ptr = (char *)&func;
+    ++ptr;
+    fun_ptr_t fptr = (fun_ptr_t)ptr;
+    fptr(); // <-- bounds violation
+  }
 
 Calling signal handlers
 -----------------------

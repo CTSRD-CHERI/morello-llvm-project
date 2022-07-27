@@ -83,6 +83,11 @@ TEST(CheckAccessDeathTest, BoundsInside) {
       EXPECT_GRANTED(__cheriseed_check_access(&cap, sizeof(uint16_t), 0)));
 }
 
+TEST(CheckAccessDeathTest, BoundsZero) {
+  TEST_CHECK_ACCESS(EXPECT_DENIED_BOUNDS(__cheriseed_bounds_set(&cap, &cap, 0);
+                                         __cheriseed_check_access(&cap, 1, 0)));
+}
+
 TEST(CheckAccessDeathTest, LoadCap) {
   __cheriseed_cap_t target, load_base, load_from, dst;
 
@@ -121,4 +126,15 @@ TEST(CheckAccessDeathTest, StoreCap) {
   // Check if bounds is enough
   __cheriseed_bounds_set(&store_to, &store_base, sizeof(__cheriseed_cap_t) - 1);
   EXPECT_DENIED_BOUNDS(__cheriseed_store_cap(&store_to, &src));
+}
+
+TEST(CheckAccessDeathTest, GenericCapInit) {
+  uint16_t a;
+  __cheriseed_cap_t cap;
+  __cheriseed_generic_cap_init(&cap, reinterpret_cast<uint64_t>(&a), sizeof(a),
+                               Permissions::EXECUTE);
+  TEST_CHECK_ACCESS(
+      EXPECT_GRANTED(__cheriseed_check_access(&cap, 0, Permissions::LOAD)));
+  TEST_CHECK_ACCESS(EXPECT_DENIED_PERMS(
+      __cheriseed_check_access(&cap, 0, Permissions::EXECUTE)));
 }

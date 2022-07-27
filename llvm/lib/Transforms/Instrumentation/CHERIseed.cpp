@@ -550,6 +550,7 @@ struct CHERIseed final : public InstVisitor<CHERIseed, Value *> {
     CMPXCHG_CAP_HYBRID,
     COPY_CAP_WITH_OFFSET,
     DDC_GET,
+    GENERIC_CAP_INIT,
     LOAD_CAP,
     LOAD_CAP_ATOMIC,
     LOAD_CAP_HYBRID,
@@ -1159,13 +1160,19 @@ protected:
   /// Such conversion might be necessary in hybrid code.
   ///
   /// \param Addr The original pointer.
-  /// \param Out If set, this is the output capability, otherwise it is \p Addr.
-  /// \param FromPCC If true, the function derives from PCC,
-  /// otherwise it derives from DDC.
   ///
   /// \returns Pointer to the resulting Value.
-  Value *createPtrToCap(Value *Addr, Value *Out = nullptr,
-                        bool FromPCC = false);
+  Value *createCapFromPtr(Value *Addr);
+
+  /// Derives a capability with restricted bounds and permissions.
+  ///
+  /// \param Addr The original pointer.
+  /// \param Size Size of the memory the capability describes. Can be nullptr.
+  /// \param IsCode If true, STORE* permissions are removed. Otherwise
+  /// EXECUTE permissions are not allowed.
+  ///
+  /// \returns Pointer to the resulting Value.
+  Value *createBoundedCap(Value *Addr, Value *Size, bool IsCode);
 
   /// Creates a capability to a Value on the stack.
   ///
@@ -1311,7 +1318,7 @@ Value *CHERIseed::visitAddrSpaceCastInst(AddrSpaceCastInst &I) {
          "Should not happen");
   if (IsCapability(I.getSrcTy()))
     return createCapToPtr(mapValue(I.getPointerOperand()), DstTy);
-  return createPtrToCap(mapValue(I.getPointerOperand()));
+  return createCapFromPtr(mapValue(I.getPointerOperand()));
 }
 
 Value *CHERIseed::visitAllocaInst(AllocaInst &I) {
@@ -1459,9 +1466,8 @@ Value *CHERIseed::visitCallInst(CallInst &I) {
   }
 
   if (Callee->getType() == CapPtrTy)
-    Callee = createCapAccessCheck(Callee, FTy->getPointerTo(), 0,
-                                  cheriseed::abi::permissions::LOAD |
-                                      cheriseed::abi::permissions::EXECUTE);
+    Callee = createCapAccessCheck(Callee, FTy->getPointerTo(), 1,
+                                  cheriseed::abi::permissions::EXECUTE);
   CallInst *NV = VC.IRB->CreateCall(FTy, Callee, Ctx.Args);
   NV->setAttributes(Ctx.Attrs);
   // FIXME: clone other properties when we CreateCall? Elsewhere too.
@@ -2548,7 +2554,7 @@ Value *CHERIseed::mapValue(Value *V) {
       // Not all globals have accessor functions.
       if (!ShouldInstrumentGlobal(GV)) {
         if (GV->getAddressSpace() == kCapabilityAS)
-          return createPtrToCap(MGV);
+          return createCapFromPtr(MGV);
         return MGV;
       }
       // Otherwise, try to insert a call to the accessor function.
@@ -2580,7 +2586,7 @@ Value *CHERIseed::mapValue(Value *V) {
       if (GA->getAddressSpace() == kCapabilityAS) {
         Value *Addr = VC.IRB->CreateBitCast(MGA, Int8PtrTy);
         DebugPrint::Emit(Addr);
-        return createPtrToCap(Addr, /* Out */ nullptr, /* FromPCC */ true);
+        return createBoundedCap(Addr, nullptr, /* IsCode */ true);
       }
       return MGA;
     }
@@ -2612,7 +2618,7 @@ Value *CHERIseed::mapValue(Value *V) {
     if (VC.BB && (F->getAddressSpace() == kCapabilityAS)) {
       Value *Addr = VC.IRB->CreateBitCast(MF, Int8PtrTy);
       DebugPrint::Emit(Addr);
-      return createPtrToCap(Addr, /* Out */ nullptr, /* FromPCC */ true);
+      return createBoundedCap(Addr, nullptr, /* IsCode */ true);
     }
     return MF;
   }
@@ -3436,6 +3442,11 @@ CallInst *CHERIseed::createRtCall(RtKind Kind, const StringRef Name,
     RtName = "ddc_get";
     FTy = FunctionType::get(CapPtrTy, {CapPtrTy}, false);
     break;
+  case RtKind::GENERIC_CAP_INIT:
+    RtName = "generic_cap_init";
+    FTy = FunctionType::get(
+        CapPtrTy, {CapPtrTy, AddrSizeTy, AddrSizeTy, CapPermsTy}, false);
+    break;
   case RtKind::LOAD_CAP:
     RtName = "load_cap";
     FTy = FunctionType::get(CapPtrTy, {CapPtrTy, CapPtrTy}, false);
@@ -3551,23 +3562,46 @@ Value *CHERIseed::createCapToPtr(Value *Cap, Type *PtrTy) {
   return DebugPrint::Emit(VC.IRB->CreateIntToPtr(CapV, PtrTy));
 }
 
-// Creates the following sequence (i8* may vary, input is %p):
+// Creates the following sequence (i8* may vary):
 //
 // %2 = alloca %__cheriseed_cap_t, align 16
-// %3 = call void @__cheriseed_{ddc, pcc}_get(%__cheriseed_cap_t* %2)
-// %4 = ptrtoint i8* %p to i64
-// %5 = call void @__cheriseed_address_set(
-//            %__cheriseed_cap_t* %3 /* cap_out */,
-//            %__cheriseed_cap_t* %3 /* cap_in */,
-//            i64 %4)
-Value *CHERIseed::createPtrToCap(Value *Addr, Value *Out, bool FromPCC) {
-  Value *AllocCap = createAlloca(CapTy);
-  Value *Src =
-      createRtCall(FromPCC ? RtKind::PCC_GET : RtKind::DDC_GET, AllocCap);
+// %3 = call void @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
+// %4 = call void @__cheriseed_address_set(
+//            %__cheriseed_cap_t* %cap_out,
+//            %__cheriseed_cap_t* %cap_in,
+//            i64 <Addr>)
+Value *CHERIseed::createCapFromPtr(Value *Addr) {
+  Value *AllocaCap = createAlloca(CapTy);
+  Value *Cap = createRtCall(RtKind::DDC_GET, AllocaCap);
   Value *IntV = VC.IRB->CreatePtrToInt(Addr, AddrSizeTy);
-  DebugPrint::Emit(IntV);
-  Value *Cap = createRtCall(RtKind::ADDRESS_SET, Out ? Out : Src, Src, IntV);
-  return Cap;
+  return createRtCall(RtKind::ADDRESS_SET, Cap, Cap, IntV);
+}
+
+// Creates the following sequence:
+//
+// %2 = alloca %__cheriseed_cap_t, align 16
+// %3 = call void @__cheriseed_generic_cap_init(
+//            %__cheriseed_cap_t* %cap_out,
+//            %__cheriseed_cap_t* %cap_in,
+//            i64 <Addr>,
+//            i64 <size>,
+//            i32 <perms_to_clear>)
+Value *CHERIseed::createBoundedCap(Value *Addr, Value *Size, bool IsCode) {
+  Value *AllocCap = createAlloca(CapTy);
+  Value *IntAddr = VC.IRB->CreatePtrToInt(Addr, AddrSizeTy);
+  Size = Size ? Size : ConstantInt::get(AddrSizeTy, 0);
+  uint64_t PermsToClear;
+  if (IsCode) {
+    PermsToClear = cheriseed::abi::permissions::LOAD |
+                   cheriseed::abi::permissions::LOAD_CAP |
+                   cheriseed::abi::permissions::STORE |
+                   cheriseed::abi::permissions::STORE_CAP;
+    Size = ConstantInt::get(AddrSizeTy, 1);
+  } else {
+    PermsToClear = cheriseed::abi::permissions::EXECUTE;
+  }
+  return createRtCall(RtKind::GENERIC_CAP_INIT, AllocCap, IntAddr, Size,
+                      ConstantInt::get(CapPermsTy, PermsToClear));
 }
 
 // Creates the following sequence:

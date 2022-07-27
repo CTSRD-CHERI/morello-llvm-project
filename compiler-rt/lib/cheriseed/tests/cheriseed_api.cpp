@@ -535,3 +535,13 @@ TEST(API, TagGet) {
   utils::InitCap(&cap, &a);
   ASSERT_EQ(__cheriseed_tag_get(&cap), 1);
 }
+
+TEST(API, GenericCapInit) {
+  uint16_t a;
+  __cheriseed_cap_t cap;
+  __cheriseed_generic_cap_init(&cap, reinterpret_cast<uint64_t>(&a), sizeof(a),
+                               0);
+  ASSERT_CAPABILITY_VALUE_EQ(&cap, &a);
+  ASSERT_EQ(__cheriseed_base_get(&cap), reinterpret_cast<uint64_t>(&a));
+  ASSERT_EQ(__cheriseed_length_get(&cap), sizeof(a));
+}

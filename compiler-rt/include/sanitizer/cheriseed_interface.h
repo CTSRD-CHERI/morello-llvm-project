@@ -636,6 +636,20 @@ __cheriseed_copy_cap_with_offset(__cheriseed_cap_t *cap_out,
                                  const __cheriseed_cap_t *cap_in,
                                  uint64_t offset);
 
+/// Derives a capability with restricted bounds and permissions.
+///
+/// \note This API is defined exclusively by CHERIseed and does not map
+/// to any CHERI intrinsics.
+///
+/// \param[out] cap Capability to initialize, non-null.
+/// \param[in] address Address to initialize the capability with.
+/// \param[in] size The size of the object pointed to by the capability.
+/// \param[in] perms_to_clear The permissions mask to clear.
+/// \returns The first argument, \p cap .
+__cheriseed_cap_t *__cheriseed_generic_cap_init(__cheriseed_cap_t *cap,
+                                                uint64_t address, uint64_t size,
+                                                uint32_t perms_to_clear);
+
 /// Loads a capability from a memory location described by a capability.
 ///
 /// \note This API is defined exclusively by CHERIseed and does not

@@ -686,9 +686,14 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-NEXT: define internal void @__cheriseed_initializer_case.8() {
 ; CHECK-NEXT:   %"CHERIseed Alloca Insertion Point" = bitcast i8 0 to i8
 ; CHECK-NEXT:   %1 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:   %2 = call %__cheriseed_cap_t* @__cheriseed_pcc_get(%__cheriseed_cap_t* %1)
-; CHECK-NEXT:   %3 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %2, %__cheriseed_cap_t* %2, i64 ptrtoint (void ()* @case.8.f.2 to i64))
-; CHECK-NEXT:   %4 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* getelementptr inbounds (%case.8.s, %case.8.s* @__cheriseed_global_case.8, i32 0, i32 3), %__cheriseed_cap_t* %3, i64 0)
+; CHECK-NEXT:   %2 = call %__cheriseed_cap_t* @__cheriseed_generic_cap_init(
+; CHECK-SAME:     %__cheriseed_cap_t* %1,
+; CHECK-SAME:     i64 ptrtoint (void ()* @case.8.f.2 to i64),
+; CHECK-SAME:     i64 1,
+; CHECK-SAME:     i32 27)
+; CHECK-NEXT:   %3 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t*
+; CHECK-SAME:     getelementptr inbounds (%case.8.s, %case.8.s* @__cheriseed_global_case.8, i32 0, i32 3),
+; CHECK-SAME:     %__cheriseed_cap_t* %2, i64 0)
 ; CHECK-NEXT:   ret void
 ; CHECK-NEXT: }
 
