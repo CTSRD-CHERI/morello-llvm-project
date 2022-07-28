@@ -44,7 +44,7 @@
 __attribute__((constructor)) void pre_main(void) {
   __cheriseed_static_init(0);
   // Make sure violations don't trigger the call of a signal handler.
-  __cheriseed_control_invoke_signal_handlers(CHERISEED_CHECK_OFF);
+  __cheriseed_control_invoke_signal_handlers(CHERISEED_DISABLE);
 }
 
 void test_main(void);

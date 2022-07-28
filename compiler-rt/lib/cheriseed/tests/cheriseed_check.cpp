@@ -18,13 +18,13 @@
 #include "cheriseed_test_utils.h"
 
 using namespace __cheriseed::error;
-using __cheriseed::Options;
+using __cheriseed::SnapshotOptions;
 using utils::kExitCode;
 
 TEST(CheckDeathTest, NormalExit) { EXPECT_NORMAL_EXIT(exit(0)); }
 
 TEST(CheckDeathTest, CapabilityAddress) {
-  Options Opts;
+  const SnapshotOptions Opts;
   LocalCap local_cap(Opts);
 
   local_cap.SetAddress(nullptr);
@@ -49,7 +49,7 @@ TEST(CheckDeathTest, CapabilityAddress) {
 }
 
 TEST(CheckDeathTest, CapabilityAlignment) {
-  Options Opts;
+  const SnapshotOptions Opts;
   LocalCap local_cap(Opts);
   local_cap.SetAddress(reinterpret_cast<const __cheriseed_cap_t *>(1));
   EXPECT_EXIT(CheckContext(local_cap).add(CapabilityAlignment()),
@@ -58,14 +58,14 @@ TEST(CheckDeathTest, CapabilityAlignment) {
 }
 
 TEST(CheckDeathTest, NotImplemented) {
-  Options Opts;
+  const SnapshotOptions Opts;
   EXPECT_EXIT(CheckContext(LocalCap(Opts)).add(NotImplemented("")),
               testing::ExitedWithCode(kExitCode),
               CHECK_NOT_IMPLEMENTED_ERROR_MESSAGE_PATTERN);
 }
 
 TEST(CheckDeathTest, InBounds) {
-  Options Opts;
+  const SnapshotOptions Opts;
   __cheriseed_cap_t cap;
   __cheriseed_bounds_set(&cap, nullptr, 0);
   EXPECT_EXIT(CheckContext(LocalCap(Opts, &cap)).add(InBounds(UINT64_MAX)),
@@ -74,7 +74,7 @@ TEST(CheckDeathTest, InBounds) {
 }
 
 TEST(CheckDeathTest, RequiredPerms) {
-  Options Opts;
+  const SnapshotOptions Opts;
   __cheriseed_cap_t cap;
   __cheriseed_perms_and(&cap, nullptr, 0);
   EXPECT_EXIT(CheckContext(LocalCap(Opts, &cap)).add(RequiredPerms(0xF)),
@@ -83,7 +83,7 @@ TEST(CheckDeathTest, RequiredPerms) {
 }
 
 TEST(CheckDeathTest, Tagged) {
-  Options Opts;
+  const SnapshotOptions Opts;
   LocalCap local_cap(Opts);
   local_cap.ClearTag();
   EXPECT_EXIT(CheckContext(local_cap).add(Tagged()),

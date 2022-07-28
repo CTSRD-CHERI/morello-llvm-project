@@ -6,7 +6,7 @@
 
 TEST_MAIN() {
   // Turn bounds checks OFF
-  __cheriseed_control_checks(CHERISEED_CHECK_OFF, CHERISEED_CHECK_BOUNDS);
+  __cheriseed_control_checks(CHERISEED_DISABLE, CHERISEED_CHECK_BOUNDS);
   int array[10];
   int *ptr = __builtin_cheri_bounds_set(array, 5 * sizeof(int));
   // Bounds checks are turned OFF, so this will not cause a capability violation

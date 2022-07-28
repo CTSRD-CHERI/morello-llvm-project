@@ -34,6 +34,6 @@ int main(int argc, char** argv) {
   // gtest captures signals, don't try to call those handlers from the runtime
   // because the libc being used for testing is not instrumented and currently
   // CHERIseed doesn't support this feature for hybrid code.
-  __cheriseed_control_invoke_signal_handlers(CHERISEED_CHECK_OFF);
+  __cheriseed_control_invoke_signal_handlers(CHERISEED_DISABLE);
   return RUN_ALL_TESTS();
 }

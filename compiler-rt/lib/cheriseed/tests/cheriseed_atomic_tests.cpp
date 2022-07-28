@@ -17,10 +17,10 @@
 #include "cheriseed_test_utils.h"
 
 using __cheriseed::AllowNullCap;
-using __cheriseed::Options;
+using __cheriseed::SnapshotOptions;
 
 TEST(Atomics, ReadWrite) {
-  Options Opts;
+  const SnapshotOptions Opts;
   LocalCap local_cap(Opts, UINT64_MAX, UINT64_MAX - 1);
 
   // Store compressed capability somewhere...
@@ -35,7 +35,7 @@ TEST(Atomics, ReadWrite) {
 }
 
 TEST(Atomics, NullptrPromotion) {
-  Options Opts;
+  const SnapshotOptions Opts;
   LocalCap local_cap{Opts, AllowNullCap(nullptr)};
 
   ASSERT_EQ(local_cap.GetValue(), 0);

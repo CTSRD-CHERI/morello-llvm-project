@@ -36,7 +36,8 @@ extern "C" uintptr_t __shim_syscall(uintptr_t, uintptr_t, uintptr_t, uintptr_t,
                                     uintptr_t, uintptr_t, uintptr_t, uintptr_t,
                                     uintptr_t);
 
-static DefaultOptions Dopts;
+// For libc all checks are performed.
+static constexpr AllOptionsEnabled LibcOpts;
 
 // Returns true if targeting pure-capability ABI, otherwise false.
 static bool IsPureCapabilityABI() { return __shim_is_pure_capability(); }
@@ -48,7 +49,7 @@ static bool HasCancellationPoints() {
 
 // Helper to build a bounded capability.
 static LocalCap BuildBoundedCap(u64 address, u64 size, u64 perms) {
-  LocalCap local_cap(Dopts);
+  LocalCap local_cap(LibcOpts);
   ccl::methods::BuildBoundedCap(local_cap, address, size, perms);
   return local_cap;
 }
@@ -76,7 +77,7 @@ struct SystemCall final {
   // A system call argument, but a capability
   struct CapArgument final {
     uintptr_t operator&() { return reinterpret_cast<uintptr_t>(this); }
-    u64 Value() { return LocalCap(Dopts, &data).GetValue(); }
+    u64 Value() { return LocalCap(LibcOpts, &data).GetValue(); }
     __cheriseed_cap_t *Data() { return &data; }
 
    private:
@@ -215,7 +216,7 @@ SigInfo::SigInfo(int signo, int code, vaddr addr) {
   if (IsPureCapabilityABI()) {
     purecap.signo = signo;
     purecap.code = code;
-    LocalCap local_cap(Dopts);
+    LocalCap local_cap(LibcOpts);
     ccl::methods::BuildMaxCap(local_cap, addr);
     ccl::methods::PermsAnd(local_cap, ccl::permissions::READ_CAP_PERMS |
                                           ccl::permissions::EXECUTE);
@@ -239,7 +240,7 @@ void *SigInfo::operator&() {
 SigAction::SigAction() {
   __sanitizer::internal_memset(this, 0, sizeof(*this));
   if (IsPureCapabilityABI())
-    LocalCap(Dopts, kSigErr, 0).Store(&purecap.handler);
+    LocalCap(LibcOpts, kSigErr, 0).Store(&purecap.handler);
   else
     hybrid.handler = kSigErr;
 }
@@ -259,7 +260,7 @@ bool SigAction::GetAction(int signum, SigAction &action) {
 
   // Failed, poison the handler so that HasHandler() returns false.
   if (IsPureCapabilityABI())
-    LocalCap(Dopts, kSigErr, 0).Store(&action.purecap.handler);
+    LocalCap(LibcOpts, kSigErr, 0).Store(&action.purecap.handler);
   else
     action.hybrid.handler = kSigErr;
 
@@ -271,7 +272,7 @@ bool SigAction::HasHandler() const {
   if (IsPureCapabilityABI()) {
     const u64 required_perms =
         ccl::permissions::LOAD | ccl::permissions::EXECUTE;
-    LocalCap local_cap(Dopts, &purecap.handler);
+    LocalCap local_cap(LibcOpts, &purecap.handler);
     if ((ccl::methods::GetPerms(local_cap) & required_perms) != required_perms)
       return false;
     // TODO: Check tag when it gets implemented.
@@ -329,8 +330,9 @@ SignalHandleMode SigAction::InvokePureCap(SigInfo &info) {
 
   ScopedSigProcMask scope{set};
 
-  reinterpret_cast<HandlerType>(LocalCap(Dopts, &purecap.handler).GetValue())(
-      info.SignalNumber(), &cap_info, &cap_mode);
+  reinterpret_cast<HandlerType>(
+      LocalCap(LibcOpts, &purecap.handler).GetValue())(info.SignalNumber(),
+                                                       &cap_info, &cap_mode);
   return mode;
 }
 

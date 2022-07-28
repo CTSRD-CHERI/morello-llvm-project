@@ -15,11 +15,6 @@
 #include "cheriseed_shadow_memory.h"
 #include "sanitizer_common/sanitizer_atomic.h"
 
-#define CHERISEED_CHECK_PERMS ((1UL << 32) - 1)
-#define CHERISEED_CHECK_TAG (1UL << 61)
-#define CHERISEED_CHECK_BOUNDS (1UL << 62)
-#define CHERISEED_CHECK_ALIGNMENT (1UL << 63)
-
 using __sanitizer::atomic_uint64_t;
 using __sanitizer::atomic_uint8_t;
 using __sanitizer::memory_order;
@@ -40,15 +35,7 @@ struct methods;
 
 namespace __cheriseed {
 
-// Runtime configurable features.
-class Options {
- public:
-  Options() {
-    currentEnableCHERISemantics = atomic_load_relaxed(&EnableCHERISemantics);
-    currentEnableSignalHandlers = atomic_load_relaxed(&EnableSignalHandlers);
-    currentChecks = atomic_load(&Checks, memory_order::memory_order_acquire);
-  }
-
+struct Options {
   // Determine if the current config requires invocation of signal handlers
   bool shouldInvokeSignalHandlers() const {
     if (LIKELY(currentEnableCHERISemantics))
@@ -59,28 +46,28 @@ class Options {
   // Determine if the current config requires tag checks.
   bool shouldCheckTag() const {
     if (LIKELY(currentEnableCHERISemantics))
-      return ((currentChecks & CHERISEED_CHECK_TAG) != 0);
+      return ((currentChecks & abi::Check::CHK_TAG) != 0);
     return false;
   }
 
   // Determine if the current config requires bounds checks.
   bool shouldCheckBounds() const {
     if (LIKELY(currentEnableCHERISemantics))
-      return ((currentChecks & CHERISEED_CHECK_BOUNDS) != 0);
+      return ((currentChecks & abi::Check::CHK_BOUNDS) != 0);
     return false;
   }
 
   // Determine if the current config requires alignment checks.
   bool shouldCheckAlignment() const {
     if (LIKELY(currentEnableCHERISemantics))
-      return ((currentChecks & CHERISEED_CHECK_ALIGNMENT) != 0);
+      return ((currentChecks & abi::Check::CHK_ALIGNMENT) != 0);
     return false;
   }
 
-  // Determine if the current config requires permission checks.
-  u64 shouldCheckPerms() const {
+  // Returns the current config for required permission checks.
+  u64 getCheckedPerms() const {
     if (LIKELY(currentEnableCHERISemantics))
-      return currentChecks & CHERISEED_CHECK_PERMS;
+      return currentChecks & abi::Check::CHK_PERMS;
     return 0;
   }
 
@@ -91,12 +78,14 @@ class Options {
   // Enables or disables certain checks.
   static atomic_uint64_t Checks;
 
-  // May be useful to access in unit tests
-#ifdef CHERISEED_UNIT_TESTING
-  u64 GetCurrentChecks() const { return currentChecks; }
-#endif
-
+#ifndef CHERISEED_UNIT_TESTING
  protected:
+#endif
+  constexpr Options()
+      : currentEnableCHERISemantics(0),
+        currentEnableSignalHandlers(0),
+        currentChecks(0) {}
+
   // Current setting for CHERI semantics.
   u8 currentEnableCHERISemantics;
   // Current setting for invocation of signal handlers.
@@ -105,13 +94,28 @@ class Options {
   u64 currentChecks;
 };  // struct Options
 
-struct DefaultOptions : public Options {
-  DefaultOptions() {
+// All runtime configurable features are always off.
+struct NoOptionsEnabled : public Options {
+  constexpr NoOptionsEnabled() : Options() {}
+};  // struct NoOptionsEnabled
+
+// All runtime configurable features are always on.
+struct AllOptionsEnabled : public Options {
+  constexpr AllOptionsEnabled() {
     currentEnableCHERISemantics = 1;
     currentEnableSignalHandlers = 1;
     currentChecks = UINT64_MAX;
   }
-};
+};  // struct AllOptionsEnabled
+
+// Runtime configurable features.
+struct SnapshotOptions : public Options {
+  SnapshotOptions() {
+    currentEnableCHERISemantics = atomic_load_relaxed(&EnableCHERISemantics);
+    currentEnableSignalHandlers = atomic_load_relaxed(&EnableSignalHandlers);
+    currentChecks = atomic_load(&Checks, memory_order::memory_order_acquire);
+  }
+};  // struct SnapshotOptions
 
 // The coarse internal representation of an in-memory capability.
 struct __cheriseed_cap_t {
@@ -171,22 +175,22 @@ extern ShadowMemory ShadowMap;
 /// in-flight capability, which then can be modified and written to memory.
 struct LocalCap final : public __cheriseed_cap_t {
   // Note: not all the members are initialized on purpose.
-  explicit LocalCap(Options &Opts) : Opts(Opts) { ClearTag(); }
+  explicit LocalCap(const Options &Opts) : Opts(Opts) { ClearTag(); }
 
   // Note: not all the members are initialized on purpose.
-  LocalCap(Options &Opts, u64 value, u64 metadata) : Opts(Opts) {
+  LocalCap(const Options &Opts, u64 value, u64 metadata) : Opts(Opts) {
     SetValue(value);
     SetMetadata(metadata);
     ClearTag();
   }
 
   // Note: not all the members are initialized on purpose.
-  LocalCap(Options &Opts, const __cheriseed_cap_t *ptr,
+  LocalCap(const Options &Opts, const __cheriseed_cap_t *ptr,
            memory_order memory_order = memory_order::memory_order_relaxed)
       : LocalCap(Opts, ptr, memory_order, false) {}
 
   // Note: not all the members are initialized on purpose.
-  LocalCap(Options &Opts, AllowNullCap maybe_nullptr,
+  LocalCap(const Options &Opts, AllowNullCap maybe_nullptr,
            memory_order memory_order = memory_order::memory_order_relaxed)
       : LocalCap(Opts, maybe_nullptr.value, memory_order, true) {}
 
@@ -207,14 +211,14 @@ struct LocalCap final : public __cheriseed_cap_t {
   u64 GetMetadata() const { return metadata; }
   bool IsTagged() const { return (tag_state == TagState::TS_TAGGED); }
 
-  Options &GetOpts() const { return Opts; }
+  const Options &GetOpts() const { return Opts; }
 
   void ClearTag() { tag_state = TagState::TS_CLEARED; }
 
 #ifndef CHERISEED_UNIT_TESTING
  private:
 #endif
-  LocalCap(Options &Opts, const __cheriseed_cap_t *ptr,
+  LocalCap(const Options &Opts, const __cheriseed_cap_t *ptr,
            memory_order memory_order, bool allow_nullcap);
 
   void SetAddress(const __cheriseed_cap_t *ptr) {
@@ -226,8 +230,7 @@ struct LocalCap final : public __cheriseed_cap_t {
   void SetTag() { tag_state = TagState::TS_TAGGED; }
 
   /// Semantic configuration options for this capability
-  Options &Opts;
-
+  const Options &Opts;
   /// The address this capability originates from, if any.
   vaddr address;
   /// The tagged state of this capability.

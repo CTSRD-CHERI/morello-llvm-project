@@ -107,7 +107,7 @@ struct CheckContext {
   void PrintCapability(MessageBuilder& builder) const;
   void PrintTagAddress(MessageBuilder& builder) const;
 
-  Options& GetOpts() const { return local_cap.GetOpts(); }
+  const Options& GetOpts() const { return local_cap.GetOpts(); }
 
  protected:
   template <typename P>
@@ -237,9 +237,7 @@ struct RequiredPerms final {
 
   ALWAYS_INLINE
   bool DoCheck(const CheckContext& ctx) {
-    u64 mask = 0;
-    if ((mask = ctx.GetOpts().shouldCheckPerms()) == 0)
-      return true;
+    const u64 mask = ctx.GetOpts().getCheckedPerms();
     return ((ctx.Perms() & perms & mask) == (perms & mask));
   }
 

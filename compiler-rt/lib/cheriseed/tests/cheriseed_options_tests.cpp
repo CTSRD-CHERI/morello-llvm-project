@@ -14,76 +14,75 @@
 
 #define CHERISEED_UNIT_TESTING
 
-#include "cheriseed_common.h"
 #include "cheriseed_test_utils.h"
 
 using namespace __cheriseed::abi;
 
 using __cheriseed::ControlChecksDynamic;
 using __cheriseed::Environment;
-using __cheriseed::Options;
+using __cheriseed::SnapshotOptions;
 using utils::OnStackArgs;
 
 TEST(Options, CheckAlignmentON) {
-  __cheriseed_control_checks(CHERISEED_CHECK_OFF, UINT64_MAX);
-  __cheriseed_control_checks(CHERISEED_CHECK_ON, CHERISEED_CHECK_ALIGNMENT);
-  Options Opts;
-  EXPECT_EQ(Opts.GetCurrentChecks(), CHERISEED_CHECK_ALIGNMENT);
+  __cheriseed_control_checks(Control::CTRL_DISABLE, Check::CHK_ALL);
+  __cheriseed_control_checks(Control::CTRL_ENABLE, Check::CHK_ALIGNMENT);
+  const SnapshotOptions Opts;
+  EXPECT_EQ(Opts.currentChecks, Check::CHK_ALIGNMENT);
   EXPECT_TRUE(Opts.shouldCheckAlignment());
 }
 
 TEST(Options, CheckAlignmentOFF) {
-  __cheriseed_control_checks(CHERISEED_CHECK_OFF, CHERISEED_CHECK_ALIGNMENT);
-  Options Opts;
-  EXPECT_EQ(Opts.GetCurrentChecks(), UINT64_MAX & ~CHERISEED_CHECK_ALIGNMENT);
+  __cheriseed_control_checks(Control::CTRL_DISABLE, Check::CHK_ALIGNMENT);
+  const SnapshotOptions Opts;
+  EXPECT_EQ(Opts.currentChecks, Check::CHK_ALL & ~Check::CHK_ALIGNMENT);
   EXPECT_FALSE(Opts.shouldCheckAlignment());
 }
 
 TEST(Options, CheckBoundsON) {
-  __cheriseed_control_checks(CHERISEED_CHECK_OFF, UINT64_MAX);
-  __cheriseed_control_checks(CHERISEED_CHECK_ON, CHERISEED_CHECK_BOUNDS);
-  Options Opts;
-  EXPECT_EQ(Opts.GetCurrentChecks(), CHERISEED_CHECK_BOUNDS);
+  __cheriseed_control_checks(Control::CTRL_DISABLE, Check::CHK_ALL);
+  __cheriseed_control_checks(Control::CTRL_ENABLE, Check::CHK_BOUNDS);
+  const SnapshotOptions Opts;
+  EXPECT_EQ(Opts.currentChecks, Check::CHK_BOUNDS);
   EXPECT_TRUE(Opts.shouldCheckBounds());
 }
 
 TEST(Options, CheckBoundsOFF) {
-  __cheriseed_control_checks(CHERISEED_CHECK_OFF, CHERISEED_CHECK_BOUNDS);
-  Options Opts;
-  EXPECT_EQ(Opts.GetCurrentChecks(), UINT64_MAX & ~CHERISEED_CHECK_BOUNDS);
+  __cheriseed_control_checks(Control::CTRL_DISABLE, Check::CHK_BOUNDS);
+  const SnapshotOptions Opts;
+  EXPECT_EQ(Opts.currentChecks, Check::CHK_ALL & ~Check::CHK_BOUNDS);
   EXPECT_FALSE(Opts.shouldCheckBounds());
 }
 
 TEST(Options, CheckTagON) {
-  __cheriseed_control_checks(CHERISEED_CHECK_OFF, UINT64_MAX);
-  __cheriseed_control_checks(CHERISEED_CHECK_ON, CHERISEED_CHECK_TAG);
-  Options Opts;
-  EXPECT_EQ(Opts.GetCurrentChecks(), CHERISEED_CHECK_TAG);
+  __cheriseed_control_checks(Control::CTRL_DISABLE, Check::CHK_ALL);
+  __cheriseed_control_checks(Control::CTRL_ENABLE, Check::CHK_TAG);
+  const SnapshotOptions Opts;
+  EXPECT_EQ(Opts.currentChecks, Check::CHK_TAG);
   EXPECT_TRUE(Opts.shouldCheckTag());
 }
 
 TEST(Options, CheckTagOFF) {
-  __cheriseed_control_checks(CHERISEED_CHECK_OFF, CHERISEED_CHECK_TAG);
-  Options Opts;
-  EXPECT_EQ(Opts.GetCurrentChecks(), UINT64_MAX & ~CHERISEED_CHECK_TAG);
+  __cheriseed_control_checks(Control::CTRL_DISABLE, Check::CHK_TAG);
+  const SnapshotOptions Opts;
+  EXPECT_EQ(Opts.currentChecks, Check::CHK_ALL & ~Check::CHK_TAG);
   EXPECT_FALSE(Opts.shouldCheckTag());
 }
 
 TEST(Options, CheckPermsOFF) {
-  __cheriseed_control_checks(CHERISEED_CHECK_OFF, CHERISEED_CHECK_PERMS);
-  Options Opts;
-  EXPECT_EQ(Opts.GetCurrentChecks(), UINT64_MAX & ~CHERISEED_CHECK_PERMS);
-  EXPECT_TRUE(Opts.shouldCheckPerms() == 0);
+  __cheriseed_control_checks(Control::CTRL_DISABLE, Check::CHK_PERMS);
+  const SnapshotOptions Opts;
+  EXPECT_EQ(Opts.currentChecks, Check::CHK_ALL & ~Check::CHK_PERMS);
+  EXPECT_TRUE(Opts.getCheckedPerms() == 0);
 }
 
 class CheckPermsONTestFixture : public ::testing::TestWithParam<u64> {};
 
 TEST_P(CheckPermsONTestFixture, writeMasks) {
-  __cheriseed_control_checks(CHERISEED_CHECK_OFF, UINT64_MAX);
-  __cheriseed_control_checks(CHERISEED_CHECK_ON, GetParam());
-  Options Opts;
-  EXPECT_EQ(Opts.GetCurrentChecks(), GetParam());
-  EXPECT_EQ(Opts.shouldCheckPerms(), GetParam());
+  __cheriseed_control_checks(Control::CTRL_DISABLE, Check::CHK_ALL);
+  __cheriseed_control_checks(Control::CTRL_ENABLE, GetParam());
+  const SnapshotOptions Opts;
+  EXPECT_EQ(Opts.currentChecks, GetParam());
+  EXPECT_EQ(Opts.getCheckedPerms(), GetParam());
 }
 
 // TODO: Extend to include all combinations of permissions
@@ -95,7 +94,7 @@ INSTANTIATE_TEST_SUITE_P(CheckPermsON, CheckPermsONTestFixture,
                                          ccl::permissions::STORE_CAP));
 
 TEST(Options, DynamicConfigurationTag) {
-  EXPECT_TRUE(Options().shouldCheckTag());
+  EXPECT_TRUE(SnapshotOptions().shouldCheckTag());
 
   // Turn tag checks off.
   {
@@ -104,7 +103,7 @@ TEST(Options, DynamicConfigurationTag) {
     Environment env = Environment::From(args.GetAddress());
     ControlChecksDynamic(env);
   }
-  EXPECT_FALSE(Options().shouldCheckTag());
+  EXPECT_FALSE(SnapshotOptions().shouldCheckTag());
 
   // Turn tag checks on.
   {
@@ -113,11 +112,11 @@ TEST(Options, DynamicConfigurationTag) {
     Environment env = Environment::From(args.GetAddress());
     ControlChecksDynamic(env);
   }
-  EXPECT_TRUE(Options().shouldCheckTag());
+  EXPECT_TRUE(SnapshotOptions().shouldCheckTag());
 }
 
 TEST(Options, DynamicConfigurationBounds) {
-  EXPECT_TRUE(Options().shouldCheckBounds());
+  EXPECT_TRUE(SnapshotOptions().shouldCheckBounds());
 
   // Turn bounds checks off.
   {
@@ -126,7 +125,7 @@ TEST(Options, DynamicConfigurationBounds) {
     Environment env = Environment::From(args.GetAddress());
     ControlChecksDynamic(env);
   }
-  EXPECT_FALSE(Options().shouldCheckBounds());
+  EXPECT_FALSE(SnapshotOptions().shouldCheckBounds());
 
   // Turn bounds checks on.
   {
@@ -135,11 +134,11 @@ TEST(Options, DynamicConfigurationBounds) {
     Environment env = Environment::From(args.GetAddress());
     ControlChecksDynamic(env);
   }
-  EXPECT_TRUE(Options().shouldCheckBounds());
+  EXPECT_TRUE(SnapshotOptions().shouldCheckBounds());
 }
 
 TEST(Options, DynamicConfigurationPerms) {
-  EXPECT_NE(Options().shouldCheckPerms(), 0);
+  EXPECT_NE(SnapshotOptions().getCheckedPerms(), 0);
 
   // Turn bounds checks off.
   {
@@ -148,7 +147,7 @@ TEST(Options, DynamicConfigurationPerms) {
     Environment env = Environment::From(args.GetAddress());
     ControlChecksDynamic(env);
   }
-  EXPECT_EQ(Options().shouldCheckPerms(), 0);
+  EXPECT_EQ(SnapshotOptions().getCheckedPerms(), 0);
 
   // Turn bounds checks on.
   {
@@ -157,11 +156,11 @@ TEST(Options, DynamicConfigurationPerms) {
     Environment env = Environment::From(args.GetAddress());
     ControlChecksDynamic(env);
   }
-  EXPECT_NE(Options().shouldCheckPerms(), 0);
+  EXPECT_NE(SnapshotOptions().getCheckedPerms(), 0);
 }
 
 TEST(Options, DynamicConfigurationAlignment) {
-  EXPECT_TRUE(Options().shouldCheckAlignment());
+  EXPECT_TRUE(SnapshotOptions().shouldCheckAlignment());
 
   // Turn bounds checks off.
   {
@@ -170,7 +169,7 @@ TEST(Options, DynamicConfigurationAlignment) {
     Environment env = Environment::From(args.GetAddress());
     ControlChecksDynamic(env);
   }
-  EXPECT_FALSE(Options().shouldCheckAlignment());
+  EXPECT_FALSE(SnapshotOptions().shouldCheckAlignment());
 
   // Turn bounds checks on.
   {
@@ -179,14 +178,14 @@ TEST(Options, DynamicConfigurationAlignment) {
     Environment env = Environment::From(args.GetAddress());
     ControlChecksDynamic(env);
   }
-  EXPECT_TRUE(Options().shouldCheckAlignment());
+  EXPECT_TRUE(SnapshotOptions().shouldCheckAlignment());
 }
 
 TEST(Options, DynamicConfigurationAll) {
-  EXPECT_TRUE(Options().shouldCheckTag());
-  EXPECT_TRUE(Options().shouldCheckBounds());
-  EXPECT_TRUE(Options().shouldCheckAlignment());
-  EXPECT_NE(Options().shouldCheckPerms(), 0);
+  EXPECT_TRUE(SnapshotOptions().shouldCheckTag());
+  EXPECT_TRUE(SnapshotOptions().shouldCheckBounds());
+  EXPECT_TRUE(SnapshotOptions().shouldCheckAlignment());
+  EXPECT_NE(SnapshotOptions().getCheckedPerms(), 0);
 
   // Turn all checks off.
   {
@@ -195,10 +194,10 @@ TEST(Options, DynamicConfigurationAll) {
     Environment env = Environment::From(args.GetAddress());
     ControlChecksDynamic(env);
   }
-  EXPECT_FALSE(Options().shouldCheckTag());
-  EXPECT_FALSE(Options().shouldCheckBounds());
-  EXPECT_FALSE(Options().shouldCheckAlignment());
-  EXPECT_EQ(Options().shouldCheckPerms(), 0);
+  EXPECT_FALSE(SnapshotOptions().shouldCheckTag());
+  EXPECT_FALSE(SnapshotOptions().shouldCheckBounds());
+  EXPECT_FALSE(SnapshotOptions().shouldCheckAlignment());
+  EXPECT_EQ(SnapshotOptions().getCheckedPerms(), 0);
 
   // Turn bounds checks on.
   {
@@ -207,8 +206,8 @@ TEST(Options, DynamicConfigurationAll) {
     Environment env = Environment::From(args.GetAddress());
     ControlChecksDynamic(env);
   }
-  EXPECT_TRUE(Options().shouldCheckTag());
-  EXPECT_TRUE(Options().shouldCheckBounds());
-  EXPECT_TRUE(Options().shouldCheckAlignment());
-  EXPECT_NE(Options().shouldCheckPerms(), 0);
+  EXPECT_TRUE(SnapshotOptions().shouldCheckTag());
+  EXPECT_TRUE(SnapshotOptions().shouldCheckBounds());
+  EXPECT_TRUE(SnapshotOptions().shouldCheckAlignment());
+  EXPECT_NE(SnapshotOptions().getCheckedPerms(), 0);
 }

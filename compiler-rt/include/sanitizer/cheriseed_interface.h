@@ -65,12 +65,10 @@ not going to deliver the expected si_code values."
 /// The violation is not fatal, but print the reason to stderr.
 #define CHERISEED_SIGNAL_HANDLE_MODE_WARNING ((int)4)
 
-enum CHERIseedCheck {
-  /// Turn a specific CHERIseed check OFF
-  CHERISEED_CHECK_OFF,
-  /// Turn a specific CHERIseed check ON
-  CHERISEED_CHECK_ON,
-};
+/// Turns some CHERIseed feature OFF.
+#define CHERISEED_DISABLE ((uint8_t)0)
+/// Turns some CHERIseed feature ON.
+#define CHERISEED_ENABLE ((uint8_t)1)
 
 /// Bit of checks mask representing permissions
 #define CHERISEED_CHECK_PERMS ((1UL << 32) - 1)

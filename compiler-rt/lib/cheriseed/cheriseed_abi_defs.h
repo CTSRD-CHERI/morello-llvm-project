@@ -64,13 +64,25 @@ enum SignalHandleMode : int {
   SHM_WARNING = 4,
 };  // enum SignalHandleMode
 
-// Options to control whether a check is on or off.
-enum CHERIseedCheck {
-  /// Turn a specific CHERIseed check OFF
-  CHERISEED_CHECK_OFF,
-  /// Turn a specific CHERIseed check ON
-  CHERISEED_CHECK_ON,
-};  // enum CHERIseedCheck
+enum Control : __sanitizer::u8 {
+  // Turns some CHERIseed feature OFF.
+  CTRL_DISABLE = 0,
+  // Turns some CHERIseed feature ON.
+  CTRL_ENABLE = 1,
+};  // enum Control
+
+enum Check : __sanitizer::u64 {
+  // Bitmask representing permissions
+  CHK_PERMS = ((1UL << 32) - 1),
+  // Bit of checks mask representing tag
+  CHK_TAG = (1UL << 61),
+  // Bit of checks mask representing bounds
+  CHK_BOUNDS = (1UL << 62),
+  // Bit of checks mask representing alignment
+  CHK_ALIGNMENT = (1UL << 63),
+  // All checks
+  CHK_ALL = UINT64_MAX,
+};  // enum Check
 
 }  // namespace abi
 }  // namespace __cheriseed
