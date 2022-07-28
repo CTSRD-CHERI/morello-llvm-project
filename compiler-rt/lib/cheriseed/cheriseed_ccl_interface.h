@@ -46,16 +46,6 @@ namespace external {
 #define NULL 0
 #endif
 
-#ifndef assert
-#define CC_assert_DEFINED
-#define assert DCHECK
-#endif
-
-// cheri-compressed-cap library requires a few libc features.
-// Replace these with their sanitizer-equivalent ones.
-#define memset __sanitizer::internal_memset
-#define cheri_debug_assert assert
-
 // Required types
 using uint8_t = __sanitizer::u8;
 using uint16_t = __sanitizer::u16;
@@ -63,6 +53,36 @@ using uint32_t = __sanitizer::u32;
 using uint64_t = __sanitizer::u64;
 using int64_t = __sanitizer::s64;
 using size_t = __sanitizer::ssize;
+
+// cheri-compressed-cap library requires a few libc features.
+
+// memset only sets 'struct cc128_cap', but we can't use '__builtin_memset' and
+// '__sanitizer::internal_memset' has a comment which discourages use on
+// performance critical paths. In addition, the latter one is always a call.
+//
+// Therefore we map 'memset' to '__cheriseed_memset_cc128_cap' which is a
+// horribly naive implementation, but it will get optimized away by the
+// compiler in release builds.
+struct cc128_cap;
+static void __cheriseed_memset_cc128_cap(struct cc128_cap *s, int c, size_t n) {
+  char *ptr = reinterpret_cast<char *>(s);
+  char *const max_ptr = ptr + n;
+  const char v = static_cast<char>(c);
+  while (ptr < max_ptr) *ptr++ = v;
+}
+
+#define memset __cheriseed_memset_cc128_cap
+
+// cheri-compressed-cap library uses 'assert'.
+// It is undesired to hit an assert in CCL, even if the values don't make sense.
+// It can happen that an untagged capability is queried, in which case the RT
+// would still need to return some value without asserting.
+// This does not depend on the value of COMPILER_RT_DEBUG.
+#undef assert
+#define assert(__cond)
+#define cheri_debug_assert(__cond) assert(__cond)
+
+// End of libc features.
 
 #include "cheri_compressed_cap_128.h"
 
@@ -77,13 +97,14 @@ using size_t = __sanitizer::ssize;
 #undef NULL
 #endif
 
-#ifdef CC_assert_DEFINED
-#undef CC_assert_DEFINED
-#undef assert
-#endif
-
 #undef memset
 #undef cheri_debug_assert
+
+// Redefine assert so that anyone using this header will know that it has been
+// disabled.
+#undef assert
+#define assert assert_is_disabled_in_cheriseed_ccl_interface_h
+
 }  // namespace external
 
 // Macro for running an expression on all supported permissions
