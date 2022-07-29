@@ -1,5 +1,6 @@
 ; RUN: opt -passes=cheriseed -S < %s | FileCheck %s
 ; RUN: opt -cheriseed -S < %s | FileCheck %s
+; RUN: opt -passes=cheriseed -S < %s | FileCheck --check-prefix=COMMON-LINKAGE %s
 
 ; ------------------------------------------------------------------------------
 ; Make sure the final IR does not have 'addrspace(200)' in it.
@@ -81,3 +82,15 @@ define void @test_sum_hybrid_globals() {
 ; CHECK-NEXT:  ret void
   ret void
 }
+
+; ------------------------------------------------------------------------------
+; Regression for 'common' linkage: shadow capabilitites should not have that.
+; Use 'weak' linkage instead. When a definition other than 'common' is present,
+; it will be chosen by the linker instead. See -fcommon compiler option.
+
+; COMMON-LINKAGE: @__cheriseed_global_global_common_linkage = common
+; COMMON-LINKAGE: @__cheriseed_shadow_capability_global_common_linkage = weak global
+; COMMON-LINKAGE: define weak %__cheriseed_cap_t* @global_common_linkage()
+@global_common_linkage = common addrspace(200) global i8 0, align 1
+
+; ------------------------------------------------------------------------------

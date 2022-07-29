@@ -324,6 +324,21 @@ static bool IsAliasOf(const Value *V, const Value *A) {
   return false;
 }
 
+/// Returns an appropriate linkage if linkage is 'common'.
+///
+/// \param Linkage The intput linkage.
+///
+/// \returns Returns a linkage but 'common'.
+static GlobalValue::LinkageTypes
+GetNonCommonLinkage(GlobalValue::LinkageTypes Linkage) {
+  switch (Linkage) {
+  default:
+    return Linkage;
+  case GlobalValue::CommonLinkage:
+    return GlobalValue::WeakAnyLinkage;
+  }
+}
+
 /// Helper struct which collects formatting of all possible debug prints.
 struct DebugPrint final {
   /// RAII object to print a Module in debug builds.
@@ -2876,7 +2891,7 @@ Constant *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
   if (IsCapability(GV->getType())) {
     // This is Purecap ABI, create the shadow capability to access the global.
     ShadowCapability = new GlobalVariable(
-        M, CapTy, false, GV->getLinkage(),
+        M, CapTy, false, GetNonCommonLinkage(GV->getLinkage()),
         ConstantStruct::get(CapTy, Constant::getNullValue(CapTy)));
     ShadowCapability->setThreadLocal(GV->isThreadLocal());
     ShadowCapability->setName(kPrefix + std::string("shadow_capability_") +
@@ -3098,7 +3113,7 @@ Function *CHERIseed::getOrInsertAccessorFunction(GlobalVariable *GV) {
   Function *Accessor = cast<Function>(AccessorCall.getCallee());
   takeName(GV, Accessor);
   Accessor->addFnAttr(kInternalAttribute);
-  Accessor->setLinkage(GV->getLinkage());
+  Accessor->setLinkage(GetNonCommonLinkage(GV->getLinkage()));
   // If the global variable is placed in a section, do the same with a pointer
   // to its accessor. This supports a very common pattern where symbols are
   // placed into a section and they are iterated using __start_* and __stop_*.
