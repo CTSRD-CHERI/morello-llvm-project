@@ -229,6 +229,22 @@ static bool ShouldInstrumentGlobal(GlobalVariable *GV) {
   return true;
 }
 
+/// Finds a BasicBlock in the new Function.
+///
+/// \param NF The new Function to look into.
+/// \param BB The BasicBlock to search for.
+///
+/// \returns The mapped BasicBlock.
+static BasicBlock *FindMappedBasicBlock(Function *NF, BasicBlock *BB) {
+  Function::iterator FII = BB->getParent()->begin();
+  Function::iterator NFII = NF->begin();
+  while (BB != &*FII) {
+    ++FII;
+    ++NFII;
+  }
+  return &*NFII;
+}
+
 /// Returns true if \p Ty has a capability in it's layout, either direct or
 /// indirect, otherwise false. The return value is also true if there is a
 /// function involved.
@@ -676,6 +692,17 @@ struct CHERIseed final : public InstVisitor<CHERIseed, Value *> {
   /// Visits the module this pass is associated with.
   void run() {
     auto _ = DebugPrint::ScopedModuleVisit(M);
+    // To start with, process all functions and create empty functions.
+    // This is required because of BlockAddress constants.
+    for (Function &F : M) {
+      if (F.isDeclaration())
+        continue;
+      // The pass might turn PHINode constant expression arguments into regular
+      // instructions which need to be moved to their predecessor block.
+      // Therefore, it is important to break critical edges.
+      SplitAllCriticalEdges(F);
+      mapFunction(&F);
+    }
     // Visit the Globals.
     visitGlobals();
     // Visit the functions.
@@ -691,10 +718,6 @@ struct CHERIseed final : public InstVisitor<CHERIseed, Value *> {
     auto _ = DebugPrint::ScopedFunctionVisit(F);
     if (F.isDeclaration())
       return;
-    // The pass might turn PHINode constant expression arguments into regular
-    // instructions which need to be moved to their predecessor block.
-    // Therefore, it is important to break critical edges.
-    SplitAllCriticalEdges(F);
     // Reset the context before visiting a new Function.
     IRBuilder<> IRB{Ctx};
     VC.reset();
@@ -722,11 +745,7 @@ struct CHERIseed final : public InstVisitor<CHERIseed, Value *> {
 
   void visit(BasicBlock &BB) {
     auto _ = DebugPrint::ScopedBasicBlockVisit(BB, true);
-    BasicBlock *NBB = cast<BasicBlock>(mapValue(&BB));
-    // If this BasicBlock was cached in advance, move it after the current one.
-    if (VC.BB)
-      NBB->moveAfter(VC.BB);
-    VC.BB = NBB;
+    VC.BB = cast<BasicBlock>(mapValue(&BB));
     VC.IRB->SetInsertPoint(VC.BB);
     InstVisitor::visit(BB.begin(), BB.end());
     _ = DebugPrint::ScopedBasicBlockVisit(*VC.BB, false);
@@ -753,6 +772,7 @@ struct CHERIseed final : public InstVisitor<CHERIseed, Value *> {
   Value *visitCallInst(CallInst &I);
   Value *visitGetElementPtrInst(GetElementPtrInst &I);
   Value *visitICmpInst(ICmpInst &I);
+  Value *visitIndirectBrInst(IndirectBrInst &I);
   Value *visitInstruction(Instruction &I);
   Value *visitIntrinsicInst(IntrinsicInst &I);
   Value *visitIntToPtrInst(IntToPtrInst &I);
@@ -1152,13 +1172,15 @@ protected:
 
   /// Derives a capability with restricted bounds and permissions.
   ///
+  /// \param Dst The destination Value used as the capability to initialize.
+  /// If nullptr, a new capability is created on stack.
   /// \param Addr The original pointer.
   /// \param Size Size of the memory the capability describes. Can be nullptr.
   /// \param IsCode If true, STORE* permissions are removed. Otherwise
   /// EXECUTE permissions are not allowed.
   ///
   /// \returns Pointer to the resulting Value.
-  Value *createBoundedCap(Value *Addr, Value *Size, bool IsCode);
+  Value *createBoundedCap(Value *Dst, Value *Addr, Value *Size, bool IsCode);
 
   /// Creates a capability to a Value on the stack.
   ///
@@ -1551,6 +1573,21 @@ Value *CHERIseed::visitICmpInst(ICmpInst &I) {
 
   return DebugPrint::Emit(
       VC.IRB->CreateICmp(I.getPredicate(), LHSAddr, RHSAddr));
+}
+
+Value *CHERIseed::visitIndirectBrInst(IndirectBrInst &I) {
+  if (!IsCapability(I.getAddress()->getType()))
+    return Base::visitIndirectBrInst(I);
+
+  Value *Addr = mapValue(I.getAddress());
+  Value *Ptr = createCapAccessCheck(Addr, Int8PtrTy, 0,
+                                    cheriseed::abi::permissions::EXECUTE);
+  IndirectBrInst *IBR = VC.IRB->CreateIndirectBr(Ptr, I.getNumDestinations());
+  for (BasicBlock *BB : I.successors())
+    IBR->addDestination(cast<BasicBlock>(mapValue(BB)));
+
+  DebugPrint::Emit(IBR);
+  return IBR;
 }
 
 Value *CHERIseed::visitInstruction(Instruction &I) {
@@ -2475,6 +2512,15 @@ Constant *CHERIseed::mapGlobalInitializer(Use &U,
       return GV;
     });
   }
+  if (auto *C = dyn_cast<BlockAddress>(U)) {
+    if (IsCapability(C->getType())) {
+      AnalysisScope.mustInitializeRuntime();
+      return Constant::getNullValue(CapTy);
+    }
+    Function *NF = mapFunction(C->getFunction());
+    BasicBlock *NBB = FindMappedBasicBlock(NF, C->getBasicBlock());
+    return BlockAddress::get(NF, NBB);
+  }
 
   LLVM_DEBUG(dbgs() << "mapGlobalInitializer: " << *U << "\n");
   llvm_unreachable("Not yet implemented");
@@ -2526,7 +2572,7 @@ Value *CHERIseed::mapValue(Value *V) {
 
   // Handle BasicBlocks within the currently processed Function.
   if (BasicBlock *BB = dyn_cast<BasicBlock>(V)) {
-    BasicBlock *NBB = BasicBlock::Create(Ctx, BB->getName(), VC.F);
+    BasicBlock *NBB = FindMappedBasicBlock(VC.F, BB);
     VC.insert(BB, NBB);
     return NBB;
   }
@@ -2569,7 +2615,7 @@ Value *CHERIseed::mapValue(Value *V) {
       if (GA->getAddressSpace() == kCapabilityAS) {
         Value *Addr = VC.IRB->CreateBitCast(MGA, Int8PtrTy);
         DebugPrint::Emit(Addr);
-        return createBoundedCap(Addr, nullptr, /* IsCode */ true);
+        return createBoundedCap(nullptr, Addr, nullptr, /* IsCode */ true);
       }
       return MGA;
     }
@@ -2601,7 +2647,7 @@ Value *CHERIseed::mapValue(Value *V) {
     if (VC.BB && (F->getAddressSpace() == kCapabilityAS)) {
       Value *Addr = VC.IRB->CreateBitCast(MF, Int8PtrTy);
       DebugPrint::Emit(Addr);
-      return createBoundedCap(Addr, nullptr, /* IsCode */ true);
+      return createBoundedCap(nullptr, Addr, nullptr, /* IsCode */ true);
     }
     return MF;
   }
@@ -2642,6 +2688,15 @@ Value *CHERIseed::mapValue(Value *V) {
     }
     VC.insert(V, V);
     return V;
+  }
+
+  if (BlockAddress *BA = dyn_cast<BlockAddress>(V)) {
+    Function *F = mapFunction(BA->getFunction());
+    BasicBlock *NBB = FindMappedBasicBlock(F, BA->getBasicBlock());
+    BlockAddress *NBA = BlockAddress::get(F, NBB);
+    if (!IsCapability(BA->getType()))
+      return NBA;
+    return createBoundedCap(nullptr, NBA, nullptr, /* IsCode */ true);
   }
 
   // Check that unexpected types don't fall through here.
@@ -2942,6 +2997,15 @@ Constant *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
         assert((GEP->getType() == CapPtrTy) && "Expected capability type");
         createRtCall(RtKind::COPY_CAP_WITH_OFFSET, GEP, mapValue(F),
                      ConstantInt::getNullValue(AddrSizeTy));
+      } else if (BlockAddress *BA = dyn_cast<BlockAddress>(Entry.V)) {
+        Value *GEP = VC.IRB->CreateInBoundsGEP(
+            NGV->getType()->getScalarType()->getPointerElementType(), NGV,
+            Entry.Indices, "");
+        DebugPrint::Emit(GEP);
+        Function *NF = mapFunction(BA->getFunction());
+        BasicBlock *NBB = FindMappedBasicBlock(NF, BA->getBasicBlock());
+        BlockAddress *NBA = BlockAddress::get(NF, NBB);
+        createBoundedCap(GEP, NBA, nullptr, /* IsCode */ true);
       } else {
         errs() << "mapGlobalVariable: " << *Entry.V << "\n";
         errs() << "at GEP indices:\n";
@@ -3282,6 +3346,10 @@ Function *CHERIseed::replaceFunction(Function *F) {
       Function::Create(NFTy, F->getLinkage(), DL.getProgramAddressSpace());
   takeName(F, NF);
 
+  // Create BasicBlocks upfront.
+  for (auto &BB : *F)
+    BasicBlock::Create(Ctx, BB.getName(), NF);
+
   // Inherit argument names from the original function.
   {
     unsigned int Idx = IsCapability(F->getReturnType()) ? 1 : 0;
@@ -3569,8 +3637,11 @@ Value *CHERIseed::createCapFromPtr(Value *Addr) {
 //            i64 <Addr>,
 //            i64 <size>,
 //            i32 <perms_to_clear>)
-Value *CHERIseed::createBoundedCap(Value *Addr, Value *Size, bool IsCode) {
-  Value *AllocCap = createAlloca(CapTy);
+Value *CHERIseed::createBoundedCap(Value *Dst, Value *Addr, Value *Size,
+                                   bool IsCode) {
+  if (!Dst)
+    Dst = createAlloca(CapTy);
+
   Value *IntAddr = VC.IRB->CreatePtrToInt(Addr, AddrSizeTy);
   Size = Size ? Size : ConstantInt::get(AddrSizeTy, 0);
   uint64_t PermsToClear;
@@ -3583,7 +3654,8 @@ Value *CHERIseed::createBoundedCap(Value *Addr, Value *Size, bool IsCode) {
   } else {
     PermsToClear = cheriseed::abi::permissions::EXECUTE;
   }
-  return createRtCall(RtKind::GENERIC_CAP_INIT, AllocCap, IntAddr, Size,
+
+  return createRtCall(RtKind::GENERIC_CAP_INIT, Dst, IntAddr, Size,
                       ConstantInt::get(CapPermsTy, PermsToClear));
 }
 
