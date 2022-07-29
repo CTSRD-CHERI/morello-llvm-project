@@ -911,11 +911,6 @@ protected:
           Analysis.Rollback = false;
       }
 
-      /// Sets that the current Use must result in calling its accessor.
-      void mustCallAccessor() {
-        Analysis.GlobalValues.push_back(cast<GlobalValue>(U));
-      }
-
       /// Sets that the current Use requires run-time processing.
       void mustInitializeRuntime() {
         if (HasIndex)
@@ -942,14 +937,8 @@ protected:
     /// Returns an analysis scope for a use of a Value.
     Scope visit(Use &U) { return Scope(*this, U); }
 
-    /// Returns the list of GlobalValues which were collected.
-    const GlobalValueList &globals() const { return GlobalValues; }
-
     /// Returns the list of analysis entries which were collected.
     const EntryList &entries() const { return Entries; }
-
-    /// Returns true if this GlobalVariable calls other accessor functions.
-    bool callsAccessors() const { return !globals().empty(); }
 
     /// Returns true if this GlobalVariable needs runtime initialization.
     bool needsRuntimeInitialization() const { return !entries().empty(); }
@@ -976,9 +965,6 @@ protected:
     EntryList Entries;
     /// List of indices of the parent.
     SmallVector<Value *, 8> ParentIndices;
-    /// List of GlobalVariables which appear in a GlobalVariable's initializer
-    /// and need their accessors to be called.
-    GlobalValueList GlobalValues;
     /// Indicates that an analysis scope, which has no index, requested that
     /// it must be runtime initialized. This means that the analysis should
     /// mark the first parent with index as runtime-initializeable.
@@ -2469,9 +2455,6 @@ Constant *CHERIseed::mapGlobalInitializer(Use &U,
     return Constant::getNullValue(mapType(C->getType(), /* IsArgTy */ false));
   }
   if (auto *C = dyn_cast<GlobalVariable>(U)) {
-    if (ShouldMapType(C->getValueType()) || IsCapability(C->getType()))
-      AnalysisScope.mustCallAccessor();
-
     if (IsCapability(C->getType())) {
       // As globals are always accessed as pointers, if the original type is a
       // capability, we should replace it with __cheriseed_cap_t instead of
@@ -2882,7 +2865,7 @@ Constant *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
   VC.BB = BasicBlock::Create(VC.F->getContext(), "", VC.F);
   VC.IRB->SetInsertPoint(VC.BB);
 
-  if (Analysis.callsAccessors() || Analysis.needsRuntimeInitialization()) {
+  if (Analysis.needsRuntimeInitialization()) {
     // Some sanity checks
     if (!Analysis.isAggregateType())
       assert((Analysis.entries().size() <= 1) && "Expected at most one entry.");
