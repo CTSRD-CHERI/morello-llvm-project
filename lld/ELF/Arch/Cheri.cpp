@@ -972,6 +972,11 @@ static void addCapDynamicRelocation(RelType dynType, Symbol *sym,
     }
   }
 
+  addMorelloCapabilityFragment(sec, sym, offset, isExecRel);
+  if (config->pie && sym->isWeak() && sym->isHidden() &&
+      (dynType == R_MORELLO_RELATIVE))
+    return;
+
   if (dynType == R_MORELLO_RELATIVE && !sym->includeInDynsym() &&
       config->localCapRelocsMode == CapRelocsMode::ElfReloc) {
     in.relaDyn->addReloc(
@@ -984,7 +989,6 @@ static void addCapDynamicRelocation(RelType dynType, Symbol *sym,
          isExecRel ? DynamicReloc::AArch64ExecRel : DynamicReloc::AgainstSymbol,
          *sym, addend, R_ABS});
   }
-  addMorelloCapabilityFragment(sec, sym, offset, isExecRel);
 }
 
 // Relocation arising from addGotEntry() or addPltEntry().

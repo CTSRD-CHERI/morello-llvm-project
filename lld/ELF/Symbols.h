@@ -152,6 +152,7 @@ public:
   bool isWeak() const { return binding == llvm::ELF::STB_WEAK; }
 
   bool isUndefined() const { return symbolKind == UndefinedKind; }
+  bool isHidden() const { return visibility == llvm::ELF::STV_HIDDEN; }
   bool isCommon() const { return symbolKind == CommonKind; }
   bool isDefined() const { return symbolKind == DefinedKind; }
   bool isShared() const { return symbolKind == SharedKind; }
