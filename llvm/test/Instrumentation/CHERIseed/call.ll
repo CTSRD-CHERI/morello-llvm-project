@@ -402,3 +402,14 @@ define i1 @return_attributes(i8 addrspace(200)* %c, i64 %p) {
 declare i8 addrspace(200)* @return_attributes_helper(i8 addrspace(200)* nonnull %c, i64 signext %p);
 
 ; ------------------------------------------------------------------------------
+; Check that allocsize attribute is ignored.
+
+; CHECK-LABEL: @allocsize
+define i8 addrspace(200)* @allocsize(i32 %size) #0 {
+  ret i8 addrspace(200)* null
+}
+
+; CHECK-NOT: allocsize
+attributes #0 = { allocsize(0) }
+
+; ------------------------------------------------------------------------------

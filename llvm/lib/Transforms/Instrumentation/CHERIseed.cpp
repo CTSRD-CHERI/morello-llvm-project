@@ -3456,8 +3456,15 @@ Function *CHERIseed::replaceFunction(Function *F) {
     NAttrs = NAttrs.addParamAttributes(Ctx, Idx + FtoNFOffset, AB);
   }
 
-  // Finally, set new function attributes.
+  // Set new function attributes.
   NF->setAttributes(NAttrs);
+
+  // Unfortunately, the semantics of 'allocsize' attribute is such that
+  // it is not possible to support that when a returned capability gets
+  // inserted.
+  if (ReturnsCap)
+    NF->removeFnAttr(Attribute::AllocSize);
+
   // Add some more attributes.
   NF->setComdat(F->getComdat());
   NF->addFnAttr(kInternalAttribute);
