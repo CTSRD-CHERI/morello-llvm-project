@@ -5,7 +5,6 @@
 int *global_uninit_ptr;
 
 TEST_MAIN() {
-  // CHECK: Capability is missing required permission(s)
-  // CHECK: LOAD
+  // CHECK: Capability is untagged at
   int read_uninitialized = *global_uninit_ptr;
 }

@@ -7,8 +7,6 @@
 TEST_MAIN() {
   long not_cap = 42;
   int *ptr = (int *)not_cap;
-  // FIXME: we would want to check for tag later.
-  // CHECK: Capability is missing required permission(s)
-  // CHECK: LOAD
+  // CHECK: Capability is untagged at
   int x = *ptr;
 }

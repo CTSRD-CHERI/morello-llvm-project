@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-// TODO: Remove "DISABLED_" prefix from test names once tags are implemented.
-
 #include "cheriseed_test_utils.h"
 
 #define TEST_UNTAGGED_CAP(__expr)                        \
@@ -24,27 +22,27 @@
                 CHECK_IS_TAGGED_ERROR_MESSAGE_PATTERN);  \
   }
 
-TEST(DISABLED_UntaggedDeathTest, SignalHandleMode) {
+TEST(UntaggedDeathTest, SignalHandleMode) {
   TEST_UNTAGGED_CAP(__cheriseed_set_signal_handle_mode(
       reinterpret_cast<void*>(&untagged_cap), 0));
 }
 
-TEST(DISABLED_UntaggedDeathTest, CheckAccess) {
+TEST(UntaggedDeathTest, CheckAccess) {
   TEST_UNTAGGED_CAP(__cheriseed_check_access(&untagged_cap, 0, 0));
 }
 
-TEST(DISABLED_UntaggedDeathTest, LoadCap) {
+TEST(UntaggedDeathTest, LoadCap) {
   TEST_UNTAGGED_CAP(__cheriseed_load_cap(&untagged_cap, nullptr));
 }
 
-TEST(DISABLED_UntaggedDeathTest, LoadCapAtomic) {
+TEST(UntaggedDeathTest, LoadCapAtomic) {
   TEST_UNTAGGED_CAP(__cheriseed_load_cap_atomic(&untagged_cap, nullptr, 0));
 }
 
-TEST(DISABLED_UntaggedDeathTest, StoreCap) {
+TEST(UntaggedDeathTest, StoreCap) {
   TEST_UNTAGGED_CAP(__cheriseed_store_cap(&untagged_cap, nullptr));
 }
 
-TEST(DISABLED_UntaggedDeathTest, StoreCapAtomic) {
+TEST(UntaggedDeathTest, StoreCapAtomic) {
   TEST_UNTAGGED_CAP(__cheriseed_store_cap_atomic(&untagged_cap, nullptr, 0));
 }

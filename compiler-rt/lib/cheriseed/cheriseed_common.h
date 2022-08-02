@@ -12,6 +12,7 @@
 #define CHERISEED_COMMON_H
 
 #include "cheriseed_abi_defs.h"
+#include "cheriseed_shadow_memory.h"
 #include "sanitizer_common/sanitizer_atomic.h"
 
 #define CHERISEED_CHECK_PERMS ((1UL << 32) - 1)
@@ -29,7 +30,6 @@ using __sanitizer::u64;
 using __sanitizer::u8;
 using __sanitizer::usize;
 using __sanitizer::vaddr;
-using u128 = unsigned __int128;
 
 // Forward declare CCL interface.
 // This is required so that it can be made a friend and so some methods of
@@ -161,7 +161,11 @@ using AllowNullCap = MaybeNull<const __cheriseed_cap_t *>;
 enum TagState : u8 {
   TS_CLEARED = 0,
   TS_TAGGED = 1,
+  TS_LOCKED = 2,
 };  // enum TagState
+
+// CHERIseed shadow map info. Used to get shadow address of a virtual address.
+extern ShadowMemory ShadowMap;
 
 /// Class which interacts with the public (opaque) type and creates an
 /// in-flight capability, which then can be modified and written to memory.
@@ -195,6 +199,10 @@ struct LocalCap final : public __cheriseed_cap_t {
   const LocalCap &RequireBounds(u64 size) const;
 
   vaddr GetAddress() const { return address; }
+  TagState *GetShadowAddress() const {
+    return reinterpret_cast<TagState *>(
+        ShadowMap.GetShadowAddressFrom(address));
+  }
   u64 GetValue() const { return value; }
   u64 GetMetadata() const { return metadata; }
   bool IsTagged() const { return (tag_state == TagState::TS_TAGGED); }

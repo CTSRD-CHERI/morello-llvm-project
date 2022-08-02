@@ -38,16 +38,24 @@ atomic_uint64_t Options::Checks{UINT64_MAX};
     __sanitizer::Die();                                             \
   }
 
-// TODO: Move this to sanitizer_atomic, but that's not so easy because of the
-// many platforms.
-struct atomic_uint128_t {
-  typedef u128 Type;
-  volatile ALIGNED(16) Type val_dont_use;
-};  // struct atomic_uint128_t
+// Locks a tag with spinlock and acquire semantics.
+//
+// Returns the previous tag value.
+static inline TagState AcquireTag(TagState *const ptr) {
+  for (;;) {
+    TagState prev_tag =
+        __atomic_exchange_n(ptr, TagState::TS_LOCKED, __ATOMIC_ACQUIRE);
+    if (LIKELY(prev_tag != TagState::TS_LOCKED))
+      return prev_tag;
+  }
+}
 
-// Make sure alignments match.
-static_assert(alignof(atomic_uint128_t) == alignof(__cheriseed_cap_t),
-              "Alignment mismatch");
+// Writes a tag with release semantics.
+//
+// Returns the previous tag value.
+static inline TagState ReleaseTag(TagState *ptr, TagState tag) {
+  return __atomic_exchange_n(ptr, tag, __ATOMIC_RELEASE);
+}
 
 LocalCap::LocalCap(Options &Opts, const __cheriseed_cap_t *ptr,
                    memory_order memory_order, bool allow_nullcap)
@@ -62,11 +70,11 @@ LocalCap::LocalCap(Options &Opts, const __cheriseed_cap_t *ptr,
 
   SetAddress(ptr);
   CheckContext(*this).add(CapabilityAddress()).add(CapabilityAlignment());
-  const u128 bits = __sanitizer::atomic_load(
-      reinterpret_cast<const atomic_uint128_t *>(ptr), memory_order);
-  SetValue(static_cast<u64>(bits));
-  SetMetadata(static_cast<u64>(bits >> 64));
-  SetTag();
+  tag_state = AcquireTag(GetShadowAddress());
+  const u64 *cap = reinterpret_cast<const u64 *>(ptr);
+  SetValue(cap[0]);
+  SetMetadata(cap[1]);
+  ReleaseTag(GetShadowAddress(), tag_state);
 }
 
 __cheriseed_cap_t *LocalCap::Store(__cheriseed_cap_t *ptr,
@@ -74,11 +82,11 @@ __cheriseed_cap_t *LocalCap::Store(__cheriseed_cap_t *ptr,
   LocalCap local_cap(GetOpts());
   local_cap.SetAddress(ptr);
   CheckContext(local_cap).add(CapabilityAddress()).add(CapabilityAlignment());
-  atomic_uint128_t *atomic_cap =
-      reinterpret_cast<atomic_uint128_t *>(local_cap.GetAddress());
-  u128 bits =
-      static_cast<u128>(GetMetadata()) << 64 | static_cast<u128>(GetValue());
-  __sanitizer::atomic_store(atomic_cap, bits, memory_order);
+  AcquireTag(local_cap.GetShadowAddress());
+  u64 *cap = reinterpret_cast<u64 *>(ptr);
+  cap[0] = GetValue();
+  cap[1] = GetMetadata();
+  ReleaseTag(local_cap.GetShadowAddress(), tag_state);
   return ptr;
 }
 

@@ -9,6 +9,7 @@
 #pragma clang diagnostic ignored "-Wcheri-capability-misuse"
 
 TEST_MAIN() {
+  __cheriseed_control_checks(CHERISEED_CHECK_OFF, CHERISEED_CHECK_TAG);
   union U {
     int i;
     int *c;
