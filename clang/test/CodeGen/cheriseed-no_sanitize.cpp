@@ -4,12 +4,12 @@
 // RUN: %clang_cc1 -triple aarch64-unknown-linux -disable-O0-optnone \
 // RUN:   -emit-llvm -o - %s | FileCheck -check-prefix=CHECK-DISABLED %s
 
-// RUN: %clang_cc1 -triple aarch64-unknown-linux -fsanitize=cheriseed \
+// RUN: %clang_cc1 -triple aarch64-unknown-linux -fsanitize=cheriseed -target-abi purecap \
 // RUN:   -disable-O0-optnone -emit-llvm -o - %s | \
 // RUN:   FileCheck -check-prefix=CHECK-ENABLED %s
 
-// RUN: %clang_cc1 -triple aarch64-unknown-linux -fsanitize=cheriseed -flegacy-pass-manager \
-// RUN:   -disable-O0-optnone -emit-llvm -o - %s | \
+// RUN: %clang_cc1 -triple aarch64-unknown-linux -fsanitize=cheriseed -target-abi purecap \
+// RUN:   -disable-O0-optnone -emit-llvm -o - %s -flegacy-pass-manager | \
 // RUN:   FileCheck -check-prefix=CHECK-ENABLED %s
 
 int GlobalHasSanitizeCHERIseed = 1;
@@ -27,7 +27,7 @@ int helper() {
 // CHECK-DISABLED: @ExternalGlobalHasSanitizeCHERIseed = external global i32, align 4
 // CHECK-DISABLED: @ExternalGlobalHasNoSanitizeCHERIseed = external global i32, align 4
 
+// CHECK-ENABLED:  @GlobalHasSanitizeCHERIseed = global %__cheriseed_cap_t zeroinitializer, align 16
 // CHECK-ENABLED:  @GlobalHasNoSanitizeCHERIseed = global i32 0, align 4
+// CHECK-ENABLED:  @ExternalGlobalHasSanitizeCHERIseed = external global %__cheriseed_cap_t, align 16
 // CHECK-ENABLED:  @ExternalGlobalHasNoSanitizeCHERIseed = external global i32, align 4
-// CHECK-ENABLED:  @GlobalHasSanitizeCHERIseed()
-// CHECK-ENABLED:  @ExternalGlobalHasSanitizeCHERIseed()

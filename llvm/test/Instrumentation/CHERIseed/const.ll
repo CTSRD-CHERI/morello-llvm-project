@@ -25,8 +25,10 @@ define i32 addrspace(200)* @foo() {
 ; CHECK-NEXT:  %3 = bitcast void ()* @bar to i32*
 ; CHECK-NEXT:  %4 = call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %2)
 ; CHECK-NEXT:  %5 = ptrtoint i32* %3 to i64
-; CHECK-NEXT:  %6 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %4, %__cheriseed_cap_t* %4, i64 %5)
-; CHECK-NEXT:  %7 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %0, %__cheriseed_cap_t* %6, i64 0)
+; CHECK-NEXT:  %6 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %4,
+; CHECk-SAME:     %__cheriseed_cap_t* %4, i64 %5)
+; CHECK-NEXT:  %7 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %0,
+; CHECk-SAME:     %__cheriseed_cap_t* %6, i64 0)
 ; CHECK-NEXT:  ret %__cheriseed_cap_t* %0
   ret i32 addrspace(200)* addrspacecast (i32* bitcast (void ()* @bar to i32*) to i32 addrspace(200)*)
 }
@@ -168,16 +170,17 @@ entry:
 
 ; CHECK-LABEL: l1:
 l1:
-; CHECK-NEXT:    %2 = call { i64 }* @always_map_g()
-; CHECK-NEXT:    %3 = bitcast { i64 }* %2 to i8*
-; CHECK-NEXT:    %4 = call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %0)
-; CHECK-NEXT:    %5 = ptrtoint i8* %3 to i64
-; CHECK-NEXT:    %6 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %4, %__cheriseed_cap_t* %4, i64 %5)
-; CHECK-NEXT:    %7 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %6, i64 1, i32 2)
-; CHECK-NEXT:    %8 = inttoptr i64 %7 to i8*
-; CHECK-NEXT:    store i8 42, i8* %8
-; CHECK-NEXT:    call void @__cheriseed_check_access_end(i64 %7, i64 1)
-  store i8 42, i8 addrspace(200)* addrspacecast (i64* getelementptr inbounds ({ i64 }, { i64 }* @always_map_g, i64 0, i32 0) to i8 addrspace(200)*)
+; CHECK-NEXT:    %2 = bitcast { i64 }* @always_map_g to i8*
+; CHECK-NEXT:    %3 = call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %0)
+; CHECK-NEXT:    %4 = ptrtoint i8* %2 to i64
+; CHECK-NEXT:    %5 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %3,
+; CHECk-SAME:       %__cheriseed_cap_t* %3, i64 %4)
+; CHECK-NEXT:    %6 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %5, i64 1, i32 2)
+; CHECK-NEXT:    %7 = inttoptr i64 %6 to i8*
+; CHECK-NEXT:    store i8 42, i8* %7
+; CHECK-NEXT:    call void @__cheriseed_check_access_end(i64 %6, i64 1)
+  store i8 42, i8 addrspace(200)* addrspacecast (i64* getelementptr inbounds (
+    { i64 }, { i64 }* @always_map_g, i64 0, i32 0) to i8 addrspace(200)*)
 ; CHECK-NEXT:    br label %end
   br label %end
 
@@ -185,16 +188,17 @@ l1:
 l2:
 ; Ensure that constant expressions are always resolved in-place,
 ; rather than re-use %2, which is defined in a non-dominating block
-; CHECK-NEXT:    %9 = call { i64 }* @always_map_g()
-; CHECK-NEXT:    %10 = bitcast { i64 }* %9 to i8*
-; CHECK-NEXT:    %11 = call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %1)
-; CHECK-NEXT:    %12 = ptrtoint i8* %10 to i64
-; CHECK-NEXT:    %13 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %11, %__cheriseed_cap_t* %11, i64 %12)
-; CHECK-NEXT:    %14 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %13, i64 1, i32 2)
-; CHECK-NEXT:    %15 = inttoptr i64 %14 to i8*
-; CHECK-NEXT:    store i8 42, i8* %15
-; CHECK-NEXT:    call void @__cheriseed_check_access_end(i64 %14, i64 1)
-  store i8 42, i8 addrspace(200)* addrspacecast (i64* getelementptr inbounds ({ i64 }, { i64 }* @always_map_g, i64 0, i32 0) to i8 addrspace(200)*)
+; CHECK-NEXT:    %8 = bitcast { i64 }* @always_map_g to i8*
+; CHECK-NEXT:    %9 = call %__cheriseed_cap_t* @__cheriseed_ddc_get(%__cheriseed_cap_t* %1)
+; CHECK-NEXT:    %10 = ptrtoint i8* %8 to i64
+; CHECK-NEXT:    %11 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %9,
+; CHECk-SAME:       %__cheriseed_cap_t* %9, i64 %10)
+; CHECK-NEXT:    %12 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %11, i64 1, i32 2)
+; CHECK-NEXT:    %13 = inttoptr i64 %12 to i8*
+; CHECK-NEXT:    store i8 42, i8* %13
+; CHECK-NEXT:    call void @__cheriseed_check_access_end(i64 %12, i64 1)
+  store i8 42, i8 addrspace(200)* addrspacecast (i64* getelementptr inbounds (
+    { i64 }, { i64 }* @always_map_g, i64 0, i32 0) to i8 addrspace(200)*)
 ; CHECK-NEXT:    br label %end
   br label %end
 

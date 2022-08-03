@@ -21,9 +21,8 @@
 
 #include "test.h"
 
-/* To check if the initialisation of shadow capability
- * doesn't end with infinite accessor recursive calls.
- */
+/* Check that the compiler can handle recursions. */
+
 struct struct_global {
     struct struct_global *__capability a;
     int b;

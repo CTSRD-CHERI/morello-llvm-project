@@ -14,7 +14,7 @@ target triple = "x86_64-unknown-linux-gnu"
 ; ------------------------------------------------------------------------------
 ; Check that blockaddress translates properly.
 
-; CHECK-LABEL: @__cheriseed_global_blockaddresses = global [2 x %__cheriseed_cap_t]
+; CHECK-LABEL: @__cheriseed_shadowed_global_blockaddresses = global [2 x %__cheriseed_cap_t]
 ; CHECK-SAME:     zeroinitializer, align 16
 @blockaddresses = addrspace(200) constant [2 x i8 addrspace(200)*] [
   i8 addrspace(200)* blockaddress(@blockaddress, %BB1),
@@ -59,11 +59,11 @@ BB1:
 ; CHECK-LABEL: define internal void @__cheriseed_initializer_blockaddresses()
 ; CHECK-NEXT:    %1 = call %__cheriseed_cap_t* @__cheriseed_generic_cap_init(
 ; CHECK-SAME:      %__cheriseed_cap_t* getelementptr inbounds ([2 x %__cheriseed_cap_t],
-; CHECK-SAME:        [2 x %__cheriseed_cap_t]* @__cheriseed_global_blockaddresses, i32 0, i64 0),
+; CHECK-SAME:        [2 x %__cheriseed_cap_t]* @__cheriseed_shadowed_global_blockaddresses, i32 0, i64 0),
 ; CHECK-SAME:      i64 ptrtoint (i8* blockaddress(@blockaddress, %BB1) to i64), i64 1, i32 27)
 ; CHECK-NEXT:    %2 = call %__cheriseed_cap_t* @__cheriseed_generic_cap_init(
 ; CHECK-SAME:      %__cheriseed_cap_t* getelementptr inbounds ([2 x %__cheriseed_cap_t],
-; CHECK-SAME:        [2 x %__cheriseed_cap_t]* @__cheriseed_global_blockaddresses, i32 0, i64 1),
+; CHECK-SAME:        [2 x %__cheriseed_cap_t]* @__cheriseed_shadowed_global_blockaddresses, i32 0, i64 1),
 ; CHECK-SAME:      i64 ptrtoint (i8* blockaddress(@blockaddress, %BB2) to i64), i64 1, i32 27)
 ; CHECK-NEXT:    ret void
 

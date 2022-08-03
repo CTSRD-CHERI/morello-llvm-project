@@ -20,15 +20,15 @@ define void @func() {
 
 ; CHECK-LABEL: @llvm.used = appending global [6 x i8*]
 @llvm.used = appending global [6 x i8*] [
-; CHECK-SAME:  i8* bitcast (i8* ()* @char to i8*)
+; CHECK-SAME:  i8* @char
   i8* @char,
-; CHECK-SAME:  i8* bitcast (i32* ()* @int to i8*)
+; CHECK-SAME:  i8* bitcast (i32* @int to i8*)
   i8* bitcast (i32* @int to i8*),
-; CHECK-SAME:  i8* bitcast (i8** ()* @ptr to i8*)
+; CHECK-SAME:  i8* bitcast (i8** @ptr to i8*)
   i8* bitcast (i8** @ptr to i8*),
-; CHECK-SAME:  i8* bitcast (%__cheriseed_cap_t* ()* @cap_before to i8*)
+; CHECK-SAME:  i8* bitcast (%__cheriseed_cap_t* @cap_before to i8*)
   i8* bitcast (i8 addrspace(200)** @cap_before to i8*),
-; CHECK-SAME:  i8* bitcast (%__cheriseed_cap_t* ()* @cap_after to i8*)
+; CHECK-SAME:  i8* bitcast (%__cheriseed_cap_t* @cap_after to i8*)
   i8* bitcast (i8 addrspace(200)** @cap_after to i8*),
 ; CHECK-SAME:  i8* bitcast (void ()* @func to i8*)
   i8* bitcast (void ()* @func to i8*)

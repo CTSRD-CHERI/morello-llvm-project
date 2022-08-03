@@ -251,12 +251,12 @@ define void @regression() {
 ; Make sure this mapping works with globals too.
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %2 = call %__cheriseed_cap_t* @regression.g()
-; CHECK-NEXT:  %3 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %1, %__cheriseed_cap_t* %2, i64 16)
-; CHECK-NEXT:  %4 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %3, i64 8, i32 2)
-; CHECK-NEXT:  %5 = inttoptr i64 %4 to i64*
-; CHECK-NEXT:  store atomic i64 0, i64* %5 release, align 8
-; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %4, i64 8)
+; CHECK-NEXT:  %2 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %1,
+; CHECK-SAME:    %__cheriseed_cap_t* @regression.g, i64 16)
+; CHECK-NEXT:  %3 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %2, i64 8, i32 2)
+; CHECK-NEXT:  %4 = inttoptr i64 %3 to i64*
+; CHECK-NEXT:  store atomic i64 0, i64* %4 release, align 8
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %3, i64 8)
   store atomic i64 0, i64 addrspace(200)* bitcast (i64 addrspace(200)* getelementptr inbounds (%regression.s, %regression.s addrspace(200)* @regression.g, i64 0, i32 0, i64 2) to i64 addrspace(200)*) release, align 8
 ; CHECK-NEXT:  ret void
   ret void

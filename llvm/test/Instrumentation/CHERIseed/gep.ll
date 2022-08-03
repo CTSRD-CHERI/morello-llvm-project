@@ -104,12 +104,9 @@ define i32 @gep_regression(i32 addrspace(200)* %0, i32 %1) {
 
 ; CHECK-LABEL: @gep_constant_expr
 define %struct.S2* @gep_constant_expr() {
-; CHECK-NEXT:  %1 = call [2 x %struct.S2]* @C_S2()
-; CHECK-NEXT:  %2 = getelementptr inbounds [2 x %struct.S2], [2 x %struct.S2]* %1, i64 0, i64 0
+; CHECK-NEXT:  ret %struct.S2* getelementptr inbounds ([2 x %struct.S2], [2 x %struct.S2]* @C_S2, i64 0, i64 1)
   %1 = getelementptr inbounds [2 x %struct.S2], [2 x %struct.S2]* @C_S2, i64 0, i64 0
-; CHECK-NEXT:  %3 = getelementptr inbounds %struct.S2, %struct.S2* %2, i64 1
   %2 = getelementptr inbounds %struct.S2, %struct.S2* %1, i64 1
-; CHECK-NEXT:  ret %struct.S2* %3
   ret %struct.S2* %2
 }
 

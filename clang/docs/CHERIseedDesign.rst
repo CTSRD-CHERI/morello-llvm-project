@@ -125,11 +125,8 @@ type is and what type is being atomically accessed:
 Global Variables
 ----------------
 
-Global Variables only have a capability generated at the beginning during
-runtime by invoking ``__cheriseed_static_init``, then all subsequent accesses
-will utilise function calls to "accessor" functions, of which there is one per
-global. The generated capability, which functions as a pointer to the
-global variable, is referred to as its "shadow" capability.
+Capabilities in global variables and aliases are initialized at runtime
+by invoking ``__cheriseed_static_init``.
 
 Variadic Arguments
 ------------------

@@ -13,11 +13,11 @@ struct S1 {
 // CHECK-IR: %struct.S1 = type { i8* }
 
 S1 s1{nullptr};
-// CHECK-ASM-LABEL: .globl __cheriseed_global_s1
+// CHECK-ASM-LABEL: .globl s1
 // CHECK-ASM-NEXT:  .p2align 3
 //                  a
 // CHECK-ASM:       .zero 8
-// CHECK-ASM-NEXT:  .size __cheriseed_global_s1, 8
+// CHECK-ASM-NEXT:  .size s1, 8
 
 struct S2 {
   char *__capability a;
@@ -25,11 +25,11 @@ struct S2 {
 // CHECK-IR: %struct.S2 = type { %__cheriseed_cap_t }
 
 S2 s2{nullptr};
-// CHECK-ASM-LABEL: .globl __cheriseed_global_s2
+// CHECK-ASM-LABEL: .globl s2
 // CHECK-ASM-NEXT:  .p2align 4
 //                  a
 // CHECK-ASM:       .zero 16
-// CHECK-ASM-NEXT:  .size __cheriseed_global_s2, 16
+// CHECK-ASM-NEXT:  .size s2, 16
 
 struct S3 {
   char a;
@@ -39,7 +39,7 @@ struct S3 {
 // CHECK-IR: %struct.S3 = type { i8, i8*, i8 }
 
 S3 s3{1, nullptr, 2};
-// CHECK-ASM-LABEL: .globl __cheriseed_global_s3
+// CHECK-ASM-LABEL: .globl s3
 // CHECK-ASM-NEXT:  .p2align 3
 //                  a
 // CHECK-ASM:       .byte 1
@@ -50,7 +50,7 @@ S3 s3{1, nullptr, 2};
 //                  c
 // CHECK-ASM-NEXT:  .byte 2
 // CHECK-ASM-NEXT:  .zero 7
-// CHECK-ASM-NEXT:  .size __cheriseed_global_s3, 24
+// CHECK-ASM-NEXT:  .size s3, 24
 
 struct S4 {
   char a;
@@ -62,7 +62,7 @@ struct S4 {
 // OFF-CHECK-IR: %struct.S4 = type { i8, %__cheriseed_cap_t, i8 }
 
 S4 s4{1, nullptr, 2};
-// CHECK-ASM-LABEL: .globl __cheriseed_global_s4
+// CHECK-ASM-LABEL: .globl s4
 // CHECK-ASM-NEXT:  .p2align 4
 //                  a
 // CHECK-ASM:       .byte 1
@@ -72,4 +72,4 @@ S4 s4{1, nullptr, 2};
 //                  c
 // CHECK-ASM-NEXT:  .byte 2
 // CHECK-ASM-NEXT:  .zero 15
-// CHECK-ASM-NEXT:  .size __cheriseed_global_s4, 48
+// CHECK-ASM-NEXT:  .size s4, 48

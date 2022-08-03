@@ -148,14 +148,10 @@ namespace {
 static constexpr unsigned kCapabilityAS = 200;
 /// Prefix to use in every CHERIseed-related names.
 static constexpr char kPrefix[] = "__cheriseed_";
-/// The suffix to add to renamed symbols.
-static constexpr char kDeferredGlobalPrefix[] = "__cheriseed_deferred_global_";
 /// Function attribute to indicate which function a function is mapped to.
 static constexpr char kRenamedFnAttribute[] = "cheriseed-rename";
 /// Attribute marking objects that should not be processed by the pass.
 static constexpr char kInternalAttribute[] = "cheriseed-internal";
-/// Attribute to link a global to its accessor function.
-static constexpr char kAccessorAttribute[] = "cheriseed-accessor";
 /// The suffix to add to renamed symbols.
 static constexpr char kTakeNameSuffix[] = ".old";
 /// Initializer section
@@ -272,7 +268,7 @@ bool ShouldMapType(Type *Ty) {
     case Type::TypeID::StructTyID:
       // Opaque structures have no members, there is nothing to do here.
       // However, some code (mapGlobalVariable) might rely on 'ShouldMapType()'
-      // to figure out if calling an accessor is necessary or not.
+      // to figure out that to do.
       if (cast<StructType>(Ty)->isOpaque())
         return true;
       for (Type *E : cast<StructType>(Ty)->elements())
@@ -298,28 +294,6 @@ bool ShouldMapType(Type *Ty) {
       break;
     }
   } while (!Types.empty());
-
-  return false;
-}
-
-/// Returns true if \p V aliases \p A.
-static bool IsAliasOf(const Value *V, const Value *A) {
-  if (!isa<GlobalAlias>(V))
-    return false;
-
-  const User *U = cast<User>(cast<GlobalAlias>(V)->getAliasee());
-  if (U == A)
-    return true;
-
-  for (const Value *Op : U->operands()) {
-    if (Op == A)
-      return true;
-    // Don't recurse into another GlobalAlias.
-    if (isa<GlobalAlias>(Op))
-      return false;
-    if (IsAliasOf(Op, A))
-      return true;
-  }
 
   return false;
 }
@@ -697,8 +671,8 @@ struct CHERIseed final : public InstVisitor<CHERIseed, Value *> {
     CapTy->setMinimumAlignment(Align(16));
     CapPtrTy = CapTy->getPointerTo();
     CapPermsTy = Type::getInt32Ty(Ctx);
-    Type *InitializerFuncTy = PointerType::get(FunctionType::get(VoidTy, false),
-                                               DL.getProgramAddressSpace());
+    InitializerFuncTy = PointerType::get(FunctionType::get(VoidTy, false),
+                                         DL.getProgramAddressSpace());
     InitializerTy = StructType::create(
         Ctx,
         {AddrSizeTy, AddrSizeTy, AddrSizeTy, CapPermsTy, InitializerFuncTy},
@@ -893,8 +867,7 @@ protected:
   /// is necessary to emit runtime initialization sequences. When visiting
   /// 'foo' above, 'entries()' would return a list containing an entry which
   /// marks the GEP indices where '%struct.S addrspace(200)* @bar' appears:
-  /// [0, 0]. It may or may not, depending on what '%struct.S', record that
-  /// the accessor function of '@bar' is to be called.
+  /// [0, 0].
   ///
   /// It is also possible that a ConstantExpr requires runtime initialization.
   /// Such expressions are address-space casts, for example. In such cases
@@ -909,9 +882,7 @@ protected:
   /// In this case only the 'addrspacecast' has a GEP indice, but the algorithm
   /// only realizes that it has to be runtime evaluated once it visits the
   /// operands. When visiting 'i8 addrspace(200)* @bar', it indicates rollback
-  /// and so the whole address space cast would be runtime evaluated. Note that
-  /// it might be required that '@bar' has an accessor function which is to be
-  /// called independently of the AS cast.
+  /// and so the whole address space cast would be runtime evaluated.
   struct GlobalInitializerAnalysis {
     /// Entry stored by the analysis.
     struct Entry {
@@ -1012,8 +983,7 @@ protected:
   /// This function visits all operands of a GlobalVariable's initializer.
   /// It records if a specific operand has to be runtime-initialized in
   /// \p Analysis. Typically capabilities are the ones which must be processed
-  /// runtime. It also records if an aliased GlobalVariable's accessor function
-  /// has to be called. See more details at GlobalInitializerAnalysis.
+  /// runtime. See more details at GlobalInitializerAnalysis.
   ///
   /// Note: this cannot be the part of 'mapValue()', which is for handling
   /// Values in Instructions.
@@ -1032,24 +1002,29 @@ protected:
   Instruction *mapInstruction(Instruction &I);
 
   /// Maps a GlobalVariable to another Value.
-  /// Generates the accessor function if the global is modified by CHERIseed.
   ///
   /// \param GV The input GlobalVariable to map.
+  /// \returns Pointer to the mapped GlobalVariable, or \c nullptr .
+  GlobalVariable *mapGlobalVariable(GlobalVariable *GV);
+
+  /// Maps the initializer of a GlobalVariable
+  ///
+  /// \param GV The input GlobalVariable.
+  /// \param NGV The mapped GlobalVariable.
   /// \returns The pointer to the tuple containing data for global
   /// initialization if used or else nullptr.
-  Constant *mapGlobalVariable(GlobalVariable *GV);
+  Constant *mapGlobalVariableInitializer(GlobalVariable *GV,
+                                         GlobalVariable *NGV);
 
   /// Maps a GlobalAlias to another Value.
   ///
   /// \param GA The input GlobalAlias to map.
   void mapGlobalAlias(GlobalAlias *GA);
 
-  /// Similar to Module::getOrInsertFunction(), but creates an accessor
-  /// function for a global variable.
+  /// Maps the initializer of a GlobalAlias
   ///
-  /// \param GV The GlobalVariable to associate the function with.
-  /// \returns A FunctionCallee wrapper for the requested function.
-  Function *getOrInsertAccessorFunction(GlobalVariable *GV);
+  /// \param GA The input GlobalAlias.
+  void mapGlobalAliasInitializer(GlobalAlias *GA);
 
   /// Similar to Module::getOrInsertFunction(), but handles a case where the
   /// pass inserts a new function because of a library call. The named call
@@ -1277,6 +1252,8 @@ protected:
   Type *AddrSizeTy;
   /// Shorthand for '%__cheriseed_initializer_t'.
   StructType *InitializerTy;
+  /// Shorthand for the type of an initializer entry.
+  PointerType *InitializerFuncTy;
   /// A map used to map input Type-s.
   SimpleMap<Type> TypeMap{"TM"};
   /// A map used to map global Value-s per Module.
@@ -2170,23 +2147,10 @@ void CHERIseed::visitDeferredValues() {
   DeferredValueMap.for_each([&](Value *DV, Value *PV) {
     // Try to map the value, it should succeed now.
     Value *MV;
-    if (GlobalValue *GV = dyn_cast<GlobalValue>(DV)) {
+    if (GlobalValue *GV = dyn_cast<GlobalValue>(DV))
       MV = GlobalMap.get(GV);
-      // Special case: must to call the global's accessor.
-      if (GlobalValue *MGV = dyn_cast<GlobalValue>(MV)) {
-        if ((PV->getType() == CapPtrTy) &&
-            MGV->getValueType()->isFunctionTy()) {
-          CallInst *CI =
-              CallInst::Create(cast<FunctionType>(MGV->getValueType()), MGV);
-          Instruction *I = cast<Instruction>(PV);
-          assert(I->getParent() && "Expected parent");
-          CI->insertBefore(I);
-          MV = CI;
-        }
-      }
-    } else {
+    else
       MV = VC.ValueMap.get(DV);
-    }
     // Pretty-print the new change.
     DebugPrint::Map("Resolve", PV, MV);
     if (LLVM_UNLIKELY(!MV)) {
@@ -2221,20 +2185,46 @@ void CHERIseed::visitDeferredValues() {
 }
 
 void CHERIseed::visitGlobals() {
-  // Store every global to be mapped afterwards, as not to invalidate the
-  // iterator.
-  SmallVector<GlobalValue *, 8> Globals;
-  // A vector to store global initializer section tuples.
-  SmallVector<Constant *, 16> GlobalInitsSectionTuples;
   // Map global variables.
-  for (GlobalValue &GV : M.globals())
+  // Store every GlobalVariable to be mapped as not to invalidate the iterator.
+  SmallVector<GlobalVariable *, 8> Globals;
+  Globals.reserve(M.global_size());
+  for (GlobalVariable &GV : M.globals())
     Globals.push_back(&GV);
-  for (GlobalValue *GV : Globals) {
-    auto _ = DebugPrint::ScopedValueVisit(*GV);
-    if (Constant *C = mapGlobalVariable(cast<GlobalVariable>(GV)))
-      GlobalInitsSectionTuples.push_back(C);
-  }
 
+  // 1st step: create globals and optionally their shadow capabilities.
+  // Because of ordering the initializer is not yet created.
+  // A vector to store globals which should be initialized.
+  SmallVector<std::pair<GlobalVariable *, GlobalVariable *>, 8> GlobalsToInit;
+  for (GlobalVariable *GV : Globals)
+    if (GlobalVariable *NGV = mapGlobalVariable(GV))
+      GlobalsToInit.push_back(std::make_pair(GV, NGV));
+
+  // Map global aliases.
+  // Store every GlobalAlias to be mapped as not to invalidate the iterator.
+  SmallVector<GlobalAlias *, 8> Aliases;
+  Aliases.reserve(M.alias_size());
+
+  for (GlobalAlias &GA : M.aliases())
+    Aliases.push_back(&GA);
+
+  // 2nd step: create global aliases without their initializers.
+  for (GlobalAlias *GA : Aliases)
+    mapGlobalAlias(GA);
+
+  // A vector to store global initializer section tuples.
+  SmallVector<Constant *, 8> GlobalInitsSectionTuples;
+
+  // 3rd step: map GlobalVariable initializers.
+  for (auto &Pair : GlobalsToInit)
+    if (Constant *Init = mapGlobalVariableInitializer(Pair.first, Pair.second))
+      GlobalInitsSectionTuples.push_back(Init);
+
+  // 4th step: map GlobalAlias aliasees.
+  for (GlobalAlias *GA : Aliases)
+    mapGlobalAliasInitializer(GA);
+
+  // 5th step: emit capability initializers.
   if (!GlobalInitsSectionTuples.empty()) {
     // Create a variable with section attribute '__cheriseed_initializers'
     // containing all data for global initialization.
@@ -2253,29 +2243,6 @@ void CHERIseed::visitGlobals() {
     appendToCompilerUsed(M, GlobalInits);
   }
 
-  // Map global aliases.
-  Globals.clear();
-  // We need to sort aliases to avoid use-before-mapped cases.
-  // If an alias A aliases alias B, then A should come later
-  // in the processing.
-  M.getAliasList().sort(
-      // Returns false, if Left is smaller than Right.
-      [](const GlobalAlias &Right, const GlobalAlias &Left) -> bool {
-        // If an alias doesn't alias another alias,
-        // it is always smaller than anything else.
-        if (IsAliasOf(&Left, &Right))
-          return true;
-        if (IsAliasOf(&Right, &Left))
-          return false;
-        // In all other cases we fall back to sort by names.
-        return Left.getName() > Right.getName();
-      });
-  for (GlobalValue &GV : M.aliases())
-    Globals.push_back(&GV);
-  for (GlobalValue *GV : Globals) {
-    auto _ = DebugPrint::ScopedValueVisit(*GV);
-    mapGlobalAlias(cast<GlobalAlias>(GV));
-  }
   // There might be deferred values after mapping globals, process them now.
   DebugPrint::BeginProcessDeferred();
   visitDeferredValues();
@@ -2476,9 +2443,14 @@ Constant *CHERIseed::mapGlobalInitializer(Use &U,
     case Instruction::FPToUI:
     case Instruction::FPToSI:
     case Instruction::PtrToInt:
-    case Instruction::IntToPtr:
+    case Instruction::IntToPtr: {
+      if (IsCapability(C->getType())) {
+        AnalysisScope.mustInitializeRuntime();
+        return Constant::getNullValue(CapTy);
+      }
       return ConstantExpr::getCast(OpCode, Ops[0],
                                    mapType(C->getType(), /* IsArgTy */ false));
+    }
     case Instruction::ICmp:
     case Instruction::FCmp:
       return ConstantExpr::getCompare(C->getPredicate(), Ops[0], Ops[1]);
@@ -2511,9 +2483,11 @@ Constant *CHERIseed::mapGlobalInitializer(Use &U,
     return Constant::getNullValue(CapTy);
   }
   if (auto *C = dyn_cast<GlobalAlias>(U)) {
-    // Do not resolve the alias. It is only possible in the accessor function.
-    AnalysisScope.mustInitializeRuntime();
-    return Constant::getNullValue(mapType(C->getType(), /* IsArgTy */ false));
+    if (IsCapability(C->getType())) {
+      AnalysisScope.mustInitializeRuntime();
+      return Constant::getNullValue(CapTy);
+    }
+    return GlobalMap.get(C);
   }
   if (auto *C = dyn_cast<GlobalVariable>(U)) {
     if (IsCapability(C->getType())) {
@@ -2523,18 +2497,7 @@ Constant *CHERIseed::mapGlobalInitializer(Use &U,
       AnalysisScope.mustInitializeRuntime();
       return Constant::getNullValue(CapTy);
     }
-
-    Constant *MC = GlobalMap.get(C);
-    if (MC)
-      return MC;
-    // This GlobalVariable is not yet resolved, defer its resolution.
-    return deferValueResolution<Constant>(C, [&]() -> Constant * {
-      GlobalVariable *GV = new GlobalVariable(
-          M, mapType(C->getValueType()), C->isConstant(),
-          GlobalValue::LinkageTypes::ExternalLinkage, nullptr);
-      GV->setName(kDeferredGlobalPrefix + C->getName());
-      return GV;
-    });
+    return GlobalMap.get(C);
   }
   if (auto *C = dyn_cast<BlockAddress>(U)) {
     if (IsCapability(C->getType())) {
@@ -2604,26 +2567,16 @@ Value *CHERIseed::mapValue(Value *V) {
   if (GlobalVariable *GV = dyn_cast<GlobalVariable>(V)) {
     GlobalValue *MGV = GlobalMap.get(GV);
     if (MGV) {
-      // Not all globals have accessor functions.
       if (!ShouldInstrumentGlobal(GV)) {
         if (GV->getAddressSpace() == kCapabilityAS)
           return createCapFromPtr(MGV);
         return MGV;
       }
-      // Otherwise, try to insert a call to the accessor function.
-      Function *Accessor = M.getFunction(
-          GV->getAttribute(kAccessorAttribute).getValueAsString());
-      // When mapping global aliases early in the pass, VC.BB is nullptr.
-      // There is no need to insert any calls.
-      if (!VC.BB)
-        return Accessor;
-      CallInst *CI = VC.IRB->CreateCall(FunctionCallee(Accessor), {});
-      DebugPrint::Emit(CI);
       // FIXME: Mapping the newly created global creates an error in the
       // dominator graph. The mapped value may be used in a code path where it
       // isn't defined.
-      // VC.insert(V, CI);
-      return CI;
+      // VC.insert(V, MGV);
+      return MGV;
     }
   }
 
@@ -2643,13 +2596,7 @@ Value *CHERIseed::mapValue(Value *V) {
       }
       return MGA;
     }
-    // Call the accessor of the global being aliased, if any.
-    FunctionType *FTy =
-        dyn_cast_or_null<FunctionType>(MGA->getType()->getElementType());
-    if (!FTy)
-      return MGA;
-    CallInst *CI = VC.IRB->CreateCall(FTy, MGA, {});
-    return DebugPrint::Emit(CI);
+    return MGA;
   }
 
   if (ConstantExpr *CE = dyn_cast<ConstantExpr>(V)) {
@@ -2747,7 +2694,8 @@ Instruction *CHERIseed::mapInstruction(Instruction &I) {
   return NI;
 }
 
-Constant *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
+GlobalVariable *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
+  auto _ = DebugPrint::ScopedValueVisit(*GV);
   if (GV->hasAttribute(kInternalAttribute))
     return nullptr;
   // Note: ctors and dtors are handled a bit differently. The 3rd parameter
@@ -2756,8 +2704,8 @@ Constant *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
   // point to a global variable or a function. In such a case the initializer
   // will only run if the associated data is not discarded.
   // For now, set the 3rd argument to null or assert if it is non-null.
-  StringRef GVName = GV->getName();
-  if ((GVName == "llvm.global_ctors") || (GVName == "llvm.global_dtors")) {
+  StringRef Name = GV->getName();
+  if ((Name == "llvm.global_ctors") || (Name == "llvm.global_dtors")) {
     // Recreate type: [ {i32, void ()*, i8* } ]
     // CHERIseed does not support capabilities here.
     FunctionType *FTy = FunctionType::get(VoidTy, false);
@@ -2765,6 +2713,104 @@ Constant *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
         Ctx, {Type::getInt32Ty(Ctx), FTy->getPointerTo(), Int8PtrTy});
     ArrayType *ATy =
         ArrayType::get(STy, GV->getInitializer()->getNumOperands());
+    GlobalVariable *NGV =
+        new GlobalVariable(M, ATy, false, GV->getLinkage(), nullptr);
+    NGV->copyAttributesFrom(GV);
+    NGV->setComdat(GV->getComdat());
+    takeName(GV, NGV);
+    GlobalMap.insert(GV, NGV);
+    return NGV;
+  }
+
+  if ((Name == "llvm.used") || (Name == "llvm.compiler.used")) {
+    // Recreate type: [ <N> x i8* ]
+    ArrayType *ATy =
+        ArrayType::get(Int8PtrTy, GV->getInitializer()->getNumOperands());
+    GlobalVariable *NGV =
+        new GlobalVariable(M, ATy, false, GV->getLinkage(), nullptr);
+    NGV->copyAttributesFrom(GV);
+    NGV->setComdat(GV->getComdat());
+    takeName(GV, NGV);
+    GlobalMap.insert(GV, NGV);
+    return NGV;
+  }
+
+  // Skip globals which are excluded from being instrumented.
+  if (!ShouldInstrumentGlobal(GV)) {
+    // Simply copy the global and use as-is.
+    Type *NGVTy = mapType(GV->getValueType(), /* IsArgTy */ false);
+    Constant *NGVI = nullptr;
+    if (GV->hasInitializer())
+      NGVI = GV->getInitializer();
+    GlobalVariable *NGV =
+        new GlobalVariable(M, NGVTy, false, GV->getLinkage(), NGVI);
+    NGV->copyAttributesFrom(GV);
+    NGV->setComdat(GV->getComdat());
+    takeName(GV, NGV);
+    DebugPrint::Emit(NGV);
+    GlobalMap.insert(GV, NGV);
+    return nullptr;
+  }
+
+  // As globals are always accessed as pointers, if the original type is a
+  // capability, we should replace it with __cheriseed_cap_t instead of
+  // __cheriseed_cap_t*.
+  Type *NGVTy = mapType(GV->getValueType(), /* IsArgTy */ false);
+  // New global variable, replaces the original in the default address space.
+  GlobalVariable *NGV =
+      new GlobalVariable(M, NGVTy, false, GV->getLinkage(), nullptr);
+  NGV->copyAttributesFrom(GV);
+  NGV->setComdat(GV->getComdat());
+  // Make sure the alignment is correct for capabilities.
+  if (NGVTy == CapTy)
+    NGV->setAlignment(Align(kCapabilityAlignment));
+  NGV->takeName(GV);
+  DebugPrint::Emit(NGV);
+
+  // The shadow capability through which all accesses will be made in Purecap.
+  if (!IsCapability(GV->getType())) {
+    GlobalMap.insert(GV, NGV);
+    return GV->hasInitializer() ? NGV : nullptr;
+  }
+
+  // This is Purecap ABI, create the shadow capability to access the global.
+  GlobalVariable *ShadowCap = new GlobalVariable(
+      M, CapTy, false, GetNonCommonLinkage(GV->getLinkage()),
+      ConstantStruct::get(CapTy, Constant::getNullValue(CapTy)));
+  ShadowCap->setThreadLocal(GV->isThreadLocal());
+  // Call the shadow capability as the original global and call the original
+  // global something like __cheriseed_shadowed_global_<name>.
+  ShadowCap->takeName(NGV);
+  NGV->setName(kPrefix + std::string("shadowed_global_") +
+               ShadowCap->getName());
+  ShadowCap->setAlignment(Align(kCapabilityAlignment));
+  // If the global is placed into a section, do something similar with its
+  // shadow capability.
+  if (NGV->hasSection())
+    ShadowCap->setSection(kPrefix + std::string("shadow_capability_") +
+                          NGV->getSection().str());
+  ShadowCap->setComdat(NGV->getComdat());
+  DebugPrint::Emit(ShadowCap);
+  // The global should be accessed through the shadow capability, not
+  // the one replacing the original global.
+  GlobalMap.insert(GV, ShadowCap);
+
+  // If there are no initializers we assume the global is external.
+  if (!GV->hasInitializer()) {
+    ShadowCap->setInitializer(nullptr);
+    NGV->eraseFromParent();
+    return nullptr;
+  }
+
+  return NGV;
+}
+
+Constant *CHERIseed::mapGlobalVariableInitializer(GlobalVariable *GV,
+                                                  GlobalVariable *NGV) {
+  StringRef Name = NGV->getName();
+  if ((Name == "llvm.global_ctors") || (Name == "llvm.global_dtors")) {
+    ArrayType *ATy = cast<ArrayType>(NGV->getValueType());
+    StructType *STy = cast<StructType>(ATy->getElementType());
     // Create new initializer.
     Constant *Initializer;
     if (ConstantArray *CA = dyn_cast<ConstantArray>(GV->getInitializer())) {
@@ -2784,17 +2830,12 @@ Constant *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
     } else {
       Initializer = ConstantAggregateZero::get(ATy);
     }
-    GlobalVariable *NGV =
-        new GlobalVariable(M, ATy, false, GV->getLinkage(), Initializer);
-    NGV->copyAttributesFrom(GV);
-    takeName(GV, NGV);
-    GlobalMap.insert(GV, NGV);
+    NGV->setInitializer(Initializer);
     return nullptr;
   }
-  if ((GVName == "llvm.used") || (GVName == "llvm.compiler.used")) {
-    // Recreate type: [ <N> x i8* ]
-    ArrayType *ATy =
-        ArrayType::get(Int8PtrTy, GV->getInitializer()->getNumOperands());
+
+  if ((Name == "llvm.used") || (Name == "llvm.compiler.used")) {
+    ArrayType *ATy = cast<ArrayType>(NGV->getValueType());
     // Create new initializer.
     ConstantArray *CA = dyn_cast<ConstantArray>(GV->getInitializer());
     SmallVector<Constant *, 8> Elements;
@@ -2819,129 +2860,50 @@ Constant *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
 
       Constant *NV = nullptr;
       if (GlobalVariable *GV = dyn_cast<GlobalVariable>(GO))
-        if (ShouldInstrumentGlobal(GV))
-          NV = getOrInsertAccessorFunction(GV);
-      if (!NV) {
-        NV = cast<Constant>(mapValue(GO));
-      }
+        NV = GlobalMap.get(GO);
+      else if (Function *F = dyn_cast<Function>(GO))
+        NV = mapFunction(F);
+      else
+        llvm_unreachable("Unknown GlobalObject");
 
       Elements.push_back(ConstantExpr::getBitCast(NV, Int8PtrTy));
     }
-    Constant *Initializer =
-        ConstantArray::get(ATy, ArrayRef<Constant *>(Elements));
-    GlobalVariable *NGV =
-        new GlobalVariable(M, ATy, false, GV->getLinkage(), Initializer);
-    NGV->copyAttributesFrom(GV);
-    takeName(GV, NGV);
-    GlobalMap.insert(GV, NGV);
+    NGV->setInitializer(
+        ConstantArray::get(ATy, ArrayRef<Constant *>(Elements)));
     return nullptr;
   }
 
-  // Skip globals which are excluded from being instrumented.
-  if (!ShouldInstrumentGlobal(GV)) {
-    // Simply copy the global and use as-is.
-    Type *NGVTy = mapType(GV->getValueType(), /* IsArgTy */ false);
-    Constant *NGVI = nullptr;
-    if (GV->hasInitializer())
-      NGVI = GV->getInitializer();
-    GlobalVariable *NGV =
-        new GlobalVariable(M, NGVTy, false, GV->getLinkage(), NGVI);
-    NGV->copyAttributesFrom(GV);
-    takeName(GV, NGV);
-    DebugPrint::Emit(NGV);
-    GlobalMap.insert(GV, NGV);
-    return nullptr;
-  }
+  GlobalVariable *MGV = cast<GlobalVariable>(GlobalMap.get(GV));
+  // If the mapped value is not the same as the new global, it must be a shadow
+  // capability.
+  GlobalVariable *ShadowCap = MGV != NGV ? MGV : nullptr;
 
-  // As globals are always accessed as pointers, if the original type is a
-  // capability, we should replace it with __cheriseed_cap_t instead of
-  // __cheriseed_cap_t*.
-  Type *NGVTy = mapType(GV->getValueType(), /* IsArgTy */ false);
-  // Initializer used in the declaration of the new global.
-  Constant *NGVI = nullptr;
   // Create a new initializer while visiting all its operands.
   GlobalInitializerAnalysis Analysis(GV);
-  if (GV->hasInitializer())
-    NGVI = mapGlobalInitializer(GV->getOperandUse(0), Analysis);
+  Constant *NGVI = mapGlobalInitializer(GV->getOperandUse(0), Analysis);
+  NGV->setInitializer(NGVI);
 
-  // New global variable, replaces the original in the default address space.
-  bool IsConstant =
+  // Set whether the global is a constant or not.
+  const bool IsConstant =
       Analysis.needsRuntimeInitialization() ? false : GV->isConstant();
-  GlobalVariable *NGV =
-      new GlobalVariable(M, NGVTy, IsConstant, GV->getLinkage(), NGVI);
-  NGV->copyAttributesFrom(GV);
-  // Make sure the alignment is correct for capabilities.
-  if (NGVTy == CapTy)
-    NGV->setAlignment(Align(kCapabilityAlignment));
-
-  // Create the function through which this global will be accessed, its return
-  // type is a pointer to the type of the global.
-  Function *Accessor = getOrInsertAccessorFunction(GV);
-
-  // If there are no initializers we assume the global is external and only
-  // declare the accessor.
-  if (!NGVI) {
-    // There is no more need for the global's mapped declaration.
-    NGV->dropAllReferences();
-    NGV->eraseFromParent();
-    // Map the global and return.
-    GlobalMap.insert(GV, Accessor);
-    auto _ = DebugPrint::ScopedFunctionVisit(*Accessor);
-    return nullptr;
-  }
-
-  // Link the global to its accessor, which makes the output IR more readable.
-  NGV->addAttribute(kAccessorAttribute, Accessor->getName());
-  NGV->setName(kPrefix + std::string("global_") + Accessor->getName().str());
-  DebugPrint::Emit(NGV);
-
-  // The shadow capability through which all accesses will be made in Purecap.
-  GlobalVariable *ShadowCapability = nullptr;
-  if (IsCapability(GV->getType())) {
-    // This is Purecap ABI, create the shadow capability to access the global.
-    ShadowCapability = new GlobalVariable(
-        M, CapTy, false, GetNonCommonLinkage(GV->getLinkage()),
-        ConstantStruct::get(CapTy, Constant::getNullValue(CapTy)));
-    ShadowCapability->setThreadLocal(GV->isThreadLocal());
-    ShadowCapability->setName(kPrefix + std::string("shadow_capability_") +
-                              Accessor->getName().str());
-    ShadowCapability->setAlignment(Align(kCapabilityAlignment));
-    // If the global is placed into a section, do something similar with its
-    // shadow capability.
-    if (NGV->hasSection())
-      ShadowCapability->setSection(kPrefix + std::string("shadow_capability_") +
-                                   NGV->getSection().str());
-    DebugPrint::Emit(ShadowCapability);
-    // The global should be accessed through the shadow capability, not
-    // the one replacing the original global.
-    GlobalMap.insert(GV, ShadowCapability);
-  } else {
-    GlobalMap.insert(GV, NGV);
-  }
-
-  IRBuilder<> IRB{Ctx};
-
-  // Create the body of the accessor function
-  VC.reset();
-  VC.F = Accessor;
-  VC.IRB = &IRB;
-  VC.BB = BasicBlock::Create(VC.F->getContext(), "", VC.F);
-  VC.IRB->SetInsertPoint(VC.BB);
-  VC.IRB->CreateRet(ShadowCapability ? ShadowCapability : NGV);
+  NGV->setConstant(IsConstant);
 
   // Create Initializer function body
-  Twine GlobalInitName =
-      Twine(kPrefix) + "initializer_" + Twine(Accessor->getName());
-  Function *GlobalInitializer = cast<Function>(
+  Twine GlobalInitName = Twine(kPrefix) + "initializer_" +
+                         (ShadowCap ? ShadowCap->getName() : NGV->getName());
+  Function *InitFunction = cast<Function>(
       M.getOrInsertFunction(GlobalInitName.str(), VoidTy).getCallee());
-  GlobalInitializer->setLinkage(GlobalVariable::InternalLinkage);
+  InitFunction->setLinkage(GlobalVariable::InternalLinkage);
+  InitFunction->addFnAttr(kInternalAttribute);
+  InitFunction->setComdat(NGV->getComdat());
 
-  auto _ = DebugPrint::ScopedFunctionVisit(*GlobalInitializer);
+  auto _ = DebugPrint::ScopedFunctionVisit(*InitFunction);
 
+  IRBuilder<> IRB{Ctx};
   VC.reset();
-  VC.F = mapFunction(GlobalInitializer);
+  VC.F = InitFunction;
   VC.IRB = &IRB;
-  VC.BB = BasicBlock::Create(VC.F->getContext(), "", VC.F);
+  VC.BB = BasicBlock::Create(Ctx, "", VC.F);
   VC.IRB->SetInsertPoint(VC.BB);
 
   if (Analysis.needsRuntimeInitialization()) {
@@ -2951,87 +2913,50 @@ Constant *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
 
     // Process initializations at specific GEP indices.
     for (auto &Entry : Analysis.entries()) {
-      if (ConstantExpr *UsedCE = dyn_cast<ConstantExpr>(Entry.V)) {
-        Value *V = mapValue(UsedCE);
-        Value *GEP = VC.IRB->CreateInBoundsGEP(
-            NGV->getType()->getScalarType()->getPointerElementType(), NGV,
-            Entry.Indices);
-        DebugPrint::Emit(GEP);
+      Value *MV = nullptr;
+      Value *GEP = VC.IRB->CreateInBoundsGEP(
+          NGV->getType()->getScalarType()->getPointerElementType(), NGV,
+          Entry.Indices);
+
+      if (ConstantExpr *ECE = dyn_cast<ConstantExpr>(Entry.V)) {
+        Value *MECE = mapValue(ECE);
+        if (GEP->getType() == CapPtrTy)
+          MV = createRtCall(RtKind::COPY_CAP_WITH_OFFSET, GEP, MECE,
+                            ConstantInt::getNullValue(AddrSizeTy));
+        else
+          MV = VC.IRB->CreateStore(MECE, GEP, false);
+
+      } else if (GlobalVariable *EGV = dyn_cast<GlobalVariable>(Entry.V)) {
+        Value *MEGV = GlobalMap.get(EGV);
         if (GEP->getType() == CapPtrTy) {
-          createRtCall(RtKind::COPY_CAP_WITH_OFFSET, GEP, V,
-                       ConstantInt::getNullValue(AddrSizeTy));
-        } else {
-          Value *SI = VC.IRB->CreateStore(V, GEP, false);
-          DebugPrint::Emit(SI);
-        }
-      } else if (GlobalVariable *UsedGV = dyn_cast<GlobalVariable>(Entry.V)) {
-        // Need to call the accessor of the Value in this Use.
-        Function *Accessor = getOrInsertAccessorFunction(UsedGV);
-        std::string GEPName = "gep." + Accessor->getName().str();
-        CallInst *CI = VC.IRB->CreateCall(Accessor, {}, GEPName);
-        Value *GEP = VC.IRB->CreateInBoundsGEP(
-            NGV->getType()->getScalarType()->getPointerElementType(), NGV,
-            Entry.Indices, GEPName);
-        // If this is a capability, then the accessor needs to initialize
-        // the capability which points to this. Otherwise remove the GEP.
-        if (GEP->getType() == CapPtrTy) {
-          DebugPrint::Emit(GEP);
-          createRtCall(RtKind::COPY_CAP_WITH_OFFSET, GEP, CI,
-                       ConstantInt::getNullValue(AddrSizeTy));
+          MV = createRtCall(RtKind::COPY_CAP_WITH_OFFSET, GEP, MEGV,
+                            ConstantInt::getNullValue(AddrSizeTy));
         } else if (Instruction *GEPI = dyn_cast<Instruction>(GEP)) {
           GEPI->eraseFromParent();
+          continue;
         }
-
-      } else if (GlobalAlias *InitGA = dyn_cast<GlobalAlias>(Entry.V)) {
-        // An alias is always a call after transformation.
-        // In hybrid, it returns a pointer to the original global.
-        // In Pure-cap, it returns a pointer to the shadow capability.
-        // Either way, the pointer to the original global is required here.
-        // However, aliases are only resolved after mapping globals.
-        FunctionType *FTy;
-        Value *V = deferValueResolution<Value>(InitGA, [&]() -> Value * {
-          Type *MTy = mapType(InitGA->getAliasee()->getType());
-          FTy = FunctionType::get(MTy, false);
-          MTy = FTy->getPointerTo();
-          return new BitCastInst(Constant::getNullValue(MTy), MTy);
-        });
-        // Call the alias, it is a function.
-        std::string CallName = "accessor.call." + InitGA->getName().str();
-        CallInst *CI = VC.IRB->CreateCall(FTy, V, {}, CallName);
-        DebugPrint::Emit(CI);
-        // Get a GEP to point into the global variable.
-        std::string GEPName = "gep." + InitGA->getName().str();
-        Value *GEP = VC.IRB->CreateInBoundsGEP(
-            NGV->getType()->getScalarType()->getPointerElementType(), NGV,
-            Entry.Indices, GEPName);
-        DebugPrint::Emit(GEP);
+      } else if (GlobalAlias *EGA = dyn_cast<GlobalAlias>(Entry.V)) {
+        Value *MEGA = GlobalMap.get(EGA);
         // Initialize the global value.
-        if (GEP->getType() == CapPtrTy) {
-          createRtCall(RtKind::COPY_CAP_WITH_OFFSET, GEP, CI,
-                       ConstantInt::getNullValue(AddrSizeTy));
-        } else {
-          Value *SI = VC.IRB->CreateStore(CI, GEP, false);
-          DebugPrint::Emit(SI);
-        }
-      } else if (Function *F = dyn_cast<Function>(Entry.V)) {
-        Value *GEP = VC.IRB->CreateInBoundsGEP(
-            NGV->getType()->getScalarType()->getPointerElementType(), NGV,
-            Entry.Indices, "");
-        DebugPrint::Emit(GEP);
+        if (GEP->getType() == CapPtrTy)
+          MV = createRtCall(RtKind::COPY_CAP_WITH_OFFSET, GEP, MEGA,
+                            ConstantInt::getNullValue(AddrSizeTy));
+        else
+          MV = VC.IRB->CreateStore(MEGA, GEP, false);
+      } else if (Function *EF = dyn_cast<Function>(Entry.V)) {
         assert((GEP->getType() == CapPtrTy) && "Expected capability type");
-        createRtCall(RtKind::COPY_CAP_WITH_OFFSET, GEP, mapValue(F),
-                     ConstantInt::getNullValue(AddrSizeTy));
+        Value *MEF = mapValue(EF);
+        MV = createRtCall(RtKind::COPY_CAP_WITH_OFFSET, GEP, MEF,
+                          ConstantInt::getNullValue(AddrSizeTy));
       } else if (BlockAddress *BA = dyn_cast<BlockAddress>(Entry.V)) {
-        Value *GEP = VC.IRB->CreateInBoundsGEP(
-            NGV->getType()->getScalarType()->getPointerElementType(), NGV,
-            Entry.Indices, "");
-        DebugPrint::Emit(GEP);
         Function *NF = mapFunction(BA->getFunction());
         BasicBlock *NBB = FindMappedBasicBlock(NF, BA->getBasicBlock());
         BlockAddress *NBA = BlockAddress::get(NF, NBB);
-        createBoundedCap(GEP, NBA, nullptr, /* IsCode */ true);
-      } else {
-        errs() << "mapGlobalVariable: " << *Entry.V << "\n";
+        MV = createBoundedCap(GEP, NBA, nullptr, /* IsCode */ true);
+      }
+
+      if (!MV) {
+        errs() << "mapGlobalVariableInitializer: " << *Entry.V << "\n";
         errs() << "at GEP indices:\n";
         for (auto *A : Entry.Indices)
           errs() << *A << " ";
@@ -3041,46 +2966,66 @@ Constant *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
     }
   }
 
-  VC.IRB->CreateRetVoid();
+  // Remove init if it does nothing i.e, just has instruction 'ret void'.
+  const bool HasInitFunction = VC.BB->size() != 0;
+  Constant *InitFunctionPtr;
+  if (HasInitFunction) {
+    VC.IRB->CreateRetVoid();
+    InitFunctionPtr = ConstantExpr::getPointerBitCastOrAddrSpaceCast(
+        InitFunction, InitializerFuncTy);
+  } else {
+    VC.F->eraseFromParent();
+    InitFunctionPtr = Constant::getNullValue(InitializerFuncTy);
+  }
 
-  const uint64_t BoundsSizeVal = alignTo(DL.getTypeSizeInBits(NGVTy), 8) / 8;
+  VC.reset();
+
+  // Do not create an entry if there is no shadow capability or init function.
+  if (!ShadowCap && !HasInitFunction)
+    return nullptr;
+
+  const uint64_t BoundsSizeVal =
+      alignTo(DL.getTypeSizeInBits(NGV->getValueType()), 8) / 8;
   // Determine which capabilities should be cleared on the shadow cap
   uint64_t ClearPermsVal = cheriseed::abi::EXECUTE;
   if (IsConstant)
     ClearPermsVal |= cheriseed::abi::STORE;
 
-  Constant *Src = ShadowCapability
-                      ? ConstantExpr::getPtrToInt(ShadowCapability, AddrSizeTy)
-                      : Constant::getNullValue(AddrSizeTy);
-  Constant *Addr = ShadowCapability ? ConstantExpr::getPtrToInt(NGV, AddrSizeTy)
-                                    : Constant::getNullValue(AddrSizeTy);
-  Type *InitializerFuncTy = PointerType::get(FunctionType::get(VoidTy, false),
-                                             DL.getProgramAddressSpace());
-  Constant *InitFunction = (VC.BB->size() > 1)
-                               ? ConstantExpr::getPointerBitCastOrAddrSpaceCast(
-                                     VC.F, InitializerFuncTy)
-                               : Constant::getNullValue(InitializerFuncTy);
-  Constant *BoundsSize = ShadowCapability
-                             ? ConstantInt::get(AddrSizeTy, BoundsSizeVal)
-                             : Constant::getNullValue(AddrSizeTy);
-  Constant *ClearPerms = ShadowCapability
-                             ? ConstantInt::get(CapPermsTy, ClearPermsVal)
-                             : Constant::getNullValue(CapPermsTy);
-  // Remove if function does nothing i.e, just has instruction 'ret void'.
-  if (VC.BB->size() == 1)
-    VC.F->eraseFromParent();
-  VC.reset();
+  // Constants to save in the initializer rodata.
+  Constant *Src, *Addr, *BoundsSize, *ClearPerms;
+  if (ShadowCap) {
+    Src = ConstantExpr::getPtrToInt(ShadowCap, AddrSizeTy);
+    Addr = ConstantExpr::getPtrToInt(NGV, AddrSizeTy);
+    BoundsSize = ConstantInt::get(AddrSizeTy, BoundsSizeVal);
+    ClearPerms = ConstantInt::get(CapPermsTy, ClearPermsVal);
+  } else {
+    Src = Addr = BoundsSize = Constant::getNullValue(AddrSizeTy);
+    ClearPerms = Constant::getNullValue(CapPermsTy);
+  }
 
-  if (!ShadowCapability &&
-      (InitFunction == Constant::getNullValue(InitializerFuncTy)))
-    return nullptr;
   return ConstantStruct::get(
-      InitializerTy,
-      ArrayRef<Constant *>({Src, Addr, BoundsSize, ClearPerms, InitFunction}));
+      InitializerTy, {Src, Addr, BoundsSize, ClearPerms, InitFunctionPtr});
 }
 
 void CHERIseed::mapGlobalAlias(GlobalAlias *GA) {
-  GlobalAlias *NGA;
+  auto _ = DebugPrint::ScopedValueVisit(*GA);
+  PointerType *NTy;
+  if (FunctionType *FTy = dyn_cast<FunctionType>(GA->getValueType())) {
+    NTy = mapType(FTy)->getPointerTo();
+  } else {
+    NTy = cast<PointerType>(mapType(GA->getType()));
+  }
+  GlobalAlias *NGA = GlobalAlias::create(NTy->getPointerElementType(),
+                                         DL.getGlobalsAddressSpace(),
+                                         GA->getLinkage(), "", nullptr, &M);
+  NGA->copyAttributesFrom(GA);
+  takeName(GA, NGA);
+  GlobalMap.insert(GA, NGA);
+}
+
+void CHERIseed::mapGlobalAliasInitializer(GlobalAlias *GA) {
+  GlobalAlias *NGA = cast<GlobalAlias>(GlobalMap.get(GA));
+  Constant *Aliasee;
   // Allow bitcasts to appear in global aliases.
   // For example:
   //   @alias = alias void (...), bitcast (void ()* @aliasee to void (...)*)
@@ -3089,62 +3034,14 @@ void CHERIseed::mapGlobalAlias(GlobalAlias *GA) {
     assert(isa<FunctionType>(GA->getValueType()) && "Expected FunctionType");
     Function *F = mapFunction(cast<Function>(CE->getOperand(0)));
     Type *NTy = mapType(GA->getValueType());
-    Constant *MV = ConstantExpr::getBitCast(F, NTy->getPointerTo(), false);
-    NGA = GlobalAlias::create(NTy, DL.getGlobalsAddressSpace(),
-                              GA->getLinkage(), "", MV, &M);
+    Aliasee = ConstantExpr::getBitCast(F, NTy->getPointerTo(), false);
   } else if (Function *F = dyn_cast<Function>(GA->getAliasee())) {
-    NGA = GlobalAlias::create(GA->getLinkage(), "", mapFunction(F));
+    Aliasee = mapFunction(F);
   } else {
-    // Lookup the aliasee, it should already be mapped.
-    GlobalValue *MGV = cast<GlobalValue>(mapValue(GA->getAliasee()));
-    NGA = GlobalAlias::create(GA->getLinkage(), "", MGV);
+    Aliasee = GlobalMap.get(cast<GlobalValue>(GA->getAliasee()));
   }
 
-  NGA->copyAttributesFrom(GA);
-  takeName(GA, NGA);
-  GlobalMap.insert(GA, NGA);
-}
-
-Function *CHERIseed::getOrInsertAccessorFunction(GlobalVariable *GV) {
-  if (GV->hasAttribute(kAccessorAttribute))
-    return M.getFunction(
-        GV->getAttribute(kAccessorAttribute).getValueAsString());
-
-  // Figure out the return type of the accessor.
-  Type *GlobalTy = IsCapability(GV->getType())
-                       ? CapTy
-                       : mapType(GV->getValueType(), /* IsArgTy */ false);
-  // Type of the accessor function.
-  FunctionType *AccessorTy =
-      FunctionType::get(GlobalTy->getPointerTo(), {}, false);
-  // Create accessor function.
-  FunctionCallee AccessorCall = M.getOrInsertFunction("", AccessorTy);
-  Function *Accessor = cast<Function>(AccessorCall.getCallee());
-  takeName(GV, Accessor);
-  Accessor->addFnAttr(kInternalAttribute);
-  Accessor->setLinkage(GetNonCommonLinkage(GV->getLinkage()));
-  // If the global variable is placed in a section, do the same with a pointer
-  // to its accessor. This supports a very common pattern where symbols are
-  // placed into a section and they are iterated using __start_* and __stop_*.
-  if (GV->hasSection()) {
-    Constant *BC = ConstantExpr::getBitCast(Accessor, Int8PtrTy);
-    GlobalVariable *AGV =
-        new GlobalVariable(M, Int8PtrTy, true, GV->getLinkage(), BC);
-    AGV->setName(Accessor->getName() + "_" + GV->getSection());
-    AGV->setSection(kPrefix + std::string("accessor_") +
-                    GV->getSection().str());
-    AGV->setAlignment(MaybeAlign(kCapabilityAlignment));
-    // Add to llvm.compiler.used: no later optimizations should remove this.
-    appendToCompilerUsed(M, AGV);
-    // This global must not be processed.
-    AGV->addAttribute(kInternalAttribute);
-    // Since it is a global, register it.
-    GlobalMap.insert(AGV, AGV);
-  }
-  // Link the global to its accessor.
-  GV->addAttribute(kAccessorAttribute, Accessor->getName());
-
-  return Accessor;
+  NGA->setAliasee(Aliasee);
 }
 
 FunctionCallee CHERIseed::getOrInsertLibraryCall(StringRef Name,
@@ -3831,7 +3728,6 @@ void CHERIseed::stripAttributes() {
   for (GlobalVariable &GV : M.globals()) {
     AttributeSet set = GV.getAttributes();
     set = set.removeAttribute(Ctx, kInternalAttribute);
-    set = set.removeAttribute(Ctx, kAccessorAttribute);
     GV.setAttributes(set);
   }
 }

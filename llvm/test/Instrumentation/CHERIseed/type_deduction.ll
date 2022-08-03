@@ -114,5 +114,5 @@ define i32 addrspace(200)** @function_type_deduction_4(i32 addrspace(200)** retu
   ret i32 addrspace(200)** %0
 }
 
-; CHECK-NOT: "cheriseed-accessor"
 ; CHECK-NOT: "cheriseed-internal"
+; CHECK-NOT: "cheriseed-rename"

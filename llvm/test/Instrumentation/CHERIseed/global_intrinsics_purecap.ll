@@ -44,18 +44,18 @@ define void @func() addrspace(200) {
 
 ; CHECK-LABEL: @llvm.used = appending global [6 x i8*]
 @llvm.used = appending addrspace(200) global [6 x i8*] [
-; CHECK-SAME:  i8* bitcast (%__cheriseed_cap_t* ()* @char to i8*)
+; CHECK-SAME:  i8* bitcast (%__cheriseed_cap_t* @char to i8*)
   i8* addrspacecast (i8 addrspace(200)* @char to i8*),
-; CHECK-SAME:  i8* bitcast (%__cheriseed_cap_t* ()* @int to i8*)
+; CHECK-SAME:  i8* bitcast (%__cheriseed_cap_t* @int to i8*)
   i8* addrspacecast (i8 addrspace(200)* bitcast (
     i32 addrspace(200)* @int to i8 addrspace(200)*) to i8*),
-; CHECK-SAME:  i8* bitcast (%__cheriseed_cap_t* ()* @ptr to i8*)
+; CHECK-SAME:  i8* bitcast (%__cheriseed_cap_t* @ptr to i8*)
   i8* addrspacecast (i8 addrspace(200)* bitcast (
     i8 addrspace(200)* addrspace(200)* @ptr to i8 addrspace(200)*) to i8*),
-; CHECK-SAME:  i8* bitcast (%__cheriseed_cap_t* ()* @cap_before to i8*)
+; CHECK-SAME:  i8* bitcast (%__cheriseed_cap_t* @cap_before to i8*)
   i8* addrspacecast (i8 addrspace(200)* bitcast (
     i8 addrspace(200)* addrspace(200)* @cap_before to i8 addrspace(200)*) to i8*),
-; CHECK-SAME:  i8* bitcast (%__cheriseed_cap_t* ()* @cap_after to i8*)
+; CHECK-SAME:  i8* bitcast (%__cheriseed_cap_t* @cap_after to i8*)
   i8* addrspacecast (i8 addrspace(200)* bitcast (
     i8 addrspace(200)* addrspace(200)* @cap_after to i8 addrspace(200)*) to i8*),
 ; CHECK-SAME:  i8* bitcast (void ()* @func to i8*)
