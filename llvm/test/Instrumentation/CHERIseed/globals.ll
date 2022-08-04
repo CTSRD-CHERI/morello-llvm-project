@@ -39,6 +39,7 @@ define void @test_sum_globals() {
 ; CHECK-NEXT:  %14 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %13, i64 4, i32 2)
 ; CHECK-NEXT:  %15 = inttoptr i64 %14 to i32*
 ; CHECK-NEXT:  store i32 %12, i32* %15, align 4
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %14, i64 4)
   store i32 %4, i32 addrspace(200)* @global_cap_200, align 4
 ; CHECK-NEXT:  %16 = call %__cheriseed_cap_t* @ext_cap_to_cap_200()
 ; CHECK-NEXT:  %17 = call %__cheriseed_cap_t* @__cheriseed_load_cap(%__cheriseed_cap_t* %16, %__cheriseed_cap_t* %2)
@@ -53,6 +54,7 @@ define void @test_sum_globals() {
 ; CHECK-NEXT:  %23 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %22, i64 4, i32 2)
 ; CHECK-NEXT:  %24 = inttoptr i64 %23 to i32*
 ; CHECK-NEXT:  store i32 %21, i32* %24, align 4
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %23, i64 4)
   store i32 %7, i32 addrspace(200)* @global_cap_200, align 4
 ; CHECK-NEXT:  ret void
   ret void
@@ -78,6 +80,7 @@ define void @test_sum_hybrid_globals() {
 ; CHECK-NEXT:  %11 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %9, i64 4, i32 2)
 ; CHECK-NEXT:  %12 = inttoptr i64 %11 to i32*
 ; CHECK-NEXT:  store i32 %10, i32* %12, align 4
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %11, i64 4)
   store i32 %4, i32 addrspace(200)* %3, align 4
 ; CHECK-NEXT:  ret void
   ret void

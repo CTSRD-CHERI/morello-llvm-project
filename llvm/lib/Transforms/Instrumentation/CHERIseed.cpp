@@ -577,6 +577,7 @@ struct CHERIseed final : public InstVisitor<CHERIseed, Value *> {
     ADDRESS_GET,
     ADDRESS_SET,
     CHECK_ACCESS,
+    CHECK_ACCESS_END,
     CMPXCHG_CAP,
     CMPXCHG_CAP_HYBRID,
     COPY_CAP_WITH_OFFSET,
@@ -1230,6 +1231,11 @@ protected:
   Value *createCapAccessCheck(Value *Cap, Type *Ty, unsigned Size,
                               unsigned PermsReq);
 
+  /// Executes post-access-check steps for STORE accesses.
+  ///
+  /// \param Access A value returned by a previous createCapAccessCheck() call.
+  void createCapAccessCheckEnd(Value *Access);
+
   /// Removes Values which are left behind during the transformations and
   /// are no longer used.
   void stripDeadValues();
@@ -1406,6 +1412,7 @@ Value *CHERIseed::visitAtomicCmpXchgInst(AtomicCmpXchgInst &I) {
       NBase, MCmp, MNew, I.getAlign(), I.getSuccessOrdering(),
       I.getFailureOrdering(), I.getSyncScopeID());
   DebugPrint::Emit(NI);
+  createCapAccessCheckEnd(NBase);
   return NI;
 }
 
@@ -1443,6 +1450,7 @@ Value *CHERIseed::visitAtomicRMWInst(AtomicRMWInst &I) {
   Value *NI = VC.IRB->CreateAtomicRMW(I.getOperation(), NBase, MVal,
                                       I.getAlign(), I.getOrdering());
   DebugPrint::Emit(NI);
+  createCapAccessCheckEnd(NBase);
   return NI;
 }
 
@@ -1777,6 +1785,7 @@ Value *CHERIseed::visitStoreInst(StoreInst &I) {
   NI->setOrdering(I.getOrdering());
   NI->setAlignment(I.getAlign());
   DebugPrint::Emit(NI);
+  createCapAccessCheckEnd(Ptr);
   // Do not map store instructions, it is not necessary.
   // Original store instructions should have no return value.
   return nullptr;
@@ -3488,6 +3497,10 @@ CallInst *CHERIseed::createRtCall(RtKind Kind, const StringRef Name,
     FTy = FunctionType::get(AddrSizeTy, {CapPtrTy, AddrSizeTy, CapPermsTy},
                             false);
     break;
+  case RtKind::CHECK_ACCESS_END:
+    RtName = "check_access_end";
+    FTy = FunctionType::get(VoidTy, {AddrSizeTy, AddrSizeTy}, false);
+    break;
   case RtKind::CMPXCHG_CAP:
     RtName = "cmpxchg_cap";
     FTy = FunctionType::get(
@@ -3766,6 +3779,12 @@ Value *CHERIseed::createCapAccessCheck(Value *Cap, Type *Ty, unsigned Size,
   Value *Ptr = VC.IRB->CreateIntToPtr(Addr, Ty);
   DebugPrint::Emit(Ptr);
   return Ptr;
+}
+
+void CHERIseed::createCapAccessCheckEnd(Value *Access) {
+  CallInst *Address = cast<CallInst>(cast<IntToPtrInst>(Access)->getOperand(0));
+  Value *Size = Address->getArgOperand(1);
+  createRtCall(RtKind::CHECK_ACCESS_END, Address, Size);
 }
 
 void CHERIseed::stripDeadValues() {

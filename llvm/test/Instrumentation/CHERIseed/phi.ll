@@ -337,6 +337,7 @@ l2:
 ; CHECK-NEXT:  %1 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %phi.cpy, i64 1, i32 2)
 ; CHECK-NEXT:  %2 = inttoptr i64 %1 to i8*
 ; CHECK-NEXT:  store i8 42, i8* %2
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %1, i64 1)
   store i8 42, i8 addrspace(200)* %phi
 ; CHECK-NEXT:  br label %end
   br label %end

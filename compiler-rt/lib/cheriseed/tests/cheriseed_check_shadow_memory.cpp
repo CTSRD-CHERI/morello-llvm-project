@@ -74,3 +74,52 @@ TEST(CheckShadowMemory, CheckCommonValues) {
   EXPECT_EQ(test_map.GetAlignment(), 0x10000);
   EXPECT_EQ(test_map.GetShadowSize(), 0x10000000);
 };
+
+static const MemoryRange *IterateTagRangesExpected;
+
+static void IterateTagRangesCallback(const MemoryRange &range) {
+  EXPECT_EQ(range.GetBase(), IterateTagRangesExpected->GetBase());
+  EXPECT_EQ(range.GetEnd(), IterateTagRangesExpected->GetEnd());
+  ++IterateTagRangesExpected;
+}
+
+struct IterateTagRangesTester {
+  IterateTagRangesTester(vaddr start, vaddr end,
+                         const MemoryRange *expected_ranges) {
+    IterateTagRangesExpected = expected_ranges;
+    test_map.IterateTagRanges(MemoryRange(start, end),
+                              &IterateTagRangesCallback);
+  }
+};
+
+TEST(CheckShadowMemory, IterateTagRanges) {
+  TEST_MAP_INIT;
+  MemoryRange ranges[2];
+
+  // Note: end address is not inclusive.
+  // Think about base + size: [base, base + size)
+
+  ranges[0] = MemoryRange(0x7e000000, 0x7e000001);
+  IterateTagRangesTester(0, 1, ranges);
+  IterateTagRangesTester(0, 16, ranges);
+  IterateTagRangesTester(15, 16, ranges);
+
+  ranges[0] = MemoryRange(0x7e000000, 0x7e000002);
+  IterateTagRangesTester(0, 17, ranges);
+  IterateTagRangesTester(15, 17, ranges);
+  IterateTagRangesTester(0, 31, ranges);
+  IterateTagRangesTester(15, 31, ranges);
+
+  // Last capability before the shadow gap.
+  ranges[0] = MemoryRange(0x85DFFFFF, 0x85e00000);
+  IterateTagRangesTester(0x7DFFFFF0, 0x7DFFFFFF, ranges);
+  IterateTagRangesTester(0x7DFFFFFF, 0x7DFFFFFF, ranges);
+
+  // Overlaps to from low to high.
+  ranges[0] = MemoryRange(0x85DFFFFF, 0x85e00000);
+  ranges[1] = MemoryRange(0x86e00000, 0x86e00001);
+  IterateTagRangesTester(0x7DFFFFF0, 0x8e000001, ranges);
+  IterateTagRangesTester(0x7DFFFFFF, 0x8e000001, ranges);
+  IterateTagRangesTester(0x7DFFFFF0, 0x8e00000F, ranges);
+  IterateTagRangesTester(0x7DFFFFFF, 0x8e00000F, ranges);
+};

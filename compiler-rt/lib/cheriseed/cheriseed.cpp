@@ -259,6 +259,45 @@ void ControlChecksDynamic(const Environment &env) {
   }
 }
 
+// Helper to manage the locked state of a range of tags.
+struct RangedTagLock {
+  explicit RangedTagLock(vaddr address, usize size)
+      : range(address, address + size) {
+    // TODO: check that start < end
+  }
+
+  void Lock() const { ShadowMap.IterateTagRanges(range, &LockCallback); }
+  void UnLock() const { ShadowMap.IterateTagRanges(range, &UnLockCallback); }
+
+ protected:
+  // Locks tags in the range [range.GetBase(), range.GetEnd()).
+  static void LockCallback(const MemoryRange &range) {
+    TagState *address = reinterpret_cast<TagState *>(range.GetBase());
+    const TagState *const end_address =
+        reinterpret_cast<TagState *>(range.GetEnd());
+    while (address != end_address) {
+      AcquireTag(address++);
+    }
+  }
+
+  // Unlocks previously locked tags in the range
+  // [range.GetBase(), range.GetEnd()).
+  static void UnLockCallback(const MemoryRange &range) {
+    TagState *address = reinterpret_cast<TagState *>(range.GetBase());
+    const TagState *const end_address =
+        reinterpret_cast<TagState *>(range.GetEnd());
+    while (address != end_address) {
+      const TagState prev_tag = ReleaseTag(address, TagState::TS_CLEARED);
+      if (UNLIKELY(prev_tag != TagState::TS_LOCKED)) {
+        // TODO: error
+      }
+      ++address;
+    }
+  }
+
+  MemoryRange range;
+};  // struct RangedTagLock
+
 }  // namespace __cheriseed
 
 // -------------------------------------
@@ -613,11 +652,23 @@ void __cheriseed_static_init(u64 sp) {
 u64 __cheriseed_check_access(const __cheriseed_cap_t *cap, u64 size,
                              u32 perms) {
   Options Opts;
-  return LocalCap(Opts, cap)
-      .RequireTagged()
-      .RequirePermissions(CheckPermsToCCL(perms))
-      .RequireBounds(size)
-      .GetValue();
+  u64 ccl_perms = CheckPermsToCCL(perms);
+  u64 address = LocalCap(Opts, cap)
+                    .RequireTagged()
+                    .RequirePermissions(ccl_perms)
+                    .RequireBounds(size)
+                    .GetValue();
+  // If there is a data store going to happen, lock all tags for that range.
+  // This closes the window in which a race condition can occur between
+  // writing some random data and a tagged capability.
+  if (ccl_perms & ccl::permissions::STORE)
+    RangedTagLock(address, size).Lock();
+
+  return address;
+}
+
+void __cheriseed_check_access_end(u64 address, u64 size) {
+  RangedTagLock(address, size).UnLock();
 }
 
 __cheriseed_cmpxchg_result_t __cheriseed_cmpxchg_cap(

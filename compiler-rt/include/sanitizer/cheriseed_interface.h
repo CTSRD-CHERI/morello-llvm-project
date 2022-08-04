@@ -577,6 +577,15 @@ void __cheriseed_static_init(uint64_t sp);
 uint64_t __cheriseed_check_access(const __cheriseed_cap_t *cap, uint64_t size,
                                   uint32_t perms);
 
+/// Marks the end of a STORE access previously started by a check_access.
+///
+/// \note This API is defined exclusively by CHERIseed and does not
+/// map to any CHERI intrinsics.
+///
+/// \param[in] address Base address of the access.
+/// \param[in] size The size of the access.
+void __cheriseed_check_access_end(uint64_t address, uint64_t size);
+
 /// As a single atomic operation, compares the capability described by
 /// \p cap_to_cap with the capability pointed to by \p cap_expected . If they
 /// are bitwise-equivalent, \p cap_desired is written to \p cap_to_cap using

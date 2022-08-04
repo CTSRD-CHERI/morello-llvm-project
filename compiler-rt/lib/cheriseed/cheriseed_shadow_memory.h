@@ -38,6 +38,9 @@ struct MemoryRange {
   vaddr GetBase() const { return base; }
   vaddr GetEnd() const { return end; }
   usize GetSize() const { return end - base; }
+  bool Contains(vaddr address) const {
+    return (base <= address) && (address <= end);
+  }
 
  private:
   vaddr base, end;
@@ -88,6 +91,21 @@ struct ShadowMemory {
   // Returns the shadow address associated with a virtual address.
   vaddr GetShadowAddressFrom(vaddr address) const {
     return GetShadowMemoryRange().GetBase() + (address >> kShadowScale);
+  }
+
+  void IterateTagRanges(const MemoryRange& range,
+                        void (*callback)(const MemoryRange&)) const {
+    MemoryRange tag_range(
+        GetShadowAddressFrom(range.GetBase()),
+        GetShadowAddressFrom(range.GetEnd() + (1 << shadow_scale) - 1));
+
+    if (UNLIKELY(GetShadowMemoryRangeLow().Contains(tag_range.GetBase()) &&
+                 GetShadowMemoryRangeHigh().Contains(tag_range.GetEnd()))) {
+      callback({tag_range.GetBase(), GetShadowMemoryRangeLow().GetEnd()});
+      callback({GetShadowMemoryRangeHigh().GetBase(), tag_range.GetEnd()});
+    } else {
+      callback({tag_range.GetBase(), tag_range.GetEnd()});
+    }
   }
 
  private:

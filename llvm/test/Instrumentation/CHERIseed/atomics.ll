@@ -71,6 +71,7 @@ define void @store_atomic_i8(i8* %p, i8 addrspace(200)* %c, i8 %v) {
 ; CHECK-NEXT:  %1 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %c, i64 1, i32 2)
 ; CHECK-NEXT:  %2 = inttoptr i64 %1 to i8*
 ; CHECK-NEXT:  store atomic i8 %v, i8* %2 monotonic, align 1
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %1, i64 1)
   store atomic i8 %v, i8 addrspace(200)* %c monotonic, align 1
 ; CHECK-NEXT:  ret void
   ret void
@@ -83,6 +84,7 @@ define void @store_atomic_p0(i8** %p, i8* addrspace(200)* %c) {
 ; CHECK-NEXT:  %1 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %c, i64 8, i32 2)
 ; CHECK-NEXT:  %2 = inttoptr i64 %1 to i8**
 ; CHECK-NEXT:  store atomic i8* null, i8** %2 monotonic, align 8
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %1, i64 8)
   store atomic i8* null, i8* addrspace(200)* %c monotonic, align 8
 ; CHECK-NEXT:  ret void
   ret void
@@ -124,10 +126,12 @@ define void @atomicrmw_i8(i8 addrspace(200)* %c) {
 ; CHECK-NEXT:  %1 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %c, i64 1, i32 3)
 ; CHECK-NEXT:  %2 = inttoptr i64 %1 to i8*
 ; CHECK-NEXT:  %3 = atomicrmw xchg i8* %2, i8 1 acquire
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %1, i64 1)
   %1 = atomicrmw xchg i8 addrspace(200)* %c, i8 1 acquire
 ; CHECK-NEXT:  %4 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %c, i64 1, i32 3)
 ; CHECK-NEXT:  %5 = inttoptr i64 %4 to i8*
 ; CHECK-NEXT:  %6 = atomicrmw add i8* %5, i8 1 monotonic
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %4, i64 1)
   %2 = atomicrmw add i8 addrspace(200)* %c, i8 1 monotonic
 ; CHECK-NEXT:  ret void
   ret void
@@ -138,10 +142,12 @@ define void @atomicrmw_p0(i8* addrspace(200)* %c, i8* %p) {
 ; CHECK-NEXT:  %1 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %c, i64 8, i32 3)
 ; CHECK-NEXT:  %2 = inttoptr i64 %1 to i8**
 ; CHECK-NEXT:  %3 = atomicrmw xchg i8** %2, i8* %p acquire
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %1, i64 8)
   %1 = atomicrmw xchg i8* addrspace(200)* %c, i8* %p acquire
 ; CHECK-NEXT:  %4 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %c, i64 8, i32 3)
 ; CHECK-NEXT:  %5 = inttoptr i64 %4 to i8**
 ; CHECK-NEXT:  %6 = atomicrmw add i8** %5, i8* %p monotonic
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %4, i64 8)
   %2 = atomicrmw add i8* addrspace(200)* %c, i8* %p monotonic
 ; CHECK-NEXT:  ret void
   ret void
@@ -187,6 +193,7 @@ define void @cmpxchg_i8(i8* %p, i8 addrspace(200)* %c) {
 ; CHECK-NEXT:  %1 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %c, i64 1, i32 3)
 ; CHECK-NEXT:  %2 = inttoptr i64 %1 to i8*
 ; CHECK-NEXT:  %v2 = cmpxchg i8* %2, i8 0, i8 1 seq_cst seq_cst
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %1, i64 1)
   %v2 = cmpxchg i8 addrspace(200)* %c, i8 0, i8 1 seq_cst seq_cst
 ; CHECK-NEXT:  ret void
   ret void
@@ -199,6 +206,7 @@ define void @cmpxchg_p0(i8** %p, i8* addrspace(200)* %c, i8* %n) {
 ; CHECK-NEXT:  %1 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %c, i64 8, i32 3)
 ; CHECK-NEXT:  %2 = inttoptr i64 %1 to i8*
 ; CHECK-NEXT:  %v2 = cmpxchg i8** %2, i8* null, i8* %n seq_cst seq_cst
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %1, i64 8)
   %v2 = cmpxchg i8* addrspace(200)* %c, i8* null, i8* %n seq_cst seq_cst
 ; CHECK-NEXT:  ret void
   ret void
@@ -248,6 +256,7 @@ define void @regression() {
 ; CHECK-NEXT:  %4 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %3, i64 8, i32 2)
 ; CHECK-NEXT:  %5 = inttoptr i64 %4 to i64*
 ; CHECK-NEXT:  store atomic i64 0, i64* %5 release, align 8
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %4, i64 8)
   store atomic i64 0, i64 addrspace(200)* bitcast (i64 addrspace(200)* getelementptr inbounds (%regression.s, %regression.s addrspace(200)* @regression.g, i64 0, i32 0, i64 2) to i64 addrspace(200)*) release, align 8
 ; CHECK-NEXT:  ret void
   ret void

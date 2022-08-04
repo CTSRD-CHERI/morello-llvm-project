@@ -27,6 +27,7 @@ void callee1(int n, ...) {
 // CHECK-NEXT:  [[V4:%.*]] = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* [[N_ADDR_CAP]], i64 4, i32 2)
 // CHECK-NEXT:  [[V5:%.*]] = inttoptr i64 [[V4]] to i32*
 // CHECK-NEXT:  store i32 %n, i32* [[V5]], align 4
+// CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 [[V4]], i64 4)
 // CHECK-NEXT:  call void @__cheriseed_store_cap(%__cheriseed_cap_t* [[LST_CAP]], %__cheriseed_cap_t* %0)
 // CHECK-NEXT:  %stack = call %__cheriseed_cap_t* @__cheriseed_load_cap(%__cheriseed_cap_t* [[LST_CAP]], %__cheriseed_cap_t* [[V1]])
 // CHECK-NEXT:  %new_stack = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* [[V2]], %__cheriseed_cap_t* %stack, i64 16)
@@ -63,6 +64,7 @@ void callee2(int n, ...) {
 // CHECK-NEXT:  [[V2:%.*]] = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* [[N_ADDR_CAP]], i64 4, i32 2)
 // CHECK-NEXT:  [[V3:%.*]] = inttoptr i64 [[V2]] to i32*
 // CHECK-NEXT:  store i32 %n, i32* [[V3]], align 4
+// CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 [[V2]], i64 4)
 // CHECK-NEXT:  call void @__cheriseed_store_cap(%__cheriseed_cap_t* [[LST1_CAP]], %__cheriseed_cap_t* %0)
 // CHECK-NEXT:  [[V4:%.*]] = call %__cheriseed_cap_t* @__cheriseed_load_cap(%__cheriseed_cap_t* [[LST1_CAP]], %__cheriseed_cap_t* [[V1]])
 // CHECK-NEXT:  call void @__cheriseed_store_cap(%__cheriseed_cap_t* [[LST2_CAP]], %__cheriseed_cap_t* [[V4]])

@@ -192,6 +192,9 @@ SANITIZER_INTERFACE_ATTRIBUTE
 u64 __cheriseed_check_access(const __cheriseed_cap_t *cap, u64 size, u32 perms);
 
 SANITIZER_INTERFACE_ATTRIBUTE
+void __cheriseed_check_access_end(u64 address, u64 size);
+
+SANITIZER_INTERFACE_ATTRIBUTE
 __cheriseed_cmpxchg_result_t __cheriseed_cmpxchg_cap(
     __cheriseed_cap_t *cap_to_cap, const __cheriseed_cap_t *cap_expected,
     const __cheriseed_cap_t *cap_desired, __cheriseed_cap_t *cap_orig,

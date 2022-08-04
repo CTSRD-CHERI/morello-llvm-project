@@ -176,6 +176,7 @@ l1:
 ; CHECK-NEXT:    %7 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %6, i64 1, i32 2)
 ; CHECK-NEXT:    %8 = inttoptr i64 %7 to i8*
 ; CHECK-NEXT:    store i8 42, i8* %8
+; CHECK-NEXT:    call void @__cheriseed_check_access_end(i64 %7, i64 1)
   store i8 42, i8 addrspace(200)* addrspacecast (i64* getelementptr inbounds ({ i64 }, { i64 }* @always_map_g, i64 0, i32 0) to i8 addrspace(200)*)
 ; CHECK-NEXT:    br label %end
   br label %end
@@ -192,6 +193,7 @@ l2:
 ; CHECK-NEXT:    %14 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %13, i64 1, i32 2)
 ; CHECK-NEXT:    %15 = inttoptr i64 %14 to i8*
 ; CHECK-NEXT:    store i8 42, i8* %15
+; CHECK-NEXT:    call void @__cheriseed_check_access_end(i64 %14, i64 1)
   store i8 42, i8 addrspace(200)* addrspacecast (i64* getelementptr inbounds ({ i64 }, { i64 }* @always_map_g, i64 0, i32 0) to i8 addrspace(200)*)
 ; CHECK-NEXT:    br label %end
   br label %end
