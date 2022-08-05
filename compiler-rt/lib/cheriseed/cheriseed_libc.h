@@ -20,6 +20,9 @@
 namespace __cheriseed {
 namespace libc {
 
+// Auxiliary value constants.
+static constexpr u64 AT_PAGESZ = 6;
+
 // Some system call numbers [Linux/arch specific]
 enum SyscallNumber : int {
 #if defined(__aarch64__)

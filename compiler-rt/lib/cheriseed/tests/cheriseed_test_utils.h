@@ -135,6 +135,17 @@ struct OnStackArgs {
     argv[0] = nullptr;
     envp[0] = env;
     envp[1] = nullptr;
+    auxv[0] = {0, 0};
+    auxv[1] = {0, 0};
+  }
+
+  OnStackArgs(u64 type, u64 value) {
+    argc = 1;
+    argv[0] = nullptr;
+    envp[0] = reinterpret_cast<const char *>(&envp[1]);
+    envp[1] = nullptr;
+    auxv[0] = {type, value};
+    auxv[1] = {0, 0};
   }
 
   u64 GetAddress() const { return reinterpret_cast<u64>(&argc); }
@@ -142,6 +153,9 @@ struct OnStackArgs {
   int argc;
   const char *argv[1];
   const char *envp[2];
+  struct {
+    u64 v[2];
+  } auxv[2];
 };  // struct OnStackArgs
 
 #if !defined(CHERISEED_UNIT_TESTING)

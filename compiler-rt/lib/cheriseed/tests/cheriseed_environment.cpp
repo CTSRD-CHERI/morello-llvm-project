@@ -27,6 +27,8 @@ TEST(Environment, None) {
   EXPECT_EQ(env.GetEnv(nullptr), nullptr);
   EXPECT_EQ(env.GetEnv(""), nullptr);
   EXPECT_EQ(env.GetEnv("Foo"), nullptr);
+
+  EXPECT_EQ(env.GetAuxv(0), 0);
 }
 
 TEST(Environment, Env) {
@@ -39,4 +41,13 @@ TEST(Environment, Env) {
   EXPECT_EQ(env.GetEnv("Foo"), nullptr);
   EXPECT_EQ(env.GetEnv("FOO="), nullptr);
   EXPECT_EQ(env.GetEnv("FOO"), &env_var[0]);
+}
+
+TEST(Environment, Auxv) {
+  OnStackArgs args(1, 42);
+  Environment env = Environment::From(args.GetAddress());
+
+  EXPECT_EQ(env.GetAuxv(0), 0);
+  EXPECT_EQ(env.GetAuxv(1), 42);
+  EXPECT_EQ(env.GetAuxv(2), 0);
 }

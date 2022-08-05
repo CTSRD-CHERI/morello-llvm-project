@@ -35,6 +35,9 @@ struct methods;
 
 namespace __cheriseed {
 
+// The size of a page in the system.
+extern usize SystemPageSize;
+
 struct Options {
   // Determine if the current config requires invocation of signal handlers
   bool shouldInvokeSignalHandlers() const {
@@ -249,17 +252,26 @@ struct Environment {
   static Environment From(u64 sp);
 
   // Finds an environment variable by name.
-  EnvPtr GetEnv(const char *Name) const;
+  EnvPtr GetEnv(const char *name) const;
+
+  // Finds an auxiliary value.
+  // It is up to the user to interpret the returned value.
+  u64 GetAuxv(u64 type) const;
 
  protected:
   // Type for the environment variable array.
   using EnvArray = const char *const *;
+  // Type for the auxiliary values array.
+  using AuxvArray = const u64 *;
 
   // Protected constructor to instantiate an Environment.
-  explicit constexpr Environment(EnvArray envp) : envp_start(envp) {}
+  explicit constexpr Environment(EnvArray envp, AuxvArray auxv)
+      : envp_start(envp), auxv_start(auxv) {}
 
   // Pointer to the start of the envrionment variables.
   const EnvArray envp_start;
+  // Pointer to the start of the auxiliary values.
+  const AuxvArray auxv_start;
 };  // struct Environment
 
 // A dynamic way to control checks using CHERISEED_CHECKS environment variable.

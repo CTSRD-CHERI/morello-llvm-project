@@ -154,11 +154,8 @@ struct CapabilityAddress final {
     failed |= (cap_addr & (static_cast<vaddr>(1) << 55)) != 0;
 #endif
 #if defined(SANITIZER_LINUX)
-    // TODO: use AT_PAGESZ
-    // Ideally we would use AT_PAGESZ, but it is not available at all times.
-    // 4K is a good guess, but later it would be best to really use the
-    // appropriate value.
-    failed |= cap_addr < 4096;
+    // Check for address on the first page, which is never accessible.
+    failed |= cap_addr < SystemPageSize;
 #endif
     return !failed;
   }

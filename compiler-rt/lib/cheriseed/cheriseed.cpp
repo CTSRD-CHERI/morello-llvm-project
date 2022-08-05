@@ -29,6 +29,9 @@ atomic_uint8_t Options::EnableCHERISemantics{1};
 atomic_uint8_t Options::EnableSignalHandlers{1};
 atomic_uint64_t Options::Checks{UINT64_MAX};
 
+// This is the default value and AT_PAGESZ can override it.
+usize SystemPageSize = 4096;
+
 // Triggers an unimplemented fault.
 #undef UNIMPLEMENTED
 #define UNIMPLEMENTED()                                             \
@@ -146,7 +149,7 @@ Environment Environment::From(u64 sp) {
   const u64 *ptr = reinterpret_cast<const u64 *>(sp);
   // In case sp was 0.
   if (ptr == 0)
-    return Environment(nullptr);
+    return Environment(nullptr, nullptr);
 
   // Skip 'argc'.
   ++ptr;
@@ -156,7 +159,13 @@ Environment Environment::From(u64 sp) {
   // Now 'ptr' points to the first environment variable.
   EnvArray envp = reinterpret_cast<EnvArray>(ptr);
 
-  return Environment(envp);
+  // Skip 'envp' entries and the terminating NULL.
+  while (*ptr++)
+    ;
+  // Now 'ptr' points to the first auxiliary value.
+  AuxvArray auxv = reinterpret_cast<AuxvArray>(ptr);
+
+  return Environment(envp, auxv);
 }
 
 Environment::EnvPtr Environment::GetEnv(const char *name) const {
@@ -178,6 +187,20 @@ Environment::EnvPtr Environment::GetEnv(const char *name) const {
   }
 
   return nullptr;
+}
+
+u64 Environment::GetAuxv(u64 type) const {
+  if (!auxv_start)
+    return 0;
+
+  AuxvArray auxv = auxv_start;
+  while (0 != auxv[0]) {
+    if (auxv[0] == type)
+      return auxv[1];
+    auxv += 2;
+  }
+
+  return 0;
 }
 
 void ControlChecksDynamic(const Environment &env) {
@@ -610,6 +633,9 @@ extern void *__attribute__((weak)) __stop___cheriseed_initializers;
 void __cheriseed_static_init(u64 sp) {
   Environment env = Environment::From(sp);
   ControlChecksDynamic(env);
+  // Save AT_PAGESZ
+  if (u64 at_pagesz = env.GetAuxv(libc::AT_PAGESZ))
+    SystemPageSize = at_pagesz;
 
   ShadowMemoryInit();
 
