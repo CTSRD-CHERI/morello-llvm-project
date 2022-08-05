@@ -3011,27 +3011,31 @@ Constant *CHERIseed::mapGlobalVariableInitializer(GlobalVariable *GV,
   if (!ShadowCap && !HasInitFunction)
     return nullptr;
 
-  const uint64_t BoundsSizeVal =
-      alignTo(DL.getTypeSizeInBits(NGV->getValueType()), 8) / 8;
-  // Determine which capabilities should be cleared on the shadow cap
-  uint64_t ClearPermsVal = cheriseed::abi::EXECUTE;
-  if (IsConstant)
-    ClearPermsVal |= cheriseed::abi::STORE;
-
   // Constants to save in the initializer rodata.
-  Constant *Src, *Addr, *BoundsSize, *ClearPerms;
+  Constant *ShadowCapAddr, *ShadowCapValue, *ShadowCapBoundsSize,
+      *ShadowCapClearPerms;
   if (ShadowCap) {
-    Src = ConstantExpr::getPtrToInt(ShadowCap, AddrSizeTy);
-    Addr = ConstantExpr::getPtrToInt(NGV, AddrSizeTy);
-    BoundsSize = ConstantInt::get(AddrSizeTy, BoundsSizeVal);
-    ClearPerms = ConstantInt::get(CapPermsTy, ClearPermsVal);
+    ShadowCapAddr = ConstantExpr::getPtrToInt(ShadowCap, AddrSizeTy);
+    ShadowCapValue = ConstantExpr::getPtrToInt(NGV, AddrSizeTy);
+    ShadowCapBoundsSize = ConstantInt::get(
+        AddrSizeTy, alignTo(DL.getTypeSizeInBits(NGV->getValueType()), 8) / 8);
+    // Determine which permissions should be cleared on the shadow cap.
+    uint64_t ClearPerms = cheriseed::abi::EXECUTE;
+    // Consider the constness of the original global. It might have been made
+    // non-const because of runtime initializations, but the shadow capability
+    // should still have STORE cleared if the original global was constant.
+    if (GV->isConstant())
+      ClearPerms |= cheriseed::abi::STORE | cheriseed::abi::STORE_CAP;
+    ShadowCapClearPerms = ConstantInt::get(CapPermsTy, ClearPerms);
   } else {
-    Src = Addr = BoundsSize = Constant::getNullValue(AddrSizeTy);
-    ClearPerms = Constant::getNullValue(CapPermsTy);
+    ShadowCapAddr = ShadowCapValue = ShadowCapBoundsSize =
+        Constant::getNullValue(AddrSizeTy);
+    ShadowCapClearPerms = Constant::getNullValue(CapPermsTy);
   }
 
   return ConstantStruct::get(
-      InitializerTy, {Src, Addr, BoundsSize, ClearPerms, InitFunctionPtr});
+      InitializerTy, {ShadowCapAddr, ShadowCapValue, ShadowCapBoundsSize,
+                      ShadowCapClearPerms, InitFunctionPtr});
 }
 
 void CHERIseed::mapGlobalAlias(GlobalAlias *GA) {

@@ -423,10 +423,28 @@ declare void @case.8.f.2() addrspace(200);
 @case.20 = global i8 addrspace(200)*  inttoptr (i64 32 to i8 addrspace(200)*)
 
 ; ------------------------------------------------------------------------------
+; Regression for global constant where 'constant' should be preserved.
+
+%case.21.s = type { i8 addrspace(200)* }
+
+; CHECK-LABEL: @__cheriseed_shadowed_global_case.21 = constant %case.21.s zeroinitializer
+@case.21 = addrspace(200) constant %case.21.s { i8 addrspace(200)* null }
+
+; ------------------------------------------------------------------------------
+; Regression for global constant where 'constant' should be removed.
+
+%case.22.s = type { i8 addrspace(200)* }
+
+; CHECK-LABEL: @__cheriseed_shadowed_global_case.22 = global %case.22.s zeroinitializer
+@case.22 = addrspace(200) constant %case.22.s { i8 addrspace(200)* @case.22.g }
+
+@case.22.g = addrspace(200) global i8 0
+
+; ------------------------------------------------------------------------------
 
 ; Checking for Global Initializer variable.
 
-; CHECK-LABEL: @"__cheriseed_inits_<stdin>" = internal global [24 x %__cheriseed_initializer_t] [
+; CHECK-LABEL: @"__cheriseed_inits_<stdin>" = internal global [27 x %__cheriseed_initializer_t] [
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 0, i64 0, i64 0, i32 0, void ()* @__cheriseed_initializer_cap_to_cap
 ; CHECK-SAME:    },
@@ -534,11 +552,26 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 0, i64 0, i64 0, i32 0, void ()* @__cheriseed_initializer_case.20
+; CHECK-SAME:    },
+; CHECK-SAME:    {
+; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.21 to i64),
+; CHECK-SAME:      i64 ptrtoint (%case.21.s* @__cheriseed_shadowed_global_case.21 to i64),
+; CHECK-SAME:      i64 16, i32 22, void ()* null
+; CHECK-SAME:    },
+; CHECK-SAME:    {
+; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.22 to i64),
+; CHECK-SAME:      i64 ptrtoint (%case.22.s* @__cheriseed_shadowed_global_case.22 to i64),
+; CHECK-SAME:      i64 16, i32 22, void ()* @__cheriseed_initializer_case.22
+; CHECK-SAME:    },
+; CHECK-SAME:    {
+; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.22.g to i64),
+; CHECK-SAME:      i64 ptrtoint (i8* @__cheriseed_shadowed_global_case.22.g to i64),
+; CHECK-SAME:      i64 1, i32 4, void ()* null
 ; CHECK-SAME:    }
 ; CHECK-SAME:  ],  section "__cheriseed_initializers", align 8
 
 ; CHECK-LABEL: @llvm.compiler.used = appending global [1 x i8*] [
-; CHECK-SAME:    i8* bitcast ([24 x %__cheriseed_initializer_t]*
+; CHECK-SAME:    i8* bitcast ([27 x %__cheriseed_initializer_t]*
 ; CHECK-SAME:    @"__cheriseed_inits_<stdin>" to i8*)
 ; CHECK-SAME:  ], section "llvm.metadata"
 
@@ -743,6 +776,16 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-SAME:      %__cheriseed_cap_t* %1, %__cheriseed_cap_t* null, i64 32)
 ; CHECK-NEXT:    %3 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
 ; CHECK-SAME:      %__cheriseed_cap_t* @case.20, %__cheriseed_cap_t* %2, i64 0)
+; CHECK-NEXT:    ret void
+; CHECK-NEXT:  }
+
+; ------------------------------------------------------------------------------
+
+; CHECK-LABEL: define internal void @__cheriseed_initializer_case.22() {
+; CHECK-NEXT:    %1 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-SAME:     %__cheriseed_cap_t* getelementptr inbounds (
+; CHECK-SAME:       %case.22.s, %case.22.s* @__cheriseed_shadowed_global_case.22, i32 0, i32 0),
+; CHECK-SAME:     %__cheriseed_cap_t* @case.22.g, i64 0)
 ; CHECK-NEXT:    ret void
 ; CHECK-NEXT:  }
 
