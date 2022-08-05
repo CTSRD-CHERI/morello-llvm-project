@@ -856,6 +856,11 @@ protected:
   /// \returns The Value associated with \p V.
   Value *mapValue(Value *V);
 
+  /// Tries to make up a DebugLoc if it is missing.
+  ///
+  /// \param I The Instruction which might be missing a DebugLoc.
+  void AddDebugLocIfMissing(Instruction &I);
+
   /// Helper structure to collect all GEP indices of a GlobalVariable which
   /// require runtime initialization.
   ///
@@ -1946,6 +1951,25 @@ Value *CHERIseed::visitCHERIIntrinsicInst(IntrinsicInst &I) {
   return createRtCall(RtName, FTy, Ctx.Args);
 }
 
+void CHERIseed::AddDebugLocIfMissing(Instruction &I) {
+  // Some instructions have no !dbg for some reason.
+  // The pass relies on these and propagates them. However, if a !dbg is
+  // missing it might result in invalid IR because verifier might say that
+  // "inlinable function call in a function with debug info must have a
+  // !dbg location". This is "best effort" at the moment.
+  DebugLoc DbgLoc = I.getDebugLoc();
+  if (!DbgLoc.get()) {
+    DISubprogram *SP = I.getFunction()->getSubprogram();
+    if (SP) {
+      DILocation *PrevLoc = VC.IRB->getCurrentDebugLocation().get();
+      unsigned int Line = PrevLoc ? PrevLoc->getLine() : 0;
+      unsigned int Column = PrevLoc ? PrevLoc->getColumn() : 0;
+      DbgLoc = DILocation::get(Ctx, Line, Column, SP);
+    }
+  }
+  VC.IRB->SetCurrentDebugLocation(DbgLoc);
+}
+
 Value *CHERIseed::visitMemoryIntrinsicInst(IntrinsicInst &I) {
   DebugPrint::Visitor("MemoryIntrinsicInst");
 
@@ -1965,6 +1989,7 @@ Value *CHERIseed::visitMemoryIntrinsicInst(IntrinsicInst &I) {
     // might get inlined by the compiler. In fact, memcpy_inline is always
     // inlined. However, tag management may require that all stores are visible
     // to it, therefore the library call.
+    AddDebugLocIfMissing(I);
     CallContext Ctx = prepareCallArgs(I);
     FunctionCallee FC;
     // Always call 'memcpy' in Pure-cap.
@@ -1993,6 +2018,7 @@ Value *CHERIseed::visitMemoryIntrinsicInst(IntrinsicInst &I) {
   } break;
   case Intrinsic::memmove: {
     // Note: same comments apply as for 'memcpy' above.
+    AddDebugLocIfMissing(I);
     CallContext Ctx = prepareCallArgs(I);
     FunctionCallee FC;
     bool IsHybridC = !IsPureCap && IsCapability(I.getArgOperand(0)->getType());
@@ -2013,6 +2039,7 @@ Value *CHERIseed::visitMemoryIntrinsicInst(IntrinsicInst &I) {
   } break;
   case Intrinsic::memset: {
     // Note: same comments apply as for 'memcpy' above.
+    AddDebugLocIfMissing(I);
     CallContext Ctx = prepareCallArgs(I);
     FunctionCallee FC;
     Type *I32Ty = Type::getInt32Ty(this->Ctx);

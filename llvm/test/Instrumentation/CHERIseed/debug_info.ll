@@ -32,6 +32,20 @@ define void @di_location(i8* %p) {
 }
 
 ; ------------------------------------------------------------------------------
+; Make up missing DebugLoc!.
+
+; CHECK: @debugloc_missing{{.*}} !dbg !14
+define void @debugloc_missing() !dbg !14 {
+; CHECK-NEXT:  %1 = call i8* @memcpy(i8* null, i8* null, i64 0), !dbg !15
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* null, i8* null, i64 0, i1 false)
+; CHECK-NEXT:  ret void
+  ret void
+}
+
+declare void @llvm.memcpy.p0i8.p0i8.i64(i8* noalias nocapture writeonly,
+  i8* noalias nocapture readonly, i64, i1 immarg)
+
+; ------------------------------------------------------------------------------
 ; Metadata section
 
 !llvm.module.flags = !{!0, !1}
@@ -55,5 +69,10 @@ define void @di_location(i8* %p) {
 !11 = !DILocation(line: 0, column: 0, scope: !2)
 !12 = !DILocation(line: 1, column: 0, scope: !2)
 !13 = !DILocation(line: 2, column: 0, scope: !2)
+!14 = distinct !DISubprogram(name: "", scope: !3, file: !3, line: 1,
+    type: !4, scopeLine: 1, flags: DIFlagPrototyped | DIFlagAllCallsDescribed,
+    spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !8, retainedNodes: !9)
+
+; CHECK: !15 = !DILocation(line: 0, scope: !14)
 
 ; ------------------------------------------------------------------------------
