@@ -99,8 +99,8 @@ MessageBuilder& MessageBuilder::operator<<(const u64 value) {
   return *this;
 }
 
-MessageBuilder& MessageBuilder::operator<<(const MessageBuilder::Range range) {
-  return *this << range.base << "-" << range.top;
+MessageBuilder& MessageBuilder::operator<<(const MemoryRange& range) {
+  return *this << range.GetBase() << "-" << range.GetEnd();
 }
 
 MessageBuilder& MessageBuilder::operator<<(const MessageBuilder::Hex value) {
@@ -130,6 +130,17 @@ MessageBuilder& MessageBuilder::operator<<(
   return *this;
 }
 
+MessageBuilder& MessageBuilder::operator<<(const ShadowMemory& helper) {
+  message.append("Shadow memory layout:\n");
+  message.append("  low   ");
+  *this << "[" << helper.GetShadowMemoryRangeLow() << "]\n";
+  message.append("  gap   ");
+  *this << "[" << helper.GetShadowGapRange() << "]\n";
+  message.append("  high  ");
+  *this << "[" << helper.GetShadowMemoryRangeHigh() << "]\n";
+  return *this;
+}
+
 void MessageBuilder::WriteToStderr() {
   RawWrite(message.data());
   message.clear();
@@ -148,13 +159,18 @@ void CheckContext::PrintCapability(MessageBuilder& builder) const {
 
   builder << "  " << Value() << " [";
   bool has_perms = PermsToString(builder, Perms(), /* explain */ false);
-  builder << (has_perms ? "," : "") << MessageBuilder::Range(Base(), Top())
-          << "]";
+  builder << (has_perms ? "," : "") << MemoryRange(Base(), Top()) << "]";
 
   if (!IsTagged())
     builder << MessageBuilder::Attribute(" (invalid)");
 
   builder << "\n\n";
+}
+
+void CheckContext::PrintTagAddress(MessageBuilder& builder) const {
+  builder << "Tag address was at "
+          << ShadowMap.GetShadowAddressFrom(CapabilityAddress()) << "\n\n"
+          << ShadowMap;
 }
 
 void CheckContext::Initialize() {
@@ -255,7 +271,8 @@ void InBounds::ReportError(const CheckContext& ctx,
           << ctx.CapabilityAddress() << ":\n\n";
   ctx.PrintCapability(builder);
   builder << "Requested range was "
-          << MessageBuilder::Range(ctx.Value(), ctx.Value() + size) << "\n";
+          << MemoryRange(ctx.Value(), ctx.Value() + size) << "\n\n";
+  ctx.PrintTagAddress(builder);
 }
 
 void RequiredPerms::ReportError(const CheckContext& ctx,
@@ -265,11 +282,14 @@ void RequiredPerms::ReportError(const CheckContext& ctx,
   ctx.PrintCapability(builder);
   builder << "Missing permission(s):\n";
   PermsToString(builder, (perms & ~ctx.Perms()), /* explain */ true);
+  builder << "\n";
+  ctx.PrintTagAddress(builder);
 }
 
 void Tagged::ReportError(const CheckContext& ctx, MessageBuilder& builder) {
   builder << "Capability is untagged at " << ctx.CapabilityAddress() << ":\n\n";
   ctx.PrintCapability(builder);
+  ctx.PrintTagAddress(builder);
 }
 
 void DynamicControlError::ReportError(const CheckContext& ctx,

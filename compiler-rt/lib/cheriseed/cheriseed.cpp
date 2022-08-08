@@ -17,6 +17,7 @@
 
 #include "cheriseed_errors.h"
 #include "cheriseed_interface_internal.h"
+#include "cheriseed_shadow_memory.h"
 
 using namespace __cheriseed;
 using namespace __cheriseed::abi;
@@ -562,6 +563,8 @@ extern void *__attribute__((weak)) __stop___cheriseed_initializers;
 void __cheriseed_static_init(u64 sp) {
   Environment env = Environment::From(sp);
   ControlChecksDynamic(env);
+
+  ShadowMemoryInit();
 
   if (!&__start___cheriseed_initializers)
     return;

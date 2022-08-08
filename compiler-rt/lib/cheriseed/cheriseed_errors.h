@@ -17,6 +17,7 @@
 
 #include "cheriseed_ccl_interface.h"
 #include "cheriseed_libc.h"
+#include "cheriseed_shadow_memory.h"
 #include "sanitizer_common/sanitizer_common.h"
 
 namespace __cheriseed {
@@ -38,12 +39,6 @@ struct Decorator final {
 // Helper class to build messages in a nicely formatted fashion.
 struct MessageBuilder final {
   explicit MessageBuilder() {}
-
-  struct Range final {
-    Range(vaddr base, vaddr top) : base(base), top(top) {}
-    vaddr base;
-    vaddr top;
-  };
 
   struct Error final {
     Error(const char* msg) : msg(msg) {}
@@ -72,11 +67,12 @@ struct MessageBuilder final {
   MessageBuilder& operator<<(const char* str);
   MessageBuilder& operator<<(const vaddr addr);
   MessageBuilder& operator<<(const u64 value);
-  MessageBuilder& operator<<(const Range range);
+  MessageBuilder& operator<<(const MemoryRange& range);
   MessageBuilder& operator<<(const Error error);
   MessageBuilder& operator<<(const Permission perm);
   MessageBuilder& operator<<(const Attribute attr);
   MessageBuilder& operator<<(const Hex value);
+  MessageBuilder& operator<<(const ShadowMemory& helper);
 
   void WriteToStderr();
 
@@ -109,6 +105,7 @@ struct CheckContext {
   u64 Perms() const { return ccl::methods::GetPerms(local_cap); }
 
   void PrintCapability(MessageBuilder& builder) const;
+  void PrintTagAddress(MessageBuilder& builder) const;
 
   Options& GetOpts() const { return local_cap.GetOpts(); }
 

@@ -5,7 +5,8 @@ add_compiler_rt_component(cheriseed)
 set(CHERISEED_SOURCES
   cheriseed.cpp
   cheriseed_errors.cpp
-  cheriseed_libc.cpp)
+  cheriseed_libc.cpp
+  cheriseed_shadow_memory.cpp)
 set(CHERISEED_CFLAGS ${SANITIZER_COMMON_CFLAGS})
 append_rtti_flag(OFF CHERISEED_CFLAGS)
 # Be very strict

@@ -74,6 +74,9 @@ static constexpr __uint128_t UINT128_MIN = (__uint128_t)0;
   ERROR_MESSAGE_RANGE_PATTERN "\\])?"                        \
   "( \\((invalid|null capability|,)+\\))?\n\n"
 
+#define ERROR_MESSAGE_TAG_ADDRESS_PATTERN   \
+  "Tag address was at .*?0x[0-9a-f]+.*?"
+
 #define ERROR_MESSAGE_DETAIL_PATTERN                   \
   "tid: .*?[0-9]+.*?\n"                                \
   "pc:  .*?0x[0-9a-f]+.*?\n"
@@ -98,6 +101,7 @@ static constexpr __uint128_t UINT128_MIN = (__uint128_t)0;
   "Prevented out-of-bounds access with capability at .*?0x[0-9a-f]+.*?:\n\n" \
   ERROR_MESSAGE_CAPABILITY_PATTERN                                           \
   "Requested range was " ERROR_MESSAGE_RANGE_PATTERN "\n\n"                  \
+  ERROR_MESSAGE_TAG_ADDRESS_PATTERN                                          \
   ERROR_MESSAGE_DETAIL_PATTERN
 
 #define CHECK_REQUIRED_PERMS_ERROR_MESSAGE_PATTERN                             \
@@ -106,12 +110,14 @@ static constexpr __uint128_t UINT128_MIN = (__uint128_t)0;
   ERROR_MESSAGE_CAPABILITY_PATTERN                                             \
   "Missing permission\\(s\\):"                                                 \
   "(\n  .*?[rwxRWE].*? \\[.*?[A-Z_]+.*?\\])+\n\n"                              \
+  ERROR_MESSAGE_TAG_ADDRESS_PATTERN                                            \
   ERROR_MESSAGE_DETAIL_PATTERN
 
 #define CHECK_IS_TAGGED_ERROR_MESSAGE_PATTERN       \
   ERROR_MESSAGE_HEADER_PATTERN                      \
   "Capability is untagged at .*?0x[0-9a-f]+.*?\n\n" \
   ERROR_MESSAGE_CAPABILITY_PATTERN                  \
+  ERROR_MESSAGE_TAG_ADDRESS_PATTERN                 \
   ERROR_MESSAGE_DETAIL_PATTERN
 
 #define CHECK_DYNAMIC_CONFIGURATION_ERROR_PATTERN(__pos, __value, __cursor) \
