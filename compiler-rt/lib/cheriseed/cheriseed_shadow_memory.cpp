@@ -24,6 +24,9 @@ using __sanitizer::vaddr;
 
 namespace __cheriseed {
 
+// The size of a page in the system.
+extern usize SystemPageSize;
+
 // Global cheriseed object containing shadow map info.
 ShadowMemory ShadowMap;
 
@@ -35,9 +38,8 @@ static bool UnMap(const MemoryRange &mem) {
 
 // Reserves a memory range with read-write permissions.
 static MemoryRange ReserveMemory(usize size, usize alignment) {
-  // FIXME: use AT_PAGESZ + alignment;
-  CHECK("Cannot map shadow memory." && (0 == (size % 4096UL)));
-  CHECK("Cannot map shadow memory." && (0 == (alignment % 4096UL)));
+  CHECK("Cannot map shadow memory." && (0 == (size % SystemPageSize)));
+  CHECK("Cannot map shadow memory." && (0 == (alignment % SystemPageSize)));
 
   // Reserve memory, which will be larger than the requested size.
   const usize map_size = size + alignment;
@@ -82,9 +84,8 @@ static void FixedMapUnaccessible(const MemoryRange &mem) {
 }
 
 void ShadowMemoryInit() {
-  // FIXME: use AT_PAGESZ
-  ShadowMap =
-      ShadowMemory(__sanitizer::GetMaxUserVirtualAddress(), 4096, kShadowScale);
+  ShadowMap = ShadowMemory(__sanitizer::GetMaxUserVirtualAddress(),
+                           SystemPageSize, kShadowScale);
   MemoryRange shadow_memory =
       ReserveMemory(ShadowMap.GetShadowSize(), ShadowMap.GetAlignment());
   ShadowMap.SetShadowMemory(shadow_memory);
