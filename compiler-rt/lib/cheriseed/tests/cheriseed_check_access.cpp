@@ -21,14 +21,14 @@ using namespace __cheriseed::abi;
 // to pass the test.
 #define EXPECT_DENIED_PERMS(__expr)                          \
   {                                                          \
-    EXPECT_EXIT(__expr, testing::ExitedWithCode(1),          \
+    EXPECT_EXIT(__expr, testing::KilledBySignal(SIGSEGV),    \
                 CHECK_REQUIRED_PERMS_ERROR_MESSAGE_PATTERN); \
   }
 
-#define EXPECT_DENIED_BOUNDS(__expr)                    \
-  {                                                     \
-    EXPECT_EXIT(__expr, testing::ExitedWithCode(1),     \
-                CHECK_IN_BOUNDS_ERROR_MESSAGE_PATTERN); \
+#define EXPECT_DENIED_BOUNDS(__expr)                      \
+  {                                                       \
+    EXPECT_EXIT(__expr, testing::KilledBySignal(SIGSEGV), \
+                CHECK_IN_BOUNDS_ERROR_MESSAGE_PATTERN);   \
   }
 
 // Tests of __cheriseed_check_access where the permissions are correct must

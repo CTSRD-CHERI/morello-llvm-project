@@ -178,8 +178,8 @@ void CheckContext::Initialize() {
   tid = GetTid();
 }
 
-static SignalHandleMode TryCallSignalHandler(int signo, SignalCode code,
-                                             vaddr pc) {
+static SignalHandleMode TryCallSignalHandler(libc::SignalNumber signo,
+                                             SignalCode code, vaddr pc) {
   if (signo == SignalNumber::SN_NONE)
     return SignalHandleMode::SHM_DEFAULT;
 
@@ -191,7 +191,7 @@ static SignalHandleMode TryCallSignalHandler(int signo, SignalCode code,
   return action.Invoke(info);
 }
 
-void CheckContext::Terminate(MessageBuilder& reason, int signo,
+void CheckContext::Terminate(MessageBuilder& reason, libc::SignalNumber signo,
                              SignalCode code) const {
   bool print_cause = true;
   bool ignore_signal = false;
@@ -214,6 +214,7 @@ void CheckContext::Terminate(MessageBuilder& reason, int signo,
         break;
     }
   }
+
   // Prepare the error message, if requested by the SignalHandleMode.
   if (print_cause) {
     MessageBuilder builder;
@@ -229,9 +230,11 @@ void CheckContext::Terminate(MessageBuilder& reason, int signo,
             << kErrorSeparator;
     builder.WriteToStderr();
   }
+
   // Ignore the violation and continue execution.
   if (ignore_signal)
     return;
+
   // Try to raise SIGTRAP if being debugged.
   const pid_t tracer_pid = GetTracerPid();
   if (tracer_pid != 0) {
@@ -243,10 +246,18 @@ void CheckContext::Terminate(MessageBuilder& reason, int signo,
               << ", sending SIGTRAP.\n";
       builder.WriteToStderr();
     }
-    RaiseSigTrap();
+    Raise(GetPid(), libc::SignalNumber::SN_SIGTRAP);
   }
-  // Terminate the program.
-  __sanitizer::Die();
+
+  // If this is an internal error, simply exit with '1'.
+  if (signo != libc::SignalNumber::SN_NONE) {
+    // Terminate the program by raising the appropriate signal.
+    SigAction::SetDefaultAction(signo);
+    Raise(GetPid(), signo);
+  }
+
+  // Last resort, exit with '1'.
+  __sanitizer::internal__exit(1);
 }
 
 void CapabilityAddress::ReportError(const CheckContext& ctx,

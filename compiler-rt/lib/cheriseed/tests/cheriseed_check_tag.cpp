@@ -14,12 +14,12 @@
 
 #include "cheriseed_test_utils.h"
 
-#define TEST_UNTAGGED_CAP(__expr)                        \
-  {                                                      \
-    __cheriseed_cap_t untagged_cap;                      \
-    __cheriseed_tag_clear(&untagged_cap, &untagged_cap); \
-    EXPECT_EXIT(__expr, testing::ExitedWithCode(1),      \
-                CHECK_IS_TAGGED_ERROR_MESSAGE_PATTERN);  \
+#define TEST_UNTAGGED_CAP(__expr)                           \
+  {                                                         \
+    __cheriseed_cap_t untagged_cap;                         \
+    __cheriseed_tag_clear(&untagged_cap, &untagged_cap);    \
+    EXPECT_EXIT(__expr, ::testing::KilledBySignal(SIGSEGV), \
+                CHECK_IS_TAGGED_ERROR_MESSAGE_PATTERN);     \
   }
 
 TEST(UntaggedDeathTest, SignalHandleMode) {

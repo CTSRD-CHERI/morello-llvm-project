@@ -192,7 +192,7 @@ struct ScopedSigProcMask final {
         .Arg(&set, ccl::permissions::READ_CAP_PERMS)
         .Arg(&old_set_, ccl::permissions::READ_CAP_PERMS |
                             ccl::permissions::WRITE_CAP_PERMS)
-        .Arg((NSIG + 1) / 8)
+        .Arg(NSIG/ 8)
         .Call();
   }
 
@@ -201,7 +201,7 @@ struct ScopedSigProcMask final {
         .Arg(kSetMask)
         .Arg(&old_set_, ccl::permissions::READ_CAP_PERMS)
         .Arg(0)
-        .Arg((NSIG + 1) / 8)
+        .Arg(NSIG / 8)
         .Call();
   }
 
@@ -245,16 +245,56 @@ SigAction::SigAction() {
     hybrid.handler = kSigErr;
 }
 
-bool SigAction::GetAction(int signum, SigAction &action) {
+bool SigAction::GetAction(SignalNumber signo, SigAction &action) {
   SystemCall sc{SyscallNumber::RT_SIGACTION};
-  sc.Arg(signum).Arg(0);
+  // signum
+  sc.Arg(signo);
+  // act
+  sc.Arg(0);
+  // oldact
   if (IsPureCapabilityABI())
     sc.Arg(&action.purecap, ccl::permissions::READ_CAP_PERMS |
                                 ccl::permissions::WRITE_CAP_PERMS);
   else
     sc.Arg(&action.hybrid);
+  // sigsetsize
+  sc.Arg(NSIG / 8);
 
-  long result = sc.Arg((NSIG + 1) / 8).Call();
+  long result = sc.Call();
+  if (result == 0)
+    return true;
+
+  // Failed, poison the handler so that HasHandler() returns false.
+  if (IsPureCapabilityABI())
+    LocalCap(LibcOpts, kSigErr, 0).Store(&action.purecap.handler);
+  else
+    action.hybrid.handler = kSigErr;
+
+  return false;
+}
+
+bool SigAction::SetDefaultAction(SignalNumber signo) {
+  SigAction action;
+
+  SystemCall sc{SyscallNumber::RT_SIGACTION};
+  // signum
+  sc.Arg(signo);
+  // act
+  if (IsPureCapabilityABI()) {
+    action.purecap.flags = kRestart | kNoDefer;
+    LocalCap(LibcOpts, kSigDfl, 0).Store(&action.purecap.handler);
+    sc.Arg(&action.purecap, ccl::permissions::READ_CAP_PERMS);
+  } else {
+    action.hybrid.flags = kRestart | kNoDefer;
+    action.hybrid.handler = kSigDfl;
+    sc.Arg(&action.hybrid);
+  }
+  // oldact
+  sc.Arg(0);
+  // sigsetsize
+  sc.Arg(NSIG / 8);
+
+  long result = sc.Call();
   if (result == 0)
     return true;
 
@@ -353,8 +393,12 @@ pid_t GetTracerPid() {
   return static_cast<pid_t>(internal_atoll(tracer_pid_pos));
 }
 
-void RaiseSigTrap() {
-  SystemCall(SyscallNumber::KILL).Arg(0).Arg(SignalNumber::SN_SIGTRAP).Call();
+int GetPid() {
+  return static_cast<int>(SystemCall(SyscallNumber::GETPID).Call());
+}
+
+void Raise(int pid, SignalNumber signo) {
+  SystemCall(SyscallNumber::KILL).Arg(pid).Arg(signo).Call();
 }
 
 }  // namespace libc

@@ -632,12 +632,14 @@ extern void *__attribute__((weak)) __stop___cheriseed_initializers;
 // include passing __start_* and __stop_* symbols as parameters while calling.
 void __cheriseed_static_init(u64 sp) {
   Environment env = Environment::From(sp);
-  ControlChecksDynamic(env);
   // Save AT_PAGESZ
   if (u64 at_pagesz = env.GetAuxv(libc::AT_PAGESZ))
     SystemPageSize = at_pagesz;
 
   ShadowMemoryInit();
+  // Tags are available from now.
+
+  ControlChecksDynamic(env);
 
   if (!&__start___cheriseed_initializers)
     return;

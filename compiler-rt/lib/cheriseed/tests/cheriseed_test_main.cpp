@@ -20,9 +20,10 @@ extern "C" bool __shim_is_pure_capability() { return false; }
 
 extern "C" bool __shim_supports_cancellation_points() { return false; }
 
-extern "C" void* __shim_syscall(long nr, ...) {
-  (void)nr;
-  return (void*)-1;
+extern "C" void* __shim_syscall(long nr, long arg1, long arg2, long arg3,
+                                long arg4, long arg5, long arg6, ...) {
+  return reinterpret_cast<void*>(
+      syscall(nr, arg1, arg2, arg3, arg4, arg5, arg6));
 }
 
 int main(int argc, char** argv) {

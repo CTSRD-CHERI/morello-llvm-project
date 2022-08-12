@@ -27,11 +27,13 @@ static constexpr u64 AT_PAGESZ = 6;
 enum SyscallNumber : int {
 #if defined(__aarch64__)
   IOCTL = 29,
+  GETPID = 172,
   KILL = 129,
   RT_SIGACTION = 134,
   RT_SIGPROCMASK = 1345,
 #elif defined(__x86_64__)
   IOCTL = 16,
+  GETPID = 39,
   KILL = 62,
   RT_SIGACTION = 13,
   RT_SIGPROCMASK = 14,
@@ -100,6 +102,8 @@ struct SigSet final {
 
 // The sigaction struct to set and retrieve signal actions.
 struct SigAction final {
+  // This is SA_RESTART flag.
+  static constexpr int kRestart = 0x10000000;
   // This is SA_NODEFER flag.
   static constexpr int kNoDefer = 0x40000000;
   // SIG_ERR
@@ -114,7 +118,10 @@ struct SigAction final {
   explicit SigAction();
 
   // Queries if an action is set for a specific signal.
-  static bool GetAction(int signum, SigAction &action);
+  static bool GetAction(SignalNumber signo, SigAction &action);
+
+  // Sets the handler of a signal to the default handler.
+  static bool SetDefaultAction(SignalNumber signo);
 
   // Returns true if handler is valid.
   bool HasHandler() const;
@@ -147,8 +154,11 @@ struct SigAction final {
 // Returns the PID of the tracer process, or '0'.
 pid_t GetTracerPid();
 
-// Raises a SIGTRAP signal.
-void RaiseSigTrap();
+// Returns the PID of the calling process.
+int GetPid();
+
+// Raises a signal.
+void Raise(int pid, SignalNumber signo);
 
 }  // namespace libc
 }  // namespace __cheriseed

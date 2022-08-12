@@ -26,14 +26,14 @@ struct alignas(16) UnalignedCapability final {
   uint8_t space_[sizeof(__cheriseed_cap_t) + 1];
 };  // struct UnalignedCapability
 
-#define TEST_UNALIGNED_CAP(__expr)                      \
-  {                                                     \
-    __cheriseed_cap_t cap;                              \
-    (void)cap;                                          \
-    UnalignedCapability uacap;                          \
-    (void)uacap;                                        \
-    EXPECT_EXIT(__expr, testing::ExitedWithCode(1),     \
-                CHECK_ALIGNMENT_ERROR_MESSAGE_PATTERN); \
+#define TEST_UNALIGNED_CAP(__expr)                         \
+  {                                                        \
+    __cheriseed_cap_t cap;                                 \
+    (void)cap;                                             \
+    UnalignedCapability uacap;                             \
+    (void)uacap;                                           \
+    EXPECT_EXIT(__expr, ::testing::KilledBySignal(SIGBUS), \
+                CHECK_ALIGNMENT_ERROR_MESSAGE_PATTERN);    \
   }
 
 TEST(UnalignedDeathTest, AddressSet) {

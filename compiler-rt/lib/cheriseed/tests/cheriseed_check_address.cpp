@@ -14,12 +14,12 @@
 
 #include "cheriseed_test_utils.h"
 
-#define TEST_INVALID_ADDRESS_CAP(__expr)              \
-  {                                                   \
-    __cheriseed_cap_t cap;                            \
-    (void)cap;                                        \
-    EXPECT_EXIT(__expr, testing::ExitedWithCode(1),   \
-                CHECK_ADDRESS_ERROR_MESSAGE_PATTERN); \
+#define TEST_INVALID_ADDRESS_CAP(__expr)                    \
+  {                                                         \
+    __cheriseed_cap_t cap;                                  \
+    (void)cap;                                              \
+    EXPECT_EXIT(__expr, ::testing::KilledBySignal(SIGSEGV), \
+                CHECK_ADDRESS_ERROR_MESSAGE_PATTERN);       \
   }
 
 TEST(InvalidAddressDeathTest, AddressSet) {

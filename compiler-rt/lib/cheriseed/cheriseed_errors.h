@@ -128,7 +128,7 @@ struct CheckContext {
   }
 
   void Initialize();
-  NOINLINE void Terminate(MessageBuilder& builder, int signo,
+  NOINLINE void Terminate(MessageBuilder& builder, libc::SignalNumber signo,
                           abi::SignalCode code) const;
 
   const LocalCap& local_cap;
@@ -166,7 +166,9 @@ struct CapabilityAddress final {
     return abi::SignalCode::SC_SEGV_MAPERR;
   }
 
-  static constexpr int SignalNumber() { return libc::SignalNumber::SN_SIGSEGV; }
+  static constexpr libc::SignalNumber SignalNumber() {
+    return libc::SignalNumber::SN_SIGSEGV;
+  }
 };  // struct CapabilityAddress
 
 // Checks that a capability is sufficiently aligned.
@@ -184,7 +186,9 @@ struct CapabilityAlignment final {
     return abi::SignalCode::SC_BUS_ADRALN;
   }
 
-  static constexpr int SignalNumber() { return libc::SignalNumber::SN_SIGBUS; }
+  static constexpr libc::SignalNumber SignalNumber() {
+    return libc::SignalNumber::SN_SIGBUS;
+  }
 };  // struct CapabilityAlignment
 
 // Reports that something is not implemented.
@@ -197,7 +201,9 @@ struct NotImplemented final {
     return abi::SignalCode::SC_PROT_NOT_IMPLEMENTED;
   }
 
-  static constexpr int SignalNumber() { return libc::SignalNumber::SN_NONE; }
+  static constexpr libc::SignalNumber SignalNumber() {
+    return libc::SignalNumber::SN_NONE;
+  }
 
   const char* msg;
 };  // struct NotImplemented
@@ -222,7 +228,9 @@ struct InBounds final {
     return abi::SignalCode::SC_SEGV_CAPBOUNDSERR;
   }
 
-  static constexpr int SignalNumber() { return libc::SignalNumber::SN_SIGSEGV; }
+  static constexpr libc::SignalNumber SignalNumber() {
+    return libc::SignalNumber::SN_SIGSEGV;
+  }
 
   const __sanitizer::u64 size;
 };  // struct InBounds
@@ -244,7 +252,9 @@ struct RequiredPerms final {
     return abi::SignalCode::SC_SEGV_CAPPERMERR;
   }
 
-  static constexpr int SignalNumber() { return libc::SignalNumber::SN_SIGSEGV; }
+  static constexpr libc::SignalNumber SignalNumber() {
+    return libc::SignalNumber::SN_SIGSEGV;
+  }
 
   const u64 perms;
 };  // struct RequiredPerms
@@ -264,7 +274,9 @@ struct Tagged final {
     return abi::SignalCode::SC_SEGV_CAPTAGERR;
   }
 
-  static constexpr int SignalNumber() { return libc::SignalNumber::SN_SIGSEGV; }
+  static constexpr libc::SignalNumber SignalNumber() {
+    return libc::SignalNumber::SN_SIGSEGV;
+  }
 };  // struct Tagged
 
 // Reports a malformed CHERISEED_CHECKS environment variable.
@@ -279,7 +291,9 @@ struct DynamicControlError final {
     return abi::SignalCode::SC_PROT_NOT_IMPLEMENTED;
   }
 
-  static constexpr int SignalNumber() { return libc::SignalNumber::SN_NONE; }
+  static constexpr libc::SignalNumber SignalNumber() {
+    return libc::SignalNumber::SN_NONE;
+  }
 
   const char* start;
   const char* cursor;

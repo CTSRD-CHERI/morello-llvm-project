@@ -21,21 +21,19 @@ using namespace __cheriseed::error;
 using __cheriseed::SnapshotOptions;
 using utils::kExitCode;
 
-TEST(CheckDeathTest, NormalExit) { EXPECT_NORMAL_EXIT(exit(0)); }
-
 TEST(CheckDeathTest, CapabilityAddress) {
   const SnapshotOptions Opts;
   LocalCap local_cap(Opts);
 
   local_cap.SetAddress(nullptr);
   EXPECT_EXIT(CheckContext(local_cap).add(CapabilityAddress()),
-              testing::ExitedWithCode(kExitCode),
+              ::testing::KilledBySignal(SIGSEGV),
               CHECK_ADDRESS_ERROR_MESSAGE_PATTERN);
 #if defined(SANITIZER_LINUX)
   local_cap.SetAddress(reinterpret_cast<const __cheriseed_cap_t *>(
       __cheriseed::abi::kCapabilityMinAlignment));
   EXPECT_EXIT(CheckContext(local_cap).add(CapabilityAddress()),
-              testing::ExitedWithCode(kExitCode),
+              ::testing::KilledBySignal(SIGSEGV),
               CHECK_ADDRESS_ERROR_MESSAGE_PATTERN);
 #endif
 
@@ -43,7 +41,7 @@ TEST(CheckDeathTest, CapabilityAddress) {
   local_cap.SetAddress(
       reinterpret_cast<const __cheriseed_cap_t *>((vaddr)1 << 55));
   EXPECT_EXIT(CheckContext(local_cap).add(CapabilityAddress()),
-              testing::ExitedWithCode(kExitCode),
+              ::testing::KilledBySignal(SIGSEGV),
               CHECK_ADDRESS_ERROR_MESSAGE_PATTERN);
 #endif
 }
@@ -53,7 +51,7 @@ TEST(CheckDeathTest, CapabilityAlignment) {
   LocalCap local_cap(Opts);
   local_cap.SetAddress(reinterpret_cast<const __cheriseed_cap_t *>(1));
   EXPECT_EXIT(CheckContext(local_cap).add(CapabilityAlignment()),
-              testing::ExitedWithCode(kExitCode),
+              ::testing::KilledBySignal(SIGBUS),
               CHECK_ALIGNMENT_ERROR_MESSAGE_PATTERN);
 }
 
@@ -69,7 +67,7 @@ TEST(CheckDeathTest, InBounds) {
   __cheriseed_cap_t cap;
   __cheriseed_bounds_set(&cap, nullptr, 0);
   EXPECT_EXIT(CheckContext(LocalCap(Opts, &cap)).add(InBounds(UINT64_MAX)),
-              testing::ExitedWithCode(kExitCode),
+              ::testing::KilledBySignal(SIGSEGV),
               CHECK_IN_BOUNDS_ERROR_MESSAGE_PATTERN);
 }
 
@@ -78,7 +76,7 @@ TEST(CheckDeathTest, RequiredPerms) {
   __cheriseed_cap_t cap;
   __cheriseed_perms_and(&cap, nullptr, 0);
   EXPECT_EXIT(CheckContext(LocalCap(Opts, &cap)).add(RequiredPerms(0xF)),
-              testing::ExitedWithCode(kExitCode),
+              ::testing::KilledBySignal(SIGSEGV),
               CHECK_REQUIRED_PERMS_ERROR_MESSAGE_PATTERN);
 }
 
@@ -87,6 +85,6 @@ TEST(CheckDeathTest, Tagged) {
   LocalCap local_cap(Opts);
   local_cap.ClearTag();
   EXPECT_EXIT(CheckContext(local_cap).add(Tagged()),
-              testing::ExitedWithCode(kExitCode),
+              ::testing::KilledBySignal(SIGSEGV),
               CHECK_IS_TAGGED_ERROR_MESSAGE_PATTERN);
 }
