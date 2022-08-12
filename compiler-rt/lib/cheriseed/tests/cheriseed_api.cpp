@@ -19,8 +19,9 @@
 
 // Only for UINT* types.
 using namespace utils;
+using namespace __cheriseed::abi;
 
-TEST(API, AddressGet) {
+TEST(AddressGet, Api) {
   uint16_t a;
   __cheriseed_cap_t cap;
   utils::InitCap(&cap, &a);
@@ -28,7 +29,7 @@ TEST(API, AddressGet) {
   ASSERT_EQ(__cheriseed_address_get(nullptr), (uint64_t)0);
 }
 
-TEST(API, AddressSet) {
+TEST(AddressSet, Api) {
   __cheriseed_cap_t cap;
 
   uint16_t a;
@@ -42,13 +43,13 @@ TEST(API, AddressSet) {
   ASSERT_CAPABILITY_VALUE_EQ(&cap, &b);
 }
 
-TEST(API, CopyFromHigh) {
+TEST(CopyFromHigh, Api) {
   __cheriseed_cap_t cap;
   utils::InitCap(&cap, 42, 43);
   ASSERT_EQ(__cheriseed_copy_from_high(&cap), (uint64_t)43);
 }
 
-TEST(API, CopyToHigh) {
+TEST(CopyToHigh, Api) {
   __cheriseed_cap_t cap;
   utils::InitCap(&cap, 42, 43);
   __cheriseed_copy_to_high(&cap, &cap, UINT64_MAX);
@@ -56,7 +57,7 @@ TEST(API, CopyToHigh) {
   ASSERT_UNTAGGED(&cap);
 }
 
-TEST(API, CopyCapWithOffset) {
+TEST(CopyCapWithOffset, Api) {
   uint32_t array[2] = {42, 64};
   __cheriseed_cap_t cap1, cap2;
   utils::InitCap(&cap1, &array);
@@ -68,21 +69,21 @@ TEST(API, CopyCapWithOffset) {
                              __cheriseed_address_get(&cap1) + sizeof(uint32_t));
 }
 
-TEST(API, CopyCapWithOffset_CopyNullptr) {
+TEST(CopyCapWithOffset, CopyNullptr) {
   __cheriseed_cap_t cap;
   __cheriseed_copy_cap_with_offset(&cap, nullptr, 42);
   ASSERT_CAPABILITY_METADATA_EQ(&cap, (uint64_t)0);
   ASSERT_CAPABILITY_VALUE_EQ(&cap, (uint64_t)42);
 }
 
-TEST(API, DDCGet_Address) {
+TEST(DDCGet, Address) {
   __cheriseed_cap_t ddc;
   utils::InitCap(&ddc, UINT64_TEST, 0);
   __cheriseed_ddc_get(&ddc);
   ASSERT_CAPABILITY_VALUE_EQ(&ddc, (uint64_t)0);
 }
 
-TEST(API, PCCGet_Address) {
+TEST(PCCGet, Address) {
   __cheriseed_cap_t pcc;
   utils::InitCap(&pcc, UINT64_TEST, 0);
   __cheriseed_pcc_get(&pcc);
@@ -90,21 +91,21 @@ TEST(API, PCCGet_Address) {
   ASSERT_CAPABILITY_VALUE_NE(&pcc, UINT64_TEST);
 }
 
-TEST(API, DDCGet_Perms) {
+TEST(DDCGet, Perms) {
   __cheriseed_cap_t ddc;
   utils::InitCap(&ddc, UINT64_TEST, 0);
   __cheriseed_ddc_get(&ddc);
   ASSERT_EQ(__cheriseed_perms_get(&ddc), ccl::permissions::ALL);
 }
 
-TEST(API, PCCGet_Perms) {
+TEST(PCCGet, Perms) {
   __cheriseed_cap_t pcc;
   utils::InitCap(&pcc, UINT64_TEST, 0);
   __cheriseed_pcc_get(&pcc);
   ASSERT_EQ(__cheriseed_perms_get(&pcc), ccl::permissions::ALL);
 }
 
-TEST(API, DDGet_Length) {
+TEST(DDCGet, Length) {
   __cheriseed_cap_t ddc;
   utils::InitCap(&ddc, UINT64_TEST, 0);
   __cheriseed_ddc_get(&ddc);
@@ -113,7 +114,7 @@ TEST(API, DDGet_Length) {
   ASSERT_EQ(__cheriseed_length_get(&ddc), UINT64_MAX);
 }
 
-TEST(API, PCCGet_Length) {
+TEST(PCCGet, Length) {
   __cheriseed_cap_t pcc;
   utils::InitCap(&pcc, UINT64_TEST, 0);
   __cheriseed_pcc_get(&pcc);
@@ -122,21 +123,21 @@ TEST(API, PCCGet_Length) {
   ASSERT_EQ(__cheriseed_length_get(&pcc), UINT64_MAX);
 }
 
-TEST(API, DDCGet_Base) {
+TEST(DDCGet, Base) {
   __cheriseed_cap_t ddc;
   utils::InitCap(&ddc, UINT64_TEST, 0);
   __cheriseed_ddc_get(&ddc);
   ASSERT_EQ(__cheriseed_base_get(&ddc), 0u);
 }
 
-TEST(API, PCCGet_Base) {
+TEST(PCCGet, Base) {
   __cheriseed_cap_t pcc;
   utils::InitCap(&pcc, UINT64_TEST, 0);
   __cheriseed_pcc_get(&pcc);
   ASSERT_EQ(__cheriseed_base_get(&pcc), 0u);
 }
 
-TEST(API, StackCapInit) {
+TEST(StackCapInit, Api) {
   uint16_t a;
   __cheriseed_cap_t cap;
   __cheriseed_stack_cap_init(&cap, reinterpret_cast<uint64_t>(&a), sizeof(a));
@@ -147,7 +148,7 @@ TEST(API, StackCapInit) {
   ASSERT_EQ(__cheriseed_base_get(&cap), reinterpret_cast<uint64_t>(&a));
 }
 
-TEST(API, LoadStoreCap) {
+TEST(LoadStoreCap, Api) {
   __cheriseed_cap_t ones, dst, dst_cap, src, src_cap;
 
   utils::InitCap(&ones, 1, 1);
@@ -164,12 +165,17 @@ TEST(API, LoadStoreCap) {
   ASSERT_EQ(result_cap, &dst);
   ASSERT_CAPABILITY_METADATA_EQ(&dst, UINT64_TEST);
   ASSERT_CAPABILITY_VALUE_EQ(&dst, UINT64_TEST);
-
-  // if src_cap does not have perms LOAD & LOAD_CAP, dst should be
-  // invalidated
 }
 
-TEST(API, StoreCap_StoreNullptr) {
+TEST(LoadCap, NoLoadCapPerm) {
+  __cheriseed_cap_t target, load_from, dst;
+  utils::InitCap(&load_from, &target);
+  // Check missing LOAD_CAP: tag should be cleared.
+  __cheriseed_perms_and(&load_from, &load_from, ~ccl::permissions::LOAD_CAP);
+  __cheriseed_load_cap(&load_from, &dst);
+}
+
+TEST(StoreCap, StoreNullptr) {
   __cheriseed_cap_t dst, dst_cap;
   utils::InitCap(&dst, UINT64_TEST, UINT64_TEST);
   utils::InitCap(&dst_cap, &dst);
@@ -178,7 +184,16 @@ TEST(API, StoreCap_StoreNullptr) {
   ASSERT_CAPABILITY_VALUE_EQ(&dst, (uint64_t)0);
 }
 
-TEST(API, LoadStoreCapHybrid) {
+TEST(StoreCap, NoStoreCapPermission) {
+  __cheriseed_cap_t target, store_to, src;
+  utils::InitCap(&store_to, &target);
+  utils::InitCap(&src, (char *)nullptr);
+  __cheriseed_tag_clear(&src, &src);
+  __cheriseed_perms_and(&store_to, &store_to, ~ccl::permissions::STORE_CAP);
+  __cheriseed_store_cap(&store_to, &src);
+}
+
+TEST(LoadStoreCapHybrid, Api) {
   __cheriseed_cap_t ones, dst, src;
   utils::InitCap(&ones, 1, 1);
   utils::InitCap(&dst, UINT64_TEST, UINT64_TEST);
@@ -194,7 +209,7 @@ TEST(API, LoadStoreCapHybrid) {
   ASSERT_CAPABILITY_VALUE_EQ(&dst, UINT64_TEST);
 }
 
-TEST(API, EqualExact) {
+TEST(EqualExact, Api) {
   ASSERT_TRUE(__cheriseed_equal_exact(nullptr, nullptr));
 
   uint16_t a;
@@ -213,7 +228,7 @@ TEST(API, EqualExact) {
   ASSERT_FALSE(__cheriseed_equal_exact(&cap1, &cap3));
 }
 
-TEST(API, PermsAnd) {
+TEST(PermsAnd, Api) {
   // test nullptr as input capability
   __cheriseed_cap_t cap;
   __cheriseed_perms_and(&cap, nullptr, UINT64_TEST);
@@ -228,21 +243,21 @@ TEST(API, PermsAnd) {
   ASSERT_EQ(__cheriseed_perms_get(&cap_a), ccl::permissions::LOAD);
 }
 
-TEST(API, RepresentableAlignmentMask) {
+TEST(RepresentableAlignmentMask, Api) {
   ASSERT_EQ(__cheriseed_representable_alignment_mask(0), UINT64_MAX);
   ASSERT_EQ(__cheriseed_representable_alignment_mask(sizeof(uint64_t)),
             UINT64_MAX);
   ASSERT_LE(__cheriseed_representable_alignment_mask(UINT64_TEST), UINT64_MAX);
 }
 
-TEST(API, RoundRepresentableLength) {
+TEST(RoundRepresentableLength, Api) {
   ASSERT_EQ(__cheriseed_round_representable_length(0), 0u);
   ASSERT_EQ(__cheriseed_round_representable_length(sizeof(uint64_t)),
             sizeof(uint64_t));
   ASSERT_GE(__cheriseed_round_representable_length(UINT64_TEST), UINT64_TEST);
 }
 
-TEST(API, BoundsSet) {
+TEST(BoundsSet, BoundsSet) {
   uint16_t a;
   __cheriseed_cap_t cap, cap_a;
   utils::InitCap(&cap, &a);
@@ -257,7 +272,7 @@ TEST(API, BoundsSet) {
   ASSERT_EQ(__cheriseed_length_get(&cap), UINT64_MAX);
 }
 
-TEST(API, BoundsSet_SameOutIn) {
+TEST(BoundsSet, SameOutIn) {
   uint16_t a;
   __cheriseed_cap_t cap_a;
   utils::InitCap(&cap_a, &a);
@@ -269,7 +284,7 @@ TEST(API, BoundsSet_SameOutIn) {
   ASSERT_EQ(__cheriseed_length_get(&cap_a), sizeof(uint16_t));
 }
 
-TEST(API, BoundsSet_NullptrIn) {
+TEST(BoundsSet, NullptrIn) {
   uint16_t a;
   __cheriseed_cap_t cap_a;
   utils::InitCap(&cap_a, &a);
@@ -281,7 +296,7 @@ TEST(API, BoundsSet_NullptrIn) {
   ASSERT_EQ(__cheriseed_length_get(&cap_a), sizeof(uint16_t));
 }
 
-TEST(API, BoundsSet_Round) {
+TEST(BoundsSet, Round) {
   uint16_t a;
   constexpr uint64_t length = UINT16_TEST;
   __cheriseed_cap_t cap_a;
@@ -300,7 +315,7 @@ TEST(API, BoundsSet_Round) {
             __cheriseed_round_representable_length(length));
 }
 
-TEST(API, BoundsSetExact) {
+TEST(BoundsSetExact, Api) {
   uint16_t a;
   __cheriseed_cap_t cap, cap_a;
   utils::InitCap(&cap, &a);
@@ -317,7 +332,7 @@ TEST(API, BoundsSetExact) {
   ASSERT_EQ(__cheriseed_length_get(&cap), UINT64_MAX);
 }
 
-TEST(API, BoundsSetExact_SameOutIn) {
+TEST(BoundsSetExact_SameOutIn, SameOutIn) {
   uint16_t a;
   __cheriseed_cap_t cap_a;
   utils::InitCap(&cap_a, &a);
@@ -329,7 +344,7 @@ TEST(API, BoundsSetExact_SameOutIn) {
   ASSERT_EQ(__cheriseed_length_get(&cap_a), sizeof(uint16_t));
 }
 
-TEST(API, BoundsSetExact_NullptrIn) {
+TEST(BoundsSetExact, NullptrIn) {
   uint16_t a;
   __cheriseed_cap_t cap_a;
   utils::InitCap(&cap_a, &a);
@@ -342,7 +357,7 @@ TEST(API, BoundsSetExact_NullptrIn) {
   ASSERT_EQ(__cheriseed_length_get(&cap_a), sizeof(uint16_t));
 }
 
-TEST(API, OffsetSet) {
+TEST(OffsetSet, Api) {
   uint32_t a[2] = {42, 64};
   __cheriseed_cap_t cap, new_cap;
   utils::InitCap(&cap, &a);
@@ -356,7 +371,7 @@ TEST(API, OffsetSet) {
             reinterpret_cast<uint64_t>(&a[1]));
 }
 
-TEST(API, OffsetSet_NullptrIn) {
+TEST(OffsetSet, NullptrIn) {
   uint32_t a[2] = {42, 64};
   __cheriseed_cap_t cap_out;
   // base of cap is zero from ddc capability, offset is new cursor
@@ -373,7 +388,7 @@ TEST(API, OffsetSet_NullptrIn) {
   ASSERT_EQ(__cheriseed_length_get(&cap_out), UINT64_MAX);
 }
 
-TEST(API, OffsetSet_FromBase) {
+TEST(OffsetSet, FromBase) {
   uint32_t a[2] = {42, 64};
   __cheriseed_cap_t cap_a, cap_a1;
   utils::InitCap(&cap_a, &a);
@@ -397,7 +412,7 @@ TEST(API, OffsetSet_FromBase) {
   ASSERT_CAPABILITY_VALUE_EQ(&cap_a1, &(a[1]));
 }
 
-TEST(API, OffsetSet_AboveTop) {
+TEST(OffsetSet, AboveTop) {
   uint32_t a[2] = {42, 64};
   __cheriseed_cap_t cap_a, cap_a1;
   utils::InitCap(&cap_a, &a);
@@ -419,7 +434,7 @@ TEST(API, OffsetSet_AboveTop) {
   // TODO cap_a should still be valid
 }
 
-TEST(API, OffsetSet_Round) {
+TEST(OffsetSet, Round) {
   uint32_t a;
   __cheriseed_cap_t cap_a, cap_b;
   utils::InitCap(&cap_a, &a);
@@ -448,11 +463,13 @@ TEST(API, OffsetSet_Round) {
   // compression, so the base may not be zero in the output capability
 }
 
-TEST(API, BaseGet) { ASSERT_EQ(__cheriseed_base_get(nullptr), 0u); }
+TEST(BaseGet, Api) { ASSERT_EQ(__cheriseed_base_get(nullptr), 0u); }
 
-TEST(API, LengthGet) { ASSERT_EQ(__cheriseed_length_get(nullptr), UINT64_MAX); }
+TEST(ALengthGetPI, Api) {
+  ASSERT_EQ(__cheriseed_length_get(nullptr), UINT64_MAX);
+}
 
-TEST(API, OffsetGet) {
+TEST(OffsetGet, Api) {
   ASSERT_EQ(__cheriseed_offset_get(nullptr), 0u);
 
   uint16_t a;
@@ -463,7 +480,7 @@ TEST(API, OffsetGet) {
   ASSERT_EQ(__cheriseed_offset_get(&cap), reinterpret_cast<uint64_t>(&a));
 }
 
-TEST(API, Diff) {
+TEST(Diff, Api) {
   uint8_t a[2];
   __cheriseed_cap_t cap_a, cap_b;
   utils::InitCap(&cap_a, &a[1]);
@@ -478,7 +495,7 @@ TEST(API, Diff) {
   ASSERT_EQ(__cheriseed_diff(nullptr, nullptr), 0);
 }
 
-TEST(API, SubsetTest) {
+TEST(SubsetTest, Api) {
   //      a:        [42][64]
   //    cap: |- ... -------- ... -| rwxRW
   //  a_cap:        |------|        r
@@ -519,7 +536,7 @@ TEST(API, SubsetTest) {
   ASSERT_FALSE(__cheriseed_subset_test(&cap, &a_cap));
 }
 
-TEST(API, TagClear) {
+TEST(TagClear, Api) {
   uint8_t a;
   __cheriseed_cap_t cap;
   utils::InitCap(&cap, &a);
@@ -527,19 +544,47 @@ TEST(API, TagClear) {
   ASSERT_EQ(__cheriseed_tag_get(&cap), 0);
 }
 
-TEST(API, TagGet) {
+TEST(TagGet, Api) {
   uint8_t a;
   __cheriseed_cap_t cap;
   utils::InitCap(&cap, &a);
   ASSERT_EQ(__cheriseed_tag_get(&cap), 1);
 }
 
-TEST(API, GenericCapInit) {
+TEST(GenericCapInit, Api) {
   uint16_t a;
   __cheriseed_cap_t cap;
   __cheriseed_generic_cap_init(&cap, reinterpret_cast<uint64_t>(&a), sizeof(a),
-                               0);
+                               Permissions::EXECUTE);
   ASSERT_CAPABILITY_VALUE_EQ(&cap, &a);
   ASSERT_EQ(__cheriseed_base_get(&cap), reinterpret_cast<uint64_t>(&a));
   ASSERT_EQ(__cheriseed_length_get(&cap), sizeof(a));
+  ASSERT_NE(__cheriseed_perms_get(&cap) & ccl::permissions::LOAD, 0);
+  ASSERT_EQ(__cheriseed_perms_get(&cap) & ccl::permissions::EXECUTE, 0);
+  ASSERT_TAGGED(&cap);
+}
+
+TEST(CheckAccess, PermsHasExactly) {
+  uint32_t a;
+  __cheriseed_cap_t cap;
+  utils::InitCap(&cap, &a);
+  __cheriseed_perms_and(&cap, &cap,
+                        (ccl::permissions::LOAD | ccl::permissions::STORE));
+  __cheriseed_check_access(&cap, 0, (Permissions::LOAD | Permissions::STORE));
+}
+
+TEST(CheckAccess, PermsHasMore) {
+  uint32_t a;
+  __cheriseed_cap_t cap;
+  utils::InitCap(&cap, &a);
+  __cheriseed_perms_and(&cap, &cap,
+                        (ccl::permissions::LOAD | ccl::permissions::STORE));
+  __cheriseed_check_access(&cap, 0, Permissions::LOAD);
+}
+
+TEST(CheckAccess, BoundsInside) {
+  uint16_t a;
+  __cheriseed_cap_t cap;
+  utils::InitCap(&cap, &a);
+  __cheriseed_check_access(&cap, sizeof(uint16_t), 0);
 }

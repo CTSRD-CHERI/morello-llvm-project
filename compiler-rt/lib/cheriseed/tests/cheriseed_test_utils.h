@@ -233,9 +233,6 @@ static inline void ValueNotEquals(const __cheriseed_cap_t *cap, T *value) {
 #endif  // !CHERISEED_UNIT_TESTING
 };      // namespace utils
 
-#define EXPECT_NORMAL_EXIT(__expr) \
-  EXPECT_EXIT(__expr, ::testing::ExitedWithCode(0), "")
-
 // Symbols required by cheriseed but which are not present in testing libc.
 extern "C" bool __shim_is_pure_capability(void);
 extern "C" bool __shim_supports_cancellation_points(void);
