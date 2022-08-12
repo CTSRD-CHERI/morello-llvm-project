@@ -69,7 +69,10 @@
 
 /* Object types, sealing and unsealing: */
 typedef long cheri_otype_t;
-#if defined(__mips__) || defined(__riscv) || __has_feature(cheriseed_sanitizer)
+#if __has_feature(cheriseed_sanitizer)
+#define CHERI_OTYPE_UNSEALED ((cheri_otype_t)0x3ffff)
+#define CHERI_OTYPE_SENTRY ((cheri_otype_t)0x3fffe)
+#elif defined(__mips__) || defined(__riscv)
 /* CHERI-MIPS and CHERI-RISC-V use negative numbers for hardware-interpreted
  * otypes */
 #define CHERI_OTYPE_UNSEALED ((cheri_otype_t)-1)
