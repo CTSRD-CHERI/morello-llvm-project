@@ -156,6 +156,15 @@ static constexpr char kInternalAttribute[] = "cheriseed-internal";
 static constexpr char kTakeNameSuffix[] = ".old";
 /// Initializer section
 static constexpr char kInitializerSection[] = "__cheriseed_initializers";
+/// Prefix for global initializer array names.
+static constexpr char kPrefixInitializers[] = "__cheriseed_inits_";
+/// Prefix for global initializer names.
+static constexpr char kPrefixInitializer[] = "__cheriseed_initializer_";
+/// Prefix for shadow capability names.
+static constexpr char kPrefixShadowCapability[] =
+    "__cheriseed_shadow_capability_";
+/// Prefix for shadowed global names.
+static constexpr char kPrefixShadowedGlobal[] = "__cheriseed_shadowed_global_";
 
 /// Returns true if Type \Ty is a capability, otherwise false.
 /// For example:
@@ -205,9 +214,10 @@ static bool ShouldInstrumentGlobal(GlobalVariable *GV) {
   if (GV->hasAttribute(kInternalAttribute))
     return false;
 
-  StringRef GVName = GV->getName();
-  if ((GVName == "llvm.global_ctors") || (GVName == "llvm.global_dtors") ||
-      (GVName == "llvm.used") || (GVName == "llvm.compiler.used"))
+  StringRef GVNameRef = GV->getName();
+  if ((GVNameRef == "llvm.global_ctors") ||
+      (GVNameRef == "llvm.global_dtors") || (GVNameRef == "llvm.used") ||
+      (GVNameRef == "llvm.compiler.used"))
     return false;
 
   // If there is no metadata attached, the global is always instrumented.
@@ -476,7 +486,7 @@ template <typename T, size_t S = 64> struct SimpleMap {
   /// Shorthand to refer to the type the map stores.
   using ElementType = std::pair<T *, T *>;
 
-  SimpleMap(std::string Name) : Name(Name) { Map.reserve(S); }
+  SimpleMap(StringRef NameRef) : NameRef(NameRef) { Map.reserve(S); }
 
   /// Removes all elements from the map.
   void clear() {
@@ -496,7 +506,7 @@ template <typename T, size_t S = 64> struct SimpleMap {
   /// \param Key The key.
   /// \param Value The value associated with the key.
   void insert(T *Key, T *Value) {
-    DebugPrint::Map(Name, Key, Value);
+    DebugPrint::Map(NameRef, Key, Value);
     Map.push_back(ElementType(Key, Value));
   }
 
@@ -534,7 +544,7 @@ protected:
   /// The backing store of key-value pairs.
   std::vector<ElementType> Map;
   /// Custom name of this map.
-  const std::string Name;
+  const StringRef NameRef;
 }; // end of struct SimpleMap
 
 /// The core implementation of CHERIseed Pass.
@@ -1039,7 +1049,7 @@ protected:
   /// \param FTy Type of the function to return.
   /// \param Attrs Attributes for the function if creation is necessary.
   /// \returns A FunctionCallee wrapper for the requested function.
-  FunctionCallee getOrInsertLibraryCall(StringRef Name, FunctionType *FTy,
+  FunctionCallee getOrInsertLibraryCall(const Twine &Name, FunctionType *FTy,
                                         AttributeList Attrs);
 
   /// Creates a new FunctionType based on an existing one.
@@ -1085,7 +1095,7 @@ protected:
   /// \param Args Arguments to the call.
   ///
   /// \returns Pointer to the resulting CallInst.
-  CallInst *createRtCall(const StringRef CallName, FunctionType *FTy,
+  CallInst *createRtCall(const Twine &CallName, FunctionType *FTy,
                          ArrayRef<Value *> Args) {
     return createRtCall(CallName, "", FTy, Args);
   }
@@ -1100,7 +1110,7 @@ protected:
   /// \param Args Arguments to the call.
   ///
   /// \returns Pointer to the resulting CallInst.
-  CallInst *createRtCall(const StringRef CallName, const StringRef Name,
+  CallInst *createRtCall(const Twine &CallName, const Twine &Name,
                          FunctionType *FTy, ArrayRef<Value *> Args);
 
   /// Creates a runtime call.
@@ -1125,7 +1135,7 @@ protected:
   ///
   /// \returns Pointer to the resulting CallInst.
   template <typename... V>
-  CallInst *createRtCall(RtKind Kind, const StringRef Name, V *...Args);
+  CallInst *createRtCall(RtKind Kind, const Twine &Name, V *...Args);
 
   /// Creates a new alloca on stack.
   ///
@@ -1144,7 +1154,7 @@ protected:
   ///
   /// \returns Pointer to the resulting Value.
   AllocaInst *createAlloca(Type *Ty, Value *ArraySize, Align Align,
-                           const Twine &Name);
+                           const Twine &Name = "");
 
   /// Derives a pointer from a capability.
   ///
@@ -1188,7 +1198,7 @@ protected:
   /// block.
   ///
   /// \returns Pointer to the resulting Value.
-  Value *createShadowCapOnStack(Value *V, Value *Size, StringRef Name,
+  Value *createShadowCapOnStack(Value *V, Value *Size, const Twine &Name,
                                 bool InEntryBlock);
 
   /// Creates a capability to an alloca.
@@ -1605,8 +1615,7 @@ Value *CHERIseed::visitInstruction(Instruction &I) {
 
 Value *CHERIseed::visitIntrinsicInst(IntrinsicInst &I) {
   DebugPrint::Visitor("IntrinsicInst");
-  StringRef Name = I.getCalledFunction()->getName();
-  if (Name.startswith("llvm.cheri."))
+  if (I.getCalledFunction()->getName().startswith("llvm.cheri."))
     return visitCHERIIntrinsicInst(I);
   if (I.mayReadOrWriteMemory())
     return visitMemoryIntrinsicInst(I);
@@ -1878,7 +1887,7 @@ Value *CHERIseed::visitCallInlineAsm(CallInst &I) {
 Value *CHERIseed::visitCHERIIntrinsicInst(IntrinsicInst &I) {
   DebugPrint::Visitor("CHERIIntrinsicInst");
   Function *F = I.getCalledFunction();
-  StringRef RtNameEnd;
+  StringRef RtNameRef;
 
   switch (I.getIntrinsicID()) {
   default:
@@ -1916,39 +1925,39 @@ Value *CHERIseed::visitCHERIIntrinsicInst(IntrinsicInst &I) {
   case Intrinsic::cheri_cap_type_copy:
   case Intrinsic::cheri_cap_type_get:
   case Intrinsic::cheri_cap_unseal:
-    RtNameEnd =
+    RtNameRef =
         F->getName().drop_front(sizeof("llvm.cheri.cap.") - 1).rtrim(".i64");
     break;
   case Intrinsic::cheri_cap_from_pointer:
   case Intrinsic::cheri_cap_from_pointer_nonnull_zero:
     // These two are semantically equivalent to 'address_set' in CHERIseed.
-    RtNameEnd = "address_set";
+    RtNameRef = "address_set";
     break;
   case Intrinsic::cheri_cap_load_tags:
-    RtNameEnd = F->getName()
+    RtNameRef = F->getName()
                     .drop_front(sizeof("llvm.cheri.cap.") - 1)
                     .rtrim(".i64.p200i8");
     break;
   case Intrinsic::cheri_stack_cap_get:
-    RtNameEnd = "stack_cap_get";
+    RtNameRef = "stack_cap_get";
     break;
   case Intrinsic::cheri_bounded_stack_cap:
   case Intrinsic::cheri_ddc_get:
   case Intrinsic::cheri_pcc_get:
   case Intrinsic::cheri_representable_alignment_mask:
   case Intrinsic::cheri_round_representable_length:
-    RtNameEnd =
+    RtNameRef =
         F->getName().drop_front(sizeof("llvm.cheri.") - 1).rtrim(".i64");
     break;
   }
 
   // Apply some cosmetics to the name.
-  std::string RtName = RtNameEnd.str();
-  std::replace(RtName.begin(), RtName.end(), '.', '_');
+  std::string RtNameStr = RtNameRef.str();
+  std::replace(RtNameStr.begin(), RtNameStr.end(), '.', '_');
   // Build the new call.
   FunctionType *FTy = mapType<FunctionType>(F->getFunctionType());
   CallContext Ctx = prepareCallArgs(I);
-  return createRtCall(RtName, FTy, Ctx.Args);
+  return createRtCall(RtNameStr, FTy, Ctx.Args);
 }
 
 void CHERIseed::AddDebugLocIfMissing(Instruction &I) {
@@ -2151,7 +2160,7 @@ void CHERIseed::visitDeferredPHINodes(Function &F) {
       Value *AllocaCap = createAlloca(CapTy);
       VC.BB = PHI->getParent();
       VC.IRB->SetInsertPoint(&*VC.BB->getFirstInsertionPt());
-      std::string RtName = PHI->hasName() ? PHI->getName().str() + ".cpy" : "";
+      Twine RtName = Twine(PHI->hasName() ? PHI->getName() : "", ".cpy");
       Instruction *PHICopy =
           createRtCall(RtKind::COPY_CAP_WITH_OFFSET, RtName, AllocaCap, PHI,
                        ConstantInt::getNullValue(AddrSizeTy));
@@ -2262,7 +2271,7 @@ void CHERIseed::visitGlobals() {
         GlobalVariable::InternalLinkage,
         ConstantArray::get(ArrayOfGlobalInitSectionTy,
                            GlobalInitsSectionTuples),
-        Twine(kPrefix) + "inits_" + sys::path::stem(M.getModuleIdentifier()));
+        Twine(kPrefixInitializers, sys::path::stem(M.getModuleIdentifier())));
     GlobalInits->setSection(kInitializerSection);
     GlobalInits->setAlignment(Align(8));
     // Append to llvm.compiler.used so that so that during linking this variable
@@ -2281,9 +2290,15 @@ unsigned CHERIseed::getTypeStoreSize(Type *Ty) {
 }
 
 template <typename T, typename V> void CHERIseed::takeName(T *From, V *To) {
-  std::string Name = From->getName().str();
-  From->setName(Name + kTakeNameSuffix);
-  To->setName(Name);
+  if (!From->hasName())
+    return;
+
+  std::string NameRef = From->getName().str();
+  SmallString<256> NewNameStorage;
+  StringRef NewNameRef =
+      Twine(NameRef, kTakeNameSuffix).toStringRef(NewNameStorage);
+  From->setName(NewNameRef);
+  To->setName(NameRef);
 }
 
 template <typename T> T *CHERIseed::mapType(Type *Ty, bool IsArgTy) {
@@ -2731,8 +2746,8 @@ GlobalVariable *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
   // point to a global variable or a function. In such a case the initializer
   // will only run if the associated data is not discarded.
   // For now, set the 3rd argument to null or assert if it is non-null.
-  StringRef Name = GV->getName();
-  if ((Name == "llvm.global_ctors") || (Name == "llvm.global_dtors")) {
+  StringRef NameRef = GV->getName();
+  if ((NameRef == "llvm.global_ctors") || (NameRef == "llvm.global_dtors")) {
     // Recreate type: [ {i32, void ()*, i8* } ]
     // CHERIseed does not support capabilities here.
     FunctionType *FTy = FunctionType::get(VoidTy, false);
@@ -2749,7 +2764,7 @@ GlobalVariable *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
     return NGV;
   }
 
-  if ((Name == "llvm.used") || (Name == "llvm.compiler.used")) {
+  if ((NameRef == "llvm.used") || (NameRef == "llvm.compiler.used")) {
     // Recreate type: [ <N> x i8* ]
     ArrayType *ATy =
         ArrayType::get(Int8PtrTy, GV->getInitializer()->getNumOperands());
@@ -2808,14 +2823,16 @@ GlobalVariable *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
   // Call the shadow capability as the original global and call the original
   // global something like __cheriseed_shadowed_global_<name>.
   ShadowCap->takeName(NGV);
-  NGV->setName(kPrefix + std::string("shadowed_global_") +
-               ShadowCap->getName());
+  NGV->setName(Twine(kPrefixShadowedGlobal, ShadowCap->getName()));
   ShadowCap->setAlignment(Align(kCapabilityAlignment));
   // If the global is placed into a section, do something similar with its
   // shadow capability.
-  if (NGV->hasSection())
-    ShadowCap->setSection(kPrefix + std::string("shadow_capability_") +
-                          NGV->getSection().str());
+  if (NGV->hasSection()) {
+    SmallString<256> SectionNameStorage;
+    StringRef SectionNameRef = Twine(kPrefixShadowCapability, NGV->getSection())
+                                   .toStringRef(SectionNameStorage);
+    ShadowCap->setSection(SectionNameRef);
+  }
   ShadowCap->setComdat(NGV->getComdat());
   DebugPrint::Emit(ShadowCap);
   // The global should be accessed through the shadow capability, not
@@ -2834,8 +2851,8 @@ GlobalVariable *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
 
 Constant *CHERIseed::mapGlobalVariableInitializer(GlobalVariable *GV,
                                                   GlobalVariable *NGV) {
-  StringRef Name = NGV->getName();
-  if ((Name == "llvm.global_ctors") || (Name == "llvm.global_dtors")) {
+  StringRef NameRef = NGV->getName();
+  if ((NameRef == "llvm.global_ctors") || (NameRef == "llvm.global_dtors")) {
     ArrayType *ATy = cast<ArrayType>(NGV->getValueType());
     StructType *STy = cast<StructType>(ATy->getElementType());
     // Create new initializer.
@@ -2861,7 +2878,7 @@ Constant *CHERIseed::mapGlobalVariableInitializer(GlobalVariable *GV,
     return nullptr;
   }
 
-  if ((Name == "llvm.used") || (Name == "llvm.compiler.used")) {
+  if ((NameRef == "llvm.used") || (NameRef == "llvm.compiler.used")) {
     ArrayType *ATy = cast<ArrayType>(NGV->getValueType());
     // Create new initializer.
     ConstantArray *CA = dyn_cast<ConstantArray>(GV->getInitializer());
@@ -2916,10 +2933,16 @@ Constant *CHERIseed::mapGlobalVariableInitializer(GlobalVariable *GV,
   NGV->setConstant(IsConstant);
 
   // Create Initializer function body
-  Twine GlobalInitName = Twine(kPrefix) + "initializer_" +
-                         (ShadowCap ? ShadowCap->getName() : NGV->getName());
+  SmallString<256> GlobalInitNameStorage;
+  StringRef GlobalInitNameRef;
+  if (ShadowCap)
+    GlobalInitNameRef = Twine(kPrefixInitializer, ShadowCap->getName())
+                            .toStringRef(GlobalInitNameStorage);
+  else
+    GlobalInitNameRef = Twine(kPrefixInitializer, NGV->getName())
+                            .toStringRef(GlobalInitNameStorage);
   Function *InitFunction = cast<Function>(
-      M.getOrInsertFunction(GlobalInitName.str(), VoidTy).getCallee());
+      M.getOrInsertFunction(GlobalInitNameRef, VoidTy).getCallee());
   InitFunction->setLinkage(GlobalVariable::InternalLinkage);
   InitFunction->addFnAttr(kInternalAttribute);
   InitFunction->setComdat(NGV->getComdat());
@@ -3075,16 +3098,20 @@ void CHERIseed::mapGlobalAliasInitializer(GlobalAlias *GA) {
   NGA->setAliasee(Aliasee);
 }
 
-FunctionCallee CHERIseed::getOrInsertLibraryCall(StringRef Name,
+FunctionCallee CHERIseed::getOrInsertLibraryCall(const Twine &Name,
                                                  FunctionType *FTy,
                                                  AttributeList Attrs) {
+  SmallString<256> NameStorage;
+  StringRef NameRef = Name.toStringRef(NameStorage);
+  assert(!NameRef.empty() && "Library call must have a name");
+
   // Try to lookup among the known library calls.
   for (Function *F : LibraryCalls)
-    if (F->getName() == Name)
+    if (F->getName() == NameRef)
       return F;
 
   // Try to get an existing function first.
-  Function *F = M.getFunction(Name);
+  Function *F = M.getFunction(NameRef);
   if (F) {
     if (!F->hasFnAttribute(kInternalAttribute))
       F = mapFunction(F);
@@ -3093,7 +3120,7 @@ FunctionCallee CHERIseed::getOrInsertLibraryCall(StringRef Name,
   }
 
   // This function does not yet exist.
-  FunctionCallee FC = M.getOrInsertFunction(Name, FTy, Attrs);
+  FunctionCallee FC = M.getOrInsertFunction(NameRef, FTy, Attrs);
   // getOrInsertFunction may return a bitcast on AS mismatch.
   F = cast<Function>(FC.getCallee());
   F->addFnAttr(kInternalAttribute);
@@ -3185,9 +3212,8 @@ CHERIseed::CallContext CHERIseed::prepareCallArgs(CallInst &I) {
         AB.removeAttribute(Attribute::ByVal);
         // 1. Create an allocation slot on the stack.
         //    It must go into the entry block.
-        std::string AllocaName = std::string("byval_cpy");
         Type *ATy = mapType(cast<PointerType>(A->getType())->getElementType());
-        AllocaInst *Alloca = createAlloca(ATy, AllocaName);
+        AllocaInst *Alloca = createAlloca(ATy, "byval_cpy");
         DebugPrint::Emit(Alloca);
         // 2. Create a shadow capability to the new alloca slot.
         //    This will be used as an argument to the call.
@@ -3402,10 +3428,10 @@ Function *CHERIseed::replaceFunction(Function *F) {
   return NF;
 }
 
-CallInst *CHERIseed::createRtCall(const StringRef CallName,
-                                  const StringRef Name, FunctionType *FTy,
-                                  ArrayRef<Value *> Args) {
-  FunctionCallee FC = getOrInsertLibraryCall(kPrefix + CallName.str(), FTy, {});
+CallInst *CHERIseed::createRtCall(const Twine &CallName, const Twine &Name,
+                                  FunctionType *FTy, ArrayRef<Value *> Args) {
+  FunctionCallee FC =
+      getOrInsertLibraryCall(Twine(kPrefix) + CallName, FTy, {});
   CallInst *CI = VC.IRB->CreateCall(FC, Args);
   CI->setName(Name);
   DebugPrint::Emit(CI);
@@ -3413,8 +3439,7 @@ CallInst *CHERIseed::createRtCall(const StringRef CallName,
 }
 
 template <typename... V>
-CallInst *CHERIseed::createRtCall(RtKind Kind, const StringRef Name,
-                                  V *...Args) {
+CallInst *CHERIseed::createRtCall(RtKind Kind, const Twine &Name, V *...Args) {
   StringRef RtName;
   FunctionType *FTy;
 
@@ -3631,13 +3656,12 @@ Value *CHERIseed::createBoundedCap(Value *Dst, Value *Addr, Value *Size,
 //
 // V must be a pointer type in the default address space, or nullptr. If V is
 // nullptr, Size is ignored and is set to 0.
-Value *CHERIseed::createShadowCapOnStack(Value *V, Value *Size, StringRef Name,
-                                         bool InEntryBlock) {
+Value *CHERIseed::createShadowCapOnStack(Value *V, Value *Size,
+                                         const Twine &Name, bool InEntryBlock) {
   // Get the raw address of V, or '0'.
   Value *Addr;
   if (V) {
-    Twine AddrName = !Name.empty() ? Name + std::string(".addr") : "";
-    Addr = VC.IRB->CreatePtrToInt(V, AddrSizeTy, AddrName);
+    Addr = VC.IRB->CreatePtrToInt(V, AddrSizeTy, Name + ".addr");
     DebugPrint::Emit(Addr);
     // If Size is nullptr derive the size from types available.
     if (!Size)
@@ -3651,18 +3675,17 @@ Value *CHERIseed::createShadowCapOnStack(Value *V, Value *Size, StringRef Name,
 
   // Create shadow capability on the stack.
   AllocaInst *ShadowCap;
-  Twine ShadowCapName = !Name.empty() ? Name + std::string(".shadow.cap") : "";
   if (InEntryBlock) {
-    ShadowCap = createAlloca(CapTy, ShadowCapName);
+    ShadowCap = createAlloca(CapTy, Name + ".shadow.cap");
   } else {
-    ShadowCap = VC.IRB->CreateAlloca(CapTy, DL.getAllocaAddrSpace(),
-                                     /* ArraySize */ nullptr, ShadowCapName);
+    ShadowCap =
+        VC.IRB->CreateAlloca(CapTy, DL.getAllocaAddrSpace(),
+                             /* ArraySize */ nullptr, Name + ".shadow.cap");
     DebugPrint::Emit(ShadowCap);
   }
 
   // Finally, create an RT call to initialize the new capability on the stack.
-  const std::string RtCallName = !Name.empty() ? Name.str() + ".cap" : "";
-  return createRtCall(RtKind::STACK_CAP_INIT, RtCallName, ShadowCap, Addr,
+  return createRtCall(RtKind::STACK_CAP_INIT, Name + ".cap", ShadowCap, Addr,
                       Size);
 }
 
@@ -3692,11 +3715,13 @@ Value *CHERIseed::createCapToAlloca(AllocaInst *Alloca, bool InEntryBlock) {
     AllocaSize = VC.IRB->CreateMul(
         Alloca->getArraySize(), ConstantInt::get(AddrSizeTy, AllocaTypeSize));
     if (Alloca->hasName())
-      AllocaSize->setName(Alloca->getName() + std::string(".size"));
+      AllocaSize->setName(
+          Twine(Alloca->hasName() ? Alloca->getName() : "", ".size"));
     DebugPrint::Emit(AllocaSize);
   }
 
-  return createShadowCapOnStack(Alloca, AllocaSize, Alloca->getName(),
+  return createShadowCapOnStack(Alloca, AllocaSize,
+                                Alloca->hasName() ? Alloca->getName() : "",
                                 InEntryBlock);
 }
 
