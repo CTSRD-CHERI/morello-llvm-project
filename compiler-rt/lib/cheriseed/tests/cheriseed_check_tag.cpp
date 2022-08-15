@@ -46,3 +46,7 @@ TEST(UntaggedDeathTest, StoreCap) {
 TEST(UntaggedDeathTest, StoreCapAtomic) {
   TEST_UNTAGGED_CAP(__cheriseed_store_cap_atomic(&untagged_cap, nullptr, 0));
 }
+
+TEST(UntaggedDeathTest, ClearAllTags) {
+  TEST_UNTAGGED_CAP(__cheriseed_clear_all_tags(&untagged_cap, 0));
+}

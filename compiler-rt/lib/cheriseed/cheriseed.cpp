@@ -60,6 +60,11 @@ static inline TagState ReleaseTag(TagState *ptr, TagState tag) {
   return __atomic_exchange_n(ptr, tag, __ATOMIC_RELEASE);
 }
 
+// Writes a tag with relaxed semantics..
+static inline void WriteTag(TagState *ptr, TagState tag) {
+  __atomic_store_n(ptr, tag, __ATOMIC_RELAXED);
+}
+
 LocalCap::LocalCap(const Options &Opts, const __cheriseed_cap_t *ptr,
                    memory_order memory_order, bool allow_nullcap)
     : Opts(Opts) {
@@ -283,14 +288,17 @@ void ControlChecksDynamic(const Environment &env) {
 }
 
 // Helper to manage the locked state of a range of tags.
-struct RangedTagLock {
-  explicit RangedTagLock(vaddr address, usize size)
+struct RangedTagOperation {
+  explicit RangedTagOperation(vaddr address, usize size)
       : range(address, address + size) {
     // TODO: check that start < end
   }
 
   void Lock() const { ShadowMap.IterateTagRanges(range, &LockCallback); }
   void UnLock() const { ShadowMap.IterateTagRanges(range, &UnLockCallback); }
+  void ClearAll() const {
+    ShadowMap.IterateTagRanges(range, &ClearAllCallback);
+  }
 
  protected:
   // Locks tags in the range [range.GetBase(), range.GetEnd()).
@@ -318,8 +326,18 @@ struct RangedTagLock {
     }
   }
 
+  // Clears tags in the range [range.GetBase(), range.GetEnd()).
+  static void ClearAllCallback(const MemoryRange &range) {
+    TagState *address = reinterpret_cast<TagState *>(range.GetBase());
+    const TagState *const end_address =
+        reinterpret_cast<TagState *>(range.GetEnd());
+    while (address != end_address) {
+      WriteTag(address++, TagState::TS_CLEARED);
+    }
+  }
+
   MemoryRange range;
-};  // struct RangedTagLock
+};  // struct RangedTagOperation
 
 }  // namespace __cheriseed
 
@@ -550,6 +568,13 @@ void __cheriseed_stack_cap_get(__cheriseed_cap_t *cap) { UNIMPLEMENTED(); }
 // Additional user-accessible APIs
 // -------------------------------------
 
+void __cheriseed_clear_all_tags(const __cheriseed_cap_t *cap, u64 size) {
+  const SnapshotOptions Opts;
+  u64 address =
+      LocalCap(Opts, cap).RequireTagged().RequireBounds(size).GetValue();
+  RangedTagOperation(address, size).ClearAll();
+}
+
 void __cheriseed_control_semantics(u8 enable) {
   atomic_store_relaxed(&Options::EnableCHERISemantics, enable);
 }
@@ -690,13 +715,13 @@ u64 __cheriseed_check_access(const __cheriseed_cap_t *cap, u64 size,
   // This closes the window in which a race condition can occur between
   // writing some random data and a tagged capability.
   if (ccl_perms & ccl::permissions::STORE)
-    RangedTagLock(address, size).Lock();
+    RangedTagOperation(address, size).Lock();
 
   return address;
 }
 
 void __cheriseed_check_access_end(u64 address, u64 size) {
-  RangedTagLock(address, size).UnLock();
+  RangedTagOperation(address, size).UnLock();
 }
 
 __cheriseed_cmpxchg_result_t __cheriseed_cmpxchg_cap(

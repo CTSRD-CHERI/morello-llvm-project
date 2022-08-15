@@ -74,3 +74,7 @@ TEST(InvalidAddressDeathTest, StoreCap) {
 TEST(InvalidAddressDeathTest, GenericCapInit) {
   TEST_INVALID_ADDRESS_CAP(__cheriseed_generic_cap_init(nullptr, 0, 0, 0));
 }
+
+TEST(InvalidAddressDeathTest, ClearAllTags) {
+  TEST_INVALID_ADDRESS_CAP(__cheriseed_clear_all_tags(nullptr, 0));
+}

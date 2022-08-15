@@ -93,3 +93,10 @@ TEST(StoreCapDeathTest, Bounds) {
   __cheriseed_bounds_set(&store_to, &store_to, sizeof(__cheriseed_cap_t) - 1);
   EXPECT_DENIED_BOUNDS(__cheriseed_store_cap(&store_to, &src));
 }
+
+TEST(ClearAllDeathTest, Bounds) {
+  __cheriseed_cap_t cap[20], cap_all;
+  utils::InitCap(&cap_all, cap);
+  __cheriseed_bounds_set(&cap_all, &cap_all, sizeof(cap));
+  EXPECT_DENIED_BOUNDS(__cheriseed_clear_all_tags(&cap_all, sizeof(cap) + 1));
+}

@@ -123,3 +123,7 @@ TEST(UnalignedDeathTest, ThreadPointer) {
 TEST(UnalignedDeathTest, GenericCapInit) {
   TEST_UNALIGNED_CAP(__cheriseed_generic_cap_init(&uacap, 0, 0, 0));
 }
+
+TEST(UnalignedDeathTest, ClearAllTags) {
+  TEST_UNALIGNED_CAP(__cheriseed_clear_all_tags(&uacap, 0));
+}

@@ -564,6 +564,25 @@ TEST(GenericCapInit, Api) {
   ASSERT_TAGGED(&cap);
 }
 
+TEST(ClearAllTags, Api) {
+  uint8_t a;
+  __cheriseed_cap_t cap[20];
+  // Initialize all capabilities.
+  for (size_t idx = 0; idx < (sizeof(cap) / sizeof(cap[0])); ++idx) {
+    utils::InitCap(&cap[idx], &a);
+    ASSERT_EQ(__cheriseed_tag_get(&cap[idx]), 1);
+  }
+  __cheriseed_cap_t cap_all;
+  utils::InitCap(&cap_all, cap);
+  // Call API.
+  __cheriseed_clear_all_tags(&cap_all, sizeof(cap));
+  // Check if all tags are cleared.
+  ASSERT_EQ(__cheriseed_tag_get(&cap_all), 1);
+  for (size_t idx = 0; idx < (sizeof(cap) / sizeof(cap[0])); ++idx) {
+    ASSERT_EQ(__cheriseed_tag_get(&cap[idx]), 0);
+  }
+}
+
 TEST(CheckAccess, PermsHasExactly) {
   uint32_t a;
   __cheriseed_cap_t cap;

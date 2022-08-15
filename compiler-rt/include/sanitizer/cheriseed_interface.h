@@ -508,6 +508,12 @@ __cheriseed_cap_t *__cheriseed_stack_cap_get(__cheriseed_cap_t *cap_out);
 // Additional user-accessible APIs
 // -------------------------------------
 
+/// Clears all tags from address of capability within the specified size.
+///
+/// \param[in] ptr Pointer to the base address.
+/// \param[in] size The length of the memory where tags are to be cleared.
+void __cheriseed_clear_all_tags(const void *ptr, uint64_t size);
+
 /// Enables/disables CHERI semantics, enabled by default.
 ///
 /// \param[in] enable 0: disable, otherwise enable.

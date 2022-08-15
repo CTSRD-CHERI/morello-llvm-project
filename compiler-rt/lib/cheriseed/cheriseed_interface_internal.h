@@ -167,6 +167,9 @@ void __cheriseed_stack_cap_get(__cheriseed_cap_t *cap);
 // -------------------------------------
 
 SANITIZER_INTERFACE_ATTRIBUTE
+void __cheriseed_clear_all_tags(const __cheriseed_cap_t *cap, u64 size);
+
+SANITIZER_INTERFACE_ATTRIBUTE
 void __cheriseed_control_semantics(u8 enable);
 
 SANITIZER_INTERFACE_ATTRIBUTE
