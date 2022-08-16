@@ -100,3 +100,25 @@ TEST(ClearAllDeathTest, Bounds) {
   __cheriseed_bounds_set(&cap_all, &cap_all, sizeof(cap));
   EXPECT_DENIED_BOUNDS(__cheriseed_clear_all_tags(&cap_all, sizeof(cap) + 1));
 }
+
+TEST(LockAndCopyAllTagsDeathTest, Bounds) {
+  __cheriseed_cap_t cap[20], cap_1, cap_2;
+  utils::InitCap(&cap_1, cap);
+  utils::InitCap(&cap_2, cap);
+  __cheriseed_bounds_set(&cap_1, &cap_1, sizeof(cap));
+  EXPECT_DENIED_BOUNDS(
+      __cheriseed_lock_and_copy_all_tags(&cap_1, &cap_2, sizeof(cap) + 1););
+  EXPECT_DENIED_BOUNDS(
+      __cheriseed_lock_and_copy_all_tags(&cap_2, &cap_1, sizeof(cap) + 1););
+}
+
+TEST(CopyAllTagsDeathTest, Bounds) {
+  __cheriseed_cap_t cap[20], cap_1, cap_2;
+  utils::InitCap(&cap_1, cap);
+  utils::InitCap(&cap_2, cap);
+  __cheriseed_bounds_set(&cap_1, &cap_1, sizeof(cap));
+  EXPECT_DENIED_BOUNDS(
+      __cheriseed_copy_all_tags(&cap_1, &cap_2, sizeof(cap) + 1););
+  EXPECT_DENIED_BOUNDS(
+      __cheriseed_copy_all_tags(&cap_2, &cap_1, sizeof(cap) + 1););
+}

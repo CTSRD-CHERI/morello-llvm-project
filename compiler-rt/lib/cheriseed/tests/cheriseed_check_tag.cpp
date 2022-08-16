@@ -16,6 +16,8 @@
 
 #define TEST_UNTAGGED_CAP(__expr)                           \
   {                                                         \
+    __cheriseed_cap_t cap;                                  \
+    (void)cap;                                              \
     __cheriseed_cap_t untagged_cap;                         \
     __cheriseed_tag_clear(&untagged_cap, &untagged_cap);    \
     EXPECT_EXIT(__expr, ::testing::KilledBySignal(SIGSEGV), \
@@ -49,4 +51,14 @@ TEST(UntaggedDeathTest, StoreCapAtomic) {
 
 TEST(UntaggedDeathTest, ClearAllTags) {
   TEST_UNTAGGED_CAP(__cheriseed_clear_all_tags(&untagged_cap, 0));
+}
+
+TEST(UntaggedDeathTest, LockAndCopyAllTags) {
+  TEST_UNTAGGED_CAP(__cheriseed_lock_and_copy_all_tags(&cap, &untagged_cap, 0));
+  TEST_UNTAGGED_CAP(__cheriseed_lock_and_copy_all_tags(&untagged_cap, &cap, 0));
+}
+
+TEST(UntaggedDeathTest, CopyAllTags) {
+  TEST_UNTAGGED_CAP(__cheriseed_copy_all_tags(&cap, &untagged_cap, 0));
+  TEST_UNTAGGED_CAP(__cheriseed_copy_all_tags(&untagged_cap, &cap, 0));
 }

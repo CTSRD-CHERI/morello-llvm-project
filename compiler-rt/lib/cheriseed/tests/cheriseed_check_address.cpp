@@ -78,3 +78,21 @@ TEST(InvalidAddressDeathTest, GenericCapInit) {
 TEST(InvalidAddressDeathTest, ClearAllTags) {
   TEST_INVALID_ADDRESS_CAP(__cheriseed_clear_all_tags(nullptr, 0));
 }
+
+TEST(InvalidAddressDeathTest, LockAndCopyAllTags) {
+  u8 a;
+  __cheriseed_cap_t tagged_cap;
+  utils::InitCap(&tagged_cap, &a);
+  TEST_INVALID_ADDRESS_CAP(
+      __cheriseed_lock_and_copy_all_tags(&tagged_cap, nullptr, 0));
+  TEST_INVALID_ADDRESS_CAP(
+      __cheriseed_lock_and_copy_all_tags(nullptr, &tagged_cap, 0));
+}
+
+TEST(InvalidAddressDeathTest, CopyAllTags) {
+  u8 a;
+  __cheriseed_cap_t tagged_cap;
+  utils::InitCap(&tagged_cap, &a);
+  TEST_INVALID_ADDRESS_CAP(__cheriseed_copy_all_tags(&tagged_cap, nullptr, 0));
+  TEST_INVALID_ADDRESS_CAP(__cheriseed_copy_all_tags(nullptr, &tagged_cap, 0));
+}

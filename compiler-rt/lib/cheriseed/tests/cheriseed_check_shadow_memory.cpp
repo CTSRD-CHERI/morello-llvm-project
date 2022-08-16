@@ -82,13 +82,23 @@ static void IterateTagRangesCallback(const MemoryRange &range) {
   EXPECT_EQ(range.GetEnd(), IterateTagRangesExpected->GetEnd());
   ++IterateTagRangesExpected;
 }
+static void ZipTagRangeCallback(const MemoryRange &src_range,
+                                const MemoryRange &dst_range) {
+  EXPECT_EQ(src_range.GetBase(), IterateTagRangesExpected->GetBase());
+  EXPECT_EQ(src_range.GetEnd(), IterateTagRangesExpected->GetEnd());
+  EXPECT_EQ(dst_range.GetBase(), IterateTagRangesExpected->GetBase());
+  EXPECT_EQ(dst_range.GetEnd(), IterateTagRangesExpected->GetEnd());
+  ++IterateTagRangesExpected;
+}
 
-struct IterateTagRangesTester {
-  IterateTagRangesTester(vaddr start, vaddr end,
-                         const MemoryRange *expected_ranges) {
-    IterateTagRangesExpected = expected_ranges;
+struct TagRangesTester {
+  TagRangesTester(vaddr start, vaddr end, const MemoryRange *expected_range) {
+    IterateTagRangesExpected = expected_range;
     test_map.IterateTagRanges(MemoryRange(start, end),
                               &IterateTagRangesCallback);
+    IterateTagRangesExpected = expected_range;
+    test_map.ZipTagRange(MemoryRange(start, end), MemoryRange(start, end),
+                         &ZipTagRangeCallback);
   }
 };
 
@@ -100,26 +110,18 @@ TEST(CheckShadowMemory, IterateTagRanges) {
   // Think about base + size: [base, base + size)
 
   ranges[0] = MemoryRange(0x7e000000, 0x7e000001);
-  IterateTagRangesTester(0, 1, ranges);
-  IterateTagRangesTester(0, 16, ranges);
-  IterateTagRangesTester(15, 16, ranges);
+  TagRangesTester(0, 1, ranges);
+  TagRangesTester(0, 16, ranges);
+  TagRangesTester(15, 16, ranges);
 
   ranges[0] = MemoryRange(0x7e000000, 0x7e000002);
-  IterateTagRangesTester(0, 17, ranges);
-  IterateTagRangesTester(15, 17, ranges);
-  IterateTagRangesTester(0, 31, ranges);
-  IterateTagRangesTester(15, 31, ranges);
+  TagRangesTester(0, 17, ranges);
+  TagRangesTester(15, 17, ranges);
+  TagRangesTester(0, 31, ranges);
+  TagRangesTester(15, 31, ranges);
 
   // Last capability before the shadow gap.
   ranges[0] = MemoryRange(0x85DFFFFF, 0x85e00000);
-  IterateTagRangesTester(0x7DFFFFF0, 0x7DFFFFFF, ranges);
-  IterateTagRangesTester(0x7DFFFFFF, 0x7DFFFFFF, ranges);
-
-  // Overlaps to from low to high.
-  ranges[0] = MemoryRange(0x85DFFFFF, 0x85e00000);
-  ranges[1] = MemoryRange(0x86e00000, 0x86e00001);
-  IterateTagRangesTester(0x7DFFFFF0, 0x8e000001, ranges);
-  IterateTagRangesTester(0x7DFFFFFF, 0x8e000001, ranges);
-  IterateTagRangesTester(0x7DFFFFF0, 0x8e00000F, ranges);
-  IterateTagRangesTester(0x7DFFFFFF, 0x8e00000F, ranges);
+  TagRangesTester(0x7DFFFFF0, 0x7DFFFFFF, ranges);
+  TagRangesTester(0x7DFFFFFF, 0x7DFFFFFF, ranges);
 };

@@ -127,3 +127,21 @@ TEST(UnalignedDeathTest, GenericCapInit) {
 TEST(UnalignedDeathTest, ClearAllTags) {
   TEST_UNALIGNED_CAP(__cheriseed_clear_all_tags(&uacap, 0));
 }
+
+TEST(UnalignedDeathTest, LockAndCopyAllTags) {
+  u8 a;
+  __cheriseed_cap_t tagged_cap;
+  utils::InitCap(&tagged_cap, &a);
+  TEST_UNALIGNED_CAP(
+      __cheriseed_lock_and_copy_all_tags(&tagged_cap, &uacap, 0));
+  TEST_UNALIGNED_CAP(
+      __cheriseed_lock_and_copy_all_tags(&uacap, &tagged_cap, 0));
+}
+
+TEST(UnalignedDeathTest, CopyAllTags) {
+  u8 a;
+  __cheriseed_cap_t tagged_cap;
+  utils::InitCap(&tagged_cap, &a);
+  TEST_UNALIGNED_CAP(__cheriseed_copy_all_tags(&tagged_cap, &uacap, 0));
+  TEST_UNALIGNED_CAP(__cheriseed_copy_all_tags(&uacap, &tagged_cap, 0));
+}

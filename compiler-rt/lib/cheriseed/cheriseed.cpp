@@ -65,6 +65,11 @@ static inline void WriteTag(TagState *ptr, TagState tag) {
   __atomic_store_n(ptr, tag, __ATOMIC_RELAXED);
 }
 
+// Reads a tag with relaxed semantics.
+static inline TagState ReadTag(TagState *ptr) {
+  return __atomic_load_n(ptr, __ATOMIC_RELAXED);
+}
+
 LocalCap::LocalCap(const Options &Opts, const __cheriseed_cap_t *ptr,
                    memory_order memory_order, bool allow_nullcap)
     : Opts(Opts) {
@@ -299,6 +304,9 @@ struct RangedTagOperation {
   void ClearAll() const {
     ShadowMap.IterateTagRanges(range, &ClearAllCallback);
   }
+  void CopyAllTo(const MemoryRange &dest_range, const bool lock) const {
+    ShadowMap.ZipTagRange(range, dest_range, &CopyAllToCallback, lock);
+  }
 
  protected:
   // Locks tags in the range [range.GetBase(), range.GetEnd()).
@@ -333,6 +341,22 @@ struct RangedTagOperation {
         reinterpret_cast<TagState *>(range.GetEnd());
     while (address != end_address) {
       WriteTag(address++, TagState::TS_CLEARED);
+    }
+  }
+
+  // Copies tags in the range [range.GetBase(), range.GetEnd()) to
+  // tag_ptr. If lock is true, lock the source tag and copy to
+  // destination, else just copy.
+  static void CopyAllToCallback(const MemoryRange &range_src,
+                                const MemoryRange &range_dest,
+                                const bool lock) {
+    TagState *address = reinterpret_cast<TagState *>(range_src.GetBase());
+    const TagState *const end_address =
+        reinterpret_cast<TagState *>(range_src.GetEnd());
+    TagState *dest_address = reinterpret_cast<TagState *>(range_dest.GetBase());
+    while (address != end_address) {
+      WriteTag(dest_address++, lock ? AcquireTag(address) : ReadTag(address));
+      ++address;
     }
   }
 
@@ -573,6 +597,30 @@ void __cheriseed_clear_all_tags(const __cheriseed_cap_t *cap, u64 size) {
   u64 address =
       LocalCap(Opts, cap).RequireTagged().RequireBounds(size).GetValue();
   RangedTagOperation(address, size).ClearAll();
+}
+
+static void __cheriseed_copy_tags(const __cheriseed_cap_t *cap_to,
+                                  const __cheriseed_cap_t *cap_from, u64 size,
+                                  bool lock) {
+  const SnapshotOptions Opts;
+  u64 source_address =
+      LocalCap(Opts, cap_from).RequireTagged().RequireBounds(size).GetValue();
+  u64 destination_address =
+      LocalCap(Opts, cap_to).RequireTagged().RequireBounds(size).GetValue();
+  RangedTagOperation(source_address, size)
+      .CopyAllTo(MemoryRange(destination_address, destination_address + size),
+                 lock);
+}
+
+void __cheriseed_copy_all_tags(const __cheriseed_cap_t *cap_to,
+                               const __cheriseed_cap_t *cap_from, u64 size) {
+  __cheriseed_copy_tags(cap_to, cap_from, size, false);
+}
+
+void __cheriseed_lock_and_copy_all_tags(const __cheriseed_cap_t *cap_to,
+                                        const __cheriseed_cap_t *cap_from,
+                                        u64 size) {
+  __cheriseed_copy_tags(cap_to, cap_from, size, true);
 }
 
 void __cheriseed_control_semantics(u8 enable) {

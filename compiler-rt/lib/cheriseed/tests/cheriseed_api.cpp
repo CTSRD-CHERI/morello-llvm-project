@@ -583,6 +583,75 @@ TEST(ClearAllTags, Api) {
   }
 }
 
+TEST(LockAndCopyAllTags, Api) {
+  constexpr uint8_t test_pattern_interval = 3;  // Arbitary value.
+  uint8_t a;
+  __cheriseed_cap_t cap_src[20], cap_dest[20];
+
+  // Initialize caps in a pattern and check if tags of caps are as expected.
+  for (size_t idx = 0; idx < (sizeof(cap_src) / sizeof(cap_src[0])); ++idx) {
+    if (idx % test_pattern_interval == 0) {
+      utils::InitCap(&cap_src[idx], &a);
+      ASSERT_EQ(__cheriseed_tag_get(&cap_src[idx]), 1);
+    } else {
+      ASSERT_EQ(__cheriseed_tag_get(&cap_src[idx]), 0);
+    }
+    ASSERT_EQ(__cheriseed_tag_get(&cap_dest[idx]), 0);
+  }
+
+  // Initialize src and dest caps.
+  __cheriseed_cap_t cap_all_src, cap_all_dest;
+  utils::InitCap(&cap_all_src, cap_src);
+  utils::InitCap(&cap_all_dest, cap_dest);
+
+  // Call api
+  __cheriseed_lock_and_copy_all_tags(&cap_all_dest, &cap_all_src,
+                                     sizeof(cap_src));
+
+  ASSERT_EQ(__cheriseed_tag_get(&cap_all_src), 1);
+  ASSERT_EQ(__cheriseed_tag_get(&cap_all_dest), 1);
+  for (size_t idx = 0; idx < (sizeof(cap_dest) / sizeof(cap_dest[0])); ++idx) {
+    // Check if tags are copied correctly.
+    if (idx % test_pattern_interval == 0)
+      ASSERT_EQ(__cheriseed_tag_get(&cap_dest[idx]), 1);
+    else
+      ASSERT_EQ(__cheriseed_tag_get(&cap_dest[idx]), 0);
+  }
+}
+
+TEST(CopyAllTags, Api) {
+  constexpr uint8_t test_pattern_interval = 3;  // Arbitary value.
+  uint8_t a;
+  __cheriseed_cap_t cap_src[20], cap_dest[20];
+
+  // Initialize caps in a pattern and check if tags of caps are as expected.
+  for (size_t idx = 0; idx < (sizeof(cap_src) / sizeof(cap_src[0])); ++idx) {
+    if (idx % test_pattern_interval == 0) {
+      utils::InitCap(&cap_src[idx], &a);
+      ASSERT_EQ(__cheriseed_tag_get(&cap_src[idx]), 1);
+    } else {
+      ASSERT_EQ(__cheriseed_tag_get(&cap_src[idx]), 0);
+    }
+    ASSERT_EQ(__cheriseed_tag_get(&cap_dest[idx]), 0);
+  }
+
+  // Initialize src and dest caps.
+  __cheriseed_cap_t cap_all_src, cap_all_dest;
+  utils::InitCap(&cap_all_src, cap_src);
+  utils::InitCap(&cap_all_dest, cap_dest);
+
+  // Call api
+  __cheriseed_copy_all_tags(&cap_all_dest, &cap_all_src, sizeof(cap_src));
+
+  ASSERT_EQ(__cheriseed_tag_get(&cap_all_src), 1);
+  ASSERT_EQ(__cheriseed_tag_get(&cap_all_dest), 1);
+  for (size_t idx = 0; idx < (sizeof(cap_dest) / sizeof(cap_dest[0])); ++idx) {
+    // Check if tags are copied correctly.
+    ASSERT_EQ(__cheriseed_tag_get(&cap_dest[idx]),
+              __cheriseed_tag_get(&cap_src[idx]));
+  }
+}
+
 TEST(CheckAccess, PermsHasExactly) {
   uint32_t a;
   __cheriseed_cap_t cap;

@@ -514,6 +514,25 @@ __cheriseed_cap_t *__cheriseed_stack_cap_get(__cheriseed_cap_t *cap_out);
 /// \param[in] size The length of the memory where tags are to be cleared.
 void __cheriseed_clear_all_tags(const void *ptr, uint64_t size);
 
+/// Copies all tags from the address of source capability to the address of
+/// destination capability of the specifed length.
+///
+/// \param[in] dest_ptr Pointer to the copy destination address.
+/// \param[in] src_ptr Pointer to the copy source address.
+/// \param[in] size The length of the memory to be copied.
+void __cheriseed_copy_all_tags(const void *dest_ptr, const void *src_ptr,
+                               uint64_t size);
+
+/// Locks the tags from source capability and copies all previous tags from the
+/// address of source capability to the address of destination capability of
+/// the specifed length.
+///
+/// \param[in] dest_ptr Pointer to the copy destination address.
+/// \param[in] src_ptr Pointer to the copy source address.
+/// \param[in] size The length of the memory to be copied.
+void __cheriseed_lock_and_copy_all_tags(const void *dest_ptr,
+                                        const void *src_ptr, uint64_t size);
+
 /// Enables/disables CHERI semantics, enabled by default.
 ///
 /// \param[in] enable 0: disable, otherwise enable.

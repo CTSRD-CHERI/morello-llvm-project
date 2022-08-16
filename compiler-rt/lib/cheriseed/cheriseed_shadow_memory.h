@@ -93,22 +93,34 @@ struct ShadowMemory {
     return GetShadowMemoryRange().GetBase() + (address >> kShadowScale);
   }
 
+  template <typename... Ts>
   void IterateTagRanges(const MemoryRange& range,
-                        void (*callback)(const MemoryRange&)) const {
-    MemoryRange tag_range(
-        GetShadowAddressFrom(range.GetBase()),
-        GetShadowAddressFrom(range.GetEnd() + (1 << shadow_scale) - 1));
+                        void (*callback)(const MemoryRange&, Ts...),
+                        Ts... args) const {
+    callback(GetTagRange(range), args...);
+  }
 
-    if (UNLIKELY(GetShadowMemoryRangeLow().Contains(tag_range.GetBase()) &&
-                 GetShadowMemoryRangeHigh().Contains(tag_range.GetEnd()))) {
-      callback({tag_range.GetBase(), GetShadowMemoryRangeLow().GetEnd()});
-      callback({GetShadowMemoryRangeHigh().GetBase(), tag_range.GetEnd()});
-    } else {
-      callback({tag_range.GetBase(), tag_range.GetEnd()});
-    }
+  template <typename... Ts>
+  void ZipTagRange(const MemoryRange& range_src, const MemoryRange& range_dest,
+                   void (*callback)(const MemoryRange&, const MemoryRange&,
+                                    Ts...),
+                   Ts... args) const {
+    callback(GetTagRange(range_src), GetTagRange(range_dest), args...);
   }
 
  private:
+  // Returns tag address range from the given memory address range.
+  MemoryRange GetTagRange(const MemoryRange& range) const {
+    if (UNLIKELY(GetShadowMemoryRange().Contains(range.GetBase()) ||
+                 GetShadowMemoryRange().Contains(range.GetEnd()))) {
+      // TODO: Incorrect case.
+    }
+
+    return MemoryRange(
+        GetShadowAddressFrom(range.GetBase()),
+        GetShadowAddressFrom(range.GetEnd() + (1 << shadow_scale) - 1));
+  }
+
   // Shadow scale for the map.
   u8 shadow_scale;
   // Full shadow memory range.
