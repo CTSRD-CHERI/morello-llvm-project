@@ -138,5 +138,7 @@ struct ShadowMemory {
 // Global which holds information about shadow memory.
 extern ShadowMemory ShadowMap;
 
+void FixedMapAccessible(const MemoryRange& mem);
+
 }  // namespace __cheriseed
 #endif  // CHERISEED_SHADOW_MEMORY_H

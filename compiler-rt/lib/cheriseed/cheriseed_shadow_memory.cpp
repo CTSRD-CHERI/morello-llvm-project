@@ -74,7 +74,7 @@ static void FixedMap(const MemoryRange &mem, int protection) {
 }
 
 // Makes a memory range accessible.
-static void FixedMapAccessible(const MemoryRange &mem) {
+void FixedMapAccessible(const MemoryRange &mem) {
   FixedMap(mem, PROT_READ | PROT_WRITE);
 }
 

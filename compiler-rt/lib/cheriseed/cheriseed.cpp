@@ -340,7 +340,16 @@ struct RangedTagOperation {
     const TagState *const end_address =
         reinterpret_cast<TagState *>(range.GetEnd());
     while (address != end_address) {
-      WriteTag(address++, TagState::TS_CLEARED);
+      const usize addr = reinterpret_cast<usize>(address);
+      const usize remaining = static_cast<usize>(end_address - address);
+      // If it is possible, use fixed mapping to clear the tags.
+      if (((addr % SystemPageSize) == 0) && (remaining > SystemPageSize)) {
+        usize map_size = __sanitizer::RoundDownTo(remaining, SystemPageSize);
+        FixedMapAccessible({addr, addr + map_size});
+        address += map_size;
+      } else {
+        WriteTag(address++, TagState::TS_CLEARED);
+      }
     }
   }
 
