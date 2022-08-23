@@ -29,11 +29,11 @@ static constexpr char kDynamicConfigurationEnv[] = "CHERISEED_CHECKS";
 // These permissions bits are used as the arguments for the function
 // __cheriseed_check_access as a platform independent representation.
 enum Permissions : __sanitizer::u32 {
-  LOAD = (1 << 0),
-  STORE = (1 << 1),
-  EXECUTE = (1 << 2),
-  LOAD_CAP = (1 << 3),
-  STORE_CAP = (1 << 4)
+  EXECUTE = (1 << 1),
+  LOAD = (1 << 2),
+  STORE = (1 << 3),
+  LOAD_CAP = (1 << 4),
+  STORE_CAP = (1 << 5)
 };  // enum Permissions
 
 // Possible reasons of a capability violation.

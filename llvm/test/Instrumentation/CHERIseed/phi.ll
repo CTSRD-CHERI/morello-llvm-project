@@ -334,7 +334,7 @@ l2:
 ; CHECK-NEXT:  %phi.cpy = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %0, %__cheriseed_cap_t* %phi, i64 0)
   %phi = phi i8 addrspace(200)* [ %a, %entry ], [ %b, %l1 ]
 ; This was faulty.
-; CHECK-NEXT:  %1 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %phi.cpy, i64 1, i32 2)
+; CHECK-NEXT:  %1 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %phi.cpy, i64 1, i32 8)
 ; CHECK-NEXT:  %2 = inttoptr i64 %1 to i8*
 ; CHECK-NEXT:  store i8 42, i8* %2
 ; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %1, i64 1)

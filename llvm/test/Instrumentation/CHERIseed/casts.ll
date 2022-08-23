@@ -122,8 +122,8 @@ define void @bitcast_function_alias_2() addrspace(200) {
 ; CHECK-SAME:     %__cheriseed_cap_t* %1,
 ; CHECK-SAME:     i64 ptrtoint (void (...)* @bitcast_func_alias_2 to i64),
 ; CHECK-SAME:     i64 1,
-; CHECK-SAME:     i32 27)
-; CHECK-NEXT:  %3 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %2, i64 1, i32 4)
+; CHECK-SAME:     i32 60)
+; CHECK-NEXT:  %3 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %2, i64 1, i32 2)
 ; CHECK-NEXT:  %4 = inttoptr i64 %3 to void ()*
 ; CHECK-NEXT:  call void %4()
   call addrspace(200) void bitcast (void (...) addrspace(200)* @bitcast_func_alias_2 to void () addrspace(200)*)()

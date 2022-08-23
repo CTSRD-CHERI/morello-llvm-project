@@ -40,7 +40,7 @@ define void @blockaddress_indirect() addrspace(200) {
 ; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
 ; CHECK-NEXT:  %2 = alloca %__cheriseed_cap_t, align 16
 ; CHECK-NEXT:  %3 = call %__cheriseed_cap_t* @__cheriseed_generic_cap_init(%__cheriseed_cap_t* %2,
-; CHECK-SAME:     i64 ptrtoint (i8* blockaddress(@blockaddress_indirect_func, %BB1) to i64), i64 1, i32 27)
+; CHECK-SAME:     i64 ptrtoint (i8* blockaddress(@blockaddress_indirect_func, %BB1) to i64), i64 1, i32 60)
 ; CHECK-NEXT:  %indirect = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %1,
 ; CHECK-SAME:     %__cheriseed_cap_t* %3, i64 0)
   %indirect = getelementptr i8, i8 addrspace(200)* blockaddress(@blockaddress_indirect_func, %BB1), i64 0
@@ -60,11 +60,11 @@ BB1:
 ; CHECK-NEXT:    %1 = call %__cheriseed_cap_t* @__cheriseed_generic_cap_init(
 ; CHECK-SAME:      %__cheriseed_cap_t* getelementptr inbounds ([2 x %__cheriseed_cap_t],
 ; CHECK-SAME:        [2 x %__cheriseed_cap_t]* @__cheriseed_shadowed_global_blockaddresses, i32 0, i64 0),
-; CHECK-SAME:      i64 ptrtoint (i8* blockaddress(@blockaddress, %BB1) to i64), i64 1, i32 27)
+; CHECK-SAME:      i64 ptrtoint (i8* blockaddress(@blockaddress, %BB1) to i64), i64 1, i32 60)
 ; CHECK-NEXT:    %2 = call %__cheriseed_cap_t* @__cheriseed_generic_cap_init(
 ; CHECK-SAME:      %__cheriseed_cap_t* getelementptr inbounds ([2 x %__cheriseed_cap_t],
 ; CHECK-SAME:        [2 x %__cheriseed_cap_t]* @__cheriseed_shadowed_global_blockaddresses, i32 0, i64 1),
-; CHECK-SAME:      i64 ptrtoint (i8* blockaddress(@blockaddress, %BB2) to i64), i64 1, i32 27)
+; CHECK-SAME:      i64 ptrtoint (i8* blockaddress(@blockaddress, %BB2) to i64), i64 1, i32 60)
 ; CHECK-NEXT:    ret void
 
 ; ------------------------------------------------------------------------------

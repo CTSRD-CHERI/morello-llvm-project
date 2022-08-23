@@ -132,6 +132,14 @@ static constexpr u64 WRITE_CAP_PERMS = STORE | STORE_CAP;
 static constexpr u64 ALL = FOREACH_CCL_PERMISSION(PERM_ALL_BUILDER) 0;
 #undef PERM_ALL_BUILDER
 
+#define CHECK_PERMISSION_VALUE(__perm)                                   \
+  static_assert(                                                         \
+      ccl::permissions::__perm == __cheriseed::abi::Permissions::__perm, \
+      "Mismatching value for permission " #__perm);
+
+FOREACH_CCL_PERMISSION(CHECK_PERMISSION_VALUE)
+#undef CHECK_PERMISSION_VALUE
+
 }  // namespace permissions
 
 /// Interface to the cheri-compressed-cap library.

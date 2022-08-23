@@ -24,7 +24,7 @@ void callee1(int n, ...) {
 // CHECK-NEXT:  [[V2:%.*]] = alloca %__cheriseed_cap_t, align 16
 // CHECK-NEXT:  [[V3:%.*]] = alloca %__cheriseed_cap_t, align 16
 // CHECK-NEXT:  [[CAP_CAP:%.*]] = call %__cheriseed_cap_t* @__cheriseed_stack_cap_init(%__cheriseed_cap_t* [[CAP_SHADOW_CAP]], i64 [[CAP_ADDR]], i64 16)
-// CHECK-NEXT:  [[V4:%.*]] = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* [[N_ADDR_CAP]], i64 4, i32 2)
+// CHECK-NEXT:  [[V4:%.*]] = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* [[N_ADDR_CAP]], i64 4, i32 8)
 // CHECK-NEXT:  [[V5:%.*]] = inttoptr i64 [[V4]] to i32*
 // CHECK-NEXT:  store i32 %n, i32* [[V5]], align 4
 // CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 [[V4]], i64 4)
@@ -61,7 +61,7 @@ void callee2(int n, ...) {
 // CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 // CHECK-NEXT:  [[V1:%.*]] = alloca %__cheriseed_cap_t, align 16
 // CHECK-NEXT:  [[LST2_CAP:%.*]] = call %__cheriseed_cap_t* @__cheriseed_stack_cap_init(%__cheriseed_cap_t* [[LST2_SHADOW_CAP]], i64 [[LST2_ADDR]], i64 16)
-// CHECK-NEXT:  [[V2:%.*]] = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* [[N_ADDR_CAP]], i64 4, i32 2)
+// CHECK-NEXT:  [[V2:%.*]] = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* [[N_ADDR_CAP]], i64 4, i32 8)
 // CHECK-NEXT:  [[V3:%.*]] = inttoptr i64 [[V2]] to i32*
 // CHECK-NEXT:  store i32 %n, i32* [[V3]], align 4
 // CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 [[V2]], i64 4)

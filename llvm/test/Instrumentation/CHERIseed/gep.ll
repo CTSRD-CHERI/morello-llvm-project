@@ -18,7 +18,7 @@ define void @gep_constant_01(%struct.S addrspace(200)* %0) addrspace(200) {
 ; CHECK-NEXT:  %2 = alloca %__cheriseed_cap_t, align 16
 ; CHECK-NEXT:  %3 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %2, %__cheriseed_cap_t* %0, i64 32)
   %2 = getelementptr inbounds %struct.S, %struct.S addrspace(200)* %0, i64 1, i32 0
-; CHECK-NEXT:  %4 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %3, i64 1, i32 2)
+; CHECK-NEXT:  %4 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %3, i64 1, i32 8)
 ; CHECK-NEXT:  %5 = inttoptr i64 %4 to i8*
 ; CHECK-NEXT:  store i8 2, i8* %5, align 16
 ; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %4, i64 1)
@@ -40,7 +40,7 @@ define void @gep_constant_02(%struct.S addrspace(200)* addrspace(200)* %0) addrs
   %3 = load %struct.S addrspace(200)*, %struct.S addrspace(200)* addrspace(200)* %2, align 16
 ; CHECK-NEXT:  %8 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %4, %__cheriseed_cap_t* %7, i64 0)
   %4 = getelementptr inbounds %struct.S, %struct.S addrspace(200)* %3, i64 0, i32 0
-; CHECK-NEXT:  %9 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %8, i64 1, i32 2)
+; CHECK-NEXT:  %9 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %8, i64 1, i32 8)
 ; CHECK-NEXT:  %10 = inttoptr i64 %9 to i8*
 ; CHECK-NEXT:  store i8 2, i8* %10, align 16
 ; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %9, i64 1)
@@ -63,7 +63,7 @@ define void @gep_variable_01(%struct.S addrspace(200)* %0, i64 %1) addrspace(200
 ; CHECK-NEXT:  %7 = ptrtoint i8* %6 to i64
 ; CHECK-NEXT:  %8 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %3, %__cheriseed_cap_t* %0, i64 %7)
   %3 = getelementptr inbounds %struct.S, %struct.S addrspace(200)* %0, i64 %1, i32 0
-; CHECK-NEXT:  %9 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %8, i64 1, i32 2)
+; CHECK-NEXT:  %9 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %8, i64 1, i32 8)
 ; CHECK-NEXT:  %10 = inttoptr i64 %9 to i8*
 ; CHECK-NEXT:  store i8 2, i8* %10, align 16
 ; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %9, i64 1)
@@ -88,7 +88,7 @@ define i32 @gep_regression(i32 addrspace(200)* %0, i32 %1) {
 ; CHECK-NEXT:  %8 = ptrtoint i32* %7 to i64
 ; CHECK-NEXT:  %9 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %3, %__cheriseed_cap_t* %0, i64 %8)
   %4 = getelementptr inbounds i32, i32 addrspace(200)* %0, i64 %3
-; CHECK-NEXT:  %10 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %9, i64 4, i32 1)
+; CHECK-NEXT:  %10 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %9, i64 4, i32 4)
 ; CHECK-NEXT:  %11 = inttoptr i64 %10 to i32*
 ; CHECK-NEXT:  %12 = load i32, i32* %11, align 4
   %5 = load i32, i32 addrspace(200)* %4, align 4

@@ -451,47 +451,47 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @int_as200 to i64),
 ; CHECK-SAME:      i64 ptrtoint (i32* @__cheriseed_shadowed_global_int_as200 to i64),
-; CHECK-SAME:      i64 4, i32 4, void ()* null
+; CHECK-SAME:      i64 4, i32 2, void ()* null
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @ptr_as200 to i64),
 ; CHECK-SAME:      i64 ptrtoint (i32** @__cheriseed_shadowed_global_ptr_as200 to i64),
-; CHECK-SAME:      i64 8, i32 4, void ()* null
+; CHECK-SAME:      i64 8, i32 2, void ()* null
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @cap_as200 to i64),
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @__cheriseed_shadowed_global_cap_as200 to i64),
-; CHECK-SAME:      i64 16, i32 4, void ()* null
+; CHECK-SAME:      i64 16, i32 2, void ()* null
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @cap_to_cap_null_as200 to i64),
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @__cheriseed_shadowed_global_cap_to_cap_null_as200 to i64),
-; CHECK-SAME:      i64 16, i32 4, void ()* null
+; CHECK-SAME:      i64 16, i32 2, void ()* null
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @cap_to_cap_as200 to i64),
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @__cheriseed_shadowed_global_cap_to_cap_as200 to i64),
-; CHECK-SAME:      i64 16, i32 4, void ()* @__cheriseed_initializer_cap_to_cap_as200
+; CHECK-SAME:      i64 16, i32 2, void ()* @__cheriseed_initializer_cap_to_cap_as200
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.3 to i64),
-; CHECK-SAME:      i64 ptrtoint (%case.3.s* @__cheriseed_shadowed_global_case.3 to i64), i64 48, i32 4,
+; CHECK-SAME:      i64 ptrtoint (%case.3.s* @__cheriseed_shadowed_global_case.3 to i64), i64 48, i32 2,
 ; CHECK-SAME:      void ()* @__cheriseed_initializer_case.3
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.3.g to i64),
 ; CHECK-SAME:      i64 ptrtoint (%com.nocap.s* @__cheriseed_shadowed_global_case.3.g to i64),
-; CHECK-SAME:      i64 16, i32 4, void ()* null
+; CHECK-SAME:      i64 16, i32 2, void ()* null
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.4 to i64),
 ; CHECK-SAME:      i64 ptrtoint (%case.4.s* @__cheriseed_shadowed_global_case.4 to i64),
-; CHECK-SAME:      i64 48, i32 4, void ()* @__cheriseed_initializer_case.4
+; CHECK-SAME:      i64 48, i32 2, void ()* @__cheriseed_initializer_case.4
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.4.g to i64),
 ; CHECK-SAME:      i64 ptrtoint (%com.hascap.s* @__cheriseed_shadowed_global_case.4.g to i64),
-; CHECK-SAME:      i64 32, i32 4, void ()* null
+; CHECK-SAME:      i64 32, i32 2, void ()* null
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 0, i64 0, i64 0, i32 0, void ()* @__cheriseed_initializer_case.5
@@ -499,7 +499,7 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.5.g2 to i64),
 ; CHECK-SAME:      i64 ptrtoint (i8* @__cheriseed_shadowed_global_case.5.g2 to i64),
-; CHECK-SAME:      i64 1, i32 4, void ()* null
+; CHECK-SAME:      i64 1, i32 2, void ()* null
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 0, i64 0, i64 0, i32 0, void ()* @__cheriseed_initializer_case.6
@@ -513,42 +513,42 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.9.g2 to i64),
 ; CHECK-SAME:      i64 ptrtoint (i8* @__cheriseed_shadowed_global_case.9.g2 to i64),
-; CHECK-SAME:      i64 1, i32 4, void ()* null
+; CHECK-SAME:      i64 1, i32 2, void ()* null
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.11.g1 to i64),
 ; CHECK-SAME:      i64 ptrtoint ([2 x i64]* @__cheriseed_shadowed_global_case.11.g1 to i64),
-; CHECK-SAME:      i64 16, i32 4, void ()* null
+; CHECK-SAME:      i64 16, i32 2, void ()* null
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.11 to i64),
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @__cheriseed_shadowed_global_case.11 to i64),
-; CHECK-SAME:      i64 16, i32 4, void ()* @__cheriseed_initializer_case.11
+; CHECK-SAME:      i64 16, i32 2, void ()* @__cheriseed_initializer_case.11
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.14.g to i64),
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @__cheriseed_shadowed_global_case.14.g to i64),
-; CHECK-SAME:      i64 16, i32 4, void ()* null
+; CHECK-SAME:      i64 16, i32 2, void ()* null
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.14 to i64),
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @__cheriseed_shadowed_global_case.14 to i64),
-; CHECK-SAME:      i64 16, i32 4, void ()* @__cheriseed_initializer_case.14
+; CHECK-SAME:      i64 16, i32 2, void ()* @__cheriseed_initializer_case.14
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.19 to i64),
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @__cheriseed_shadowed_global_case.19 to i64),
-; CHECK-SAME:      i64 16, i32 4, void ()* @__cheriseed_initializer_case.19
+; CHECK-SAME:      i64 16, i32 2, void ()* @__cheriseed_initializer_case.19
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.19.g1 to i64),
 ; CHECK-SAME:      i64 ptrtoint ([1 x %__cheriseed_cap_t]* @__cheriseed_shadowed_global_case.19.g1 to i64),
-; CHECK-SAME:      i64 16, i32 4, void ()* @__cheriseed_initializer_case.19.g1
+; CHECK-SAME:      i64 16, i32 2, void ()* @__cheriseed_initializer_case.19.g1
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.19.g2 to i64),
 ; CHECK-SAME:      i64 ptrtoint (i32* @__cheriseed_shadowed_global_case.19.g2 to i64),
-; CHECK-SAME:      i64 4, i32 4, void ()* null
+; CHECK-SAME:      i64 4, i32 2, void ()* null
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 0, i64 0, i64 0, i32 0, void ()* @__cheriseed_initializer_case.20
@@ -556,17 +556,17 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.21 to i64),
 ; CHECK-SAME:      i64 ptrtoint (%case.21.s* @__cheriseed_shadowed_global_case.21 to i64),
-; CHECK-SAME:      i64 16, i32 22, void ()* null
+; CHECK-SAME:      i64 16, i32 42, void ()* null
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.22 to i64),
 ; CHECK-SAME:      i64 ptrtoint (%case.22.s* @__cheriseed_shadowed_global_case.22 to i64),
-; CHECK-SAME:      i64 16, i32 22, void ()* @__cheriseed_initializer_case.22
+; CHECK-SAME:      i64 16, i32 42, void ()* @__cheriseed_initializer_case.22
 ; CHECK-SAME:    },
 ; CHECK-SAME:    {
 ; CHECK-SAME:      i64 ptrtoint (%__cheriseed_cap_t* @case.22.g to i64),
 ; CHECK-SAME:      i64 ptrtoint (i8* @__cheriseed_shadowed_global_case.22.g to i64),
-; CHECK-SAME:      i64 1, i32 4, void ()* null
+; CHECK-SAME:      i64 1, i32 2, void ()* null
 ; CHECK-SAME:    }
 ; CHECK-SAME:  ],  section "__cheriseed_initializers", align 8
 
@@ -682,7 +682,7 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-SAME:      %__cheriseed_cap_t* %1,
 ; CHECK-SAME:      i64 ptrtoint (void ()* @case.8.f.2 to i64),
 ; CHECK-SAME:      i64 1,
-; CHECK-SAME:      i32 27)
+; CHECK-SAME:      i32 60)
 ; CHECK-NEXT:    %3 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t*
 ; CHECK-SAME:      getelementptr inbounds (%case.8.s, %case.8.s* @case.8, i32 0, i32 3),
 ; CHECK-SAME:      %__cheriseed_cap_t* %2, i64 0)

@@ -118,23 +118,6 @@ const LocalCap &LocalCap::RequireBounds(u64 size) const {
   return *this;
 }
 
-// Sets a permissions bit in the ccl representation if the corresponding bit is
-// set in the check_access permission mask.
-static u64 CheckPermsToCCL(u32 in_perms) {
-#define BIT_CONVERTER(__perm) \
-  (in_perms & Permissions::__perm) ? ccl::permissions::__perm : 0
-
-  u32 out_perms = 0;
-  out_perms |= BIT_CONVERTER(LOAD);
-  out_perms |= BIT_CONVERTER(STORE);
-  out_perms |= BIT_CONVERTER(EXECUTE);
-  out_perms |= BIT_CONVERTER(LOAD_CAP);
-  out_perms |= BIT_CONVERTER(STORE_CAP);
-  return out_perms;
-
-#undef BIT_CONVERTER
-}
-
 static memory_order IRToCppOrdering(u8 ordering) {
   // Detect if the common header is changed.
   static_assert((1 << 0) == memory_order::memory_order_relaxed,
@@ -743,7 +726,7 @@ void __cheriseed_static_init(u64 sp) {
     LocalCap local_cap(Opts);
     bool is_exact = ccl::methods::BuildBoundedCap(
         local_cap, glo_init_start[idx].address, glo_init_start[idx].size,
-        ~CheckPermsToCCL(glo_init_start[idx].clear_perms));
+        ~glo_init_start[idx].clear_perms);
     if (!is_exact) {
       // TODO: invalidate capability if not exact
     }
@@ -762,16 +745,15 @@ void __cheriseed_static_init(u64 sp) {
 u64 __cheriseed_check_access(const __cheriseed_cap_t *cap, u64 size,
                              u32 perms) {
   const SnapshotOptions Opts;
-  u64 ccl_perms = CheckPermsToCCL(perms);
   u64 address = LocalCap(Opts, cap)
                     .RequireTagged()
-                    .RequirePermissions(ccl_perms)
+                    .RequirePermissions(perms)
                     .RequireBounds(size)
                     .GetValue();
   // If there is a data store going to happen, lock all tags for that range.
   // This closes the window in which a race condition can occur between
   // writing some random data and a tagged capability.
-  if (ccl_perms & ccl::permissions::STORE)
+  if (perms & ccl::permissions::STORE)
     RangedTagOperation(address, size).Lock();
 
   return address;
@@ -808,8 +790,8 @@ __cheriseed_cap_t *__cheriseed_generic_cap_init(__cheriseed_cap_t *cap,
                                                 u32 perms_to_clear) {
   const SnapshotOptions Opts;
   LocalCap local_cap{Opts};
-  bool is_exact = ccl::methods::BuildBoundedCap(
-      local_cap, address, size, ~CheckPermsToCCL(perms_to_clear));
+  bool is_exact =
+      ccl::methods::BuildBoundedCap(local_cap, address, size, ~perms_to_clear);
   if (!is_exact) {
     // TODO: invalidate capability if not exact?
   }

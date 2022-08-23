@@ -101,11 +101,11 @@ using namespace llvm;
 namespace cheriseed {
 namespace abi {
 enum permissions : unsigned int {
-  LOAD = (1 << 0),
-  STORE = (1 << 1),
-  EXECUTE = (1 << 2),
-  LOAD_CAP = (1 << 3),
-  STORE_CAP = (1 << 4)
+  EXECUTE = (1 << 1),
+  LOAD = (1 << 2),
+  STORE = (1 << 3),
+  LOAD_CAP = (1 << 4),
+  STORE_CAP = (1 << 5)
 };
 } // namespace abi
 } // namespace cheriseed
