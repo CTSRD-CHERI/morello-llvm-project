@@ -19,6 +19,7 @@ set(CHERISEED_UNITTEST_COMMON_CFLAGS
   -I${COMPILER_RT_SOURCE_DIR}/lib
   -I${COMPILER_RT_SOURCE_DIR}/lib/cheriseed
   -I${CHERI_COMPRESSED_CAP_INTERFACE_DIRECTORY}
+  -I${LLVM_MAIN_SRC_DIR}/include/
   -fno-rtti
   -Wno-non-virtual-dtor
   )

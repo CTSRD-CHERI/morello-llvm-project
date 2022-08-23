@@ -74,6 +74,7 @@
 #include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/AtomicOrdering.h"
+#include "llvm/Support/CHERIseed.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
@@ -87,28 +88,6 @@
 #include <utility>
 
 using namespace llvm;
-
-// These permissions bits are used as the arguments for compiler_rt function
-// __cheriseed_check_access as a platform independent representation.
-//
-// All calls to other compiler_rt functions that are accessible via intrinsics
-// to the user should use the platform specific permissions bits defined in
-// cheriintrin.h
-//
-// These constants are duplicated in:
-//   compiler-rt/lib/cheriseed/cheriseed_abi_defs.h
-// so any changes should be reflected there.
-namespace cheriseed {
-namespace abi {
-enum permissions : unsigned int {
-  EXECUTE = (1 << 1),
-  LOAD = (1 << 2),
-  STORE = (1 << 3),
-  LOAD_CAP = (1 << 4),
-  STORE_CAP = (1 << 5)
-};
-} // namespace abi
-} // namespace cheriseed
 
 #define PASS_ARG "cheriseed"
 #define PASS_NAME "CHERIseed: software-only capability support."
@@ -1397,9 +1376,10 @@ Value *CHERIseed::visitAtomicCmpXchgInst(AtomicCmpXchgInst &I) {
 
   // Compare-exchange some other type through a capability.
   Type *MNewTy = MNew->getType();
-  Value *NBase = createCapAccessCheck(
-      MBase, MNewTy->getPointerTo(), getTypeStoreSize(MNewTy),
-      cheriseed::abi::permissions::LOAD | cheriseed::abi::permissions::STORE);
+  Value *NBase = createCapAccessCheck(MBase, MNewTy->getPointerTo(),
+                                      getTypeStoreSize(MNewTy),
+                                      __cheriseed::abi::Permissions::LOAD |
+                                          __cheriseed::abi::Permissions::STORE);
   Value *NI = VC.IRB->CreateAtomicCmpXchg(
       NBase, MCmp, MNew, I.getAlign(), I.getSuccessOrdering(),
       I.getFailureOrdering(), I.getSyncScopeID());
@@ -1436,9 +1416,10 @@ Value *CHERIseed::visitAtomicRMWInst(AtomicRMWInst &I) {
 
   // Otherwise, do a regular atomic operation through a capability.
   Type *MValTy = MVal->getType();
-  Value *NBase = createCapAccessCheck(
-      MAddr, MValTy->getPointerTo(), getTypeStoreSize(MValTy),
-      cheriseed::abi::permissions::LOAD | cheriseed::abi::permissions::STORE);
+  Value *NBase = createCapAccessCheck(MAddr, MValTy->getPointerTo(),
+                                      getTypeStoreSize(MValTy),
+                                      __cheriseed::abi::Permissions::LOAD |
+                                          __cheriseed::abi::Permissions::STORE);
   Value *NI = VC.IRB->CreateAtomicRMW(I.getOperation(), NBase, MVal,
                                       I.getAlign(), I.getOrdering());
   DebugPrint::Emit(NI);
@@ -1490,7 +1471,7 @@ Value *CHERIseed::visitCallInst(CallInst &I) {
 
   if (Callee->getType() == CapPtrTy)
     Callee = createCapAccessCheck(Callee, FTy->getPointerTo(), 1,
-                                  cheriseed::abi::permissions::EXECUTE);
+                                  __cheriseed::abi::Permissions::EXECUTE);
   CallInst *NV = VC.IRB->CreateCall(FTy, Callee, Ctx.Args);
   NV->setAttributes(Ctx.Attrs);
   // FIXME: clone other properties when we CreateCall? Elsewhere too.
@@ -1596,7 +1577,7 @@ Value *CHERIseed::visitIndirectBrInst(IndirectBrInst &I) {
 
   Value *Addr = mapValue(I.getAddress());
   Value *Ptr = createCapAccessCheck(Addr, Int8PtrTy, 0,
-                                    cheriseed::abi::permissions::EXECUTE);
+                                    __cheriseed::abi::Permissions::EXECUTE);
   IndirectBrInst *IBR = VC.IRB->CreateIndirectBr(Ptr, I.getNumDestinations());
   for (BasicBlock *BB : I.successors())
     IBR->addDestination(cast<BasicBlock>(mapValue(BB)));
@@ -1712,7 +1693,7 @@ Value *CHERIseed::visitLoadInst(LoadInst &I) {
   const unsigned StoreSize = getTypeStoreSize(ValTy);
   Type *NValTy = mapType(ValTy->getPointerTo());
   Value *Ptr = createCapAccessCheck(NAddr, NValTy, StoreSize,
-                                    cheriseed::abi::permissions::LOAD);
+                                    __cheriseed::abi::Permissions::LOAD);
   LoadInst *NI = VC.IRB->CreateLoad(mapType(ValTy), Ptr, I.isVolatile());
   NI->setOrdering(I.getOrdering());
   NI->setAlignment(I.getAlign());
@@ -1771,7 +1752,7 @@ Value *CHERIseed::visitStoreInst(StoreInst &I) {
   unsigned StoreSize = getTypeStoreSize(ValTy);
   Type *NValTy = mapType(ValTy->getPointerTo());
   Value *Ptr = createCapAccessCheck(NAddr, NValTy, StoreSize,
-                                    cheriseed::abi::permissions::STORE);
+                                    __cheriseed::abi::Permissions::STORE);
   StoreInst *NI = VC.IRB->CreateStore(MV, Ptr, I.isVolatile());
   NI->setOrdering(I.getOrdering());
   NI->setAlignment(I.getAlign());
@@ -3043,12 +3024,13 @@ Constant *CHERIseed::mapGlobalVariableInitializer(GlobalVariable *GV,
     ShadowCapBoundsSize = ConstantInt::get(
         AddrSizeTy, alignTo(DL.getTypeSizeInBits(NGV->getValueType()), 8) / 8);
     // Determine which permissions should be cleared on the shadow cap.
-    uint64_t ClearPerms = cheriseed::abi::EXECUTE;
+    uint64_t ClearPerms = __cheriseed::abi::Permissions::EXECUTE;
     // Consider the constness of the original global. It might have been made
     // non-const because of runtime initializations, but the shadow capability
     // should still have STORE cleared if the original global was constant.
     if (GV->isConstant())
-      ClearPerms |= cheriseed::abi::STORE | cheriseed::abi::STORE_CAP;
+      ClearPerms |= __cheriseed::abi::Permissions::STORE |
+                    __cheriseed::abi::Permissions::STORE_CAP;
     ShadowCapClearPerms = ConstantInt::get(CapPermsTy, ClearPerms);
   } else {
     ShadowCapAddr = ShadowCapValue = ShadowCapBoundsSize =
@@ -3273,7 +3255,7 @@ CHERIseed::CallContext CHERIseed::prepareCallArgs(CallInst &I) {
         DebugPrint::Emit(BC);
         Value *Ptr = createCapAccessCheck(MA, ByValType->getPointerTo(),
                                           getTypeStoreSize(ByValType),
-                                          cheriseed::abi::permissions::LOAD);
+                                          __cheriseed::abi::Permissions::LOAD);
         Value *Load =
             VC.IRB->CreateAlignedLoad(ByValType, Ptr, Align(SlotSize));
         DebugPrint::Emit(Load);
@@ -3634,13 +3616,13 @@ Value *CHERIseed::createBoundedCap(Value *Dst, Value *Addr, Value *Size,
   Size = Size ? Size : ConstantInt::get(AddrSizeTy, 0);
   uint64_t PermsToClear;
   if (IsCode) {
-    PermsToClear = cheriseed::abi::permissions::LOAD |
-                   cheriseed::abi::permissions::LOAD_CAP |
-                   cheriseed::abi::permissions::STORE |
-                   cheriseed::abi::permissions::STORE_CAP;
+    PermsToClear = __cheriseed::abi::Permissions::LOAD |
+                   __cheriseed::abi::Permissions::LOAD_CAP |
+                   __cheriseed::abi::Permissions::STORE |
+                   __cheriseed::abi::Permissions::STORE_CAP;
     Size = ConstantInt::get(AddrSizeTy, 1);
   } else {
-    PermsToClear = cheriseed::abi::permissions::EXECUTE;
+    PermsToClear = __cheriseed::abi::Permissions::EXECUTE;
   }
 
   return createRtCall(RtKind::GENERIC_CAP_INIT, Dst, IntAddr, Size,

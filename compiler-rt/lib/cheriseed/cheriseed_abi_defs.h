@@ -12,10 +12,16 @@
 #ifndef CHERISEED_ABI_DEFS_H
 #define CHERISEED_ABI_DEFS_H
 
+#include "llvm/Support/CHERIseed.h"
 #include "sanitizer_common/sanitizer_internal_defs.h"
 
 namespace __cheriseed {
+
+using namespace llvm::__cheriseed;
+
 namespace abi {
+
+using namespace llvm::__cheriseed::abi;
 
 // Minimum expected alignment of a capability.
 static constexpr __sanitizer::u8 kCapabilityMinAlignment = 16;
@@ -25,16 +31,6 @@ static constexpr __sanitizer::u8 kIRRelaxedOrdering = 0;
 
 // The dynamic configuration value as it appears in the 'envp' array.
 static constexpr char kDynamicConfigurationEnv[] = "CHERISEED_CHECKS";
-
-// These permissions bits are used as the arguments for the function
-// __cheriseed_check_access as a platform independent representation.
-enum Permissions : __sanitizer::u32 {
-  EXECUTE = (1 << 1),
-  LOAD = (1 << 2),
-  STORE = (1 << 3),
-  LOAD_CAP = (1 << 4),
-  STORE_CAP = (1 << 5)
-};  // enum Permissions
 
 // Possible reasons of a capability violation.
 enum SignalCode : int {
@@ -70,19 +66,6 @@ enum Control : __sanitizer::u8 {
   // Turns some CHERIseed feature ON.
   CTRL_ENABLE = 1,
 };  // enum Control
-
-enum Check : __sanitizer::u64 {
-  // Bitmask representing permissions
-  CHK_PERMS = ((1UL << 32) - 1),
-  // Bit of checks mask representing tag
-  CHK_TAG = (1UL << 61),
-  // Bit of checks mask representing bounds
-  CHK_BOUNDS = (1UL << 62),
-  // Bit of checks mask representing alignment
-  CHK_ALIGNMENT = (1UL << 63),
-  // All checks
-  CHK_ALL = UINT64_MAX,
-};  // enum Check
 
 }  // namespace abi
 }  // namespace __cheriseed

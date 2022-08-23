@@ -74,3 +74,42 @@ TEST(CheckDeathTest, DynamicConfiguration6) {
       ControlChecksDynamic(env), testing::ExitedWithCode(kExitCode),
       CHECK_DYNAMIC_CONFIGURATION_ERROR_PATTERN(5, "LOAD,-FOO", "     \\^"));
 }
+
+TEST(CheckDeathTest, DynamicConfiguration7) {
+  const char *checks = "CHERISEED_CHECKS=LO";
+  OnStackArgs args(&checks[0]);
+  Environment env = Environment::From(args.GetAddress());
+  EXPECT_EXIT(ControlChecksDynamic(env), testing::ExitedWithCode(kExitCode),
+              CHECK_DYNAMIC_CONFIGURATION_ERROR_PATTERN(0, "LO", "\\^"));
+}
+
+TEST(CheckDeathTest, DynamicConfiguration8) {
+  const char *checks = "CHERISEED_CHECKS=-LO";
+  OnStackArgs args(&checks[0]);
+  Environment env = Environment::From(args.GetAddress());
+  EXPECT_EXIT(ControlChecksDynamic(env), testing::ExitedWithCode(kExitCode),
+              CHECK_DYNAMIC_CONFIGURATION_ERROR_PATTERN(0, "-LO", "\\^"));
+}
+
+TEST(CheckDeathTest, DynamicConfiguration9) {
+  const char *checks = "CHERISEED_CHECKS=LOADx";
+  OnStackArgs args(&checks[0]);
+  Environment env = Environment::From(args.GetAddress());
+  EXPECT_EXIT(ControlChecksDynamic(env), testing::ExitedWithCode(kExitCode),
+              CHECK_DYNAMIC_CONFIGURATION_ERROR_PATTERN(0, "LOADx", "\\^"));
+}
+
+TEST(CheckDeathTest, DynamicConfiguration10) {
+  const char *checks = "CHERISEED_CHECKS=-LOADx";
+  OnStackArgs args(&checks[0]);
+  Environment env = Environment::From(args.GetAddress());
+  EXPECT_EXIT(ControlChecksDynamic(env), testing::ExitedWithCode(kExitCode),
+              CHECK_DYNAMIC_CONFIGURATION_ERROR_PATTERN(0, "-LOADx", "\\^"));
+}
+
+TEST(CheckTest, DynamicConfiguration11) {
+  const char *checks = "CHERISEED_CHECKS=LOAD_CAP";
+  OnStackArgs args(&checks[0]);
+  Environment env = Environment::From(args.GetAddress());
+  ControlChecksDynamic(env);
+}

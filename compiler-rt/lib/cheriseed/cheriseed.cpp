@@ -208,70 +208,31 @@ void ControlChecksDynamic(const Environment &env) {
       cheriseed_checks_start + sizeof(kDynamicConfigurationEnv);
   // Process the comma separated list of options.
   while (*cheriseed_checks) {
-    const char *const option_start = cheriseed_checks;
-    // A starting '-' marks if an option is negated.
-    enum Control enabled_state = Control::CTRL_ENABLE;
-    if ('-' == *cheriseed_checks) {
-      enabled_state = Control::CTRL_DISABLE;
-      // Skip the '-' character.
-      ++cheriseed_checks;
+    parser::ParsedOption option;
+    cheriseed_checks =
+        parser::Parse(cheriseed_checks,
+                      {
+                          .strchrnul = &__sanitizer::internal_strchrnul,
+                          .strncmp = &__sanitizer::internal_strncmp,
+                      },
+                      option);
+    switch (option.Result()) {
+      case parser::ParseResult::VALID_OPTION: {
+        __cheriseed_control_checks(
+            option.Enabled() ? abi::CTRL_ENABLE : abi::CTRL_DISABLE,
+            option.GetCheck());
+      } break;
+      case parser::ParseResult::ZERO_LENGTH_OPTION: {
+        const NoOptionsEnabled Opts;
+        CheckContext(LocalCap(Opts))
+            .add(DynamicControlError(cheriseed_checks_start, option.Data()));
+      } break;
+      case parser::ParseResult::UNKNOWN_OPTION: {
+        const NoOptionsEnabled Opts;
+        CheckContext(LocalCap(Opts))
+            .add(DynamicControlError(cheriseed_checks_start, option.Data()));
+      } break;
     }
-
-    // Find the position of the next delimiter character.
-    const char *delimiter =
-        __sanitizer::internal_strchrnul(cheriseed_checks, ',');
-    // Calculate the length of this option.
-    const usize option_length =
-        static_cast<usize>(delimiter - cheriseed_checks);
-    // Grab the current option.
-    const char *const option = cheriseed_checks;
-    // Don't process zero-length options.
-    if (0 == option_length) {
-      const NoOptionsEnabled Opts;
-      CheckContext(LocalCap(Opts))
-          .add(DynamicControlError(cheriseed_checks_start, option_start));
-      break;
-    }
-    // Advance pointer: if there is a delimiter, skip the delimiter itself.
-    cheriseed_checks = *delimiter ? ++delimiter : delimiter;
-
-// Helper macros to make the code a bit more readable.
-#define OPTION(__name) \
-  (0 == __sanitizer::internal_strncmp(__name, option, option_length))
-
-#define CONTROL_CHECK(__check) \
-  __cheriseed_control_checks(enabled_state, __check);
-
-    if OPTION ("ALL") {
-      CONTROL_CHECK(Check::CHK_ALL);
-    } else if OPTION ("TAG") {
-      CONTROL_CHECK(Check::CHK_TAG);
-    } else if OPTION ("BOUNDS") {
-      CONTROL_CHECK(Check::CHK_BOUNDS);
-    } else if OPTION ("PERMS") {
-      CONTROL_CHECK(Check::CHK_PERMS);
-    } else if OPTION ("ALIGNMENT") {
-      CONTROL_CHECK(Check::CHK_ALIGNMENT);
-    } else if OPTION ("LOAD") {
-      CONTROL_CHECK(ccl::permissions::LOAD);
-    } else if OPTION ("STORE") {
-      CONTROL_CHECK(ccl::permissions::STORE);
-    } else if OPTION ("LOAD_CAP") {
-      CONTROL_CHECK(ccl::permissions::LOAD_CAP);
-    } else if OPTION ("STORE_CAP") {
-      CONTROL_CHECK(ccl::permissions::STORE_CAP);
-    } else if OPTION ("EXECUTE") {
-      CONTROL_CHECK(ccl::permissions::EXECUTE);
-    } else {
-      // Unfortunately, the current option is not recognized.
-      const NoOptionsEnabled Opts;
-      CheckContext(LocalCap(Opts))
-          .add(DynamicControlError(cheriseed_checks_start, option_start));
-      break;
-    }
-
-#undef CONTROL_CHECK
-#undef OPTION
   }
 }
 
