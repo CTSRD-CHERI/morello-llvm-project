@@ -16,7 +16,7 @@ target triple = "x86_64-unknown-linux-gnu"
 
 ; CHECK-LABEL: @indirectbr
 define void @indirectbr(i8 addrspace(200)* %branch) addrspace(200) {
-; CHECK-NEXT:  %1 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %branch, i64 0, i32 2)
+; CHECK-NEXT:  %1 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %branch, i64 0, i32 2, i64 0)
 ; CHECK-NEXT:  %2 = inttoptr i64 %1 to i8*
 ; CHECK-NEXT:  indirectbr i8* %2, [label %BB1, label %BB2]
   indirectbr i8 addrspace(200)* %branch, [label %BB1, label %BB2]

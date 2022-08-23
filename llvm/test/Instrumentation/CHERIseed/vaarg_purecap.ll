@@ -113,7 +113,7 @@ define void @caller_byval_16bytes() addrspace(200) {
 ; CHECK-NEXT:  [[AG:%.*]] = getelementptr inbounds i8, i8* %va_slot, i32 0
 ; CHECK-NEXT:  [[AB:%.*]] = bitcast i8* [[AG]] to %union.U1*
 ; CHECK-NEXT:  [[U_ADDR:%.*]] = call i64 @__cheriseed_check_access(
-; CHECK-SAME:      %__cheriseed_cap_t* %u.cap, i64 16, i32 4)
+; CHECK-SAME:      %__cheriseed_cap_t* %u.cap, i64 16, i32 4, i64 0)
 ; CHECK-NEXT:  [[I2P:%.*]] = inttoptr i64 %3 to %union.U1*
 ; CHECK-NEXT:  [[U:%.*]] = load %union.U1, %union.U1* [[I2P]], align 16
 ; CHECK-NEXT:  store %union.U1 [[U]], %union.U1* [[AB]], align 16

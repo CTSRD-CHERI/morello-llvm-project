@@ -30,23 +30,23 @@ TEST(UntaggedDeathTest, SignalHandleMode) {
 }
 
 TEST(UntaggedDeathTest, CheckAccess) {
-  TEST_UNTAGGED_CAP(__cheriseed_check_access(&untagged_cap, 0, 0));
+  TEST_UNTAGGED_CAP(__cheriseed_check_access(&untagged_cap, 0, 0, 0));
 }
 
 TEST(UntaggedDeathTest, LoadCap) {
-  TEST_UNTAGGED_CAP(__cheriseed_load_cap(&untagged_cap, nullptr));
+  TEST_UNTAGGED_CAP(__cheriseed_load_cap(&untagged_cap, nullptr, 0));
 }
 
 TEST(UntaggedDeathTest, LoadCapAtomic) {
-  TEST_UNTAGGED_CAP(__cheriseed_load_cap_atomic(&untagged_cap, nullptr, 0));
+  TEST_UNTAGGED_CAP(__cheriseed_load_cap_atomic(&untagged_cap, nullptr, 0, 0));
 }
 
 TEST(UntaggedDeathTest, StoreCap) {
-  TEST_UNTAGGED_CAP(__cheriseed_store_cap(&untagged_cap, nullptr));
+  TEST_UNTAGGED_CAP(__cheriseed_store_cap(&untagged_cap, nullptr, 0));
 }
 
 TEST(UntaggedDeathTest, StoreCapAtomic) {
-  TEST_UNTAGGED_CAP(__cheriseed_store_cap_atomic(&untagged_cap, nullptr, 0));
+  TEST_UNTAGGED_CAP(__cheriseed_store_cap_atomic(&untagged_cap, nullptr, 0, 0));
 }
 
 TEST(UntaggedDeathTest, ClearAllTags) {

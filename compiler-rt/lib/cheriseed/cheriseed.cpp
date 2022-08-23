@@ -27,7 +27,8 @@ namespace __cheriseed {
 
 atomic_uint8_t Options::EnableCHERISemantics{1};
 atomic_uint8_t Options::EnableSignalHandlers{1};
-atomic_uint64_t Options::Checks{UINT64_MAX};
+atomic_uint64_t Options::Checks{abi::Check::CHK_ALL};
+atomic_uint64_t Options::DefaultChecks{abi::Check::CHK_ALL};
 
 // This is the default value and AT_PAGESZ can override it.
 usize SystemPageSize = 4096;
@@ -585,6 +586,9 @@ void __cheriseed_control_invoke_signal_handlers(u8 enable) {
 }
 
 void __cheriseed_control_checks(u8 enable, u64 checks) {
+  // Only consider known checks.
+  checks &= __cheriseed::abi::Check::CHK_ALL;
+
   u64 old_mask =
       atomic_load(&Options::Checks, memory_order::memory_order_acquire);
   u64 new_mask;
@@ -593,6 +597,9 @@ void __cheriseed_control_checks(u8 enable, u64 checks) {
   } while (!atomic_compare_exchange_strong(&Options::Checks, &old_mask,
                                            new_mask,
                                            memory_order::memory_order_acq_rel));
+  // FIXME:
+  u64 old_default_mask = atomic_load_relaxed(&Options::DefaultChecks);
+  atomic_store_relaxed(&Options::DefaultChecks, old_default_mask & ~checks);
 }
 
 __cheriseed_cap_t *__cheriseed_strerror(__cheriseed_cap_t *result, int code) {
@@ -703,9 +710,9 @@ void __cheriseed_static_init(u64 sp) {
 // APIs used by the compiler
 // -------------------------------------
 
-u64 __cheriseed_check_access(const __cheriseed_cap_t *cap, u64 size,
-                             u32 perms) {
-  const SnapshotOptions Opts;
+u64 __cheriseed_check_access(const __cheriseed_cap_t *cap, u64 size, u32 perms,
+                             u64 masked_checks) {
+  const SnapshotOptions Opts(masked_checks);
   u64 address = LocalCap(Opts, cap)
                     .RequireTagged()
                     .RequirePermissions(perms)
@@ -727,7 +734,7 @@ void __cheriseed_check_access_end(u64 address, u64 size) {
 __cheriseed_cmpxchg_result_t __cheriseed_cmpxchg_cap(
     __cheriseed_cap_t *cap_to_cap, const __cheriseed_cap_t *cap_expected,
     const __cheriseed_cap_t *cap_desired, __cheriseed_cap_t *cap_orig,
-    u8 memory_order_success, u8 memory_order_failure) {
+    u8 memory_order_success, u8 memory_order_failure, u64 masked_checks) {
   UNIMPLEMENTED();
 }
 
@@ -760,16 +767,17 @@ __cheriseed_cap_t *__cheriseed_generic_cap_init(__cheriseed_cap_t *cap,
 }
 
 __cheriseed_cap_t *__cheriseed_load_cap(const __cheriseed_cap_t *cap_to_cap,
-                                        __cheriseed_cap_t *loaded_cap) {
+                                        __cheriseed_cap_t *loaded_cap,
+                                        u64 masked_checks) {
   // All capability loads should be atomic, with default memory order
-  return __cheriseed_load_cap_atomic(cap_to_cap, loaded_cap,
-                                     kIRRelaxedOrdering);
+  return __cheriseed_load_cap_atomic(cap_to_cap, loaded_cap, kIRRelaxedOrdering,
+                                     masked_checks);
 }
 
 __cheriseed_cap_t *__cheriseed_load_cap_atomic(
     const __cheriseed_cap_t *cap_to_cap, __cheriseed_cap_t *loaded_cap,
-    u8 memory_order) {
-  const SnapshotOptions Opts;
+    u8 memory_order, u64 masked_checks) {
+  const SnapshotOptions Opts(masked_checks);
   LocalCap local_cap(Opts, cap_to_cap);
   local_cap.RequireTagged()
       .RequirePermissions(ccl::permissions::LOAD)
@@ -804,7 +812,7 @@ __cheriseed_cap_t *__cheriseed_load_cap_hybrid_atomic(
 __cheriseed_cap_t *__cheriseed_rmw_cap(__cheriseed_cap_t *cap_to_cap,
                                        const __cheriseed_cap_t *cap_value,
                                        __cheriseed_cap_t *cap_ret, u8 op,
-                                       u8 memory_order) {
+                                       u8 memory_order, u64 masked_checks) {
   UNIMPLEMENTED();
 }
 
@@ -827,15 +835,17 @@ __cheriseed_cap_t *__cheriseed_stack_cap_init(__cheriseed_cap_t *cap_out,
 }
 
 void __cheriseed_store_cap(__cheriseed_cap_t *cap_to_cap,
-                           const __cheriseed_cap_t *cap_to_store) {
+                           const __cheriseed_cap_t *cap_to_store,
+                           u64 masked_checks) {
   // All capability stores should be atomic, with default memory order
-  __cheriseed_store_cap_atomic(cap_to_cap, cap_to_store, kIRRelaxedOrdering);
+  __cheriseed_store_cap_atomic(cap_to_cap, cap_to_store, kIRRelaxedOrdering,
+                               masked_checks);
 }
 
 void __cheriseed_store_cap_atomic(__cheriseed_cap_t *cap_to_cap,
                                   const __cheriseed_cap_t *cap_to_store,
-                                  u8 memory_order) {
-  const SnapshotOptions Opts;
+                                  u8 memory_order, u64 masked_checks) {
+  const SnapshotOptions Opts(masked_checks);
   LocalCap local_cap(Opts, cap_to_cap);
   local_cap.RequireTagged()
       .RequirePermissions(ccl::permissions::STORE)

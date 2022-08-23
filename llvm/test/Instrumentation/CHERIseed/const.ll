@@ -175,7 +175,7 @@ l1:
 ; CHECK-NEXT:    %4 = ptrtoint i8* %2 to i64
 ; CHECK-NEXT:    %5 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %3,
 ; CHECk-SAME:       %__cheriseed_cap_t* %3, i64 %4)
-; CHECK-NEXT:    %6 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %5, i64 1, i32 8)
+; CHECK-NEXT:    %6 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %5, i64 1, i32 8, i64 0)
 ; CHECK-NEXT:    %7 = inttoptr i64 %6 to i8*
 ; CHECK-NEXT:    store i8 42, i8* %7
 ; CHECK-NEXT:    call void @__cheriseed_check_access_end(i64 %6, i64 1)
@@ -193,7 +193,7 @@ l2:
 ; CHECK-NEXT:    %10 = ptrtoint i8* %8 to i64
 ; CHECK-NEXT:    %11 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %9,
 ; CHECk-SAME:       %__cheriseed_cap_t* %9, i64 %10)
-; CHECK-NEXT:    %12 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %11, i64 1, i32 8)
+; CHECK-NEXT:    %12 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %11, i64 1, i32 8, i64 0)
 ; CHECK-NEXT:    %13 = inttoptr i64 %12 to i8*
 ; CHECK-NEXT:    store i8 42, i8* %13
 ; CHECK-NEXT:    call void @__cheriseed_check_access_end(i64 %12, i64 1)

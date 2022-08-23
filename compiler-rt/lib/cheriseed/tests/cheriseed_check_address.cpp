@@ -61,14 +61,14 @@ TEST(InvalidAddressDeathTest, ThreadPointer) {
 TEST(InvalidAddressDeathTest, LoadCap) {
   TEST_INVALID_ADDRESS_CAP(__cheriseed_cap_t cap_to_cap;
                            utils::InitCap(&cap_to_cap, &cap);
-                           __cheriseed_load_cap(&cap_to_cap, nullptr));
+                           __cheriseed_load_cap(&cap_to_cap, nullptr, 0));
 }
 
 TEST(InvalidAddressDeathTest, StoreCap) {
   TEST_INVALID_ADDRESS_CAP(
       __cheriseed_cap_t cap_to_null;
       utils::InitCap(&cap_to_null, reinterpret_cast<__cheriseed_cap_t*>(0));
-      __cheriseed_store_cap(&cap_to_null, nullptr));
+      __cheriseed_store_cap(&cap_to_null, nullptr, 0));
 }
 
 TEST(InvalidAddressDeathTest, GenericCapInit) {

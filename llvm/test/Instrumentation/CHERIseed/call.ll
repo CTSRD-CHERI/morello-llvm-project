@@ -93,7 +93,7 @@ define void @call_func_ptr_8() {
   %1 = call i8 addrspace(200)* @llvm.cheri.pcc.get()
 ; CHECK-NEXT:  %4 = ptrtoint void ()* @call_func_ptr_8_callee to i64
 ; CHECK-NEXT:  %5 = call %__cheriseed_cap_t* @__cheriseed_address_set(%__cheriseed_cap_t* %2, %__cheriseed_cap_t* %3, i64 %4)
-; CHECK-NEXT:  %6 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %5, i64 1, i32 2)
+; CHECK-NEXT:  %6 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %5, i64 1, i32 2, i64 0)
   %2 = call i8 addrspace(200)* @llvm.cheri.cap.from.pointer.i64(i8 addrspace(200)* %1, i64 ptrtoint (void ()* @call_func_ptr_8_callee to i64))
 ; CHECK-NEXT:  %7 = inttoptr i64 %6 to void ()*
   %3 = bitcast i8 addrspace(200)* %2 to void () addrspace(200)*
@@ -130,7 +130,7 @@ define void @call_func_ptr_9() addrspace(200) {
 ; CHECK-NEXT:  %5 = call %__cheriseed_cap_t* @__cheriseed_load_cap_hybrid(%__cheriseed_cap_t* %1,
 ; CHECK-SAME:     %__cheriseed_cap_t* %3)
   %2 = load void () addrspace(200)*, void () addrspace(200)** %1, align 16
-; CHECK-NEXT:  %6 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %5, i64 1, i32 2)
+; CHECK-NEXT:  %6 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %5, i64 1, i32 2, i64 0)
 ; CHECK-NEXT:  %7 = inttoptr i64 %6 to void ()*
 ; CHECK-NEXT:  call void %7()
   call void %2()
@@ -168,9 +168,9 @@ define void @call_func_ptr_5(void (%struct.S*)** %p) {
 define void @call_func_ptr_6(void () addrspace(200)* addrspace(200)* %cap) {
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %2 = call %__cheriseed_cap_t* @__cheriseed_load_cap(%__cheriseed_cap_t* %cap, %__cheriseed_cap_t* %1)
+; CHECK-NEXT:  %2 = call %__cheriseed_cap_t* @__cheriseed_load_cap(%__cheriseed_cap_t* %cap, %__cheriseed_cap_t* %1, i64 0)
   %1 = load void () addrspace(200)*, void () addrspace(200)* addrspace(200)* %cap, align 16
-; CHECK-NEXT:  %3 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %2, i64 1, i32 2)
+; CHECK-NEXT:  %3 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %2, i64 1, i32 2, i64 0)
 ; CHECK-NEXT:  %4 = inttoptr i64 %3 to void ()*
 ; CHECK-NEXT:  call void %4()
   call void %1()
@@ -184,7 +184,7 @@ define void @call_func_ptr_7([4 x void () addrspace(200)*] addrspace(200)* %0){
 ; CHECK-NEXT  %2 = alloca %__cheriseed_cap_t, align 16
 ; CHECK-NEXT  %3 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %0, %__cheriseed_cap_t* %2, i64 48)
   %2 = getelementptr inbounds [4 x void () addrspace(200)*], [4 x void () addrspace(200)*] addrspace(200)* %0, i64 1, i64 2
-; CHECK-NEXT  %4 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %3, i64 8, i32 2)
+; CHECK-NEXT  %4 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %3, i64 8, i32 2, i64 0)
 ; CHECK-NEXT  %5 = inttoptr i64 %4 to void ()**
 ; CHECK-NEXT  %6 = load void ()*, void ()** %5, align 16
   %3 = load void () addrspace(200)*, void () addrspace(200)* addrspace(200)* %2, align 16

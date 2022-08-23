@@ -80,14 +80,16 @@ struct Options {
   static atomic_uint8_t EnableSignalHandlers;
   // Enables or disables certain checks.
   static atomic_uint64_t Checks;
+  // Records if a check was changed runtime.
+  // A changed one always overrides the check request from compile-time.
+  static atomic_uint64_t DefaultChecks;
 
-#ifndef CHERISEED_UNIT_TESTING
  protected:
-#endif
   constexpr Options()
       : currentEnableCHERISemantics(0),
         currentEnableSignalHandlers(0),
-        currentChecks(0) {}
+        currentChecks(0),
+        defaultChecks(0) {}
 
   // Current setting for CHERI semantics.
   u8 currentEnableCHERISemantics;
@@ -95,6 +97,8 @@ struct Options {
   u8 currentEnableSignalHandlers;
   // Current setting for checks.
   u64 currentChecks;
+  // Checks which were not modified runtime.
+  u64 defaultChecks;
 };  // struct Options
 
 // All runtime configurable features are always off.
@@ -107,7 +111,8 @@ struct AllOptionsEnabled : public Options {
   constexpr AllOptionsEnabled() {
     currentEnableCHERISemantics = 1;
     currentEnableSignalHandlers = 1;
-    currentChecks = UINT64_MAX;
+    currentChecks = abi::Check::CHK_ALL;
+    defaultChecks = abi::Check::CHK_ALL;
   }
 };  // struct AllOptionsEnabled
 
@@ -116,7 +121,19 @@ struct SnapshotOptions : public Options {
   SnapshotOptions() {
     currentEnableCHERISemantics = atomic_load_relaxed(&EnableCHERISemantics);
     currentEnableSignalHandlers = atomic_load_relaxed(&EnableSignalHandlers);
-    currentChecks = atomic_load(&Checks, memory_order::memory_order_acquire);
+    currentChecks = atomic_load(&Checks, memory_order::memory_order_relaxed);
+  }
+
+  SnapshotOptions(u64 masked_checks) : SnapshotOptions() {
+    // A masked check 'C' only takes precedence if it was not modified.
+    // Masked? | Default? | Really masked?
+    //    0    |    1     |    0
+    //    1    |    1     |    1
+    //    0    |    0     |    0
+    //    1    |    0     |    0
+    defaultChecks =
+        atomic_load(&DefaultChecks, memory_order::memory_order_relaxed);
+    currentChecks &= ~(masked_checks & defaultChecks);
   }
 };  // struct SnapshotOptions
 

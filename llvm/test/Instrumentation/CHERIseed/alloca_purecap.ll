@@ -45,7 +45,7 @@ define void @alloca_cap() {
 ; CHECK-SAME:     %__cheriseed_cap_t* %cap_to_int.shadow.cap, i64 %cap_to_int.addr, i64 4)
   %cap_to_int = alloca i32, align 4, addrspace(200)
 ; CHECK-NEXT:  call void @__cheriseed_store_cap(%__cheriseed_cap_t* %cap_to_cap.cap,
-; CHECK-SAME:     %__cheriseed_cap_t* %cap_to_int.cap)
+; CHECK-SAME:     %__cheriseed_cap_t* %cap_to_int.cap, i64 0)
   store i32 addrspace(200)* %cap_to_int, i32 addrspace(200)* addrspace(200)* %cap_to_cap, align 16
 ; CHECK-NEXT:  ret void
   ret void

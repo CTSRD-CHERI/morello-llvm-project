@@ -97,13 +97,13 @@ TEST(UnalignedDeathTest, OffsetSet) {
 TEST(UnalignedDeathTest, UnalignedLoad) {
   TEST_UNALIGNED_CAP(__cheriseed_cap_t load_from;
                      utils::InitCap(&load_from, &uacap);
-                     __cheriseed_load_cap(&load_from, &cap));
+                     __cheriseed_load_cap(&load_from, &cap, 0));
 }
 
 TEST(UnalignedDeathTest, UnalignedStore) {
   TEST_UNALIGNED_CAP(__cheriseed_cap_t store_to;
                      utils::InitCap(&store_to, &uacap);
-                     __cheriseed_store_cap(&store_to, &cap));
+                     __cheriseed_store_cap(&store_to, &cap, 0));
 }
 
 TEST(UnalignedDeathTest, Diff) {

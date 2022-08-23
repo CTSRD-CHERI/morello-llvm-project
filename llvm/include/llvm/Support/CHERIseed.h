@@ -28,11 +28,14 @@ enum Permissions : CheckType {
   STORE = (1 << 3),
   LOAD_CAP = (1 << 4),
   STORE_CAP = (1 << 5),
+  // Useful values
+  LAST = STORE_CAP,
+  MASK = (LAST << 1) - 1,
 }; // enum Permissions
 
 enum Check : CheckType {
-  // Bitmask representing permissions
-  CHK_PERMS = ((1UL << 32) - 1),
+  // Important: bits [31:0] are reserved for permissions.
+  CHK_PERMS = Permissions::MASK,
   // Bit of checks mask representing tag
   CHK_TAG = (1UL << 61),
   // Bit of checks mask representing bounds
@@ -40,8 +43,11 @@ enum Check : CheckType {
   // Bit of checks mask representing alignment
   CHK_ALIGNMENT = (1UL << 63),
   // All checks
-  CHK_ALL = static_cast<CheckType>(-1),
+  CHK_ALL = CHK_ALIGNMENT | CHK_BOUNDS | CHK_TAG | CHK_PERMS,
 }; // enum Check
+
+static_assert(static_cast<CheckType>(Check::CHK_PERMS) < (1UL << 32),
+              "LLVM permissions are out-of-range.");
 
 // Representation of a configurable option.
 struct AvailableCheckOption final {

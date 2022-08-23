@@ -157,11 +157,11 @@ TEST(LoadStoreCap, Api) {
   utils::InitCap(&src, UINT64_TEST, UINT64_TEST);
   utils::InitCap(&src_cap, &src);
 
-  __cheriseed_store_cap(&dst_cap, &ones);
+  __cheriseed_store_cap(&dst_cap, &ones, 0);
   ASSERT_CAPABILITY_METADATA_EQ(&dst, (uint64_t)1);
   ASSERT_CAPABILITY_VALUE_EQ(&dst, (uint64_t)1);
 
-  __cheriseed_cap_t *result_cap = __cheriseed_load_cap(&src_cap, &dst);
+  __cheriseed_cap_t *result_cap = __cheriseed_load_cap(&src_cap, &dst, 0);
   ASSERT_EQ(result_cap, &dst);
   ASSERT_CAPABILITY_METADATA_EQ(&dst, UINT64_TEST);
   ASSERT_CAPABILITY_VALUE_EQ(&dst, UINT64_TEST);
@@ -172,14 +172,14 @@ TEST(LoadCap, NoLoadCapPerm) {
   utils::InitCap(&load_from, &target);
   // Check missing LOAD_CAP: tag should be cleared.
   __cheriseed_perms_and(&load_from, &load_from, ~ccl::permissions::LOAD_CAP);
-  __cheriseed_load_cap(&load_from, &dst);
+  __cheriseed_load_cap(&load_from, &dst, 0);
 }
 
 TEST(StoreCap, StoreNullptr) {
   __cheriseed_cap_t dst, dst_cap;
   utils::InitCap(&dst, UINT64_TEST, UINT64_TEST);
   utils::InitCap(&dst_cap, &dst);
-  __cheriseed_store_cap(&dst_cap, nullptr);
+  __cheriseed_store_cap(&dst_cap, nullptr, 0);
   ASSERT_CAPABILITY_METADATA_EQ(&dst, (uint64_t)0);
   ASSERT_CAPABILITY_VALUE_EQ(&dst, (uint64_t)0);
 }
@@ -190,7 +190,7 @@ TEST(StoreCap, NoStoreCapPermission) {
   utils::InitCap(&src, (char *)nullptr);
   __cheriseed_tag_clear(&src, &src);
   __cheriseed_perms_and(&store_to, &store_to, ~ccl::permissions::STORE_CAP);
-  __cheriseed_store_cap(&store_to, &src);
+  __cheriseed_store_cap(&store_to, &src, 0);
 }
 
 TEST(LoadStoreCapHybrid, Api) {
@@ -658,7 +658,8 @@ TEST(CheckAccess, PermsHasExactly) {
   utils::InitCap(&cap, &a);
   __cheriseed_perms_and(&cap, &cap,
                         (ccl::permissions::LOAD | ccl::permissions::STORE));
-  __cheriseed_check_access(&cap, 0, (Permissions::LOAD | Permissions::STORE));
+  __cheriseed_check_access(&cap, 0, (Permissions::LOAD | Permissions::STORE),
+                           0);
 }
 
 TEST(CheckAccess, PermsHasMore) {
@@ -667,12 +668,12 @@ TEST(CheckAccess, PermsHasMore) {
   utils::InitCap(&cap, &a);
   __cheriseed_perms_and(&cap, &cap,
                         (ccl::permissions::LOAD | ccl::permissions::STORE));
-  __cheriseed_check_access(&cap, 0, Permissions::LOAD);
+  __cheriseed_check_access(&cap, 0, Permissions::LOAD, 0);
 }
 
 TEST(CheckAccess, BoundsInside) {
   uint16_t a;
   __cheriseed_cap_t cap;
   utils::InitCap(&cap, &a);
-  __cheriseed_check_access(&cap, sizeof(uint16_t), 0);
+  __cheriseed_check_access(&cap, sizeof(uint16_t), 0, 0);
 }

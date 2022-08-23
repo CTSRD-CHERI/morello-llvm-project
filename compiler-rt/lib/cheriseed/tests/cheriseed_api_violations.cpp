@@ -44,36 +44,37 @@ using namespace __cheriseed::abi;
 
 TEST(CheckAccessDeathTest, PermsHasNone) {
   TEST_CHECK_ACCESS(EXPECT_DENIED_PERMS(
-      __cheriseed_check_access(&cap, 0, Permissions::EXECUTE)));
+      __cheriseed_check_access(&cap, 0, Permissions::EXECUTE, 0)));
 }
 
 TEST(CheckAccessDeathTest, PermsHasSome) {
   TEST_CHECK_ACCESS(EXPECT_DENIED_PERMS(__cheriseed_check_access(
-      &cap, 0, (Permissions::LOAD | Permissions::EXECUTE))));
+      &cap, 0, (Permissions::LOAD | Permissions::EXECUTE), 0)));
 }
 
 TEST(CheckAccessDeathTest, BoundsOutside) {
   TEST_CHECK_ACCESS(EXPECT_DENIED_BOUNDS(
-      __cheriseed_check_access(&cap, sizeof(uint64_t), 0)));
+      __cheriseed_check_access(&cap, sizeof(uint64_t), 0, 0)));
 }
 
 TEST(CheckAccessDeathTest, BoundsZero) {
-  TEST_CHECK_ACCESS(EXPECT_DENIED_BOUNDS(__cheriseed_bounds_set(&cap, &cap, 0);
-                                         __cheriseed_check_access(&cap, 1, 0)));
+  TEST_CHECK_ACCESS(
+      EXPECT_DENIED_BOUNDS(__cheriseed_bounds_set(&cap, &cap, 0);
+                           __cheriseed_check_access(&cap, 1, 0, 0)));
 }
 
 TEST(LoadCapDeathTest, NoLoadPermission) {
   __cheriseed_cap_t target, load_from, dst;
   utils::InitCap(&load_from, &target);
   __cheriseed_perms_and(&load_from, &load_from, ~ccl::permissions::LOAD);
-  EXPECT_DENIED_PERMS(__cheriseed_load_cap(&load_from, &dst));
+  EXPECT_DENIED_PERMS(__cheriseed_load_cap(&load_from, &dst, 0));
 }
 
 TEST(LoadCapDeathTest, Bounds) {
   __cheriseed_cap_t target, load_from, dst;
   utils::InitCap(&load_from, &target);
   __cheriseed_bounds_set(&load_from, &load_from, sizeof(__cheriseed_cap_t) - 1);
-  EXPECT_DENIED_BOUNDS(__cheriseed_load_cap(&load_from, &dst));
+  EXPECT_DENIED_BOUNDS(__cheriseed_load_cap(&load_from, &dst, 0));
 }
 
 TEST(StoreCapDeathTest, NoStorePermission) {
@@ -82,7 +83,7 @@ TEST(StoreCapDeathTest, NoStorePermission) {
   utils::InitCap(&store_to, &target);
   utils::InitCap(&src, &x);
   __cheriseed_perms_and(&store_to, &store_to, ~ccl::permissions::STORE);
-  EXPECT_DENIED_PERMS(__cheriseed_store_cap(&store_to, &src));
+  EXPECT_DENIED_PERMS(__cheriseed_store_cap(&store_to, &src, 0));
 }
 
 TEST(StoreCapDeathTest, Bounds) {
@@ -91,7 +92,7 @@ TEST(StoreCapDeathTest, Bounds) {
   utils::InitCap(&store_to, &target);
   utils::InitCap(&src, &x);
   __cheriseed_bounds_set(&store_to, &store_to, sizeof(__cheriseed_cap_t) - 1);
-  EXPECT_DENIED_BOUNDS(__cheriseed_store_cap(&store_to, &src));
+  EXPECT_DENIED_BOUNDS(__cheriseed_store_cap(&store_to, &src, 0));
 }
 
 TEST(ClearAllDeathTest, Bounds) {

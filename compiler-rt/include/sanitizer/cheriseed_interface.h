@@ -596,9 +596,10 @@ void __cheriseed_static_init(uint64_t sp);
 /// \param[in] cap Pointer to a capability.
 /// \param[in] size The size of the access to be made.
 /// \param[in] perms Requested permissions for the access.
+/// \param[in] masked_checks Bitmask of masked checks for the access.
 /// \returns The value of \p cap .
 uint64_t __cheriseed_check_access(const __cheriseed_cap_t *cap, uint64_t size,
-                                  uint32_t perms);
+                                  uint32_t perms, uint64_t masked_checks);
 
 /// Marks the end of a STORE access previously started by a check_access.
 ///
@@ -627,11 +628,13 @@ void __cheriseed_check_access_end(uint64_t address, uint64_t size);
 /// comparison succeeds.
 /// \param[in] memory_order_failure The memory synchronization ordering for the
 /// atomic load operation if the comparison fails.
+/// \param[in] masked_checks Bitmask of masked checks for the access.
 /// \returns See the description of @c __cheriseed_cmpxchg_result_t .
 __cheriseed_cmpxchg_result_t __cheriseed_cmpxchg_cap(
     __cheriseed_cap_t *cap_to_cap, const __cheriseed_cap_t *cap_expected,
     const __cheriseed_cap_t *cap_desired, __cheriseed_cap_t *cap_orig,
-    uint8_t memory_order_success, uint8_t memory_order_failure);
+    uint8_t memory_order_success, uint8_t memory_order_failure,
+    uint64_t masked_checks);
 
 /// As a single atomic operation, compares the capability described by
 /// \p cap with the capability pointed to by \p cap_expected . If they
@@ -693,9 +696,11 @@ __cheriseed_cap_t *__cheriseed_generic_cap_init(__cheriseed_cap_t *cap,
 /// to load.
 /// \param[out] loaded_cap Pointer to a capability to write the loaded
 /// capability to.
+/// \param[in] masked_checks Bitmask of masked checks for the access.
 /// \returns The second argument, \p loaded_cap .
 __cheriseed_cap_t *__cheriseed_load_cap(const __cheriseed_cap_t *cap_to_cap,
-                                        __cheriseed_cap_t *loaded_cap);
+                                        __cheriseed_cap_t *loaded_cap,
+                                        uint64_t masked_checks);
 
 /// Loads a capability from a memory location described by a capability,
 /// accounting for a requested memory ordering constraint.
@@ -709,11 +714,12 @@ __cheriseed_cap_t *__cheriseed_load_cap(const __cheriseed_cap_t *cap_to_cap,
 /// capability to.
 /// \param[in] memory_order The memory synchronization ordering
 /// requirement.
+/// \param[in] masked_checks Bitmask of masked checks for the access.
 /// \returns The second argument, \p loaded_cap .
 __cheriseed_cap_t *
 __cheriseed_load_cap_atomic(const __cheriseed_cap_t *cap_to_cap,
-                            __cheriseed_cap_t *loaded_cap,
-                            uint8_t memory_order);
+                            __cheriseed_cap_t *loaded_cap, uint8_t memory_order,
+                            uint64_t masked_checks);
 
 /// Loads a capability from a memory location described by a pointer.
 ///
@@ -753,11 +759,13 @@ __cheriseed_load_cap_hybrid_atomic(const __cheriseed_cap_t *cap,
 /// capability.
 /// \param[in] op The enum value for the operation to perform.
 /// \param[in] memory_order The memory synchronization ordering requirement.
+/// \param[in] masked_checks Bitmask of masked checks for the access.
 /// \returns The third argument, \p cap_ret .
 __cheriseed_cap_t *__cheriseed_rmw_cap(__cheriseed_cap_t *cap_to_cap,
                                        const __cheriseed_cap_t *cap_value,
                                        __cheriseed_cap_t *cap_ret, uint8_t op,
-                                       uint8_t memory_order);
+                                       uint8_t memory_order,
+                                       uint64_t masked_checks);
 
 /// An atomic read-modify-write operation on a capability described by a
 /// pointer.
@@ -794,8 +802,10 @@ __cheriseed_cap_t *__cheriseed_stack_cap_init(__cheriseed_cap_t *cap,
 /// \param[in] cap_to_cap Pointer to a capability which describes where to store
 /// the capability \p cap_to_store .
 /// \param[in] cap_to_store Pointer to a capability to store.
+/// \param[in] masked_checks Bitmask of masked checks for the access.
 void __cheriseed_store_cap(__cheriseed_cap_t *cap_to_cap,
-                           const __cheriseed_cap_t *cap_to_store);
+                           const __cheriseed_cap_t *cap_to_store,
+                           uint64_t masked_checks);
 
 /// Stores a capability to a memory location described by a capability,
 /// accounting for a requested memory ordering constraint.
@@ -807,9 +817,10 @@ void __cheriseed_store_cap(__cheriseed_cap_t *cap_to_cap,
 /// the capability \p cap_to_store .
 /// \param[in] cap_to_store Pointer to a capability to store.
 /// \param[in] memory_order The memory synchronization ordering requirement.
+/// \param[in] masked_checks Bitmask of masked checks for the access.
 void __cheriseed_store_cap_atomic(__cheriseed_cap_t *cap_to_cap,
                                   const __cheriseed_cap_t *cap_to_store,
-                                  uint8_t memory_order);
+                                  uint8_t memory_order, uint64_t masked_checks);
 
 /// Stores a capability to a memory location described by a pointer.
 ///
