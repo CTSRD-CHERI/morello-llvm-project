@@ -73,11 +73,11 @@ not going to deliver the expected si_code values."
 /// Bit of checks mask representing permissions
 #define CHERISEED_CHECK_PERMS ((1UL << 32) - 1)
 /// Bit of checks mask representing tag
-#define CHERISEED_CHECK_TAG (1UL << 61)
+#define CHERISEED_CHECK_TAG (1UL << 32)
 /// Bit of checks mask representing bounds
-#define CHERISEED_CHECK_BOUNDS (1UL << 62)
+#define CHERISEED_CHECK_BOUNDS (1UL << 33)
 /// Bit of checks mask representing alignment
-#define CHERISEED_CHECK_ALIGNMENT (1UL << 63)
+#define CHERISEED_CHECK_ALIGNMENT (1UL << 34)
 
 // -------------------------------------
 // Mappings of CHERI intrinsics

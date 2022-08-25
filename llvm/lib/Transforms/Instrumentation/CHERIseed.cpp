@@ -121,6 +121,11 @@ static cl::opt<bool> ClNoInlineAsm("cheriseed-no-inline-asm",
                                    cl::desc("Turn off warning for inline asm"),
                                    cl::Hidden, cl::init(false));
 
+static cl::opt<std::string> ClCompileTimeDisabledChecks(
+    "cheriseed-disabled-checks",
+    cl::desc("Compile-time disabled checks as Hex string"), cl::Hidden,
+    cl::init(""));
+
 namespace {
 
 /// The address space which capabilities use.
@@ -644,13 +649,20 @@ struct CHERIseed final : public InstVisitor<CHERIseed, Value *> {
     AttributeList Attrs;
   };
 
-  CHERIseed(Module &M, uint64_t CompileTimeChecks)
+  CHERIseed(Module &M)
       : M(M), InputDL(M.getDataLayout()),
         DL(sanitizeDataLayout(M.getDataLayout())), Ctx(M.getContext()),
         VoidTy(Type::getVoidTy(Ctx)), Int8Ty(Type::getInt8Ty(Ctx)),
         Int8PtrTy(Int8Ty->getPointerTo()), AddrSizeTy(Type::getInt64Ty(Ctx)),
-        IsPureCap(InputDL.getGlobalsAddressSpace() == kCapabilityAS),
-        CompileTimeChecks(ConstantInt::get(AddrSizeTy, CompileTimeChecks)) {
+        IsPureCap(InputDL.getGlobalsAddressSpace() == kCapabilityAS) {
+    // Initialize CompileTimeDisabledChecks.
+    uint64_t DisabledChecks = 0;
+    if (!ClCompileTimeDisabledChecks.empty())
+      if (StringRef(ClCompileTimeDisabledChecks)
+              .getAsInteger(16, DisabledChecks))
+        errs() << "Cannot parse " << ClCompileTimeDisabledChecks.ArgStr
+               << ": all checks are enabled.\n";
+    CompileTimeDisabledChecks = ConstantInt::get(AddrSizeTy, DisabledChecks);
     // Change DL for the current Module to the sanitized one.
     M.setDataLayout(DL);
     // Use i128 to enforce 128-bit alignment. This is achieved by using
@@ -1269,7 +1281,7 @@ protected:
   /// True if this is Pure-Cap ABI, otherwise false.
   const bool IsPureCap;
   /// Value created from compile-time checks.
-  Constant *CompileTimeChecks;
+  Constant *CompileTimeDisabledChecks;
 }; // end of struct CHERIseed
 
 /// Legacy module pass for cheriseed instrumentation
@@ -1298,7 +1310,7 @@ struct CHERIseedSanitizerLegacyPass final : ModulePass {
 } // end of anonymous namespace
 
 bool CHERIseedSanitizerLegacyPass::runOnModule(Module &M) {
-  CHERIseed(M, 0).run();
+  CHERIseed(M).run();
   // This pass always transforms the input IR.
   return true;
 }
@@ -1307,7 +1319,7 @@ char CHERIseedSanitizerLegacyPass::ID = 0;
 
 PreservedAnalyses CHERIseedSanitizerPass::run(Module &M,
                                               ModuleAnalysisManager &MAM) {
-  CHERIseed(M, 0).run();
+  CHERIseed(M).run();
   // TODO: Can we specifically select the outdated ones?
   // Mark every analysis as outdated
   return PreservedAnalyses::none();
@@ -3445,7 +3457,7 @@ CallInst *CHERIseed::createRtCall(RtKind Kind, const Twine &Name, V *...Args) {
     RtName = "check_access";
     FTy = FunctionType::get(
         AddrSizeTy, {CapPtrTy, AddrSizeTy, CapPermsTy, AddrSizeTy}, false);
-    Arguments.push_back(CompileTimeChecks);
+    Arguments.push_back(CompileTimeDisabledChecks);
     break;
   case RtKind::CHECK_ACCESS_END:
     RtName = "check_access_end";
@@ -3457,7 +3469,7 @@ CallInst *CHERIseed::createRtCall(RtKind Kind, const Twine &Name, V *...Args) {
         StructType::get(Ctx, {CapPtrTy, Type::getInt1Ty(Ctx)}, false),
         {CapPtrTy, CapPtrTy, CapPtrTy, CapPtrTy, Int8Ty, Int8Ty, AddrSizeTy},
         false);
-    Arguments.push_back(CompileTimeChecks);
+    Arguments.push_back(CompileTimeDisabledChecks);
     break;
   case RtKind::CMPXCHG_CAP_HYBRID:
     RtName = "cmpxchg_cap_hybrid";
@@ -3481,13 +3493,13 @@ CallInst *CHERIseed::createRtCall(RtKind Kind, const Twine &Name, V *...Args) {
   case RtKind::LOAD_CAP:
     RtName = "load_cap";
     FTy = FunctionType::get(CapPtrTy, {CapPtrTy, CapPtrTy, AddrSizeTy}, false);
-    Arguments.push_back(CompileTimeChecks);
+    Arguments.push_back(CompileTimeDisabledChecks);
     break;
   case RtKind::LOAD_CAP_ATOMIC:
     RtName = "load_cap_atomic";
     FTy = FunctionType::get(CapPtrTy, {CapPtrTy, CapPtrTy, Int8Ty, AddrSizeTy},
                             false);
-    Arguments.push_back(CompileTimeChecks);
+    Arguments.push_back(CompileTimeDisabledChecks);
     break;
   case RtKind::LOAD_CAP_HYBRID:
     RtName = "load_cap_hybrid";
@@ -3510,7 +3522,7 @@ CallInst *CHERIseed::createRtCall(RtKind Kind, const Twine &Name, V *...Args) {
     FTy = FunctionType::get(
         CapPtrTy, {CapPtrTy, CapPtrTy, CapPtrTy, Int8Ty, Int8Ty, AddrSizeTy},
         false);
-    Arguments.push_back(CompileTimeChecks);
+    Arguments.push_back(CompileTimeDisabledChecks);
     break;
   case RtKind::RMW_CAP_HYBRID:
     RtName = "rmw_cap_hybrid";
@@ -3525,13 +3537,13 @@ CallInst *CHERIseed::createRtCall(RtKind Kind, const Twine &Name, V *...Args) {
   case RtKind::STORE_CAP:
     RtName = "store_cap";
     FTy = FunctionType::get(VoidTy, {CapPtrTy, CapPtrTy, AddrSizeTy}, false);
-    Arguments.push_back(CompileTimeChecks);
+    Arguments.push_back(CompileTimeDisabledChecks);
     break;
   case RtKind::STORE_CAP_ATOMIC:
     RtName = "store_cap_atomic";
     FTy = FunctionType::get(VoidTy, {CapPtrTy, CapPtrTy, Int8Ty, AddrSizeTy},
                             false);
-    Arguments.push_back(CompileTimeChecks);
+    Arguments.push_back(CompileTimeDisabledChecks);
     break;
   case RtKind::STORE_CAP_HYBRID:
     RtName = "store_cap_hybrid";

@@ -12,6 +12,7 @@
 #include "clang/Driver/Types.h"
 #include "llvm/Option/Arg.h"
 #include "llvm/Option/ArgList.h"
+#include "llvm/Support/CHERIseed.h"
 #include "llvm/Transforms/Instrumentation/AddressSanitizerOptions.h"
 #include <string>
 #include <vector>
@@ -31,6 +32,8 @@ class SanitizerArgs {
   std::vector<std::string> CoverageAllowlistFiles;
   std::vector<std::string> CoverageIgnorelistFiles;
   int CoverageFeatures = 0;
+  llvm::__cheriseed::abi::CheckType CHERIseedEnabledChecks =
+      llvm::__cheriseed::abi::CHK_ALL;
   int MsanTrackOrigins = 0;
   bool MsanUseAfterDtor = true;
   bool CfiCrossDso = false;

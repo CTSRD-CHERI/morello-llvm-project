@@ -1632,6 +1632,12 @@ def : Joined<["-"], "fsanitize-coverage-blacklist=">,
   Group<f_clang_Group>, Flags<[CoreOption, HelpHidden]>,
   Alias<fsanitize_coverage_ignorelist>,
   HelpText<"Deprecated, use -fsanitize-coverage-ignorelist= instead">;
+
+def fsanitize_cheriseed_checks : CommaJoined<["-"], "fsanitize-cheriseed-checks=">,
+                                 Group<f_clang_Group>, Flags<[CoreOption, NoXarchOption]>,
+                                 HelpText<"Specify enabled runtime checks. "
+                                          "To view available options use \'-fsanitize-cheriseed-checks=help\'">;
+
 def fsanitize_memory_track_origins_EQ : Joined<["-"], "fsanitize-memory-track-origins=">,
                                         Group<f_clang_Group>,
                                         HelpText<"Enable origins tracking in MemorySanitizer">,

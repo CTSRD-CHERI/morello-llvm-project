@@ -216,19 +216,18 @@ void ControlChecksDynamic(const Environment &env) {
                           .strchrnul = &__sanitizer::internal_strchrnul,
                           .strncmp = &__sanitizer::internal_strncmp,
                       },
-                      option);
+                      option, /* flags_to_exclude */ 0);
     switch (option.Result()) {
       case parser::ParseResult::VALID_OPTION: {
         __cheriseed_control_checks(
             option.Enabled() ? abi::CTRL_ENABLE : abi::CTRL_DISABLE,
             option.GetCheck());
       } break;
-      case parser::ParseResult::ZERO_LENGTH_OPTION: {
+      case parser::ParseResult::HELP_OPTION: {
         const NoOptionsEnabled Opts;
-        CheckContext(LocalCap(Opts))
-            .add(DynamicControlError(cheriseed_checks_start, option.Data()));
+        CheckContext(LocalCap(Opts)).add(DynamicControlHelpInfo());
       } break;
-      case parser::ParseResult::UNKNOWN_OPTION: {
+      default: {
         const NoOptionsEnabled Opts;
         CheckContext(LocalCap(Opts))
             .add(DynamicControlError(cheriseed_checks_start, option.Data()));

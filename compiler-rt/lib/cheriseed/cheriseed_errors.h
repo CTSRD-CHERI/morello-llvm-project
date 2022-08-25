@@ -30,6 +30,7 @@ struct Decorator final {
   const char* Reset() const { return colorize ? "\033[0m" : ""; }
   const char* Red() const { return colorize ? "\033[31m" : ""; }
   const char* Green() const { return colorize ? "\033[32m" : ""; }
+  const char* Yellow() const { return colorize ? "\033[33m" : ""; }
   const char* Magenta() const { return colorize ? "\033[35m" : ""; }
   const char* Cyan() const { return colorize ? "\033[36m" : ""; }
 
@@ -42,6 +43,11 @@ struct MessageBuilder final {
 
   struct Error final {
     Error(const char* msg) : msg(msg) {}
+    const char* msg;
+  };
+
+  struct Info final {
+    Info(const char* msg) : msg(msg) {}
     const char* msg;
   };
 
@@ -69,6 +75,7 @@ struct MessageBuilder final {
   MessageBuilder& operator<<(const u64 value);
   MessageBuilder& operator<<(const MemoryRange& range);
   MessageBuilder& operator<<(const Error error);
+  MessageBuilder& operator<<(const Info info);
   MessageBuilder& operator<<(const Permission perm);
   MessageBuilder& operator<<(const Attribute attr);
   MessageBuilder& operator<<(const Hex value);
@@ -298,6 +305,20 @@ struct DynamicControlError final {
   const char* start;
   const char* cursor;
 };  // struct DynamicControlError
+
+// Prints 'DynamicControl' help as info message.
+struct DynamicControlHelpInfo final {
+  bool DoCheck(const CheckContext& ctx) const { return false; }
+  void ReportError(const CheckContext& ctx, MessageBuilder& builder) const;
+
+  static constexpr abi::SignalCode Code() {
+    return abi::SignalCode::SC_INFO_MESSAGE;
+  }
+
+  static constexpr libc::SignalNumber SignalNumber() {
+    return libc::SignalNumber::SN_NONE;
+  }
+};  // struct PrettyPrintHelp
 
 }  // namespace error
 }  // namespace __cheriseed

@@ -46,6 +46,8 @@ enum SignalCode : int {
   SC_BUS_ADRALN = 1,
   // Extension: something is not implemented, this is not user-visible.
   SC_PROT_NOT_IMPLEMENTED = 9999,
+  // Extension: use info message format, this is not user-visible.
+  SC_INFO_MESSAGE = 9998,
 };  // enum SignalCode
 
 // Possible ways to handle a capability violation signal.

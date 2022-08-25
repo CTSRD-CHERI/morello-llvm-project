@@ -113,6 +113,11 @@ MessageBuilder& MessageBuilder::operator<<(const Error error) {
   return *this;
 }
 
+MessageBuilder& MessageBuilder::operator<<(const Info info) {
+  message.append("%s%s%s", D.Yellow(), info.msg, D.Reset());
+  return *this;
+}
+
 MessageBuilder& MessageBuilder::operator<<(
     const MessageBuilder::Permission perm) {
   if (perm.explain) {
@@ -217,17 +222,22 @@ void CheckContext::Terminate(MessageBuilder& reason, libc::SignalNumber signo,
 
   // Prepare the error message, if requested by the SignalHandleMode.
   if (print_cause) {
+    bool info_msg = (code == SC_INFO_MESSAGE);
     MessageBuilder builder;
-    builder << "\n"
-            << kErrorSeparator
-            << MessageBuilder::Error("Runtime Error detected by CHERIseed")
-            << "\n\n"
-            << reason << "\n"
-            << "tid: " << tid << "\npc:  " << pc << "\n"
-            << (ignore_signal
-                    ? MessageBuilder::Attribute("\nViolation is ignored\n")
-                    : "")
-            << kErrorSeparator;
+    builder << "\n" << kErrorSeparator;
+    if (info_msg) {
+      builder << MessageBuilder::Info("CHERIseed Info");
+    } else {
+      builder << MessageBuilder::Error("Runtime Error detected by CHERIseed");
+    }
+    builder << "\n\n" << reason << "\n";
+    if (!info_msg) {
+      builder << "tid: " << tid << "\npc:  " << pc << "\n"
+              << (ignore_signal
+                      ? MessageBuilder::Attribute("\nViolation is ignored\n")
+                      : "");
+    }
+    builder << kErrorSeparator;
     builder.WriteToStderr();
   }
 
@@ -303,6 +313,12 @@ void Tagged::ReportError(const CheckContext& ctx, MessageBuilder& builder) {
   ctx.PrintTagAddress(builder);
 }
 
+static void PrettyPrintHelp(MessageBuilder& builder) {
+  builder << "Usage: CHERISEED_CHECKS=[[-]options,...]"
+          << "\n";
+  llvm::__cheriseed::parser::Help(builder, /* flags_to_exclude */ 0);
+}
+
 void DynamicControlError::ReportError(const CheckContext& ctx,
                                       MessageBuilder& builder) const {
   u64 pos = static_cast<u64>(cursor - start);
@@ -313,7 +329,13 @@ void DynamicControlError::ReportError(const CheckContext& ctx,
     builder << " ";
     --pos;
   }
-  builder << MessageBuilder::Attribute("^");
+  builder << MessageBuilder::Attribute("^") << "\n\n";
+  PrettyPrintHelp(builder);
+}
+
+void DynamicControlHelpInfo::ReportError(const CheckContext& ctx,
+                                         MessageBuilder& builder) const {
+  PrettyPrintHelp(builder);
 }
 
 }  // namespace error
