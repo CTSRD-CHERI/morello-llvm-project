@@ -471,7 +471,11 @@ __cheriseed_cap_t *__cheriseed_seal_entry(__cheriseed_cap_t *cap_out,
                                           const __cheriseed_cap_t *cap_in) {
   UNIMPLEMENTED();
 }
-u8 __cheriseed_sealed_get(const __cheriseed_cap_t *cap) { UNIMPLEMENTED(); }
+
+u8 __cheriseed_sealed_get(const __cheriseed_cap_t *cap) {
+  const SnapshotOptions Opts;
+  return ccl::methods::IsSealed(LocalCap(Opts, AllowNullCap(cap))) ? 1 : 0;
+}
 
 u8 __cheriseed_subset_test(const __cheriseed_cap_t *cap_tested,
                            const __cheriseed_cap_t *cap) {

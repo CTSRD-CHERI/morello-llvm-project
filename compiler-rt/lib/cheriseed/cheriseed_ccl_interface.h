@@ -420,6 +420,15 @@ struct methods {
             decom_check.permissions());
   }
 
+  /// Tests if a capability is a sealed capability.
+  ///
+  /// \param[in] local_cap the compressed capability to check.
+  /// \returns True if local_cap is a sealed, otherwise
+  /// false.
+  static inline bool IsSealed(const LocalCap &local_cap) {
+    return (external::cc128_cap_pesbt_extract_otype(local_cap.GetMetadata()) !=
+            external::CC128_OTYPE_UNSEALED);
+  }
 };  // struct methods
 
 }  // namespace ccl
