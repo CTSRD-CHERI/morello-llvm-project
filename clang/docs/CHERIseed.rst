@@ -234,29 +234,39 @@ capability semantics is:
 3. Raise SIGTRAP if the process has an attached tracer.
 4. Terminate the process.
 
-This can be configured at runtime.
+This can be configured at compile time and/or at runtime as explained below:
 
-The API ``__cheriseed_control_semantics()`` enables or disables all CHERI
-semantics at once. To fine-grain control which checks are performed at
-runtime use ``__cheriseed_control_checks()`` API. The first argument specifies
-if the checks set in the second argument are to be enabled or disabled.
+1. To configure control checks at compile time, use the clang option
+   ``-fsanitize-cheriseed-checks`` while compiling. It takes a comma separated
+   list of options which controls various checks. This configuration type
+   enables control checks which is common for the entire source file.
+2. To configure control checks at runtime use ``__cheriseed_control_checks()``
+   API. The first argument specifies if the checks set in the second argument
+   are to be enabled or disabled. A check configuration chosen at runtime always
+   overrides the configuration requested at compile time. In single threaded
+   environments, this configuration type enables the ability to specify control
+   checks for certain sections of code within the source file. The API
+   ``__cheriseed_control_semantics()`` enables or disables all CHERI semantics
+   at once.
 
 .. note::
 
-  Disabling CHERI semantics for some short scope will likely produce
-  unexpected results.
+  Be careful while disabling CHERI semantics for some short scope in
+  multi-threaded use case, since it will likely produce unexpected results.
 
 The environment variable ``CHERISEED_CHECKS`` can be used to control how
-CHERIseed behaves without the need to recompile the application. It takes a
-comma separated list of options which control various checks.
+CHERIseed behaves without the need to recompile the application. It takes same
+format of options as compile time configuration.
 
 The recognized options are:
 
 * ``TAG``: controls whether tag checks are executed
 * ``BOUNDS``: controls whether bounds checks are executed
-* ``ALIGNMENT``: controls whether alignment of capabilities are checked
+* ``ALIGNMENT``: controls whether alignment of capabilities are checked. This
+  option is not available for compile time configuration.
 * ``PERMS``: controls whether permission checks are executed
 * ``ALL``: enables all checks
+* ``HELP`` or ``help``: displays control checks which are available.
 
 To opt out a check simply prefix it with a ``-`` character.
 
