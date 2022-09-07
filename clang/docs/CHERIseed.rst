@@ -191,6 +191,17 @@ To retrieve or modify the properties of a capability, see Sections
   CHERIseed code generation may not be optimal, and performance is not
   representative of real CHERI hardware.
 
+Validity Tag
+============
+
+According to the CHERI design, capabilities should have an associated
+tag bit that can be cleared to mark a capability as invalid. This ensures
+that operations with a capability can only be performed if that capability is
+derived from valid transformations of valid capabilities.
+
+Please refer to the :doc:`Design Document<CHERIseedDesign>` to see how
+CHERIseed supports tag.
+
 Behavior on a semantic rules violation
 ======================================
 
@@ -200,6 +211,7 @@ nature of the violation.
 
 When ``SIGSEGV`` is raised the following ``si_code`` are possible:
 
+- ``SEGV_CAPTAGERR``: Attempted to dereference an untagged capability.
 - ``SEGV_CAPBOUNDSERR``: Attempted an out-of-bounds access.
 - ``SEGV_CAPPERMERR``: Attempted an access without the required permissions.
 - ``SEGV_MAPERR``: Attempted to dereference a capability at an invalid address.
@@ -350,6 +362,11 @@ The third argument passed to signal handlers installed with
 ``SA_SIGINFO`` is just opaque memory passed to user code. It
 doesn't provide any details and should not be used except for passing
 it to ``__cheriseed_set_signal_handle_mode()``.
+
+There is a known limitation on support of memory accesses performed within
+signal handlers. Specifically, a memory access performed from a signal handler
+to the same location as was being accessed at the moment signal was received
+isn't supported. That kind of memory access might result in a deadlock.
 
 Permissions
 -----------

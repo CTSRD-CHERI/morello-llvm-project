@@ -171,6 +171,34 @@ the current signal is blocked, unless SA_NODEFER was set, and the signals set
 in :code:`sigaction.sa_mask` are blocked. The only difference is that the
 runtime will not switch to the alternative signal stack, if set.
 
+Capability Tags
+---------------
+
+The runtime maps a small chunk of memory called *shadow memory* during startup
+initialization. A tag associated with each memory location that can hold
+capability is represented with an 8-bit value stored within this
+*shadow memory*. A capability is valid if its tag value is 1, and invalid if 0.
+
+* Shadow Memory:
+  A Shadow memory is a mapped accessible memory region which is used to store
+  all tags associated to all possible capabilities in the memory.
+* Shadow Gap:
+  A Shadow Gap is the unaccessible memory region within the shadow memory which
+  includes region which is not associated to any accessible capabilities,i.e,
+  it is the region mapped to shadow memory.
+
+The 8-bit values in the shadow memory can also have an additional value
+representing the locked state of a capability. This is used as "spinlock" for
+atomic capability operations. Following are the possible values in
+shadow memory:
+
+* Cleared: If the value is 0, it means the tag is cleared. The associated memory
+  location contains invalid capability.
+* Set: If the value is 1, it means the tag is set. The associated memory
+  location contains valid capability.
+* Locked: If the value is 2, it means that the associated memory location
+  contains capability with unspecified status; memory access is in progress.
+
 Possible directions of future work
 ==================================
 
@@ -187,10 +215,3 @@ Assembly
 
 Introducing support for a ``no_sanitize`` function declaration (or similar)
 would provide better support for calling assembly.
-
-Capability Tags
----------------
-
-According to the CHERI design, capabilities should have an associated
-1-bit tag that can be cleared to mark a capability as invalid.
-This functionality is not implemented.
