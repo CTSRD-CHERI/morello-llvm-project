@@ -148,6 +148,127 @@ TEST(StackCapInit, Api) {
   ASSERT_EQ(__cheriseed_base_get(&cap), reinterpret_cast<uint64_t>(&a));
 }
 
+TEST(CmpxchgCap, SameAsExpected) {
+  uint8_t a, b;
+  __cheriseed_cap_t cap_to_cap, cap, exp, des, temp;
+
+  utils::InitCap(&cap, &a);
+  utils::InitCap(&exp, &a);
+  utils::InitCap(&des, &b);
+  utils::InitCap(&cap_to_cap, &cap);
+
+  uint64_t cap_high = __cheriseed_copy_from_high(&cap);
+
+  __cheriseed_cmpxchg_result_t res =
+      __cheriseed_cmpxchg_cap(&cap_to_cap, &exp, &des, &temp, 0, 0, 0);
+  ASSERT_CAPABILITY_VALUE_EQ(&cap, &b);
+  ASSERT_CAPABILITY_METADATA_EQ(&cap, &des);
+  ASSERT_TAGGED(&cap);
+
+  ASSERT_CAPABILITY_VALUE_EQ(res.cap, &a);
+  ASSERT_CAPABILITY_METADATA_EQ(res.cap, cap_high);
+  ASSERT_TAGGED(res.cap);
+  ASSERT_EQ(res.result, (uint8_t)1);
+}
+
+TEST(CmpxchgCap, DifferentExpected) {
+  uint8_t a, b, c;
+  __cheriseed_cap_t cap_to_cap, cap, exp, des, temp;
+
+  utils::InitCap(&cap, &a);
+  utils::InitCap(&exp, &b);
+  utils::InitCap(&des, &c);
+  utils::InitCap(&cap_to_cap, &cap);
+
+  uint64_t cap_high = __cheriseed_copy_from_high(&cap);
+
+  __cheriseed_cmpxchg_result_t res =
+      __cheriseed_cmpxchg_cap(&cap_to_cap, &exp, &des, &temp, 0, 0, 0);
+  ASSERT_CAPABILITY_VALUE_EQ(&cap, &a);
+  ASSERT_CAPABILITY_METADATA_EQ(&cap, cap_high);
+  ASSERT_TAGGED(&cap);
+
+  ASSERT_CAPABILITY_VALUE_EQ(res.cap, &a);
+  ASSERT_CAPABILITY_METADATA_EQ(res.cap, cap_high);
+  ASSERT_TAGGED(res.cap);
+  ASSERT_EQ(res.result, (uint8_t)0);
+}
+
+TEST(CmpxchgCap, NoLoadCapPerm) {
+  uint8_t a, b;
+  __cheriseed_cap_t cap_to_cap, cap, exp, des, temp;
+
+  utils::InitCap(&cap, &a);
+  utils::InitCap(&exp, &a);
+  utils::InitCap(&des, &b);
+  utils::InitCap(&cap_to_cap, &cap);
+  __cheriseed_perms_and(&cap_to_cap, &cap_to_cap, ~ccl::permissions::LOAD_CAP);
+  __cheriseed_cmpxchg_result_t res =
+      __cheriseed_cmpxchg_cap(&cap_to_cap, &exp, &des, &temp, 0, 0, 0);
+  // Original cap should be tagged.
+  ASSERT_TAGGED(&cap);
+  // Loaded copy should be untagged.
+  ASSERT_UNTAGGED(&temp);
+  ASSERT_UNTAGGED(res.cap);
+}
+
+TEST(CmpxchgCap, NoStoreCapPerm) {
+  uint8_t a, b;
+  __cheriseed_cap_t cap_to_cap, cap, exp, des, temp;
+
+  utils::InitCap(&cap, &a);
+  utils::InitCap(&exp, &a);
+  utils::InitCap(&des, &b);
+  utils::InitCap(&cap_to_cap, &cap);
+  __cheriseed_tag_clear(&des, &des);
+  __cheriseed_perms_and(&cap_to_cap, &cap_to_cap, ~ccl::permissions::STORE_CAP);
+  __cheriseed_cmpxchg_cap(&cap_to_cap, &exp, &des, &temp, 0, 0, 0);
+}
+
+TEST(CmpxchgCapHybrid, SameAsExpected) {
+  uint8_t a, b;
+  __cheriseed_cap_t cap, exp, des, temp;
+
+  utils::InitCap(&cap, &a);
+  utils::InitCap(&exp, &a);
+  utils::InitCap(&des, &b);
+
+  uint64_t cap_high = __cheriseed_copy_from_high(&cap);
+
+  __cheriseed_cmpxchg_result_t res =
+      __cheriseed_cmpxchg_cap_hybrid(&cap, &exp, &des, &temp, 0, 0);
+  ASSERT_CAPABILITY_VALUE_EQ(&cap, &b);
+  ASSERT_CAPABILITY_METADATA_EQ(&cap, &des);
+  ASSERT_TAGGED(&cap);
+
+  ASSERT_CAPABILITY_VALUE_EQ(res.cap, &a);
+  ASSERT_CAPABILITY_METADATA_EQ(res.cap, cap_high);
+  ASSERT_TAGGED(res.cap);
+  ASSERT_EQ(res.result, (uint8_t)1);
+}
+
+TEST(CmpxchgCapHybrid, DifferentExpected) {
+  uint8_t a, b, c;
+  __cheriseed_cap_t cap, exp, des, temp;
+
+  utils::InitCap(&cap, &a);
+  utils::InitCap(&exp, &b);
+  utils::InitCap(&des, &c);
+
+  uint64_t cap_high = __cheriseed_copy_from_high(&cap);
+
+  __cheriseed_cmpxchg_result_t res =
+      __cheriseed_cmpxchg_cap_hybrid(&cap, &exp, &des, &temp, 0, 0);
+  ASSERT_CAPABILITY_VALUE_EQ(&cap, &a);
+  ASSERT_CAPABILITY_METADATA_EQ(&cap, cap_high);
+  ASSERT_TAGGED(&cap);
+
+  ASSERT_CAPABILITY_VALUE_EQ(res.cap, &a);
+  ASSERT_CAPABILITY_METADATA_EQ(res.cap, cap_high);
+  ASSERT_TAGGED(res.cap);
+  ASSERT_EQ(res.result, (uint8_t)0);
+}
+
 TEST(LoadStoreCap, Api) {
   __cheriseed_cap_t ones, dst, dst_cap, src, src_cap;
 

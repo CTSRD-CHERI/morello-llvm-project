@@ -33,6 +33,11 @@ TEST(UntaggedDeathTest, CheckAccess) {
   TEST_UNTAGGED_CAP(__cheriseed_check_access(&untagged_cap, 0, 0, 0));
 }
 
+TEST(UntaggedDeathTest, CmpXchgCap) {
+  TEST_UNTAGGED_CAP(__cheriseed_cmpxchg_cap(&untagged_cap, nullptr, nullptr,
+                                            nullptr, 0, 0, 0));
+}
+
 TEST(UntaggedDeathTest, LoadCap) {
   TEST_UNTAGGED_CAP(__cheriseed_load_cap(&untagged_cap, nullptr, 0));
 }

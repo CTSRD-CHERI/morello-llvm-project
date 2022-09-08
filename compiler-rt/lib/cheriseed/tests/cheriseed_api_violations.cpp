@@ -63,6 +63,59 @@ TEST(CheckAccessDeathTest, BoundsZero) {
                            __cheriseed_check_access(&cap, 1, 0, 0)));
 }
 
+TEST(CmpXchgCapDeathTest, NoLoadPermission) {
+  uint8_t a, b;
+  __cheriseed_cap_t cap_to_cap, cap, exp, des, temp;
+
+  utils::InitCap(&cap, &a);
+  utils::InitCap(&exp, &a);
+  utils::InitCap(&des, &b);
+  utils::InitCap(&cap_to_cap, &cap);
+  __cheriseed_perms_and(&cap_to_cap, &cap_to_cap, ~ccl::permissions::LOAD);
+  EXPECT_DENIED_PERMS(
+      __cheriseed_cmpxchg_cap(&cap_to_cap, &exp, &des, &temp, 0, 0, 0));
+}
+
+TEST(CmpXchgCapDeathTest, NoStorePermission) {
+  uint8_t a, b;
+  __cheriseed_cap_t cap_to_cap, cap, exp, des, temp;
+
+  utils::InitCap(&cap, &a);
+  utils::InitCap(&exp, &a);
+  utils::InitCap(&des, &b);
+  utils::InitCap(&cap_to_cap, &cap);
+  __cheriseed_perms_and(&cap_to_cap, &cap_to_cap, ~ccl::permissions::STORE);
+  EXPECT_DENIED_PERMS(
+      __cheriseed_cmpxchg_cap(&cap_to_cap, &exp, &des, &temp, 0, 0, 0));
+}
+
+TEST(CmpXchgCapDeathTest, Bounds) {
+  uint8_t a, b;
+  __cheriseed_cap_t cap_to_cap, cap, exp, des, temp;
+
+  utils::InitCap(&cap, &a);
+  utils::InitCap(&exp, &a);
+  utils::InitCap(&des, &b);
+  utils::InitCap(&cap_to_cap, &cap);
+  __cheriseed_bounds_set(&cap_to_cap, &cap_to_cap,
+                         sizeof(__cheriseed_cap_t) - 1);
+  EXPECT_DENIED_BOUNDS(
+      __cheriseed_cmpxchg_cap(&cap_to_cap, &exp, &des, &temp, 0, 0, 0));
+}
+
+TEST(CmpXchgCapDeathTest, NoStoreCapPerm) {
+  uint8_t a, b;
+  __cheriseed_cap_t cap_to_cap, cap, exp, des, temp;
+
+  utils::InitCap(&cap, &a);
+  utils::InitCap(&exp, &a);
+  utils::InitCap(&des, &b);
+  utils::InitCap(&cap_to_cap, &cap);
+  __cheriseed_perms_and(&cap_to_cap, &cap_to_cap, ~ccl::permissions::STORE_CAP);
+  EXPECT_DENIED_PERMS(
+      __cheriseed_cmpxchg_cap(&cap_to_cap, &exp, &des, &temp, 0, 0, 0));
+}
+
 TEST(LoadCapDeathTest, NoLoadPermission) {
   __cheriseed_cap_t target, load_from, dst;
   utils::InitCap(&load_from, &target);

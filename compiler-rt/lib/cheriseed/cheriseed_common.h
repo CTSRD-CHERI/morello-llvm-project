@@ -188,12 +188,41 @@ enum TagState : u8 {
   TS_LOCKED = 2,
 };  // enum TagState
 
+// Locks a tag with spinlock and acquire semantics.
+//
+// Returns the previous tag value.
+static inline TagState AcquireTag(TagState *const ptr) {
+  for (;;) {
+    TagState prev_tag =
+        __atomic_exchange_n(ptr, TagState::TS_LOCKED, __ATOMIC_ACQUIRE);
+    if (LIKELY(prev_tag != TagState::TS_LOCKED))
+      return prev_tag;
+  }
+}
+
+// Writes a tag with release semantics.
+//
+// Returns the previous tag value.
+static inline TagState ReleaseTag(TagState *ptr, TagState tag) {
+  return __atomic_exchange_n(ptr, tag, __ATOMIC_RELEASE);
+}
+
+// Writes a tag with relaxed semantics..
+static inline void WriteTag(TagState *ptr, TagState tag) {
+  __atomic_store_n(ptr, tag, __ATOMIC_RELAXED);
+}
+
+// Reads a tag with relaxed semantics.
+static inline TagState ReadTag(TagState *ptr) {
+  return __atomic_load_n(ptr, __ATOMIC_RELAXED);
+}
+
 // CHERIseed shadow map info. Used to get shadow address of a virtual address.
 extern ShadowMemory ShadowMap;
 
 /// Class which interacts with the public (opaque) type and creates an
 /// in-flight capability, which then can be modified and written to memory.
-struct LocalCap final : public __cheriseed_cap_t {
+struct LocalCap : public __cheriseed_cap_t {
   // Note: not all the members are initialized on purpose.
   explicit LocalCap(const Options &Opts) : Opts(Opts) { ClearTag(); }
 
@@ -218,6 +247,8 @@ struct LocalCap final : public __cheriseed_cap_t {
       __cheriseed_cap_t *ptr,
       memory_order memory_order = memory_order::memory_order_relaxed) const;
 
+  void Store(LocalCap &scoped_cap) const;
+
   const LocalCap &RequireTagged() const;
   const LocalCap &RequirePermissions(u64 perms) const;
   const LocalCap &RequireBounds(u64 size) const;
@@ -236,10 +267,16 @@ struct LocalCap final : public __cheriseed_cap_t {
   void ClearTag() { tag_state = TagState::TS_CLEARED; }
 
 #ifndef CHERISEED_UNIT_TESTING
- private:
+ protected:
 #endif
   LocalCap(const Options &Opts, const __cheriseed_cap_t *ptr,
            memory_order memory_order, bool allow_nullcap);
+
+  void Load() {
+    const u64 *cap = reinterpret_cast<const u64 *>(GetAddress());
+    SetValue(cap[0]);
+    SetMetadata(cap[1]);
+  }
 
   void SetAddress(const __cheriseed_cap_t *ptr) {
     address = reinterpret_cast<vaddr>(ptr);
@@ -258,7 +295,19 @@ struct LocalCap final : public __cheriseed_cap_t {
 
   // Allow access to all private methods and members for CCL interface.
   friend struct ccl::methods;
+  // Allow access to all private methods and members for ScopeLockedLocalCap.
+  friend struct ScopeLockedLocalCap;
 };  // struct LocalCap
+
+struct ScopeLockedLocalCap final : public LocalCap {
+  ScopeLockedLocalCap(const Options &Opts, const __cheriseed_cap_t *ptr);
+
+  __cheriseed_cap_t *Store(
+      __cheriseed_cap_t *ptr,
+      memory_order memory_order = memory_order::memory_order_relaxed) const;
+
+  ~ScopeLockedLocalCap() { ReleaseTag(GetShadowAddress(), tag_state); }
+};  // struct ScopeLockedLocalCap
 
 // Helper class to search for environment variables.
 struct Environment {
