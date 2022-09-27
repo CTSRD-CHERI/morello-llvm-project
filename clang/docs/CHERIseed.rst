@@ -332,12 +332,6 @@ the ``__capability`` attribute will be treated as capabilities, is
 possible but not recommended. Potential use cases for Hybrid
 CHERIseed are still being explored to justify supporting this feature.
 
-Multi-threading
----------------
-
-Thread safety is not guaranteed, so multi-threaded programs are not
-supported yet.
-
 Inline Assembly
 ---------------
 
