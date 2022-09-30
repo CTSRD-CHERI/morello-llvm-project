@@ -2273,9 +2273,9 @@ void CHERIseed::visitGlobals() {
         Twine(kPrefixInitializers, sys::path::stem(M.getModuleIdentifier())));
     GlobalInits->setSection(kInitializerSection);
     GlobalInits->setAlignment(Align(8));
-    // Append to llvm.compiler.used so that so that during linking this variable
-    // remains in scope.
-    appendToCompilerUsed(M, GlobalInits);
+    // Append to llvm.used so that so that during linking this variable
+    // is retained.
+    appendToUsed(M, GlobalInits);
   }
 
   // There might be deferred values after mapping globals, process them now.

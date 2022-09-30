@@ -42,7 +42,7 @@ define void @func() addrspace(200) {
   ret void
 }
 
-; CHECK-LABEL: @llvm.used = appending global [6 x i8*]
+; CHECK-LABEL: @llvm.used = appending global [7 x i8*]
 @llvm.used = appending addrspace(200) global [6 x i8*] [
 ; CHECK-SAME:  i8* bitcast (%__cheriseed_cap_t* @char to i8*)
   i8* addrspacecast (i8 addrspace(200)* @char to i8*),

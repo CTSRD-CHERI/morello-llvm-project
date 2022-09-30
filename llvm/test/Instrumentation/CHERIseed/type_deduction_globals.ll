@@ -570,7 +570,7 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-SAME:    }
 ; CHECK-SAME:  ],  section "__cheriseed_initializers", align 8
 
-; CHECK-LABEL: @llvm.compiler.used = appending global [1 x i8*] [
+; CHECK-LABEL: @llvm.used = appending global [1 x i8*] [
 ; CHECK-SAME:    i8* bitcast ([27 x %__cheriseed_initializer_t]*
 ; CHECK-SAME:    @"__cheriseed_inits_<stdin>" to i8*)
 ; CHECK-SAME:  ], section "llvm.metadata"
