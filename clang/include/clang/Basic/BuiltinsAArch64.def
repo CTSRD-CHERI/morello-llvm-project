@@ -81,6 +81,8 @@ BUILTIN(__builtin_morello_chkssu, "v*mvC*mvC*m", "nc")
 BUILTIN(__builtin_morello_subset_test_unseal_or_null, "v*mvC*mvC*m", "nc")
 BUILTIN(__builtin_morello_cvt, "zvC*mvC*m", "nc")
 BUILTIN(__builtin_morello_cvtz, "v*mvC*mz", "nc")
+BUILTIN(__builtin_morello_round_representable_length_inexact, "zz", "nc")
+BUILTIN(__builtin_morello_representable_alignment_mask_inexact, "zz", "nc")
 //
 ///////////////////////////////
 

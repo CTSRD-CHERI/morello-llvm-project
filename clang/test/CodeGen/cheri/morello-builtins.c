@@ -24,6 +24,12 @@ long long test(void* __capability foo, void* __capability bar) {
 // CHECK: call i8 addrspace(200)* @llvm.morello.convert.to.offset.null.cap.zero.semantics
   results[i++] = __builtin_morello_cvtz(foo, x);
 
+// CHECK: call i64 @llvm.morello.round.representable.length.inexact
+  x &= __builtin_morello_round_representable_length_inexact(foo);
+
+// CHECK: call i64 @llvm.morello.representable.alignment.mask.inexact
+  x &= __builtin_morello_representable_alignment_mask_inexact(foo);
+
   return x;
 }
 
