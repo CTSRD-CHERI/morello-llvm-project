@@ -71,7 +71,10 @@ inline usize GetPageSizeCached() {
 #else
 usize GetPageSize();
 extern usize PageSizeCached;
+__attribute__((weak)) usize GetPageSizeCachedCustom();
 inline usize GetPageSizeCached() {
+  if (GetPageSizeCachedCustom)
+    return GetPageSizeCachedCustom();
   if (!PageSizeCached)
     PageSizeCached = GetPageSize();
   return PageSizeCached;

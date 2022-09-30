@@ -24,6 +24,21 @@
 using namespace __cheriseed::abi;
 using namespace __sanitizer;
 
+// Provide own implementation for GetPageSize().
+// CHERIseed caches AT_PAGESZ early during process startup. This is required
+// so that there is no need to call any libc APIs, such as getauxval(AT_PAGESZ)
+// or sysconf(_SC_PAGESIZE), from within the sanitizer runtime. It might just
+// happen that libc is not fully initialized when a capability violation occurs.
+usize __sanitizer::GetPageSize() {
+  return __cheriseed::Globals::SystemPageSize;
+}
+
+// Provide own implementation for GetPageSizeCached().
+// See the reasoning at GetPageSize() above.
+usize __sanitizer::GetPageSizeCachedCustom() {
+  return __sanitizer::GetPageSize();
+}
+
 namespace __cheriseed {
 namespace libc {
 
