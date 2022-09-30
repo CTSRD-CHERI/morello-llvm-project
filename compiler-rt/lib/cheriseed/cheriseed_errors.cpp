@@ -151,9 +151,6 @@ void MessageBuilder::WriteToStderr() {
   message.clear();
 }
 
-// Prevents recursive terminations.
-__sanitizer::atomic_uint32_t CheckContext::IsTerminating{0};
-
 // Based on
 // https://github.com/CTSRD-CHERI/cheri-c-programming/wiki/Displaying-Capabilities
 void CheckContext::PrintCapability(MessageBuilder& builder) const {
@@ -174,8 +171,10 @@ void CheckContext::PrintCapability(MessageBuilder& builder) const {
 
 void CheckContext::PrintTagAddress(MessageBuilder& builder) const {
   builder << "Tag address was at "
-          << ShadowMap.GetShadowAddressFrom(CapabilityAddress()) << "\n\n"
-          << ShadowMap;
+          << __cheriseed::Globals::ShadowMap.GetShadowAddressFrom(
+                 CapabilityAddress())
+          << "\n\n"
+          << __cheriseed::Globals::ShadowMap;
 }
 
 void CheckContext::Initialize() {

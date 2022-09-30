@@ -35,10 +35,16 @@ struct methods;
 
 namespace __cheriseed {
 
-// The size of a page in the system.
-extern usize SystemPageSize;
+struct __attribute__((visibility("hidden"))) Globals {
+  // The size of a page in the system.
+  static usize SystemPageSize;
+  // CHERIseed shadow map info. Used to get shadow address of a virtual address.
+  static ShadowMemory ShadowMap;
+  // Prevents infinite looping on some errors.
+  static __sanitizer::atomic_uint32_t IsTerminating;
+};  // struct Globals
 
-struct Options {
+struct __attribute__((visibility("hidden"))) Options {
   // Determine if the current config requires invocation of signal handlers
   bool shouldInvokeSignalHandlers() const {
     if (LIKELY(currentEnableCHERISemantics))
@@ -217,9 +223,6 @@ static inline TagState ReadTag(TagState *ptr) {
   return __atomic_load_n(ptr, __ATOMIC_RELAXED);
 }
 
-// CHERIseed shadow map info. Used to get shadow address of a virtual address.
-extern ShadowMemory ShadowMap;
-
 /// Class which interacts with the public (opaque) type and creates an
 /// in-flight capability, which then can be modified and written to memory.
 struct LocalCap : public __cheriseed_cap_t {
@@ -256,7 +259,7 @@ struct LocalCap : public __cheriseed_cap_t {
   vaddr GetAddress() const { return address; }
   TagState *GetShadowAddress() const {
     return reinterpret_cast<TagState *>(
-        ShadowMap.GetShadowAddressFrom(address));
+        Globals::ShadowMap.GetShadowAddressFrom(address));
   }
   u64 GetValue() const { return value; }
   u64 GetMetadata() const { return metadata; }

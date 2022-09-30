@@ -31,7 +31,11 @@ atomic_uint64_t Options::Checks{abi::Check::CHK_ALL};
 atomic_uint64_t Options::DefaultChecks{abi::Check::CHK_ALL};
 
 // This is the default value and AT_PAGESZ can override it.
-usize SystemPageSize = 4096;
+usize Globals::SystemPageSize = 4096;
+// Global cheriseed object containing shadow map info.
+ShadowMemory Globals::ShadowMap;
+// Prevents recursive terminations.
+__sanitizer::atomic_uint32_t Globals::IsTerminating{0};
 
 // Triggers an unimplemented fault.
 #undef UNIMPLEMENTED
@@ -236,13 +240,17 @@ struct RangedTagOperation {
     // TODO: check that start < end
   }
 
-  void Lock() const { ShadowMap.IterateTagRanges(range, &LockCallback); }
-  void UnLock() const { ShadowMap.IterateTagRanges(range, &UnLockCallback); }
+  void Lock() const {
+    Globals::ShadowMap.IterateTagRanges(range, &LockCallback);
+  }
+  void UnLock() const {
+    Globals::ShadowMap.IterateTagRanges(range, &UnLockCallback);
+  }
   void ClearAll() const {
-    ShadowMap.IterateTagRanges(range, &ClearAllCallback);
+    Globals::ShadowMap.IterateTagRanges(range, &ClearAllCallback);
   }
   void CopyAllTo(const MemoryRange &dest_range, const bool lock) const {
-    ShadowMap.ZipTagRange(range, dest_range, &CopyAllToCallback, lock);
+    Globals::ShadowMap.ZipTagRange(range, dest_range, &CopyAllToCallback, lock);
   }
 
  protected:
@@ -280,8 +288,10 @@ struct RangedTagOperation {
       const usize addr = reinterpret_cast<usize>(address);
       const usize remaining = static_cast<usize>(end_address - address);
       // If it is possible, use fixed mapping to clear the tags.
-      if (((addr % SystemPageSize) == 0) && (remaining > SystemPageSize)) {
-        usize map_size = __sanitizer::RoundDownTo(remaining, SystemPageSize);
+      if (((addr % Globals::SystemPageSize) == 0) &&
+          (remaining > Globals::SystemPageSize)) {
+        usize map_size =
+            __sanitizer::RoundDownTo(remaining, Globals::SystemPageSize);
         FixedMapAccessible({addr, addr + map_size});
         address += map_size;
       } else {
@@ -667,7 +677,7 @@ void __cheriseed_static_init(u64 sp) {
   Environment env = Environment::From(sp);
   // Save AT_PAGESZ
   if (u64 at_pagesz = env.GetAuxv(libc::AT_PAGESZ))
-    SystemPageSize = at_pagesz;
+    Globals::SystemPageSize = at_pagesz;
 
   ShadowMemoryInit();
   // Tags are available from now.

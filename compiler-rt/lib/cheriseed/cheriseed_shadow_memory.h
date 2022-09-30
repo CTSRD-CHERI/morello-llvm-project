@@ -135,9 +135,6 @@ struct ShadowMemory {
   usize page_size;
 };  // ShadowMemory
 
-// Global which holds information about shadow memory.
-extern ShadowMemory ShadowMap;
-
 void FixedMapAccessible(const MemoryRange& mem);
 
 }  // namespace __cheriseed

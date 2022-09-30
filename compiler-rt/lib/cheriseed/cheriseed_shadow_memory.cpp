@@ -16,6 +16,7 @@
 
 #include <sys/mman.h>
 
+#include "cheriseed_common.h"
 #include "sanitizer_common/sanitizer_common.h"
 #include "sanitizer_common/sanitizer_posix.h"
 
@@ -23,12 +24,6 @@ using __sanitizer::usize;
 using __sanitizer::vaddr;
 
 namespace __cheriseed {
-
-// The size of a page in the system.
-extern usize SystemPageSize;
-
-// Global cheriseed object containing shadow map info.
-ShadowMemory ShadowMap;
 
 // Unmaps a memory range.
 static bool UnMap(const MemoryRange &mem) {
@@ -38,8 +33,9 @@ static bool UnMap(const MemoryRange &mem) {
 
 // Reserves a memory range with read-write permissions.
 static MemoryRange ReserveMemory(usize size, usize alignment) {
-  CHECK("Cannot map shadow memory." && (0 == (size % SystemPageSize)));
-  CHECK("Cannot map shadow memory." && (0 == (alignment % SystemPageSize)));
+  CHECK("Cannot map shadow memory." && (0 == (size % Globals::SystemPageSize)));
+  CHECK("Cannot map shadow memory." &&
+        (0 == (alignment % Globals::SystemPageSize)));
 
   // Reserve memory, which will be larger than the requested size.
   const usize map_size = size + alignment;
@@ -84,15 +80,15 @@ static void FixedMapUnaccessible(const MemoryRange &mem) {
 }
 
 void ShadowMemoryInit() {
-  ShadowMap = ShadowMemory(__sanitizer::GetMaxUserVirtualAddress(),
-                           SystemPageSize, kShadowScale);
-  MemoryRange shadow_memory =
-      ReserveMemory(ShadowMap.GetShadowSize(), ShadowMap.GetAlignment());
-  ShadowMap.SetShadowMemory(shadow_memory);
+  Globals::ShadowMap = ShadowMemory(__sanitizer::GetMaxUserVirtualAddress(),
+                                    Globals::SystemPageSize, kShadowScale);
+  MemoryRange shadow_memory = ReserveMemory(Globals::ShadowMap.GetShadowSize(),
+                                            Globals::ShadowMap.GetAlignment());
+  Globals::ShadowMap.SetShadowMemory(shadow_memory);
 
-  FixedMapAccessible(ShadowMap.GetShadowMemoryRangeLow());
-  FixedMapUnaccessible(ShadowMap.GetShadowGapRange());
-  FixedMapAccessible(ShadowMap.GetShadowMemoryRangeHigh());
+  FixedMapAccessible(Globals::ShadowMap.GetShadowMemoryRangeLow());
+  FixedMapUnaccessible(Globals::ShadowMap.GetShadowGapRange());
+  FixedMapAccessible(Globals::ShadowMap.GetShadowMemoryRangeHigh());
 }
 
 }  // namespace __cheriseed

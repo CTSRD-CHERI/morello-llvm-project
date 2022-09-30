@@ -120,7 +120,7 @@ struct CheckContext {
   template <typename P>
   NOINLINE void BeginTerminate(P& property) {
     // Make sure that recursive aborts are not allowed.
-    if (UNLIKELY(atomic_fetch_add(&IsTerminating, 1,
+    if (UNLIKELY(atomic_fetch_add(&Globals::IsTerminating, 1,
                                   memory_order::memory_order_relaxed) > 0))
       __sanitizer::Trap();
     // Fully initialize the checker's context.
@@ -131,7 +131,8 @@ struct CheckContext {
     // Try to terminate.
     Terminate(reason, P::SignalNumber(), P::Code());
     // Not aborting in the end.
-    atomic_fetch_sub(&IsTerminating, 1, memory_order::memory_order_relaxed);
+    atomic_fetch_sub(&Globals::IsTerminating, 1,
+                     memory_order::memory_order_relaxed);
   }
 
   void Initialize();
@@ -141,8 +142,6 @@ struct CheckContext {
   const LocalCap& local_cap;
   vaddr pc;
   u64 tid;
-
-  static __sanitizer::atomic_uint32_t IsTerminating;
 };  // struct CheckContext
 
 // Note: not using base class and virtual functions here because those are
@@ -162,7 +161,7 @@ struct CapabilityAddress final {
 #endif
 #if defined(SANITIZER_LINUX)
     // Check for address on the first page, which is never accessible.
-    failed |= cap_addr < SystemPageSize;
+    failed |= cap_addr < Globals::SystemPageSize;
 #endif
     return !failed;
   }

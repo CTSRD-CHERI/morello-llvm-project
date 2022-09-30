@@ -192,7 +192,7 @@ struct ScopedSigProcMask final {
         .Arg(&set, ccl::permissions::READ_CAP_PERMS)
         .Arg(&old_set_, ccl::permissions::READ_CAP_PERMS |
                             ccl::permissions::WRITE_CAP_PERMS)
-        .Arg(NSIG/ 8)
+        .Arg(NSIG / 8)
         .Call();
   }
 
@@ -383,7 +383,7 @@ pid_t GetTracerPid() {
   if (!status)
     return false;
 
-  InternalMmapVector<char> buffer{GetPageSizeCached()};
+  InternalMmapVector<char> buffer{Globals::SystemPageSize};
   status.Read(buffer.data(), buffer.capacity() - 1);
   const char *tracer_pid_pos = internal_strstr(buffer.data(), TracerPid);
   if (!tracer_pid_pos)
