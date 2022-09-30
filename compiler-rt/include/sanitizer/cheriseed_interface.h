@@ -575,13 +575,23 @@ const char *__cheriseed_strerror(int code);
 /// \returns Zero if mode was valid, otherwise non-zero.
 int __cheriseed_set_signal_handle_mode(void *context, int mode);
 
-/// Performs initialization of capabilities in a static-linked application.
+/// Performs initialization of the sanitizer runtime.
 ///
 /// \param[in] sp The stack pointer upon process start.
 ///
+/// \note This API should be called very early during process startup.
+void __cheriseed_static_init(uint64_t sp);
+
+/// Performs initialization of capabilities.
+///
+/// \param[in] init_start Start address of the __cheriseed_initializers section,
+/// or zero.
+/// \param[in] init_stop End address of the __cheriseed_initializers section,
+/// or zero.
+///
 /// \note This API should be called before accessing any global variables,
 /// ideally early during libc init.
-void __cheriseed_static_init(uint64_t sp);
+void __cheriseed_relocate(uint64_t init_start, uint64_t init_stop);
 
 // -------------------------------------
 // APIs used by the compiler

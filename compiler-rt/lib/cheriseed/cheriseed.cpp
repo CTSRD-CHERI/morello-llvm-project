@@ -666,13 +666,6 @@ int __cheriseed_set_signal_handle_mode(__cheriseed_cap_t *context, int mode) {
   return 0;
 }
 
-// Symbols to section containing global initialization data. This works well for
-// static linkage. Needs to be removed for cases to handle dynamic linkage.
-extern void *__attribute__((weak)) __start___cheriseed_initializers;
-extern void *__attribute__((weak)) __stop___cheriseed_initializers;
-
-// The following needs to changed for dynamic linkage cases. The changes would
-// include passing __start_* and __stop_* symbols as parameters while calling.
 void __cheriseed_static_init(u64 sp) {
   Environment env = Environment::From(sp);
   // Save AT_PAGESZ
@@ -683,19 +676,48 @@ void __cheriseed_static_init(u64 sp) {
   // Tags are available from now.
 
   ControlChecksDynamic(env);
+}
 
-  if (!&__start___cheriseed_initializers)
+void __cheriseed_relocate(u64 init_start, u64 init_stop) {
+  if ((init_start == 0) && (init_stop == 0)) {
+#if defined(__aarch64__)
+    asm volatile(
+        ".weak __start___cheriseed_initializers\n"
+        ".hidden __start___cheriseed_initializers\n"
+        "adrp %0, __start___cheriseed_initializers\n"
+        "add  %0, %0, :lo12:__start___cheriseed_initializers\n"
+        : "=r"(init_start));
+    asm volatile(
+        ".weak __stop___cheriseed_initializers\n"
+        ".hidden __stop___cheriseed_initializers\n"
+        "adrp %0, __stop___cheriseed_initializers\n"
+        "add  %0, %0, :lo12:__stop___cheriseed_initializers\n"
+        : "=r"(init_stop));
+#elif defined(__x86_64__)
+    asm volatile(
+        ".weak __start___cheriseed_initializers\n"
+        ".hidden __start___cheriseed_initializers\n"
+        "lea __start___cheriseed_initializers(%%rip),%0\n"
+        : "=r"(init_start));
+    asm volatile(
+        ".weak __stop___cheriseed_initializers\n"
+        ".hidden __stop___cheriseed_initializers\n"
+        "lea __stop___cheriseed_initializers(%%rip),%0\n"
+        : "=r"(init_stop));
+#else
+#error "Unsupported architecture"
+#endif
+  }
+
+  if (!init_start)
     return;
-  CHECK_EQ(0, ((vaddr)&__stop___cheriseed_initializers -
-               (vaddr)&__start___cheriseed_initializers) %
-                  sizeof(__cheriseed_initializer_t));
+
+  CHECK_EQ(0, (init_stop - init_start) % sizeof(__cheriseed_initializer_t));
 
   __cheriseed_initializer_t *glo_init_start =
-      reinterpret_cast<__cheriseed_initializer_t *>(
-          &__start___cheriseed_initializers);
+      reinterpret_cast<__cheriseed_initializer_t *>(init_start);
   __cheriseed_initializer_t *glo_init_stop =
-      reinterpret_cast<__cheriseed_initializer_t *>(
-          &__stop___cheriseed_initializers);
+      reinterpret_cast<__cheriseed_initializer_t *>(init_stop);
 
   const SnapshotOptions Opts;
   for (ssize idx = 0; idx < glo_init_stop - glo_init_start; ++idx) {

@@ -72,6 +72,12 @@ full description of all provided APIs.
 Implementation Details
 ======================
 
+Initialization
+--------------
+
+The sanitizer runtime must be initialized by calling
+``__cheriseed_static_init()`` early during process startup.
+
 ABI Changes
 -----------
 
@@ -126,7 +132,7 @@ Global Variables
 ----------------
 
 Capabilities in global variables and aliases are initialized at runtime
-by invoking ``__cheriseed_static_init``.
+by invoking ``__cheriseed_relocate()``.
 
 Variadic Arguments
 ------------------

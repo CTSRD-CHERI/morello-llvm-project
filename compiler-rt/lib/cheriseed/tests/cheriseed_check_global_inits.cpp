@@ -36,6 +36,7 @@ TEST(CheckGlobalInits, ShadowCapInit) {
 
   ASSERT_CAPABILITY_VALUE_EQ(&cap, 0);
   __cheriseed_static_init(0);
+  __cheriseed_relocate(0, 0);
   ASSERT_CAPABILITY_VALUE_EQ(&cap, &a);
 }
 
@@ -45,6 +46,7 @@ TEST(CheckGlobalInits, InitializerFuncCall) {
 
   ASSERT_EQ(a, 1);
   __cheriseed_static_init(0);
+  __cheriseed_relocate(0, 0);
   ASSERT_EQ(a, 2);
 }
 
@@ -55,6 +57,7 @@ TEST(CheckGlobalInits, Bounds) {
   INSERT_INTO_SECTION(&cap, &t, sizeof(int), 0, &func_1);
 
   __cheriseed_static_init(0);
+  __cheriseed_relocate(0, 0);
   ASSERT_EQ(__cheriseed_length_get(&cap), sizeof(int));
 }
 
@@ -66,6 +69,7 @@ TEST(CheckGlobalInits, Perms) {
                       &func_1);
 
   __cheriseed_static_init(0);
+  __cheriseed_relocate(0, 0);
   ASSERT_EQ(__cheriseed_perms_get(&cap),
             ccl::permissions::ALL & ~ccl::permissions::STORE);
 }

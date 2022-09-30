@@ -196,6 +196,9 @@ int __cheriseed_set_signal_handle_mode(__cheriseed_cap_t *context, int mode);
 SANITIZER_INTERFACE_ATTRIBUTE
 void __cheriseed_static_init(u64 sp);
 
+SANITIZER_INTERFACE_ATTRIBUTE
+void __cheriseed_relocate(u64 init_start, u64 init_stop);
+
 // -------------------------------------
 // APIs used by the compiler
 // -------------------------------------
