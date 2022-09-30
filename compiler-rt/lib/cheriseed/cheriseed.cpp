@@ -462,7 +462,11 @@ __cheriseed_cap_t *__cheriseed_seal(__cheriseed_cap_t *cap_out,
 
 __cheriseed_cap_t *__cheriseed_seal_entry(__cheriseed_cap_t *cap_out,
                                           const __cheriseed_cap_t *cap_in) {
-  UNIMPLEMENTED();
+  // TODO: this is practically a copy for now.
+  const SnapshotOptions Opts;
+  LocalCap local_cap{Opts, AllowNullCap(cap_in)};
+  local_cap.Store(cap_out);
+  return cap_out;
 }
 
 u8 __cheriseed_sealed_get(const __cheriseed_cap_t *cap) {
