@@ -873,7 +873,7 @@ collectSanitizerRuntimes(const ToolChain &TC, const ArgList &Args,
     if (SanArgs.linkCXXRuntimes())
       StaticRuntimes.push_back("tsan_cxx");
   }
-  if (SanArgs.needsCHERIseedRt() && SanArgs.linkRuntimes())
+  if (!SanArgs.needsSharedRt() && SanArgs.needsCHERIseedRt() && SanArgs.linkRuntimes())
     StaticRuntimes.push_back("cheriseed");
   if (!SanArgs.needsSharedRt() && SanArgs.needsUbsanRt() && SanArgs.linkRuntimes()) {
     if (SanArgs.requiresMinimalRuntime()) {
