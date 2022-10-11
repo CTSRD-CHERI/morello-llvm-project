@@ -798,3 +798,10 @@ TEST(CheckAccess, BoundsInside) {
   utils::InitCap(&cap, &a);
   __cheriseed_check_access(&cap, sizeof(uint16_t), 0, 0);
 }
+
+TEST(SealedGet, NotSealed) {
+  uint16_t a;
+  __cheriseed_cap_t cap;
+  utils::InitCap(&cap, &a);
+  ASSERT_EQ(__cheriseed_sealed_get(&cap), 0);
+}

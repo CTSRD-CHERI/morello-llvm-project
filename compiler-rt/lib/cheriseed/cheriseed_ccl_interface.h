@@ -426,8 +426,11 @@ struct methods {
   /// \returns True if local_cap is a sealed, otherwise
   /// false.
   static inline bool IsSealed(const LocalCap &local_cap) {
-    return (external::cc128_cap_pesbt_extract_otype(local_cap.GetMetadata()) !=
-            external::CC128_OTYPE_UNSEALED);
+    external::cc128_cap_t decom;
+    external::cc128_decompress_mem(local_cap.GetMetadata(),
+                                   local_cap.GetValue(), local_cap.IsTagged(),
+                                   &decom);
+    return decom.is_sealed();
   }
 };  // struct methods
 
