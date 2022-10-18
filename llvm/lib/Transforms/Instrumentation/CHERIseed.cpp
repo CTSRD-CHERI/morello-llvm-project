@@ -235,6 +235,18 @@ static BasicBlock *FindMappedBasicBlock(Function *NF, BasicBlock *BB) {
   return &*NFII;
 }
 
+/// Sets attributes, calling convention, etc. for a new CallInst.
+///
+/// \param NewCI The new CallInst to further initialize.
+/// \param OldCI The old CallInst to copy details from.
+/// \param Attrs List of attributes to use for the new CallInst.
+static void InitializeCallInst(CallInst *NewCI, const CallInst &OldCI,
+                               const AttributeList &Attrs) {
+  // FIXME: Do we have to clone any other properties?
+  NewCI->setCallingConv(OldCI.getCallingConv());
+  NewCI->setAttributes(Attrs);
+}
+
 /// Returns true if \p Ty has a capability in it's layout, either direct or
 /// indirect, otherwise false. The return value is also true if there is a
 /// function involved.
@@ -1488,8 +1500,7 @@ Value *CHERIseed::visitCallInst(CallInst &I) {
     Callee = createCapAccessCheck(Callee, FTy->getPointerTo(), 1,
                                   __cheriseed::abi::Permissions::EXECUTE);
   CallInst *NV = VC.IRB->CreateCall(FTy, Callee, Ctx.Args);
-  NV->setAttributes(Ctx.Attrs);
-  // FIXME: clone other properties when we CreateCall? Elsewhere too.
+  InitializeCallInst(NV, I, Ctx.Attrs);
   DebugPrint::Emit(NV);
   return NV;
 }
@@ -1635,9 +1646,10 @@ Value *CHERIseed::visitIntrinsicInst(IntrinsicInst &I) {
     }
     // Handle @llvm.{frameaddress, returnaddress}.p200i8
     AllocaInst *AllocCap = createAlloca(CapTy);
-    Value *Intrinsic = VC.IRB->CreateCall(
+    CallInst *Intrinsic = VC.IRB->CreateCall(
         Intrinsic::getDeclaration(&M, I.getIntrinsicID(), Int8PtrTy),
         mapValue(I.getArgOperand(0)));
+    InitializeCallInst(Intrinsic, I, I.getAttributes());
     Value *Addr = VC.IRB->CreatePtrToInt(Intrinsic, AddrSizeTy);
     NI = createRtCall(RtKind::COPY_CAP_WITH_OFFSET, AllocCap,
                       ConstantPointerNull::get(CapPtrTy), Addr);
@@ -1879,7 +1891,7 @@ Value *CHERIseed::visitCallInlineAsm(CallInst &I) {
       NFTy, IA->getAsmString(), IA->getConstraintString(), IA->hasSideEffects(),
       IA->isAlignStack(), IA->getDialect());
   CallInst *NI = VC.IRB->CreateCall(NIA, Args);
-  // FIXME: clone other properties when we CreateCall? Elsewhere too.
+  InitializeCallInst(NI, I, I.getAttributes());
   return DebugPrint::Emit(NI);
 }
 

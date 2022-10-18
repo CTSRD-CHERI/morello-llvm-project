@@ -16,13 +16,13 @@ define void @handler() {
 
 ; CHECK-LABEL: define void @add_handler()
 define void @add_handler() {
-; CHECK-NEXT:  call void @register_handler(void ()* @handler)
-  call void @register_handler(void ()* @handler)
+; CHECK-NEXT:  call fastcc void @register_handler(void ()* @handler)
+  call fastcc void @register_handler(void ()* @handler)
   ret void
 }
 
-; CHECK-LABEL: declare void @register_handler(void ()*)
-declare void @register_handler(void ()*)
+; CHECK-LABEL: declare fastcc void @register_handler(void ()*)
+declare fastcc void @register_handler(void ()*)
 
 ; ------------------------------------------------------------------------------
 ; Declare later than usage.
