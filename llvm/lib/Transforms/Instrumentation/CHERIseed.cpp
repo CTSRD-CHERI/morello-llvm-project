@@ -2136,14 +2136,53 @@ void CHERIseed::visitDeferredPHINodes(Function &F) {
   // the end of the current BasicBlock. Have to save the insertion point and
   // restore it later.
   ContextInsertPointGuard _(VC);
+  SmallVector<Instruction *, 8> PHIHeadCopies;
   // Visit all PHINodes in all BasicBlocks.
-  // Save copies of returned capabilities to process once all the PHI nodes are
-  // visited. This is because a PHI node might use another PHI node's Value.
-  SmallVector<Instruction *, 8> PHICopies;
   for (BasicBlock &BB : F) {
+    // First, create "head" copies.
+    // The order in which PHI copies appear is crucial and it should
+    // always be in the order of the PHI nodes processed.
+    Instruction *PHIHeadCopyInsertionPt = nullptr;
     for (PHINode &I : BB.phis()) {
       auto _ = DebugPrint::ScopedValueVisit(I);
-      DebugPrint::Visitor("PHINode");
+      DebugPrint::Visitor("PHINode head copy");
+      PHINode *PHI = cast<PHINode>(VC.get(&I));
+      assert(PHI && "PHINode must have been mapped by now.");
+      // Non-capability types need no special handling.
+      if (!IsCapability(I.getType()))
+        continue;
+      // Check if this PHI node is used by any other PHI node. If it is used,
+      // it is required to make another "head" copy, which should be used in
+      // the "tail" copy.
+      for (const Use &U : I.uses()) {
+        if (PHINode *PHIUser = dyn_cast<PHINode>(U.getUser())) {
+          // The current PHI node does not matter.
+          if (PHIUser == &I)
+            continue;
+          // Create the "head" copy once.
+          Value *AllocaCap = createAlloca(CapTy);
+          VC.BB = PHI->getParent();
+          if (!PHIHeadCopyInsertionPt)
+            PHIHeadCopyInsertionPt = &*VC.BB->getFirstInsertionPt();
+          VC.IRB->SetInsertPoint(PHIHeadCopyInsertionPt);
+          Twine RtName =
+              Twine(PHI->hasName() ? PHI->getName() : "", ".head.cpy");
+          CallInst *HeadCopy =
+              createRtCall(RtKind::COPY_CAP_WITH_OFFSET, RtName, AllocaCap, PHI,
+                           ConstantInt::getNullValue(AddrSizeTy));
+          HeadCopy->addAttribute(AttributeList::FunctionIndex,
+                                 Attribute::HasSideEffects);
+          PHIHeadCopies.push_back(HeadCopy);
+          break;
+        }
+      }
+      // Print in a nice way in debug builds.
+      LLVM_DEBUG(VC.insert(&I, PHI));
+    }
+    // Second, create "tail" copies.
+    for (PHINode &I : BB.phis()) {
+      auto _ = DebugPrint::ScopedValueVisit(I);
+      DebugPrint::Visitor("PHINode tail copy");
       PHINode *PHI = cast<PHINode>(VC.get(&I));
       assert(PHI && "PHINode must have been mapped by now.");
       for (unsigned idx = 0, max_idx = I.getNumIncomingValues(); idx < max_idx;
@@ -2158,32 +2197,37 @@ void CHERIseed::visitDeferredPHINodes(Function &F) {
         // instructions at this point. The new instructions, if any, will get
         // emitted into VC.BB.
         Value *NIV = mapValue(I.getIncomingValue(idx));
+        // Non-capability types and null capabilities need no special handling.
+        if (!IsCapability(I.getType()) || isa<ConstantPointerNull>(NIV)) {
+          // Use the mapped BasicBlock for the incoming Value.
+          PHI->addIncoming(NIV, MIBB);
+          continue;
+        }
+        // However, if the PHINode returns a capability, the incoming value
+        // must be copied and the copy is to be used, otherwise the phi's output
+        // value might get corrupted because of possible pointer aliasing.
+        // This is referred to as "tail" copy here.
+        Value *AllocaCap = createAlloca(CapTy);
+        Twine RtName = Twine(PHI->hasName() ? PHI->getName() : "", ".tail.cpy");
+        CallInst *TailCopy =
+            createRtCall(RtKind::COPY_CAP_WITH_OFFSET, RtName, AllocaCap, NIV,
+                         ConstantInt::getNullValue(AddrSizeTy));
+        TailCopy->addAttribute(AttributeList::FunctionIndex,
+                               Attribute::HasSideEffects);
         // Use the mapped BasicBlock for the incoming Value.
-        PHI->addIncoming(NIV, MIBB);
+        PHI->addIncoming(TailCopy, MIBB);
       }
       // Print in a nice way in debug builds.
       LLVM_DEBUG(VC.insert(&I, PHI));
-      // If the PHINode returns a capability, it must be copied and the
-      // copy is to be used onwards, otherwise the phi's output value might
-      // get corrupted because of possible aliasing.
-      if (!IsCapability(I.getType()))
-        continue;
-      Value *AllocaCap = createAlloca(CapTy);
-      VC.BB = PHI->getParent();
-      VC.IRB->SetInsertPoint(&*VC.BB->getFirstInsertionPt());
-      Twine RtName = Twine(PHI->hasName() ? PHI->getName() : "", ".cpy");
-      Instruction *PHICopy =
-          createRtCall(RtKind::COPY_CAP_WITH_OFFSET, RtName, AllocaCap, PHI,
-                       ConstantInt::getNullValue(AddrSizeTy));
-      PHICopies.push_back(PHICopy);
     }
   }
 
-  // Finally, replace values of PHI nodes with their copies.
-  for (Instruction *PHICopy : PHICopies) {
-    Value *OriginalPHI = PHICopy->getOperand(1);
-    OriginalPHI->replaceUsesWithIf(
-        PHICopy, [&](Use &U) -> bool { return (U.getUser() != PHICopy); });
+  // Finally, replace values of PHI nodes with their head copies, if any.
+  for (Instruction *PHIHeadCopy : PHIHeadCopies) {
+    Value *OriginalPHI = PHIHeadCopy->getOperand(1);
+    OriginalPHI->replaceUsesWithIf(PHIHeadCopy, [&](Use &U) -> bool {
+      return (U.getUser() != PHIHeadCopy);
+    });
   }
 }
 

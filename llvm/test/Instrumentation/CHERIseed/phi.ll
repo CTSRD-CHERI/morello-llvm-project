@@ -95,6 +95,7 @@ entry:
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %0 = alloca %__cheriseed_cap_t, align 16
 ; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
+; CHECK-NEXT:  %2 = alloca %__cheriseed_cap_t, align 16
 ; CHECK-NEXT:  %cmp3 = icmp sgt i32 %n, 0
   %cmp3 = icmp sgt i32 %n, 0
 ; CHECK-NEXT:  br i1 %cmp3, label %entry.while.body_crit_edge, label %entry.while.end_crit_edge
@@ -106,19 +107,21 @@ entry:
 
 ; CHECK-LABEL: entry.while.body_crit_edge:
 ; CHECK-SAME:  ; preds = %entry
+; CHECK-NEXT:    %v.addr.05.tail.cpy1 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-SAME:      %__cheriseed_cap_t* %2, %__cheriseed_cap_t* %v, i64 0)
 ; CHECK-NEXT:    br label %while.body
 
 ; CHECK-LABEL: while.body:
 ; CHECK-SAME:  ; preds = %while.body.while.body_crit_edge, %entry.while.body_crit_edge
 while.body:
-; CHECK-NEXT:  %v.addr.05 = phi %__cheriseed_cap_t* [ %incdec.ptr, %while.body.while.body_crit_edge ], [ %v, %entry.while.body_crit_edge ]
-; CHECK-NEXT:  %v.addr.05.cpy = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %1, %__cheriseed_cap_t* %v.addr.05, i64 0)
+; CHECK-NEXT:    %v.addr.05 = phi %__cheriseed_cap_t* [ %v.addr.05.tail.cpy, %while.body.while.body_crit_edge ], [ %v.addr.05.tail.cpy1, %entry.while.body_crit_edge ]
   %v.addr.05 = phi i32 addrspace(200)* [ %incdec.ptr, %while.body ], [ %v, %entry ]
-; CHECK-NEXT:  %incdec.ptr = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %0, %__cheriseed_cap_t* %v.addr.05.cpy, i64 4)
+; CHECK-NEXT:    %incdec.ptr = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-SAME:      %__cheriseed_cap_t* %0, %__cheriseed_cap_t* %v.addr.05, i64 4)
   %incdec.ptr = getelementptr inbounds i32, i32 addrspace(200)* %v.addr.05, i64 1
-; CHECK-NEXT:  %cmp = icmp sgt i32 %n, 1
+; CHECK-NEXT:    %cmp = icmp sgt i32 %n, 1
   %cmp = icmp sgt i32 %n, 1
-; CHECK-NEXT:  br i1 %cmp, label %while.body.while.body_crit_edge, label %while.body.while.end_crit_edge
+; CHECK-NEXT:    br i1 %cmp, label %while.body.while.body_crit_edge, label %while.body.while.end_crit_edge
   br i1 %cmp, label %while.body, label %while.end
 
 ; CHECK-LABEL: while.body.while.end_crit_edge:
@@ -127,6 +130,8 @@ while.body:
 
 ; CHECK-LABEL: while.body.while.body_crit_edge:
 ; CHECK-SAME:  ; preds = %while.body
+; CHECK-NEXT:    %v.addr.05.tail.cpy = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-SAME:      %__cheriseed_cap_t* %1, %__cheriseed_cap_t* %incdec.ptr, i64 0)
 ; CHECK-NEXT:    br label %while.body
 
 ; CHECK-LABEL: while.end:
@@ -145,9 +150,10 @@ entry:
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %0 = alloca %__cheriseed_cap_t, align 16
 ; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
-; CHECK-NEXT:  %2 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %b)
-; CHECK-NEXT:  %3 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %a)
-; CHECK-NEXT:  %cmp3 = icmp ugt i64 %2, %3
+; CHECK-NEXT:  %2 = alloca %__cheriseed_cap_t, align 16
+; CHECK-NEXT:  %3 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %b)
+; CHECK-NEXT:  %4 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %a)
+; CHECK-NEXT:  %cmp3 = icmp ugt i64 %3, %4
   %cmp3 = icmp ugt i32 addrspace(200)* %b, %a
 ; CHECK-NEXT:  br i1 %cmp3, label %while.body.lr.ph, label %entry.while.end_crit_edge
   br i1 %cmp3, label %while.body.lr.ph, label %while.end
@@ -159,21 +165,24 @@ entry:
 ; CHECK-LABEL: while.body.lr.ph:
 ; CHECK-SAME:  ; preds = %entry
 while.body.lr.ph:
-; CHECK-NEXT:  br label %while.body
+; CHECK-NEXT:    %b.addr.tail.cpy = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-SAME:      %__cheriseed_cap_t* %1, %__cheriseed_cap_t* %b, i64 0)
+; CHECK-NEXT:    br label %while.body
   br label %while.body
+
 ; CHECK-LABEL: while.body:
 ; CHECK-SAME:  ; preds = %while.body.while.body_crit_edge, %while.body.lr.ph
 while.body:
-; CHECK-NEXT:  %b.addr = phi %__cheriseed_cap_t* [ %b, %while.body.lr.ph ], [ %incdec.ptr, %while.body.while.body_crit_edge ]
-; CHECK-NEXT:  %b.addr.cpy = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %1, %__cheriseed_cap_t* %b.addr, i64 0)
+; CHECK-NEXT:    %b.addr = phi %__cheriseed_cap_t* [ %b.addr.tail.cpy, %while.body.lr.ph ], [ %b.addr.tail.cpy1, %while.body.while.body_crit_edge ]
   %b.addr = phi i32 addrspace(200)* [ %b, %while.body.lr.ph ], [ %incdec.ptr, %while.body ]
-; CHECK-NEXT:  %incdec.ptr = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %0, %__cheriseed_cap_t* %b.addr.cpy, i64 -4)
+; CHECK-NEXT:    %incdec.ptr = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-SAME:      %__cheriseed_cap_t* %0, %__cheriseed_cap_t* %b.addr, i64 -4)
   %incdec.ptr = getelementptr inbounds i32, i32 addrspace(200)* %b.addr, i64 -1
-; CHECK-NEXT:  %4 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %incdec.ptr)
-; CHECK-NEXT:  %5 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %a)
-; CHECK-NEXT:  %cmp = icmp ugt i64 %4, %5
+; CHECK-NEXT:    %5 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %incdec.ptr)
+; CHECK-NEXT:    %6 = call i64 @__cheriseed_address_get(%__cheriseed_cap_t* %a)
+; CHECK-NEXT:    %cmp = icmp ugt i64 %5, %6
   %cmp = icmp ugt i32 addrspace(200)* %incdec.ptr, %a
-; CHECK-NEXT:  br i1 %cmp, label %while.body.while.body_crit_edge, label %while.body.while.end_crit_edge
+; CHECK-NEXT:    br i1 %cmp, label %while.body.while.body_crit_edge, label %while.body.while.end_crit_edge
   br i1 %cmp, label %while.body, label %while.end
 
 ; CHECK-LABEL: while.body.while.end_crit_edge:
@@ -182,6 +191,8 @@ while.body:
 
 ; CHECK-LABEL: while.body.while.body_crit_edge:
 ; CHECK-SAME:  ; preds = %while.body
+; CHECK-NEXT:    %b.addr.tail.cpy1 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-SAME:      %__cheriseed_cap_t* %2, %__cheriseed_cap_t* %incdec.ptr, i64 0)
 ; CHECK-NEXT:    br label %while.body
 
 ; CHECK-LABEL: while.end:
@@ -320,24 +331,31 @@ define void @store_regression(i1 %bool, i8 addrspace(200)* %a , i8 addrspace(200
 entry:
 ; CHECK-NEXT:  %"CHERIseed Alloca Insertion Point"
 ; CHECK-NEXT:  %0 = alloca %__cheriseed_cap_t, align 16
+; CHECK-NEXT:  %1 = alloca %__cheriseed_cap_t, align 16
 ; CHECK-NEXT:  br i1 %bool, label %l1, label %entry.l2_crit_edge
   br i1 %bool, label %l1, label %l2
 
+; CHECK-LABEL: entry.l2_crit_edge:
+; CHECK-NEXT:    %phi.tail.cpy = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-SAME:      %__cheriseed_cap_t* %0, %__cheriseed_cap_t* %a, i64 0)
+; CHECK-NEXT:  br label %l2
+
 ; CHECK-LABEL: l1:
 l1:
+; CHECK-NEXT:  %phi.tail.cpy1 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-SAME:    %__cheriseed_cap_t* %1, %__cheriseed_cap_t* %b, i64 0)
 ; CHECK-NEXT:  br label %l2
   br label %l2
 
 ; CHECK-LABEL: l2:
 l2:
-; CHECK-NEXT:  %phi = phi %__cheriseed_cap_t* [ %a, %entry.l2_crit_edge ], [ %b, %l1 ]
-; CHECK-NEXT:  %phi.cpy = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(%__cheriseed_cap_t* %0, %__cheriseed_cap_t* %phi, i64 0)
+; CHECK-NEXT:  %phi = phi %__cheriseed_cap_t* [ %phi.tail.cpy, %entry.l2_crit_edge ], [ %phi.tail.cpy1, %l1 ]
   %phi = phi i8 addrspace(200)* [ %a, %entry ], [ %b, %l1 ]
 ; This was faulty.
-; CHECK-NEXT:  %1 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %phi.cpy, i64 1, i32 8, i64 0)
-; CHECK-NEXT:  %2 = inttoptr i64 %1 to i8*
-; CHECK-NEXT:  store i8 42, i8* %2
-; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %1, i64 1)
+; CHECK-NEXT:  %2 = call i64 @__cheriseed_check_access(%__cheriseed_cap_t* %phi, i64 1, i32 8, i64 0)
+; CHECK-NEXT:  %3 = inttoptr i64 %2 to i8*
+; CHECK-NEXT:  store i8 42, i8* %3
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 %2, i64 1)
   store i8 42, i8 addrspace(200)* %phi
 ; CHECK-NEXT:  br label %end
   br label %end
@@ -363,7 +381,6 @@ l1:
 ; CHECK-LABEL: l2:
 l2:
 ; CHECK-NEXT:  %phi = phi %__cheriseed_cap_t* [ null, %entry.l2_crit_edge ], [ null, %l1 ]
-; CHECK-NEXT:  %phi.cpy
   %phi = phi i8 addrspace(200)* [ undef, %entry ], [ undef, %l1 ]
 ; CHECK-NEXT:  br label %end
   br label %end
@@ -371,6 +388,45 @@ l2:
 ; CHECK-LABEL: end:
 end:
 ; CHECK-NEXT:  ret void
+  ret void
+}
+
+; ------------------------------------------------------------------------------
+; Regression test for the order of PHI copies.
+; The order of the emitted '__cheriseed_copy_cap_with_offset' should match the
+; order of the PHI nodes apeparing in the IR
+
+; CHECK-LABEL: @phi_copy_order
+define void @phi_copy_order(i1 %bool, i8 addrspace(200)* %a , i8 addrspace(200)* %b) {
+entry:
+  br i1 %bool, label %l1, label %l2
+
+; CHECK-LABEL: entry.l2_crit_edge:
+; The order of copies was reversed.
+; CHECK-NEXT: %phi1.tail.cpy = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-SAME:   %__cheriseed_cap_t* %0, %__cheriseed_cap_t* %a, i64 0)
+; CHECK-NEXT: %phi2.tail.cpy = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-SAME:   %__cheriseed_cap_t* %2, %__cheriseed_cap_t* %a, i64 0)
+
+; CHECK-LABEL: l1:
+l1:
+; The order of copies was reversed.
+; CHECK-NEXT: %phi1.tail.cpy1 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-SAME:   %__cheriseed_cap_t* %1, %__cheriseed_cap_t* %b, i64 0)
+; CHECK-NEXT: %phi2.tail.cpy2 = call %__cheriseed_cap_t* @__cheriseed_copy_cap_with_offset(
+; CHECK-SAME:   %__cheriseed_cap_t* %3, %__cheriseed_cap_t* %b, i64 0)
+  br label %l2
+
+; CHECK-LABEL: l2:
+l2:
+; CHECK-NEXT: %phi1 = phi %__cheriseed_cap_t* [ %phi1.tail.cpy, %entry.l2_crit_edge ], [ %phi1.tail.cpy1, %l1 ]
+; CHECK-NEXT: %phi2 = phi %__cheriseed_cap_t* [ %phi2.tail.cpy, %entry.l2_crit_edge ], [ %phi2.tail.cpy2, %l1 ]
+  %phi1 = phi i8 addrspace(200)* [ %a, %entry ], [ %b, %l1 ]
+  %phi2 = phi i8 addrspace(200)* [ %a, %entry ], [ %b, %l1 ]
+; CHECK-NEXT:  br label %end
+  br label %end
+
+end:
   ret void
 }
 
