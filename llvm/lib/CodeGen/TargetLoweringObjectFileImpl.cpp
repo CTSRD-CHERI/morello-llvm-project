@@ -182,7 +182,11 @@ void TargetLoweringObjectFileELF::Initialize(MCContext &Ctx,
     // The small model guarantees static code/data size < 4GB, but not where it
     // will be in memory. Most of these could end up >2GB away so even a signed
     // pc-relative 32-bit address is insufficient, theoretically.
-    if (isPositionIndependent()) {
+    // For CHERI pure-capability targets we always have to use PC-relative
+    // addresses since we could otherwise end up emitting a DW_EH_PE_absptr
+    // that is misaligned (and DW_EH_PE_absptr doesn't avoid run-time relocation
+    // for static binaries, so we might as well use pc-relative values).
+    if (isPositionIndependent() || Ctx.getAsmInfo()->isCheriPurecapABI()) {
       // ILP32 uses sdata4 instead of sdata8
       if (TgtM.getTargetTriple().getEnvironment() == Triple::GNUILP32) {
         PersonalityEncoding = dwarf::DW_EH_PE_indirect | dwarf::DW_EH_PE_pcrel |

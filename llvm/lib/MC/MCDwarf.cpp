@@ -1223,6 +1223,9 @@ static unsigned getSizeForEncoding(MCStreamer &streamer,
   default: llvm_unreachable("Unknown Encoding");
   case dwarf::DW_EH_PE_absptr:
   case dwarf::DW_EH_PE_signed:
+    // These encodings should be errors for CHERI targets.
+    assert(!context.getAsmInfo()->isCheriPurecapABI());
+    assert(context.getAsmInfo()->getCodePointerSize() <= 8);
     return context.getAsmInfo()->getCodePointerSize();
   case dwarf::DW_EH_PE_udata2:
   case dwarf::DW_EH_PE_sdata2:
@@ -1505,6 +1508,8 @@ void FrameEmitterImpl::EmitCompactUnwind(const MCDwarfFrameInfo &Frame) {
   Streamer.emitIntValue(Encoding, Size);
 
   // Personality Function
+  // NB: this cannot be used for CHERI!
+  assert(!Context.getAsmInfo()->isCheriPurecapABI());
   Size = getSizeForEncoding(Streamer, dwarf::DW_EH_PE_absptr);
   if (!DwarfEHFrameOnly && Frame.Personality)
     Streamer.emitSymbolValue(Frame.Personality, Size);
