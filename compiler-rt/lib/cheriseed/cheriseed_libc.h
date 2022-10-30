@@ -47,7 +47,6 @@ static constexpr int NSIG = 65;
 
 // Some signal numbers [Linux specific]
 enum SignalNumber : int {
-  SN_NONE = 0,
   SN_SIGBUS = 7,
   SN_SIGSEGV = 11,
 };  // enum SignalNumber

@@ -63,8 +63,7 @@ static constexpr __uint128_t UINT128_MIN = (__uint128_t)0;
   "Tag address was at .*?0x[0-9a-f]+.*?"
 
 #define ERROR_MESSAGE_DETAIL_PATTERN                   \
-  "tid: .*?[0-9]+.*?\n"                                \
-  "pc:  .*?0x[0-9a-f]+.*?\n"
+  "tid: .*?[0-9]+.*?\n"
 
 #define CHECK_ADDRESS_ERROR_MESSAGE_PATTERN                       \
   ERROR_MESSAGE_HEADER_PATTERN                                    \

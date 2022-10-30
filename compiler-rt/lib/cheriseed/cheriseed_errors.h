@@ -15,17 +15,15 @@
 #ifndef CHERISEED_ERRORS_H
 #define CHERISEED_ERRORS_H
 
-#include "cheriseed_ccl_interface.h"
 #include "cheriseed_libc.h"
-#include "cheriseed_shadow_memory.h"
 #include "sanitizer_common/sanitizer_common.h"
 
 namespace __cheriseed {
 namespace error {
 
-// Decorator to create brightly colored reports.
+/// Decorator to create brightly colored reports.
 struct Decorator final {
-  explicit Decorator() : colorize(__sanitizer::ColorizeReports()) {}
+  Decorator() : colorize(__sanitizer::ColorizeReports()) {}
 
   const char* Reset() const { return colorize ? "\033[0m" : ""; }
   const char* Red() const { return colorize ? "\033[31m" : ""; }
@@ -34,290 +32,282 @@ struct Decorator final {
   const char* Magenta() const { return colorize ? "\033[35m" : ""; }
   const char* Cyan() const { return colorize ? "\033[36m" : ""; }
 
+ private:
   const bool colorize;
 };  // struct Decorator
 
-// Helper class to build messages in a nicely formatted fashion.
-struct MessageBuilder final {
-  explicit MessageBuilder() {}
-
+/// Helper class to build messages in a nicely formatted fashion.
+struct MessageBuilder final : public DisableCopyAndMoveMixin {
   struct Error final {
-    Error(const char* msg) : msg(msg) {}
+    explicit Error(const char* msg) : msg(msg) {}
     const char* msg;
-  };
+  };  // struct Error
 
   struct Info final {
-    Info(const char* msg) : msg(msg) {}
+    explicit Info(const char* msg) : msg(msg) {}
     const char* msg;
-  };
+  };  // struct Info
 
   struct Permission final {
-    Permission(u64 perm, bool explain) : perm(perm), explain(explain) {}
-    const char* LongName() const;
+    explicit Permission(u64 perm, bool explain)
+        : perm(perm), explain(explain) {}
     const char* ShortName() const;
+    const char* LongName() const;
     const u64 perm;
     const bool explain;
-  };
+  };  // struct Permission
 
   struct Attribute final {
-    Attribute(const char* msg) : msg(msg) {}
+    explicit Attribute(const char* msg) : msg(msg) {}
     const char* msg;
-  };
+  };  // struct Attribute
 
   struct Hex final {
-    Hex(u64 value) : value(value) {}
+    explicit Hex(u64 value) : value(value) {}
     u64 value;
-  };
+  };  // struct Hex
 
   MessageBuilder& operator<<(const MessageBuilder& other);
   MessageBuilder& operator<<(const char* str);
   MessageBuilder& operator<<(const vaddr addr);
   MessageBuilder& operator<<(const u64 value);
   MessageBuilder& operator<<(const MemoryRange& range);
+  MessageBuilder& operator<<(const Hex value);
   MessageBuilder& operator<<(const Error error);
   MessageBuilder& operator<<(const Info info);
   MessageBuilder& operator<<(const Permission perm);
   MessageBuilder& operator<<(const Attribute attr);
-  MessageBuilder& operator<<(const Hex value);
-  MessageBuilder& operator<<(const ShadowMemory& helper);
+  MessageBuilder& operator<<(const ShadowMemory& shadow_memory);
 
   void WriteToStderr();
 
+ private:
   Decorator D;
   __sanitizer::InternalScopedString message;
-};
+};  // struct MessageBuilder
 
-// Helper to perform various property checks.
-struct CheckContext {
-  explicit CheckContext(const LocalCap& local_cap) : local_cap(local_cap) {}
+// It is not possible to have virtual destructors because those require
+// 'operator delete(void*)', which this library should not define.
+// In pratice, virtual destructors are only necessary if deletion is made
+// through a base class, and there are resources which should be properly
+// released. This is not the case in this library.
 
-  template <typename P>
-  ALWAYS_INLINE CheckContext& add(P&& property) {
-    if (LIKELY(property.DoCheck(*this)))
-      return *this;
-    pc = GET_CALLER_PC();
-    BeginTerminate(property);
-    return *this;
-  }
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnon-virtual-dtor"
 
-  // Returns the address of the capability itself.
-  vaddr CapabilityAddress() const { return local_cap.GetAddress(); }
+// This is the base class for all formatted messages.
+// Cannot use abstract base class because that would require
+// '__cxa_pure_virtual'.
+struct IMessageBuilder {
+  virtual void Compose(MessageBuilder& message) const final;
 
-  // Methods to retrieve fields of the capability.
-  vaddr Value() const { return local_cap.GetValue(); }
-  vaddr Metadata() const { return local_cap.GetMetadata(); }
-  bool IsTagged() const { return local_cap.IsTagged(); }
-  vaddr Base() const { return ccl::methods::GetBase(local_cap); }
-  vaddr Top() const { return ccl::methods::GetTop(local_cap); }
-  u64 Perms() const { return ccl::methods::GetPerms(local_cap); }
-
-  void PrintCapability(MessageBuilder& builder) const;
-  void PrintTagAddress(MessageBuilder& builder) const;
-
-  const Options& GetOpts() const { return local_cap.GetOpts(); }
+  virtual void Separator(MessageBuilder& message) const;
+  virtual void Header(MessageBuilder& message) const {}
+  virtual void Message(MessageBuilder& message) const { __sanitizer::Trap(); }
+  virtual void Footer(MessageBuilder& message) const {}
 
  protected:
-  template <typename P>
-  NOINLINE void BeginTerminate(P& property) {
-    // Make sure that recursive aborts are not allowed.
-    if (UNLIKELY(atomic_fetch_add(&Globals::IsTerminating, 1,
-                                  memory_order::memory_order_relaxed) > 0))
-      __sanitizer::Trap();
-    // Fully initialize the checker's context.
-    Initialize();
-    // Get reason for failure.
-    MessageBuilder reason;
-    property.ReportError(*this, reason);
-    // Try to terminate.
-    Terminate(reason, P::SignalNumber(), P::Code());
-    // Not aborting in the end.
-    atomic_fetch_sub(&Globals::IsTerminating, 1,
-                     memory_order::memory_order_relaxed);
-  }
+  constexpr IMessageBuilder() {}
+};  // struct IMessageBuilder
 
-  void Initialize();
-  NOINLINE void Terminate(MessageBuilder& builder, libc::SignalNumber signo,
-                          abi::SignalCode code) const;
+struct ErrorMessageBuilder : public IMessageBuilder {
+ protected:
+  constexpr ErrorMessageBuilder() {}
 
-  const LocalCap& local_cap;
-  vaddr pc;
-  u64 tid;
-};  // struct CheckContext
+ private:
+  void Separator(MessageBuilder& message) const override;
+  void Header(MessageBuilder& message) const override final;
+  void Footer(MessageBuilder& message) const override;
+};  // struct ErrorMessageBuilder
 
-// Note: not using base class and virtual functions here because those are
-// not de-virtualized, even with -O3. This code is less elegant but the
-// resulting code size is significantly smaller and avoids calls through
-// vtables. It also does not depend on __cxa_pure_virtual, which would
-// otherwise be necessary with virtual destructors.
+struct InfoMessageBuilder : public IMessageBuilder {
+ protected:
+  constexpr InfoMessageBuilder() {}
 
-// Checks that the pointer to a capability has a valid address.
-struct CapabilityAddress final {
-  ALWAYS_INLINE
-  bool DoCheck(const CheckContext& ctx) const {
-    const vaddr cap_addr = ctx.CapabilityAddress();
-    bool failed = (cap_addr == 0);
-#if defined(__aarch64__)
-    failed |= (cap_addr & (static_cast<vaddr>(1) << 55)) != 0;
-#endif
-#if defined(SANITIZER_LINUX)
-    // Check for address on the first page, which is never accessible.
-    failed |= cap_addr < Globals::SystemPageSize;
-#endif
-    return !failed;
-  }
+ private:
+  void Separator(MessageBuilder& message) const override;
+  void Header(MessageBuilder& message) const override final;
+  void Footer(MessageBuilder& message) const override;
+};  // struct InfoMessageBuilder
 
-  void ReportError(const CheckContext& ctx, MessageBuilder& builder) const;
+#pragma clang diagnostic pop
 
-  static constexpr abi::SignalCode Code() {
-    return abi::SignalCode::SC_SEGV_MAPERR;
-  }
+/// Reports that something is not implemented.
+struct NotImplementedMessageBuilder final : public ErrorMessageBuilder {
+  explicit constexpr NotImplementedMessageBuilder(const char* msg) : msg(msg) {}
 
-  static constexpr libc::SignalNumber SignalNumber() {
-    return libc::SignalNumber::SN_SIGSEGV;
-  }
-};  // struct CapabilityAddress
-
-// Checks that a capability is sufficiently aligned.
-struct CapabilityAlignment final {
-  ALWAYS_INLINE
-  bool DoCheck(const CheckContext& ctx) const {
-    if (!ctx.GetOpts().shouldCheckAlignment())
-      return true;
-    return (ctx.CapabilityAddress() % abi::kCapabilityMinAlignment) == 0;
-  }
-
-  void ReportError(const CheckContext& ctx, MessageBuilder& builder) const;
-
-  static constexpr abi::SignalCode Code() {
-    return abi::SignalCode::SC_BUS_ADRALN;
-  }
-
-  static constexpr libc::SignalNumber SignalNumber() {
-    return libc::SignalNumber::SN_SIGBUS;
-  }
-};  // struct CapabilityAlignment
-
-// Reports that something is not implemented.
-struct NotImplemented final {
-  explicit NotImplemented(const char* msg) : msg(msg) {}
-  bool DoCheck(const CheckContext& ctx) const { return false; }
-  void ReportError(const CheckContext& ctx, MessageBuilder& builder) const;
-
-  static constexpr abi::SignalCode Code() {
-    return abi::SignalCode::SC_PROT_NOT_IMPLEMENTED;
-  }
-
-  static constexpr libc::SignalNumber SignalNumber() {
-    return libc::SignalNumber::SN_NONE;
-  }
+ private:
+  void Message(MessageBuilder& message) const override;
 
   const char* msg;
-};  // struct NotImplemented
+};  // struct NotImplementedMessageBuilder
 
-// Checks that an access of a given size would not exceed the bounds of the
-// capability
-struct InBounds final {
-  explicit InBounds(u64 size) : size(size) {}
+/// Reports that an error is ignored.
+struct IgnoredMessageBuilder final : public IMessageBuilder {
+ private:
+  void Separator(MessageBuilder& message) const override;
+  void Header(MessageBuilder& message) const override;
+  void Message(MessageBuilder& message) const override;
+  void Footer(MessageBuilder& message) const override;
+};  // struct IgnoredMessageBuilder
 
-  ALWAYS_INLINE
-  bool DoCheck(const CheckContext& ctx) const {
-    if (!ctx.GetOpts().shouldCheckBounds())
-      return true;
-    // Top (base + length) is not inclusive in acceptable range of a capability.
-    // Since size is taken as-is base <= cursor <= top is correct.
-    return (ctx.Base() <= ctx.Value()) && ((ctx.Value() + size) <= ctx.Top());
-  }
-
-  void ReportError(const CheckContext& ctx, MessageBuilder& builder) const;
-
-  static constexpr abi::SignalCode Code() {
-    return abi::SignalCode::SC_SEGV_CAPBOUNDSERR;
-  }
-
-  static constexpr libc::SignalNumber SignalNumber() {
-    return libc::SignalNumber::SN_SIGSEGV;
-  }
-
-  const __sanitizer::u64 size;
-};  // struct InBounds
-
-// Checks that a capability has all required permissions to perform an action
-// which requires at least 'perms'.
-struct RequiredPerms final {
-  explicit RequiredPerms(u64 perms) : perms(perms) {}
-
-  ALWAYS_INLINE
-  bool DoCheck(const CheckContext& ctx) {
-    const u64 mask = ctx.GetOpts().getCheckedPerms();
-    return ((ctx.Perms() & perms & mask) == (perms & mask));
-  }
-
-  void ReportError(const CheckContext& ctx, MessageBuilder& builder) const;
-
-  static constexpr abi::SignalCode Code() {
-    return abi::SignalCode::SC_SEGV_CAPPERMERR;
-  }
-
-  static constexpr libc::SignalNumber SignalNumber() {
-    return libc::SignalNumber::SN_SIGSEGV;
-  }
-
-  const u64 perms;
-};  // struct RequiredPerms
-
-// Checks that a capability is tagged.
-struct Tagged final {
-  ALWAYS_INLINE
-  bool DoCheck(const CheckContext& ctx) {
-    if (!ctx.GetOpts().shouldCheckTag())
-      return true;
-    return ctx.IsTagged();
-  }
-
-  void ReportError(const CheckContext& ctx, MessageBuilder& builder);
-
-  static constexpr abi::SignalCode Code() {
-    return abi::SignalCode::SC_SEGV_CAPTAGERR;
-  }
-
-  static constexpr libc::SignalNumber SignalNumber() {
-    return libc::SignalNumber::SN_SIGSEGV;
-  }
-};  // struct Tagged
-
-// Reports a malformed CHERISEED_CHECKS environment variable.
-struct DynamicControlError final {
-  explicit DynamicControlError(const char* const start,
-                               const char* const cursor)
+/// Reports a malformed CHERISEED_CHECKS environment variable.
+struct DynamicControlMessageBuilder final : public ErrorMessageBuilder {
+  explicit constexpr DynamicControlMessageBuilder(const char* const start,
+                                                  const char* const cursor)
       : start(start), cursor(cursor) {}
-  bool DoCheck(const CheckContext& ctx) const { return false; }
-  void ReportError(const CheckContext& ctx, MessageBuilder& builder) const;
 
-  static constexpr abi::SignalCode Code() {
-    return abi::SignalCode::SC_PROT_NOT_IMPLEMENTED;
-  }
-
-  static constexpr libc::SignalNumber SignalNumber() {
-    return libc::SignalNumber::SN_NONE;
-  }
+ private:
+  void Message(MessageBuilder& message) const override;
+  void Footer(MessageBuilder& message) const override;
 
   const char* start;
   const char* cursor;
-};  // struct DynamicControlError
+};  // struct DynamicControlMessageBuilder
 
-// Prints 'DynamicControl' help as info message.
-struct DynamicControlHelpInfo final {
-  bool DoCheck(const CheckContext& ctx) const { return false; }
-  void ReportError(const CheckContext& ctx, MessageBuilder& builder) const;
+/// Prints help for CHERISEED_CHECKS environment variable as info message.
+struct DynamicControlHelpMessageBuilder final : public InfoMessageBuilder {
+ private:
+  void Message(MessageBuilder& message) const override;
+};  // struct DynamicControlHelpMessageBuilder
 
-  static constexpr abi::SignalCode Code() {
-    return abi::SignalCode::SC_INFO_MESSAGE;
-  }
+/// Helper template for capability violations.
+template <typename T, const libc::SignalNumber SIGNO,
+          const abi::SignalCode CODE>
+struct CapabilityViolation {
+  T& GetBuilder() { return builder; }
+  bool ShouldInvokeSignalHandler() const { return invoke_signal_handler; }
 
-  static constexpr libc::SignalNumber SignalNumber() {
-    return libc::SignalNumber::SN_NONE;
-  }
-};  // struct PrettyPrintHelp
+  static constexpr libc::SignalNumber Signo{SIGNO};
+  static constexpr abi::SignalCode Code{CODE};
+
+ protected:
+  template <typename... ParamTy>
+  CapabilityViolation(const LocalCap& local_cap, ParamTy&&... params)
+      : builder(local_cap, params...),
+        invoke_signal_handler(
+            local_cap.GetOpts().shouldInvokeSignalHandlers()) {}
+
+ private:
+  T builder;
+  const bool invoke_signal_handler;
+};  // struct CapabilityViolation
+
+/// Reports that a pointer to a capability is likely invalid.
+struct AddressErrorMessageBuilder final : public ErrorMessageBuilder {
+  explicit constexpr AddressErrorMessageBuilder(const LocalCap& local_cap)
+      : local_cap(local_cap) {}
+
+ private:
+  void Message(MessageBuilder& message) const override;
+
+  const LocalCap& local_cap;
+};  // struct AddressErrorMessageBuilder
+
+struct AddressError final
+    : public CapabilityViolation<AddressErrorMessageBuilder,
+                                 libc::SignalNumber::SN_SIGSEGV,
+                                 abi::SignalCode::SC_SEGV_MAPERR> {
+  explicit AddressError(const LocalCap& local_cap)
+      : CapabilityViolation(local_cap) {}
+};  // struct AddressError
+
+/// Reports that a pointer to a capability is unaligned.
+struct AlignmentErrorMessageBuilder final : public ErrorMessageBuilder {
+  explicit AlignmentErrorMessageBuilder(const LocalCap& local_cap)
+      : local_cap(local_cap) {}
+
+ private:
+  void Message(MessageBuilder& message) const override;
+
+  const LocalCap& local_cap;
+};  // struct AlignmentErrorMessageBuilder
+
+struct AlignmentError final
+    : public CapabilityViolation<AlignmentErrorMessageBuilder,
+                                 libc::SignalNumber::SN_SIGBUS,
+                                 abi::SignalCode::SC_BUS_ADRALN> {
+  explicit AlignmentError(const LocalCap& local_cap)
+      : CapabilityViolation(local_cap) {}
+};  // struct AlignmentError
+
+/// Reports that a capability is untagged.
+struct NotTaggedErrorMessageBuilder final : public ErrorMessageBuilder {
+  explicit NotTaggedErrorMessageBuilder(const LocalCap& local_cap)
+      : local_cap(local_cap) {}
+
+ private:
+  void Message(MessageBuilder& message) const override;
+
+  const LocalCap& local_cap;
+};  // struct NotTaggedErrorMessageBuilder
+
+struct NotTaggedError final
+    : public CapabilityViolation<NotTaggedErrorMessageBuilder,
+                                 libc::SignalNumber::SN_SIGSEGV,
+                                 abi::SignalCode::SC_SEGV_CAPTAGERR> {
+  explicit NotTaggedError(const LocalCap& local_cap)
+      : CapabilityViolation(local_cap) {}
+};  // struct NotTaggedError
+
+/// Reports that a capability is missing permissions for the required operation.
+struct PermissionErrorMessageBuilder final : public ErrorMessageBuilder {
+  explicit PermissionErrorMessageBuilder(const LocalCap& local_cap,
+                                         u64 requested_permissions)
+      : local_cap(local_cap), requested_permissions(requested_permissions) {}
+
+ private:
+  void Message(MessageBuilder& message) const override;
+
+  const LocalCap& local_cap;
+  const u64 requested_permissions;
+};  // struct PermissionErrorMessageBuilder
+
+struct PermissionError final
+    : public CapabilityViolation<PermissionErrorMessageBuilder,
+                                 libc::SignalNumber::SN_SIGSEGV,
+                                 abi::SignalCode::SC_SEGV_CAPPERMERR> {
+  explicit PermissionError(const LocalCap& local_cap, u64 requested_permissions)
+      : CapabilityViolation(local_cap, requested_permissions) {}
+};  // struct PermissionError
+
+/// Reports that an access exceeds the bounds of a capability.
+struct OutOfBoundsAccessErrorMessageBuilder final : public ErrorMessageBuilder {
+  explicit OutOfBoundsAccessErrorMessageBuilder(const LocalCap& local_cap,
+                                                u64 requested_size)
+      : local_cap(local_cap), requested_size(requested_size) {}
+
+ private:
+  void Message(MessageBuilder& message) const override;
+
+  const LocalCap& local_cap;
+  const u64 requested_size;
+};  // struct OutOfBoundsAccessErrorMessageBuilder
+
+struct OutOfBoundsAccessError final
+    : public CapabilityViolation<OutOfBoundsAccessErrorMessageBuilder,
+                                 libc::SignalNumber::SN_SIGSEGV,
+                                 abi::SignalCode::SC_SEGV_CAPBOUNDSERR> {
+  explicit OutOfBoundsAccessError(const LocalCap& local_cap, u64 requested_size)
+      : CapabilityViolation(local_cap, requested_size) {}
+};  // struct OutOfBoundsAccessError
+
+NOINLINE void Raise(IMessageBuilder& builder);
+NOINLINE void RaiseSignal(IMessageBuilder& builder, bool invoke_signal_handler,
+                          libc::SignalNumber signo, abi::SignalCode code);
+
+template <typename T, typename... ParamTy>
+NOINLINE void Raise(ParamTy&&... params) {
+  T error(params...);
+  Raise(error);
+}
+
+template <typename T, typename... ParamTy>
+NOINLINE void RaiseSignal(ParamTy&&... params) {
+  T error(params...);
+  RaiseSignal(error.GetBuilder(), error.ShouldInvokeSignalHandler(), T::Signo,
+              T::Code);
+}
 
 }  // namespace error
 }  // namespace __cheriseed

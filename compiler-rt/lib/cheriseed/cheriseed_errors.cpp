@@ -14,6 +14,8 @@
 
 #include "cheriseed_errors.h"
 
+#include "cheriseed_ccl_interface.h"
+
 using namespace __cheriseed::abi;
 using namespace __cheriseed::libc;
 using namespace __sanitizer;
@@ -27,7 +29,7 @@ namespace error {
 #define REP16(_c) REP8(_c) REP8(_c)
 #define REP32(_c) REP16(_c) REP16(_c)
 #define REP64(_c) REP32(_c) REP32(_c)
-static constexpr char kErrorSeparator[] = REP64("=") "\n";
+static constexpr char kErrorSeparator[] = REP64("=");
 
 static bool PermsToString(MessageBuilder& builder, u64 mask, bool explain) {
   bool has_perms = false;
@@ -44,6 +46,65 @@ static bool PermsToString(MessageBuilder& builder, u64 mask, bool explain) {
 #undef APPEND_NAME_IF
   return has_perms;
 }
+
+static SignalHandleMode TryCallSignalHandler(libc::SignalNumber signo,
+                                             SignalCode code, vaddr pc) {
+  SigAction action;
+  if (!SigAction::GetAction(signo, action))
+    return SignalHandleMode::SHM_DEFAULT;
+
+  SigInfo info{signo, code, pc};
+  return action.Invoke(info);
+}
+
+// Based on
+// https://github.com/CTSRD-CHERI/cheri-c-programming/wiki/Displaying-Capabilities
+static void PrintCapability(const LocalCap& local_cap,
+                            MessageBuilder& message) {
+  if (!local_cap.IsTagged() && (local_cap.GetValue() == 0) &&
+      (local_cap.GetMetadata() == 0)) {
+    message << "  " << MessageBuilder::Hex(0) << " (null capability)\n\n";
+    return;
+  }
+
+  message << "  " << MessageBuilder::Hex(local_cap.GetValue()) << " [";
+  bool has_perms =
+      PermsToString(message, local_cap.GetPermissions(), /* explain */ false);
+  message << (has_perms ? "," : "")
+          << MemoryRange(local_cap.GetBase(), local_cap.GetTop()) << "]";
+
+  if (!local_cap.IsTagged())
+    message << MessageBuilder::Attribute(" (invalid)");
+
+  message << "\n\n";
+}
+
+static void PrintTagAddress(const LocalCap& local_cap,
+                            MessageBuilder& message) {
+  message << "Tag address was at "
+          << reinterpret_cast<vaddr>(local_cap.GetShadowAddress()) << "\n\n"
+          << __cheriseed::Globals::ShadowMap;
+}
+
+static void PrettyPrintHelp(MessageBuilder& message) {
+  message << "Usage: CHERISEED_CHECKS=[[-]options,...]"
+          << "\n";
+  llvm::__cheriseed::parser::Help(message, /* flags_to_exclude */ 0);
+}
+
+/// Helper class to make sure errors do not recurse infinitely.
+struct ScopedRaiseAttempt final {
+  ScopedRaiseAttempt() {
+    if (UNLIKELY(atomic_fetch_add(&Globals::IsTerminating, 1,
+                                  memory_order::memory_order_relaxed) > 0))
+      __sanitizer::Trap();
+  }
+
+  ~ScopedRaiseAttempt() {
+    atomic_fetch_sub(&Globals::IsTerminating, 1,
+                     memory_order::memory_order_relaxed);
+  }
+};  // struct ScopedRaiseAttempt
 
 const char* MessageBuilder::Permission::LongName() const {
   switch (perm) {
@@ -103,8 +164,8 @@ MessageBuilder& MessageBuilder::operator<<(const MemoryRange& range) {
   return *this << range.GetBase() << "-" << range.GetEnd();
 }
 
-MessageBuilder& MessageBuilder::operator<<(const MessageBuilder::Hex value) {
-  message.append("%s0x%x%s", D.Green(), value, D.Reset());
+MessageBuilder& MessageBuilder::operator<<(const Hex value) {
+  message.append("%s0x%llx%s", D.Green(), value, D.Reset());
   return *this;
 }
 
@@ -118,8 +179,7 @@ MessageBuilder& MessageBuilder::operator<<(const Info info) {
   return *this;
 }
 
-MessageBuilder& MessageBuilder::operator<<(
-    const MessageBuilder::Permission perm) {
+MessageBuilder& MessageBuilder::operator<<(const Permission perm) {
   if (perm.explain) {
     message.append("  %s%s%s [%s%s%s]\n", D.Magenta(), perm.ShortName(),
                    D.Reset(), D.Magenta(), perm.LongName(), D.Reset());
@@ -129,20 +189,19 @@ MessageBuilder& MessageBuilder::operator<<(
   return *this;
 }
 
-MessageBuilder& MessageBuilder::operator<<(
-    const MessageBuilder::Attribute attr) {
+MessageBuilder& MessageBuilder::operator<<(const Attribute attr) {
   message.append("%s%s%s", D.Cyan(), attr.msg, D.Reset());
   return *this;
 }
 
-MessageBuilder& MessageBuilder::operator<<(const ShadowMemory& helper) {
-  message.append("Shadow memory layout:\n");
-  message.append("  low   ");
-  *this << "[" << helper.GetShadowMemoryRangeLow() << "]\n";
-  message.append("  gap   ");
-  *this << "[" << helper.GetShadowGapRange() << "]\n";
-  message.append("  high  ");
-  *this << "[" << helper.GetShadowMemoryRangeHigh() << "]\n";
+MessageBuilder& MessageBuilder::operator<<(const ShadowMemory& shadow_memory) {
+  *this << "Shadow memory layout:\n"
+        << "  low   "
+        << "[" << shadow_memory.GetShadowMemoryRangeLow() << "]\n"
+        << "  gap   "
+        << "[" << shadow_memory.GetShadowGapRange() << "]\n"
+        << "  high  "
+        << "[" << shadow_memory.GetShadowMemoryRangeHigh() << "]\n";
   return *this;
 }
 
@@ -151,57 +210,142 @@ void MessageBuilder::WriteToStderr() {
   message.clear();
 }
 
-// Based on
-// https://github.com/CTSRD-CHERI/cheri-c-programming/wiki/Displaying-Capabilities
-void CheckContext::PrintCapability(MessageBuilder& builder) const {
-  if (!IsTagged() && (Value() == 0) && (Metadata() == 0)) {
-    builder << "  " << MessageBuilder::Hex(0) << " (null capability)\n\n";
-    return;
+void IMessageBuilder::Compose(MessageBuilder& message) const {
+  message << "\n";
+  Separator(message);
+  Header(message);
+  Message(message);
+  Footer(message);
+  Separator(message);
+}
+
+void IMessageBuilder::Separator(MessageBuilder& message) const {
+  message << kErrorSeparator << "\n";
+}
+
+void ErrorMessageBuilder::Separator(MessageBuilder& message) const {
+  IMessageBuilder::Separator(message);
+}
+
+void ErrorMessageBuilder::Header(MessageBuilder& message) const {
+  message << MessageBuilder::Error("Runtime Error detected by CHERIseed")
+          << "\n\n";
+}
+
+void ErrorMessageBuilder::Footer(MessageBuilder& message) const {
+  message << "\ntid: " << GetTid() << "\n";
+}
+
+void InfoMessageBuilder::Separator(MessageBuilder& message) const {
+  IMessageBuilder::Separator(message);
+}
+
+void InfoMessageBuilder::Header(MessageBuilder& message) const {
+  message << MessageBuilder::Attribute("CHERIseed Info") << "\n\n";
+}
+
+void InfoMessageBuilder::Footer(MessageBuilder& message) const {}
+
+void NotImplementedMessageBuilder::Message(MessageBuilder& message) const {
+  message << "'" << msg << "' is not implemented\n";
+}
+
+void IgnoredMessageBuilder::Separator(MessageBuilder& message) const {}
+
+void IgnoredMessageBuilder::Header(MessageBuilder& message) const {
+  message << MessageBuilder::Attribute("[CHERIseed] ");
+}
+
+void IgnoredMessageBuilder::Message(MessageBuilder& message) const {
+  message << "The above error is ignored, continuing execution.\n";
+}
+
+void IgnoredMessageBuilder::Footer(MessageBuilder& message) const {}
+
+void DynamicControlMessageBuilder::Message(MessageBuilder& message) const {
+  u64 pos = static_cast<u64>(cursor - start);
+  message << "CHERISEED_CHECKS has an invalid option at position "
+          << static_cast<u64>(pos - sizeof(kDynamicConfigurationEnv))
+          << ":\n\n  " << start << "\n  ";
+  while (pos > 0) {
+    message << " ";
+    --pos;
   }
-
-  builder << "  " << Value() << " [";
-  bool has_perms = PermsToString(builder, Perms(), /* explain */ false);
-  builder << (has_perms ? "," : "") << MemoryRange(Base(), Top()) << "]";
-
-  if (!IsTagged())
-    builder << MessageBuilder::Attribute(" (invalid)");
-
-  builder << "\n\n";
+  message << MessageBuilder::Attribute("^") << "\n\n";
+  PrettyPrintHelp(message);
 }
 
-void CheckContext::PrintTagAddress(MessageBuilder& builder) const {
-  builder << "Tag address was at "
-          << __cheriseed::Globals::ShadowMap.GetShadowAddressFrom(
-                 CapabilityAddress())
-          << "\n\n"
-          << __cheriseed::Globals::ShadowMap;
+void DynamicControlMessageBuilder::Footer(MessageBuilder& message) const {}
+
+void DynamicControlHelpMessageBuilder::Message(MessageBuilder& message) const {
+  PrettyPrintHelp(message);
 }
 
-void CheckContext::Initialize() {
+void AddressErrorMessageBuilder::Message(MessageBuilder& message) const {
+  message << "Capability address is likely invalid at "
+          << local_cap.GetAddress() << "\n";
+}
+
+void AlignmentErrorMessageBuilder::Message(MessageBuilder& message) const {
+  message << "Capability is unaligned at " << local_cap.GetAddress() << "\n";
+}
+
+void NotTaggedErrorMessageBuilder::Message(MessageBuilder& message) const {
+  message << "Capability is untagged at " << local_cap.GetAddress() << ":\n\n";
+  PrintCapability(local_cap, message);
+  PrintTagAddress(local_cap, message);
+}
+
+void PermissionErrorMessageBuilder::Message(MessageBuilder& message) const {
+  message << "Capability is missing required permission(s) at "
+          << local_cap.GetAddress() << ":\n\n";
+  PrintCapability(local_cap, message);
+  message << "Missing permission(s):\n";
+  PermsToString(message, (requested_permissions & ~local_cap.GetPermissions()),
+                /* explain */ true);
+  message << "\n";
+  PrintTagAddress(local_cap, message);
+}
+
+void OutOfBoundsAccessErrorMessageBuilder::Message(
+    MessageBuilder& message) const {
+  message << "Prevented out-of-bounds access with capability at "
+          << local_cap.GetAddress() << ":\n\n";
+  PrintCapability(local_cap, message);
+  message << "Requested range was "
+          << MemoryRange(local_cap.GetValue(),
+                         local_cap.GetValue() + requested_size)
+          << "\n\n";
+  PrintTagAddress(local_cap, message);
+}
+
+void Raise(IMessageBuilder& builder) {
+  // Make sure that recursive aborts are not allowed.
+  ScopedRaiseAttempt sra;
+  // Initialize sanitizer flags.
   SetCommonFlagsDefaults();
-  tid = GetTid();
+  // Compose the message by building it from bits and pieces, and  then
+  // write it to standard error.
+  MessageBuilder message;
+  builder.Compose(message);
+  message.WriteToStderr();
+  // Last resort, exit with '1'.
+  __sanitizer::internal__exit(1);
 }
 
-static SignalHandleMode TryCallSignalHandler(libc::SignalNumber signo,
-                                             SignalCode code, vaddr pc) {
-  if (signo == SignalNumber::SN_NONE)
-    return SignalHandleMode::SHM_DEFAULT;
+void RaiseSignal(IMessageBuilder& builder, bool invoke_signal_handler,
+                 libc::SignalNumber signo, abi::SignalCode code) {
+  // Make sure that recursive aborts are not allowed.
+  ScopedRaiseAttempt sra;
+  // Initialize sanitizer flags.
+  SetCommonFlagsDefaults();
 
-  SigAction action;
-  if (!SigAction::GetAction(signo, action))
-    return SignalHandleMode::SHM_DEFAULT;
-
-  SigInfo info{signo, code, pc};
-  return action.Invoke(info);
-}
-
-void CheckContext::Terminate(MessageBuilder& reason, libc::SignalNumber signo,
-                             SignalCode code) const {
+  // Try to invoke a signal handler.
   bool print_cause = true;
   bool ignore_signal = false;
   // Try to invoke a signal handler directly, if set.
-  if (GetOpts().shouldInvokeSignalHandlers()) {
-    switch (TryCallSignalHandler(signo, code, pc)) {
+  if (invoke_signal_handler) {
+    switch (TryCallSignalHandler(signo, code, 0)) {
       default:
         break;
       case SignalHandleMode::SHM_SILENT:
@@ -219,108 +363,25 @@ void CheckContext::Terminate(MessageBuilder& reason, libc::SignalNumber signo,
     }
   }
 
-  // Prepare the error message, if requested by the SignalHandleMode.
   if (print_cause) {
-    bool info_msg = (code == SC_INFO_MESSAGE);
-    MessageBuilder builder;
-    builder << "\n" << kErrorSeparator;
-    if (info_msg) {
-      builder << MessageBuilder::Info("CHERIseed Info");
-    } else {
-      builder << MessageBuilder::Error("Runtime Error detected by CHERIseed");
-    }
-    builder << "\n\n" << reason << "\n";
-    if (!info_msg) {
-      builder << "tid: " << tid << "\npc:  " << pc << "\n"
-              << (ignore_signal
-                      ? MessageBuilder::Attribute("\nViolation is ignored\n")
-                      : "");
-    }
-    builder << kErrorSeparator;
-    builder.WriteToStderr();
+    // Compose the message by building it from bits and pieces, and  then
+    // write it to standard error.
+    MessageBuilder message;
+    builder.Compose(message);
+    if (ignore_signal)
+      IgnoredMessageBuilder().Compose(message);
+    message.WriteToStderr();
   }
 
   // Ignore the violation and continue execution.
   if (ignore_signal)
     return;
 
-  // If this is an internal error, simply exit with '1'.
-  if (signo != libc::SignalNumber::SN_NONE) {
-    // Terminate the program by raising the appropriate signal.
-    SigAction::SetDefaultAction(signo);
-    Raise(GetPid(), signo);
-  }
-
+  // Try to terminate the program by raising the appropriate signal.
+  SigAction::SetDefaultAction(signo);
+  libc::Raise(GetPid(), signo);
   // Last resort, exit with '1'.
   __sanitizer::internal__exit(1);
-}
-
-void CapabilityAddress::ReportError(const CheckContext& ctx,
-                                    MessageBuilder& builder) const {
-  builder << "Capability address is likely invalid at "
-          << ctx.CapabilityAddress() << "\n";
-}
-
-void CapabilityAlignment::ReportError(const CheckContext& ctx,
-                                      MessageBuilder& builder) const {
-  builder << "Capability is unaligned at " << ctx.CapabilityAddress() << "\n";
-}
-
-void NotImplemented::ReportError(const CheckContext& ctx,
-                                 MessageBuilder& builder) const {
-  builder << "'" << msg << "' is not implemented\n";
-}
-
-void InBounds::ReportError(const CheckContext& ctx,
-                           MessageBuilder& builder) const {
-  builder << "Prevented out-of-bounds access with capability at "
-          << ctx.CapabilityAddress() << ":\n\n";
-  ctx.PrintCapability(builder);
-  builder << "Requested range was "
-          << MemoryRange(ctx.Value(), ctx.Value() + size) << "\n\n";
-  ctx.PrintTagAddress(builder);
-}
-
-void RequiredPerms::ReportError(const CheckContext& ctx,
-                                MessageBuilder& builder) const {
-  builder << "Capability is missing required permission(s) at "
-          << ctx.CapabilityAddress() << ":\n\n";
-  ctx.PrintCapability(builder);
-  builder << "Missing permission(s):\n";
-  PermsToString(builder, (perms & ~ctx.Perms()), /* explain */ true);
-  builder << "\n";
-  ctx.PrintTagAddress(builder);
-}
-
-void Tagged::ReportError(const CheckContext& ctx, MessageBuilder& builder) {
-  builder << "Capability is untagged at " << ctx.CapabilityAddress() << ":\n\n";
-  ctx.PrintCapability(builder);
-  ctx.PrintTagAddress(builder);
-}
-
-static void PrettyPrintHelp(MessageBuilder& builder) {
-  builder << "Usage: CHERISEED_CHECKS=[[-]options,...]"
-          << "\n";
-  llvm::__cheriseed::parser::Help(builder, /* flags_to_exclude */ 0);
-}
-
-void DynamicControlError::ReportError(const CheckContext& ctx,
-                                      MessageBuilder& builder) const {
-  u64 pos = static_cast<u64>(cursor - start);
-  builder << "CHERISEED_CHECKS has an invalid option at position "
-          << static_cast<u64>(pos - sizeof(kDynamicConfigurationEnv))
-          << ":\n\n  " << start << "\n  ";
-  while (pos > 0) {
-    builder << " ";
-    --pos;
-  }
-  builder << MessageBuilder::Attribute("^") << "\n\n";
-  PrettyPrintHelp(builder);
-}
-
-void DynamicControlHelpInfo::ReportError(const CheckContext& ctx,
-                                         MessageBuilder& builder) const {
-  PrettyPrintHelp(builder);
 }
 
 }  // namespace error

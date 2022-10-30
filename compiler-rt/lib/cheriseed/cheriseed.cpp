@@ -15,6 +15,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "cheriseed_ccl_interface.h"
 #include "cheriseed_errors.h"
 #include "cheriseed_interface_internal.h"
 #include "cheriseed_shadow_memory.h"
@@ -39,11 +40,10 @@ __sanitizer::atomic_uint32_t Globals::IsTerminating{0};
 
 // Triggers an unimplemented fault.
 #undef UNIMPLEMENTED
-#define UNIMPLEMENTED()                                             \
-  {                                                                 \
-    const NoOptionsEnabled Opts;                                    \
-    CheckContext(LocalCap(Opts)).add(NotImplemented(__FUNCTION__)); \
-    __sanitizer::Die();                                             \
+#define UNIMPLEMENTED()                                \
+  {                                                    \
+    Raise<NotImplementedMessageBuilder>(__FUNCTION__); \
+    __sanitizer::Die();                                \
   }
 
 LocalCap::LocalCap(const Options &Opts, const __cheriseed_cap_t *ptr,
@@ -58,7 +58,8 @@ LocalCap::LocalCap(const Options &Opts, const __cheriseed_cap_t *ptr,
   }
 
   SetAddress(ptr);
-  CheckContext(*this).add(CapabilityAddress()).add(CapabilityAlignment());
+  RequireValidAddress();
+  RequireAligned();
   tag_state = AcquireTag(GetShadowAddress());
   Load();
   ReleaseTag(GetShadowAddress(), tag_state);
@@ -68,7 +69,7 @@ __cheriseed_cap_t *LocalCap::Store(__cheriseed_cap_t *ptr,
                                    memory_order memory_order) const {
   LocalCap local_cap(GetOpts());
   local_cap.SetAddress(ptr);
-  CheckContext(local_cap).add(CapabilityAddress()).add(CapabilityAlignment());
+  local_cap.RequireValidAddress().RequireAligned();
   AcquireTag(local_cap.GetShadowAddress());
   Store(local_cap);
   ReleaseTag(local_cap.GetShadowAddress(), tag_state);
@@ -82,26 +83,63 @@ void LocalCap::Store(LocalCap &local_cap) const {
   local_cap.tag_state = tag_state;
 }
 
-const LocalCap &LocalCap::RequireTagged() const {
-  CheckContext(*this).add(Tagged());
+const LocalCap &LocalCap::RequireValidAddress() const {
+  const vaddr cap_addr = GetAddress();
+  bool failed = (cap_addr == 0);
+#if defined(__aarch64__)
+  failed |= (cap_addr & (static_cast<vaddr>(1) << 55)) != 0;
+#endif
+#if defined(SANITIZER_LINUX)
+  // Check for address on the first page, which is never accessible.
+  failed |= cap_addr < Globals::SystemPageSize;
+#endif
+  if (UNLIKELY(failed))
+    RaiseSignal<AddressError>(*this);
   return *this;
 }
 
-const LocalCap &LocalCap::RequirePermissions(u64 perms) const {
-  CheckContext(*this).add(RequiredPerms(perms));
+const LocalCap &LocalCap::RequireAligned() const {
+  if (LIKELY(Opts.shouldCheckAlignment()))
+    if (UNLIKELY((GetAddress() % abi::kCapabilityMinAlignment) != 0))
+      RaiseSignal<AlignmentError>(*this);
+  return *this;
+}
+
+const LocalCap &LocalCap::RequireTagged() const {
+  if (LIKELY(Opts.shouldCheckTag()))
+    if (UNLIKELY(!IsTagged()))
+      RaiseSignal<NotTaggedError>(*this);
+  return *this;
+}
+
+const LocalCap &LocalCap::RequirePermissions(u64 permissions) const {
+  const u64 mask = Opts.getCheckedPerms();
+  if (UNLIKELY((GetPermissions() & permissions & mask) != (permissions & mask)))
+    RaiseSignal<PermissionError>(*this, permissions);
   return *this;
 }
 
 const LocalCap &LocalCap::RequireBounds(u64 size) const {
-  CheckContext(*this).add(InBounds(size));
+  if (LIKELY(Opts.shouldCheckBounds()))
+    // Top (base + length) is not inclusive in acceptable range of a capability.
+    // Since size is taken as-is base <= cursor <= top is correct.
+    if (UNLIKELY((GetBase() > GetValue()) || ((GetValue() + size) > GetTop())))
+      RaiseSignal<OutOfBoundsAccessError>(*this, size);
   return *this;
 }
+
+vaddr LocalCap::GetBase() const { return ccl::methods::GetBase(*this); }
+
+vaddr LocalCap::GetTop() const { return ccl::methods::GetTop(*this); }
+
+u64 LocalCap::GetPermissions() const { return ccl::methods::GetPerms(*this); }
 
 ScopeLockedLocalCap::ScopeLockedLocalCap(const Options &Opts,
                                          const __cheriseed_cap_t *ptr)
     : LocalCap(Opts, ptr) {
   SetAddress(ptr);
-  CheckContext(*this).add(CapabilityAddress()).add(CapabilityAlignment());
+  RequireValidAddress();
+  RequireAligned();
   tag_state = AcquireTag(GetShadowAddress());
   Load();
 }
@@ -110,7 +148,7 @@ __cheriseed_cap_t *ScopeLockedLocalCap::Store(__cheriseed_cap_t *ptr,
                                               memory_order memory_order) const {
   LocalCap local_cap(GetOpts());
   local_cap.SetAddress(ptr);
-  CheckContext(local_cap).add(CapabilityAddress()).add(CapabilityAlignment());
+  local_cap.RequireValidAddress().RequireAligned();
   LocalCap::Store(local_cap);
   WriteTag(local_cap.GetShadowAddress(), tag_state);
   return ptr;
@@ -221,13 +259,11 @@ void ControlChecksDynamic(const Environment &env) {
             option.GetCheck());
       } break;
       case parser::ParseResult::HELP_OPTION: {
-        const NoOptionsEnabled Opts;
-        CheckContext(LocalCap(Opts)).add(DynamicControlHelpInfo());
+        Raise<DynamicControlHelpMessageBuilder>();
       } break;
       default: {
-        const NoOptionsEnabled Opts;
-        CheckContext(LocalCap(Opts))
-            .add(DynamicControlError(cheriseed_checks_start, option.Data()));
+        Raise<DynamicControlMessageBuilder>(cheriseed_checks_start,
+                                            option.Data());
       } break;
     }
   }

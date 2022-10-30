@@ -35,6 +35,18 @@ struct methods;
 
 namespace __cheriseed {
 
+/// This mixin class disables copy and move constructors and assignment
+/// operators.
+struct DisableCopyAndMoveMixin {
+  DisableCopyAndMoveMixin() {}
+
+ private:
+  DisableCopyAndMoveMixin(DisableCopyAndMoveMixin const &) = delete;
+  DisableCopyAndMoveMixin &operator=(DisableCopyAndMoveMixin const &) = delete;
+  DisableCopyAndMoveMixin(DisableCopyAndMoveMixin &&) = delete;
+  DisableCopyAndMoveMixin &operator=(DisableCopyAndMoveMixin &&) = delete;
+};  // class DisableCopyAndMoveMixin
+
 struct __attribute__((visibility("hidden"))) Globals {
   // The size of a page in the system.
   static usize SystemPageSize;
@@ -252,6 +264,8 @@ struct LocalCap : public __cheriseed_cap_t {
 
   void Store(LocalCap &scoped_cap) const;
 
+  const LocalCap &RequireValidAddress() const;
+  const LocalCap &RequireAligned() const;
   const LocalCap &RequireTagged() const;
   const LocalCap &RequirePermissions(u64 perms) const;
   const LocalCap &RequireBounds(u64 size) const;
@@ -263,11 +277,12 @@ struct LocalCap : public __cheriseed_cap_t {
   }
   u64 GetValue() const { return value; }
   u64 GetMetadata() const { return metadata; }
+  vaddr GetBase() const;
+  vaddr GetTop() const;
+  u64 GetPermissions() const;
   bool IsTagged() const { return (tag_state == TagState::TS_TAGGED); }
-
-  const Options &GetOpts() const { return Opts; }
-
   void ClearTag() { tag_state = TagState::TS_CLEARED; }
+  const Options &GetOpts() const { return Opts; }
 
 #ifndef CHERISEED_UNIT_TESTING
  protected:
