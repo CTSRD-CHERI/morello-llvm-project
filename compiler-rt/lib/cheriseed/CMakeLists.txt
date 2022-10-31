@@ -26,6 +26,7 @@ foreach(arch ${CHERISEED_SUPPORTED_ARCH})
   list(APPEND CHERISEED_RUNTIME_LIBRARIES clang_rt.cheriseed-${arch})
 endforeach()
 
+add_subdirectory(benchmarks)
 if(COMPILER_RT_INCLUDE_TESTS)
   add_subdirectory(tests)
 endif()

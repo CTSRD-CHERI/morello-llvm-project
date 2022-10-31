@@ -15,6 +15,9 @@
 #ifndef CHERISEED_TEST_UTILS_H
 #define CHERISEED_TEST_UTILS_H
 
+#include "cheriseed_test_common.h"
+#include "cheriseed_test_config.h"
+
 #if !defined(CHERISEED_UNIT_TESTING)
 #include <sanitizer/cheriseed_interface.h>
 #else
@@ -22,24 +25,6 @@
 #endif
 
 #include "cheriseed_ccl_interface.h"
-#include "cheriseed_test_config.h"
-
-#if !defined(CHERISEED_UNIT_TESTING)
-
-/// Define __cheriseed_cap_t for testing purposes. It is still opaque, but
-/// describes a well-sized and well-aligned type now.
-struct __cheriseed_cap_t {
-  __cheriseed_cap_t() {}
-
- protected:
-  // Disallow copy
-  __cheriseed_cap_t(const __cheriseed_cap_t &) = delete;
-  __cheriseed_cap_t &operator=(__cheriseed_cap_t const &) = delete;
-
-  uint8_t bits[16];
-} ALIGNED(16);  // struct __cheriseed_cap_t
-
-#endif  //  !CHERISEED_UNIT_TESTING
 
 namespace utils {
 
@@ -158,24 +143,6 @@ struct OnStackArgs {
   } auxv[2];
 };  // struct OnStackArgs
 
-#if !defined(CHERISEED_UNIT_TESTING)
-
-/// Helper to create a capability on stack in the tests.
-template <typename T>
-static inline void InitCap(__cheriseed_cap_t *cap, T *address) {
-  // Set maximum permissions metadata
-  __cheriseed_ddc_get(cap);
-  // Set value field
-  __cheriseed_address_set(cap, cap, reinterpret_cast<uint64_t>(address));
-}
-
-/// Helper to create a capability on stack.
-static inline void InitCap(__cheriseed_cap_t *cap, uint64_t value,
-                           uint64_t metadata) {
-  __cheriseed_address_set(cap, cap, value);
-  __cheriseed_copy_to_high(cap, cap, metadata);
-}
-
 /// Checks that two capabilities have the same metadata.
 static inline void MetadataEquals(const __cheriseed_cap_t *cap1,
                                   const __cheriseed_cap_t *cap2) {
@@ -230,13 +197,6 @@ static inline void ValueNotEquals(const __cheriseed_cap_t *cap, T *value) {
 #define ASSERT_TAGGED(__a) ASSERT_EQ(__cheriseed_tag_get(__a), (uint8_t)1)
 #define ASSERT_UNTAGGED(__a) ASSERT_EQ(__cheriseed_tag_get(__a), (uint8_t)0)
 
-#endif  // !CHERISEED_UNIT_TESTING
-};      // namespace utils
-
-// Symbols required by cheriseed but which are not present in testing libc.
-extern "C" bool __shim_is_pure_capability(void);
-extern "C" bool __shim_supports_cancellation_points(void);
-extern "C" void *__shim_syscall(long nr, long arg1, long arg2, long arg3,
-                                long arg4, long arg5, long arg6, ...);
+}  // namespace utils
 
 #endif  // CHERISEED_TEST_UTILS_H
