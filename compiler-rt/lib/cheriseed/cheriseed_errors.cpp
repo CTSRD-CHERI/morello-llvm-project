@@ -244,20 +244,6 @@ void CheckContext::Terminate(MessageBuilder& reason, libc::SignalNumber signo,
   if (ignore_signal)
     return;
 
-  // Try to raise SIGTRAP if being debugged.
-  const pid_t tracer_pid = GetTracerPid();
-  if (tracer_pid != 0) {
-    if (print_cause) {
-      MessageBuilder builder;
-      builder << "\n"
-              << MessageBuilder::Attribute("[CHERIseed] ")
-              << "Tracer detected with pid = " << static_cast<u64>(tracer_pid)
-              << ", sending SIGTRAP.\n";
-      builder.WriteToStderr();
-    }
-    Raise(GetPid(), libc::SignalNumber::SN_SIGTRAP);
-  }
-
   // If this is an internal error, simply exit with '1'.
   if (signo != libc::SignalNumber::SN_NONE) {
     // Terminate the program by raising the appropriate signal.

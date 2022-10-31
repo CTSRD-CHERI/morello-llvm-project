@@ -48,7 +48,6 @@ static constexpr int NSIG = 65;
 // Some signal numbers [Linux specific]
 enum SignalNumber : int {
   SN_NONE = 0,
-  SN_SIGTRAP = 5,
   SN_SIGBUS = 7,
   SN_SIGSEGV = 11,
 };  // enum SignalNumber
@@ -150,9 +149,6 @@ struct SigAction final {
     __cheriseed_cap_t restorer;
   } purecap;
 };  // struct SigAction
-
-// Returns the PID of the tracer process, or '0'.
-pid_t GetTracerPid();
 
 // Returns the PID of the calling process.
 int GetPid();

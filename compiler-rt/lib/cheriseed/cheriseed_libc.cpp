@@ -391,23 +391,6 @@ SignalHandleMode SigAction::InvokePureCap(SigInfo &info) {
   return mode;
 }
 
-pid_t GetTracerPid() {
-  static const char TracerPid[] = "TracerPid:";
-
-  ScopedOpenFd status{"/proc/self/status", FileAccessMode::RdOnly};
-  if (!status)
-    return false;
-
-  InternalMmapVector<char> buffer{Globals::SystemPageSize};
-  status.Read(buffer.data(), buffer.capacity() - 1);
-  const char *tracer_pid_pos = internal_strstr(buffer.data(), TracerPid);
-  if (!tracer_pid_pos)
-    return false;
-
-  tracer_pid_pos += sizeof(TracerPid) - 1 /* terminating '\0' */;
-  return static_cast<pid_t>(internal_atoll(tracer_pid_pos));
-}
-
 int GetPid() {
   return static_cast<int>(SystemCall(SyscallNumber::GETPID).Call());
 }
