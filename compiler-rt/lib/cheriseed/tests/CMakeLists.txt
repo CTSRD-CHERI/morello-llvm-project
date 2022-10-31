@@ -76,8 +76,7 @@ if(COMPILER_RT_CAN_EXECUTE_TESTS AND NOT ANDROID)
     set(CHERISEED_TEST_RUNTIME_OBJECTS
         $<TARGET_OBJECTS:clang_rt.cheriseed-${arch}>
         $<TARGET_OBJECTS:RTSanitizerCommon.${arch}>
-        $<TARGET_OBJECTS:RTSanitizerCommonNoLibc.${arch}>
-        $<TARGET_OBJECTS:RTLSanCommon.${arch}>)
+        $<TARGET_OBJECTS:RTSanitizerCommonNoLibc.${arch}>)
 
     add_library(${CHERISEED_TEST_RUNTIME} STATIC ${CHERISEED_TEST_RUNTIME_OBJECTS})
     set_target_properties(${CHERISEED_TEST_RUNTIME} PROPERTIES
