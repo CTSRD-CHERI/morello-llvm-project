@@ -18,6 +18,7 @@
 #include "cheriseed_test_utils.h"
 
 using namespace __cheriseed::error;
+using __cheriseed::LocalCap;
 using __cheriseed::SnapshotOptions;
 using utils::kExitCode;
 

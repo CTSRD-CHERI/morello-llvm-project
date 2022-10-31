@@ -9,7 +9,7 @@
 // This file is a part of the CHERIseed Runtime Library.
 //
 // This header provides interface functions to the Capability Compression
-// Library, included in cheriseed_ccl_interface.cpp. These interface
+// Library, included in cheriseed_ccl_interface.h. These interface
 // functions should be used to modify any capabilities, as nothing should be
 // assumed about the representation of a compressed capability.
 //
@@ -18,8 +18,11 @@
 #ifndef CHERISEED_CCL_INTERFACE_H
 #define CHERISEED_CCL_INTERFACE_H
 
-#include "cheriseed_common.h"
-#include "sanitizer_common/sanitizer_libc.h"
+#ifndef CHERISEED_LOCAL_CAP_H
+#error "CCL interface should be included via cheriseed_local_cap.h"
+#endif
+
+#include "cheriseed_abi_defs.h"
 
 // The ccl namespace contains functions allowing manipulation of capabilities,
 // via the Capability Compression Library header, which is included inside the
@@ -33,6 +36,9 @@
 // definitions in this file.
 namespace ccl {
 namespace external {
+
+// Forward declarations.
+struct cc128_cap;
 
 // Sanitizers have a very constrained environment.
 // Provide some types and definitions for cheri-compressed-cap library.
@@ -53,6 +59,7 @@ using uint32_t = __sanitizer::u32;
 using uint64_t = __sanitizer::u64;
 using int64_t = __sanitizer::s64;
 using size_t = __sanitizer::ssize;
+using length128_t = unsigned __int128;
 
 // cheri-compressed-cap library requires a few libc features.
 
@@ -63,8 +70,8 @@ using size_t = __sanitizer::ssize;
 // Therefore we map 'memset' to '__cheriseed_memset_cc128_cap' which is a
 // horribly naive implementation, but it will get optimized away by the
 // compiler in release builds.
-struct cc128_cap;
-static void __cheriseed_memset_cc128_cap(struct cc128_cap *s, int c, size_t n) {
+static ALWAYS_INLINE void __cheriseed_memset_cc128_cap(struct cc128_cap *s,
+                                                       int c, size_t n) {
   char *ptr = reinterpret_cast<char *>(s);
   char *const max_ptr = ptr + n;
   const char v = static_cast<char>(c);
@@ -83,6 +90,22 @@ static void __cheriseed_memset_cc128_cap(struct cc128_cap *s, int c, size_t n) {
 #define cheri_debug_assert(__cond) assert(__cond)
 
 // End of libc features.
+
+// Force inlining CCL functions, if requested.
+#ifdef CHERISEED_CCL_CONFIG_FORCE_INLINE_ALL
+static ALWAYS_INLINE void cc128_decompress_raw(uint64_t, uint64_t, bool,
+                                               struct cc128_cap *);
+static ALWAYS_INLINE void cc128_decompress_mem(uint64_t, uint64_t, bool,
+                                               struct cc128_cap *);
+static ALWAYS_INLINE uint64_t cc128_compress_raw(const struct cc128_cap *);
+static ALWAYS_INLINE uint64_t cc128_compress_mem(const struct cc128_cap *);
+static ALWAYS_INLINE uint64_t cc128_get_alignment_mask(uint64_t);
+static ALWAYS_INLINE uint64_t cc128_get_representable_length(uint64_t);
+static ALWAYS_INLINE bool cc128_is_representable_cap_exact(
+    const struct cc128_cap *);
+static ALWAYS_INLINE bool cc128_setbounds_impl(struct cc128_cap *, uint64_t,
+                                               length128_t, uint64_t *);
+#endif  // CHERISEED_CCL_CONFIG_FORCE_INLINE_ALL
 
 #include "cheri_compressed_cap_128.h"
 
@@ -118,18 +141,19 @@ static void __cheriseed_memset_cc128_cap(struct cc128_cap *s, int c, size_t n) {
 namespace permissions {
 // Macro to declare a compile time constant for a permission bit
 #define PERM_CONSTEXPR(__name) \
-  static constexpr u64 __name = CC128_PERM_##__name;
+  static constexpr __sanitizer::u64 __name = CC128_PERM_##__name;
 // Compile time constants for each supported permission
 FOREACH_CCL_PERMISSION(PERM_CONSTEXPR)
 #undef PERM_CONSTEXP
 
 // Compile time constant for read permission
-static constexpr u64 READ_CAP_PERMS = LOAD | LOAD_CAP;
+static constexpr __sanitizer::u64 READ_CAP_PERMS = LOAD | LOAD_CAP;
 // Compile time constant for write permission
-static constexpr u64 WRITE_CAP_PERMS = STORE | STORE_CAP;
+static constexpr __sanitizer::u64 WRITE_CAP_PERMS = STORE | STORE_CAP;
 // Compile time constant for ALL permissions representation
 #define PERM_ALL_BUILDER(__name) __name |
-static constexpr u64 ALL = FOREACH_CCL_PERMISSION(PERM_ALL_BUILDER) 0;
+static constexpr __sanitizer::u64 ALL =
+    FOREACH_CCL_PERMISSION(PERM_ALL_BUILDER) 0;
 #undef PERM_ALL_BUILDER
 
 #define CHECK_PERMISSION_VALUE(__perm)                                   \
@@ -142,8 +166,12 @@ FOREACH_CCL_PERMISSION(CHECK_PERMISSION_VALUE)
 
 }  // namespace permissions
 
-/// Interface to the cheri-compressed-cap library.
-struct methods {
+/// Adapter to the cheri-compressed-cap library.
+template <typename U>
+struct Adapter {
+  using u32 = __sanitizer::u32;
+  using u64 = __sanitizer::u64;
+
   /// This is necessary for macro expansion
   using cc128_length_t = external::cc128_length_t;
 
@@ -151,27 +179,27 @@ struct methods {
   /// permissions of a "maximum" capability will only include the subset
   /// of CCL permissions currently supported by cheriseed.
   ///
-  /// \param[out] local_cap Reference to an object that will contain the maximum
+  /// \param[out] user Reference to an object that will contain the maximum
   /// capability.
   /// \param[in] value Sets the value field of the resulting capability.
-  static inline void BuildMaxCap(LocalCap &local_cap, u64 value) {
+  static ALWAYS_INLINE void BuildMaxCap(U &user, u64 value) {
     external::cc128_cap_t max_cap =
         external::cc128_make_max_perms_cap(0, value, CC128_MAX_LENGTH);
     external::cc128_update_perms(&max_cap, permissions::ALL);
-    local_cap.SetValue(value);
-    local_cap.SetMetadata(external::cc128_compress_mem(&max_cap));
-    local_cap.SetTag();
+    user.SetValue(value);
+    user.SetMetadata(Compress(&max_cap));
+    user.SetTag();
   }
 
   /// Generates a maximum capability from a pointer using the CCL.
   /// The address provided will be cast to an unsigned 64 bit int
   ///
-  /// \param[out] local_cap Reference to an object that will contain the maximum
-  /// capability.
+  /// \param[out] user Reference to an object that will contain the
+  /// maximum capability.
   /// \param[in] ptr Sets the value field of the resulting capability.
   template <typename T>
-  static inline void BuildMaxCap(LocalCap &local_cap, T *ptr) {
-    BuildMaxCap(local_cap, reinterpret_cast<u64>(ptr));
+  static ALWAYS_INLINE void BuildMaxCap(U &user, T *ptr) {
+    BuildMaxCap(user, reinterpret_cast<u64>(ptr));
   }
 
   /// Generates a bounded capability using the CCL. The base will be the
@@ -179,23 +207,23 @@ struct methods {
   /// A permissions mask can optionally be provided, otherwise the perms
   /// will be set to maximum.
   ///
-  /// \param[out] local_cap Reference to an object that will contain the output
+  /// \param[out] user Reference to an object that will contain the output
   /// capability.
   /// \param[in] value Sets the value/base fields of the resulting capability.
   /// \param[in] size Sets the top field of the resulting capability.
-  /// \param[in] perms Sets the permissions field of the resulting
-  /// capability.
+  /// \param[in] perms Sets the permissions field of the resulting capability.
+  ///
   /// \returns True if resulting bounded capability is exact, else false.
-  static inline bool BuildBoundedCap(LocalCap &local_cap, u64 value, u64 size,
-                                     u64 perms = permissions::ALL) {
+  static ALWAYS_INLINE bool BuildBoundedCap(U &user, u64 value, u64 size,
+                                            u64 perms = permissions::ALL) {
     external::cc128_cap_t max_cap =
         external::cc128_make_max_perms_cap(value, value, value + size);
     external::cc128_update_perms(&max_cap, permissions::ALL & perms);
-    local_cap.SetValue(value);
-    local_cap.SetMetadata(external::cc128_compress_mem(&max_cap));
+    user.SetValue(value);
+    user.SetMetadata(Compress(&max_cap));
     // TODO: what should we do if not exact?
     bool is_exact = external::cc128_is_representable_cap_exact(&max_cap);
-    local_cap.SetTag();
+    user.SetTag();
     return is_exact;
   }
 
@@ -206,56 +234,183 @@ struct methods {
   /// A permissions mask can optionally be provided, otherwise the perms
   /// will be set to maximum.
   ///
-  /// \param[out] local_cap Reference to an object that will contain the maximum
-  /// capability.
+  /// \param[out] user Reference to an object that will contain the
+  /// maximum capability.
   /// \param[in] ptr Used as the value field of the resulting capability.
-  /// \param[in] perms Sets the permissions field of the resulting
-  /// capability.
+  /// \param[in] perms Sets the permissions field of the resulting capability.
+  ///
   /// \returns True if resulting bounded capability is exact, else false.
   template <typename T>
-  static inline bool BuildBoundedCap(LocalCap &local_cap, T *ptr,
-                                     u64 perms = permissions::ALL) {
-    return BuildBoundedCap(local_cap, reinterpret_cast<u64>(ptr), sizeof(T),
-                           perms);
+  static ALWAYS_INLINE bool BuildBoundedCap(U &user, T *ptr,
+                                            u64 perms = permissions::ALL) {
+    return BuildBoundedCap(user, reinterpret_cast<u64>(ptr), sizeof(T), perms);
   }
 
-  /// Extracts the permissions bits from a compressed metadata.
+  /// Calculates the base of the encoded range in a compressed capability
+  /// metadata.
   ///
-  /// \param[in] local_cap The compressed capability to extract permissions
-  /// from.
+  /// \param[in] user The compressed capability.
+  ///
+  /// \returns The 64-bit base value.
+  static ALWAYS_INLINE u64 GetBase(const U &user) {
+    return Decompress(user).base();
+  }
+
+  /// Calculates the top of the encoded range in a compressed capability
+  /// metadata.
+  ///
+  /// \note This field is 128 bits so length64 returns min(top, UINT64_MAX).
+  ///
+  /// \param[in] user The compressed capability.
+  ///
+  /// \returns The 64-bit top value.
+  static ALWAYS_INLINE u64 GetTop(const U &user) {
+    return Decompress(user).top64();
+  }
+
+  /// Calculates the length of the range encoded in a compressed capability
+  /// metadata.
+  ///
+  /// \note This field is 128 bits so length64 returns min(length, UINT64_MAX).
+  ///
+  /// \param[in] user The compressed capability.
+  ///
+  /// \returns The saturated 64-bit length value.
+  static ALWAYS_INLINE u64 GetLength(const U &user) {
+    return Decompress(user).length64();
+  }
+
+  /// Calculates the offset encoded in a compressed capability metadata.
+  ///
+  /// \note This field is 128 bits so length64 returns min(offset, UINT64_MAX).
+  ///
+  /// \param[in] user The compressed capability.
+  ///
+  /// \returns The saturated offset from the capability's base value.
+  static ALWAYS_INLINE u64 GetOffset(const U &user) {
+    const external::cc128_offset_t offset = Decompress(user).offset();
+    // Create equivalent to offset64() which doesn't exist.
+    return static_cast<u64>(offset > CC128_MAX_ADDR ? CC128_MAX_ADDR : offset);
+  }
+
+  /// Extracts the permissions bits encoded in a compressed capability metadata.
+  ///
+  /// \param[in] user The compressed capability.
+  ///
   /// \returns The permissions field extracted from the compressed metadata.
-  static inline u64 GetPerms(const LocalCap &local_cap) {
-    return external::cc128_cap_pesbt_extract_perms(local_cap.GetMetadata());
+  static ALWAYS_INLINE u64 GetPermissions(const U &user) {
+    // It is possible to directly get the permission bits without decompression.
+    return external::cc128_cap_pesbt_extract_perms(user.GetMetadata());
   }
 
-  /// Queries a compressed capability for permissions bits.
+  /// Extracts the type bits encoded in a compressed capability metadata.
   ///
-  /// \param[in] local_cap The compressed capability to extract permissions
-  /// from.
-  /// \param[in] mask The permission bits that must be present to return true.
-  /// \returns True if all permissions in mask are present in local_cap, else
-  /// false.
-  static inline bool HasPerms(const LocalCap &local_cap, const u64 mask) {
-    return ((GetPerms(local_cap) & mask) == mask);
+  /// \param[in] user The compressed capability.
+  ///
+  /// \returns The type field extracted from the compressed metadata.
+  static ALWAYS_INLINE u64 GetType(const U &user) {
+    return Decompress(user).type();
+  }
+
+  /// Tests if a compressed capability is a sealed or not.
+  ///
+  /// \param[in] user The compressed capability.
+  ///
+  /// \returns True if the capability is sealed, otherwise false.
+  static ALWAYS_INLINE bool IsSealed(const U &user) {
+    return Decompress(user).is_sealed();
+  }
+
+  /// Tests if a capability is representable with a given cursor.
+  ///
+  /// \param[in] user The compressed capability.
+  /// \param[in] cursor The requested new cursor to test.
+  ///
+  /// \returns True if the capability would be representable, otherwise false.
+  static ALWAYS_INLINE bool IsRepresentableWithCursor(const U &user,
+                                                      u64 cursor) {
+    auto decom_cap = Decompress(user);
+    return external::cc128_is_representable_with_addr(&decom_cap, cursor);
+  }
+
+  /// Sets the value of a capability, potentially clearing its tag.
+  ///
+  /// \param[in] user The compressed capability whose value to update.
+  /// \param[in] value The requested value to set.
+  static ALWAYS_INLINE void SetValue(U &user, u64 value) {
+    if (UNLIKELY(!IsRepresentableWithCursor(user, value)))
+      user.ClearTag();
+    user.SetValue(value);
   }
 
   /// Sets the permissions field of a compressed metadata to bitwise AND with
   /// some mask.
   ///
-  /// \param[in] local_cap The compressed capability whose permissions to
-  /// update.
+  /// \param[in] user The compressed capability whose permissions to update.
   /// \param[in] mask A mask specifying permissions to retain.
-  static inline void PermsAnd(LocalCap &local_cap, const u64 mask) {
-    local_cap.SetMetadata(external::cc128_cap_pesbt_deposit_perms(
-        local_cap.GetMetadata(), static_cast<u32>(GetPerms(local_cap) & mask)));
+  static ALWAYS_INLINE void ReducePermissions(U &user, u64 mask) {
+    u32 permissions = static_cast<u32>(GetPermissions(user) & mask);
+    // It is possible to directly set the permission bits without recompression.
+    u64 metadata = external::cc128_cap_pesbt_deposit_perms(user.GetMetadata(),
+                                                           permissions);
+    user.SetMetadata(metadata);
+  }
+
+  /// Sets the bounds of a compressed capability, potentially clearing its tag.
+  ///
+  /// \param[in] user The compressed capability to update.
+  /// \param[in] base The requested base value.
+  /// \param[in] top The requested top value.
+  /// \param[in] needs_exact True if exact representation is requested.
+  ///
+  /// \returns True, if the bounds are representable, otherwise false.
+  static ALWAYS_INLINE bool SetBounds(U &user, u64 base, u64 top,
+                                      bool needs_exact) {
+    auto decom_cap = Decompress(user);
+    bool is_exact = external::cc128_setbounds(&decom_cap, base, top);
+    if (UNLIKELY(!is_exact && needs_exact))
+      user.ClearTag();
+    user.SetMetadata(Compress(&decom_cap));
+    return is_exact;
+  }
+
+  /// Compares two compressed capabilities for equality.
+  ///
+  /// \param[in] user_lhs First compressed capability to compare.
+  /// \param[in] user_rhs Second compressed capability to compare.
+  ///
+  /// \returns True if exactly the two capabilities are exactly equal, otherwise
+  /// false.
+  static ALWAYS_INLINE bool ExactlyEqual(const U &user_lhs, const U &user_rhs) {
+    auto decom_cap_lhs = Decompress(user_lhs);
+    auto decom_cap_rhs = Decompress(user_rhs);
+    return external::cc128_exactly_equal(&decom_cap_lhs, &decom_cap_rhs);
+  }
+
+  /// Tests if a capability is a subset of another capability.
+  ///
+  /// \param[in] user_check the compressed capability to check.
+  /// \param[in] user The compressed capability to check against.
+  ///
+  /// \returns True if compressed_cap_check is a subset of user,
+  /// otherwise false.
+  static ALWAYS_INLINE bool SubsetTest(const U &user_check, const U &user) {
+    const bool tag_is_sub = (user_check.IsTagged() >= user.IsTagged());
+    const bool base_is_sub = (user_check.GetBase() >= user.GetBase());
+    const bool top_is_sub = (user_check.GetTop() <= user.GetTop());
+    const bool perms_is_sub =
+        ((user_check.GetPermissions() & user.GetPermissions()) ==
+         user_check.GetPermissions());
+    return (tag_is_sub && base_is_sub && top_is_sub && perms_is_sub);
   }
 
   /// Returns the alignment mask that should be taken into account to precisely
   /// represent a capability with bounds "length" apart.
   ///
   /// \param[in] length The desired allocation length.
+  ///
   /// \returns A 64 bit mask.
-  static inline u64 GetAlignmentMask(u64 length) {
+  static ALWAYS_INLINE u64 GetAlignmentMask(u64 length) {
     return external::cc128_get_alignment_mask(length);
   }
 
@@ -263,176 +418,24 @@ struct methods {
   /// represented.
   ///
   /// \param[in] length A proposed bounds length for a capability.
+  ///
   /// \returns A rounded bounds length that can be precisely represented.
-  static inline u64 GetRepresentableLength(u64 length) {
+  static ALWAYS_INLINE u64 GetRepresentableLength(u64 length) {
     return external::cc128_get_representable_length(length);
   }
 
-  /// Compares two compressed capabilities for equality.
-  ///
-  /// \param[in] local_cap_1 First compressed capability to compare.
-  /// \param[in] local_cap_2 Second compressed capability to compare.
-  /// \returns Single boolean, true if exactly equal, false otherwise.
-  static inline bool ExactlyEqual(const LocalCap &local_cap_1,
-                                  const LocalCap &local_cap_2) {
-    external::cc128_cap_t decom_cap_1;
-    external::cc128_cap_t decom_cap_2;
-    external::cc128_decompress_mem(local_cap_1.GetMetadata(),
-                                   local_cap_1.GetValue(),
-                                   local_cap_1.IsTagged(), &decom_cap_1);
-    external::cc128_decompress_mem(local_cap_2.GetMetadata(),
-                                   local_cap_2.GetValue(),
-                                   local_cap_2.IsTagged(), &decom_cap_2);
-    return external::cc128_exactly_equal(&decom_cap_1, &decom_cap_2);
+ protected:
+  static ALWAYS_INLINE external::cc128_cap_t Decompress(const U &user) {
+    external::cc128_cap_t decom_cap;
+    external::cc128_decompress_mem(user.GetMetadata(), user.GetValue(),
+                                   user.IsTagged(), &decom_cap);
+    return decom_cap;
   }
 
-  /// Retrieves the length field of a compressed cap. This field is 128 bits so
-  /// length64 returns min(length, UINT64_MAX).
-  ///
-  /// \param[in] local_cap The compressed capability to retrieve the length
-  /// from.
-  /// \returns 64 bit length value.
-  static inline u64 GetLength(const LocalCap &local_cap) {
-    external::cc128_cap_t decom;
-    external::cc128_decompress_mem(local_cap.GetMetadata(),
-                                   local_cap.GetValue(), local_cap.IsTagged(),
-                                   &decom);
-    return decom.length64();
+  static ALWAYS_INLINE u64 Compress(const external::cc128_cap_t *decom_cap) {
+    return external::cc128_compress_mem(decom_cap);
   }
-
-  /// Retrieves the base field of a compressed cap.
-  ///
-  /// \param[in] local_cap The compressed capability to retrieve the base from.
-  /// \returns 64 bit base value.
-  static inline u64 GetBase(const LocalCap &local_cap) {
-    external::cc128_cap_t decom;
-    external::cc128_decompress_mem(local_cap.GetMetadata(),
-                                   local_cap.GetValue(), local_cap.IsTagged(),
-                                   &decom);
-    return decom.base();
-  }
-
-  /// Retrieves the calculated top value of a compressed cap.
-  ///
-  /// \param[in] local_cap The compressed capability to retrieve the top from.
-  /// \returns 64 bit base value.
-  static inline u64 GetTop(const LocalCap &local_cap) {
-    external::cc128_cap_t decom;
-    external::cc128_decompress_mem(local_cap.GetMetadata(),
-                                   local_cap.GetValue(), local_cap.IsTagged(),
-                                   &decom);
-    return decom.top64();
-  }
-
-  /// Extracts the offset from a compressed metadata.
-  ///
-  /// \param[in] local_cap The compressed capability to retrieve the offset
-  /// from.
-  /// \returns The offset from the capability's base value.
-  static inline u64 GetOffset(const LocalCap &local_cap) {
-    external::cc128_cap_t decom;
-    external::cc128_decompress_mem(local_cap.GetMetadata(),
-                                   local_cap.GetValue(), local_cap.IsTagged(),
-                                   &decom);
-    const external::cc128_offset_t offset = decom.offset();
-    // Create equivalent to offset64() which doesn't exist
-    return offset > CC128_MAX_ADDR ? CC128_MAX_ADDR : (u64)offset;
-  }
-
-  /// Tests if a capability is representable with a given cursor.
-  ///
-  /// \param[in] local_cap The compressed capability to test.
-  /// \param[in] cursor The requested new cursor to test.
-  /// \returns True if the capability is representable, otherwise false.
-  static inline bool IsRepresentableWithCursor(const LocalCap &local_cap,
-                                               u64 cursor) {
-    external::cc128_cap_t decom;
-    external::cc128_decompress_mem(local_cap.GetMetadata(),
-                                   local_cap.GetValue(), local_cap.IsTagged(),
-                                   &decom);
-    return external::cc128_is_representable_with_addr(&decom, cursor);
-  }
-
-  /// Sets the value of a capability.
-  ///
-  /// \param[in] local_cap The compressed capability to update.
-  /// \param[in] value The requested value to set.
-  static inline void SetValue(LocalCap &local_cap, u64 value) {
-    if (UNLIKELY(!IsRepresentableWithCursor(local_cap, value)))
-      local_cap.ClearTag();
-    local_cap.SetValue(value);
-  }
-
-  /// Sets the bounds of a compressed capability.
-  ///
-  /// \param[in] local_cap The compressed capability to update.
-  /// \param[in] base The requested base value.
-  /// \param[in] top The requested top value.
-  /// \param[in] needs_exact True if exact representation is requested.
-  /// \param[out] is_exact Bool set true only if the output metadata has exactly
-  ///             the requested bounds, otherwise false.
-  /// \returns 64 bit base value.
-  static inline void SetBounds(LocalCap &local_cap, u64 base, u64 top,
-                               bool needs_exact, bool &is_exact) {
-    external::cc128_cap_t decom;
-    external::cc128_decompress_mem(local_cap.GetMetadata(),
-                                   local_cap.GetValue(), local_cap.IsTagged(),
-                                   &decom);
-    is_exact = external::cc128_setbounds(&decom, base, top);
-    if (UNLIKELY(!is_exact && needs_exact))
-      local_cap.ClearTag();
-    local_cap.SetMetadata(external::cc128_compress_mem(&decom));
-  }
-
-  /// Extracts the type bits from a compressed metadata.
-  ///
-  /// \param[in] local_cap The compressed capability to retrieve the type from.
-  /// \returns The type field extracted from the compressed metadata.
-  static inline u64 GetType(const LocalCap &local_cap) {
-    external::cc128_cap_t decom;
-    external::cc128_decompress_mem(local_cap.GetMetadata(),
-                                   local_cap.GetValue(), local_cap.IsTagged(),
-                                   &decom);
-    return decom.type();
-  }
-
-  /// Tests if a capability is a subset of another capability.
-  ///
-  /// \param[in] local_cap_check the compressed capability to check.
-  /// \param[in] local_cap the compressed capability to check against.
-  /// \returns True if local_cap_check is a subset of local_cap, otherwise
-  /// false.
-  static inline bool SubsetTest(const LocalCap &local_cap_check,
-                                const LocalCap &local_cap) {
-    external::cc128_cap_t decom_check;
-    external::cc128_cap_t decom;
-    external::cc128_decompress_mem(local_cap_check.GetMetadata(),
-                                   local_cap_check.GetValue(),
-                                   local_cap_check.IsTagged(), &decom_check);
-    external::cc128_decompress_mem(local_cap.GetMetadata(),
-                                   local_cap.GetValue(), local_cap.IsTagged(),
-                                   &decom);
-
-    return (decom_check.cr_tag >= decom.cr_tag) &&
-           (decom_check.base() >= decom.base()) &&
-           (decom_check.top() <= decom.top()) &&
-           ((decom_check.permissions() & decom.permissions()) ==
-            decom_check.permissions());
-  }
-
-  /// Tests if a capability is a sealed capability.
-  ///
-  /// \param[in] local_cap the compressed capability to check.
-  /// \returns True if local_cap is a sealed, otherwise
-  /// false.
-  static inline bool IsSealed(const LocalCap &local_cap) {
-    external::cc128_cap_t decom;
-    external::cc128_decompress_mem(local_cap.GetMetadata(),
-                                   local_cap.GetValue(), local_cap.IsTagged(),
-                                   &decom);
-    return decom.is_sealed();
-  }
-};  // struct methods
+};  // struct Adapter
 
 }  // namespace ccl
 

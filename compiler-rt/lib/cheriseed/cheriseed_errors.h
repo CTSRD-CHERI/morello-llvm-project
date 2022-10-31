@@ -16,6 +16,7 @@
 #define CHERISEED_ERRORS_H
 
 #include "cheriseed_libc.h"
+#include "cheriseed_local_cap.h"
 #include "sanitizer_common/sanitizer_common.h"
 
 namespace __cheriseed {

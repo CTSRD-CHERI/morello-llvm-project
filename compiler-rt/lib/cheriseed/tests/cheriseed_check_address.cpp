@@ -80,7 +80,7 @@ TEST(InvalidAddressDeathTest, ClearAllTags) {
 }
 
 TEST(InvalidAddressDeathTest, LockAndCopyAllTags) {
-  u8 a;
+  uint8_t a;
   __cheriseed_cap_t tagged_cap;
   utils::InitCap(&tagged_cap, &a);
   TEST_INVALID_ADDRESS_CAP(
@@ -90,7 +90,7 @@ TEST(InvalidAddressDeathTest, LockAndCopyAllTags) {
 }
 
 TEST(InvalidAddressDeathTest, CopyAllTags) {
-  u8 a;
+  uint8_t a;
   __cheriseed_cap_t tagged_cap;
   utils::InitCap(&tagged_cap, &a);
   TEST_INVALID_ADDRESS_CAP(__cheriseed_copy_all_tags(&tagged_cap, nullptr, 0));

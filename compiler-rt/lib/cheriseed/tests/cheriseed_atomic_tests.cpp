@@ -17,6 +17,7 @@
 #include "cheriseed_test_utils.h"
 
 using __cheriseed::AllowNullCap;
+using __cheriseed::LocalCap;
 using __cheriseed::SnapshotOptions;
 
 TEST(Atomics, ReadWrite) {

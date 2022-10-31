@@ -31,6 +31,7 @@ enum Permissions : CheckType {
   // Useful values
   LAST = STORE_CAP,
   MASK = (LAST << 1) - 1,
+  ALL = EXECUTE | LOAD | STORE | LOAD_CAP | STORE_CAP,
 }; // enum Permissions
 
 enum Check : CheckType {

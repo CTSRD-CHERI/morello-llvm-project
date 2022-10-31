@@ -20,11 +20,12 @@
 
 #if !defined(CHERISEED_UNIT_TESTING)
 #include <sanitizer/cheriseed_interface.h>
+
+#include "cheriseed_abi_defs.h"
 #else
 #include "cheriseed_interface_internal.h"
+#include "cheriseed_local_cap.h"
 #endif
-
-#include "cheriseed_ccl_interface.h"
 
 namespace utils {
 
@@ -123,7 +124,7 @@ struct OnStackArgs {
     auxv[1] = {0, 0};
   }
 
-  OnStackArgs(u64 type, u64 value) {
+  OnStackArgs(uint64_t type, uint64_t value) {
     argc = 1;
     argv[0] = nullptr;
     envp[0] = reinterpret_cast<const char *>(&envp[1]);
@@ -132,13 +133,13 @@ struct OnStackArgs {
     auxv[1] = {0, 0};
   }
 
-  u64 GetAddress() const { return reinterpret_cast<u64>(&argc); }
+  uint64_t GetAddress() const { return reinterpret_cast<uint64_t>(&argc); }
 
   int argc;
   const char *argv[1];
   const char *envp[2];
   struct {
-    u64 v[2];
+    uint64_t v[2];
   } auxv[2];
 };  // struct OnStackArgs
 

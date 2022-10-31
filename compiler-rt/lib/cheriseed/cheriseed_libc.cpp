@@ -16,7 +16,7 @@
 
 #include "cheriseed_libc.h"
 
-#include "cheriseed_ccl_interface.h"
+#include "cheriseed_local_cap.h"
 #include "sanitizer_common/sanitizer_common.h"
 #include "sanitizer_common/sanitizer_file.h"
 #include "sanitizer_common/sanitizer_linux.h"
@@ -62,16 +62,18 @@ static bool HasCancellationPoints() {
   return __shim_supports_cancellation_points();
 }
 
-// Helper to build a bounded capability.
-static LocalCap BuildBoundedCap(u64 address, u64 size, u64 perms) {
-  LocalCap local_cap(LibcOpts);
-  ccl::methods::BuildBoundedCap(local_cap, address, size, perms);
-  return local_cap;
+// Helper to create a bounded capability.
+static void CreateBoundedCap(__cheriseed_cap_t *cap, u64 address, u64 size,
+                             u64 perms) {
+  LocalCap local_cap{LibcOpts};
+  LocalCapAdapter::BuildBoundedCap(local_cap, address, size, perms);
+  local_cap.Store(cap);
 }
 
-// Helper to build a bounded capability.
-static LocalCap BuildBoundedCap(void *ptr, u64 size, u64 perms) {
-  return BuildBoundedCap(reinterpret_cast<u64>(ptr), size, perms);
+// Helper to create a bounded capability.
+static void CreateBoundedCap(__cheriseed_cap_t *cap, void *ptr, u64 size,
+                             u64 perms) {
+  CreateBoundedCap(cap, reinterpret_cast<u64>(ptr), size, perms);
 }
 
 // Helper to invoke a system call.
@@ -92,7 +94,7 @@ struct SystemCall final {
   // A system call argument, but a capability
   struct CapArgument final {
     uintptr_t operator&() { return reinterpret_cast<uintptr_t>(this); }
-    u64 Value() { return LocalCap(LibcOpts, &data).GetValue(); }
+    u64 Value() { return LocalCap{LibcOpts, &data}.GetValue(); }
     __cheriseed_cap_t *Data() { return &data; }
 
    private:
@@ -148,7 +150,7 @@ struct SystemCall final {
       Trap();
 
     if (IsPureCapabilityABI())
-      BuildBoundedCap(arg, size, perms).Store(args_cap[num_args].Data());
+      CreateBoundedCap(args_cap[num_args].Data(), arg, size, perms);
     else
       args[num_args] = arg;
 
@@ -231,10 +233,10 @@ SigInfo::SigInfo(int signo, int code, vaddr addr) {
   if (IsPureCapabilityABI()) {
     purecap.signo = signo;
     purecap.code = code;
-    LocalCap local_cap(LibcOpts);
-    ccl::methods::BuildMaxCap(local_cap, addr);
-    ccl::methods::PermsAnd(local_cap, ccl::permissions::READ_CAP_PERMS |
-                                          ccl::permissions::EXECUTE);
+    LocalCap local_cap{LibcOpts};
+    LocalCapAdapter::BuildMaxCap(local_cap, addr);
+    local_cap.ReducePermissions(ccl::permissions::READ_CAP_PERMS |
+                                ccl::permissions::EXECUTE);
     local_cap.Store(&purecap.addr);
   } else {
     hybrid.signo = signo;
@@ -255,7 +257,7 @@ void *SigInfo::operator&() {
 SigAction::SigAction() {
   __sanitizer::internal_memset(this, 0, sizeof(*this));
   if (IsPureCapabilityABI())
-    LocalCap(LibcOpts, kSigErr, 0).Store(&purecap.handler);
+    LocalCap{LibcOpts, kSigErr, 0}.Store(&purecap.handler);
   else
     hybrid.handler = kSigErr;
 }
@@ -281,7 +283,7 @@ bool SigAction::GetAction(SignalNumber signo, SigAction &action) {
 
   // Failed, poison the handler so that HasHandler() returns false.
   if (IsPureCapabilityABI())
-    LocalCap(LibcOpts, kSigErr, 0).Store(&action.purecap.handler);
+    LocalCap{LibcOpts, kSigErr, 0}.Store(&action.purecap.handler);
   else
     action.hybrid.handler = kSigErr;
 
@@ -297,7 +299,7 @@ bool SigAction::SetDefaultAction(SignalNumber signo) {
   // act
   if (IsPureCapabilityABI()) {
     action.purecap.flags = kRestart | kNoDefer;
-    LocalCap(LibcOpts, kSigDfl, 0).Store(&action.purecap.handler);
+    LocalCap{LibcOpts, kSigDfl, 0}.Store(&action.purecap.handler);
     sc.Arg(&action.purecap, ccl::permissions::READ_CAP_PERMS);
   } else {
     action.hybrid.flags = kRestart | kNoDefer;
@@ -315,7 +317,7 @@ bool SigAction::SetDefaultAction(SignalNumber signo) {
 
   // Failed, poison the handler so that HasHandler() returns false.
   if (IsPureCapabilityABI())
-    LocalCap(LibcOpts, kSigErr, 0).Store(&action.purecap.handler);
+    LocalCap{LibcOpts, kSigErr, 0}.Store(&action.purecap.handler);
   else
     action.hybrid.handler = kSigErr;
 
@@ -325,10 +327,9 @@ bool SigAction::SetDefaultAction(SignalNumber signo) {
 bool SigAction::HasHandler() const {
   u64 handler;
   if (IsPureCapabilityABI()) {
-    const u64 required_perms =
-        ccl::permissions::LOAD | ccl::permissions::EXECUTE;
-    LocalCap local_cap(LibcOpts, &purecap.handler);
-    if ((ccl::methods::GetPerms(local_cap) & required_perms) != required_perms)
+    LocalCap local_cap{LibcOpts, &purecap.handler};
+    if (!local_cap.HasPermissions(ccl::permissions::LOAD |
+                                  ccl::permissions::EXECUTE))
       return false;
     // TODO: Check tag when it gets implemented.
     handler = local_cap.GetValue();
@@ -369,15 +370,14 @@ SignalHandleMode SigAction::InvokeHybrid(SigInfo &info) {
 SignalHandleMode SigAction::InvokePureCap(SigInfo &info) {
   // Prepare 2nd argument
   __cheriseed_cap_t cap_info;
-  BuildBoundedCap(
-      &info, sizeof(info),
-      ccl::permissions::READ_CAP_PERMS | ccl::permissions::WRITE_CAP_PERMS)
-      .Store(&cap_info);
+  CreateBoundedCap(
+      &cap_info, &info, sizeof(info),
+      ccl::permissions::READ_CAP_PERMS | ccl::permissions::WRITE_CAP_PERMS);
   // Prepare 3rd argument
   SignalHandleMode mode = SignalHandleMode::SHM_DEFAULT;
   __cheriseed_cap_t cap_mode;
-  BuildBoundedCap(&mode, sizeof(mode), ccl::permissions::STORE)
-      .Store(&cap_mode);
+
+  CreateBoundedCap(&cap_mode, &mode, sizeof(mode), ccl::permissions::STORE);
   // Create a new set and add the current signo if SA_NODEFER is unset.
   SigSet set = purecap.mask;
   if ((purecap.flags & kNoDefer) == 0)
@@ -386,7 +386,7 @@ SignalHandleMode SigAction::InvokePureCap(SigInfo &info) {
   ScopedSigProcMask scope{set};
 
   reinterpret_cast<HandlerType>(
-      LocalCap(LibcOpts, &purecap.handler).GetValue())(info.SignalNumber(),
+      LocalCap{LibcOpts, &purecap.handler}.GetValue())(info.SignalNumber(),
                                                        &cap_info, &cap_mode);
   return mode;
 }

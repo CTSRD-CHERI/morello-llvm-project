@@ -129,7 +129,7 @@ TEST(UnalignedDeathTest, ClearAllTags) {
 }
 
 TEST(UnalignedDeathTest, LockAndCopyAllTags) {
-  u8 a;
+  uint8_t a;
   __cheriseed_cap_t tagged_cap;
   utils::InitCap(&tagged_cap, &a);
   TEST_UNALIGNED_CAP(
@@ -139,7 +139,7 @@ TEST(UnalignedDeathTest, LockAndCopyAllTags) {
 }
 
 TEST(UnalignedDeathTest, CopyAllTags) {
-  u8 a;
+  uint8_t a;
   __cheriseed_cap_t tagged_cap;
   utils::InitCap(&tagged_cap, &a);
   TEST_UNALIGNED_CAP(__cheriseed_copy_all_tags(&tagged_cap, &uacap, 0));

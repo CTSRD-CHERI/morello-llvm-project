@@ -26,13 +26,6 @@ using __sanitizer::u8;
 using __sanitizer::usize;
 using __sanitizer::vaddr;
 
-// Forward declare CCL interface.
-// This is required so that it can be made a friend and so some methods of
-// LocalCap will only be accessible to that.
-namespace ccl {
-struct methods;
-}  // namespace ccl
-
 namespace __cheriseed {
 
 /// This mixin class disables copy and move constructors and assignment
@@ -156,15 +149,11 @@ struct SnapshotOptions : public Options {
 };  // struct SnapshotOptions
 
 // The coarse internal representation of an in-memory capability.
-struct __cheriseed_cap_t {
+struct __cheriseed_cap_t final : public DisableCopyAndMoveMixin {
   // Note: not all the members are initialized on purpose.
   __cheriseed_cap_t() {}
 
  protected:
-  // Do not allow copy for everyone, except for derived classes
-  __cheriseed_cap_t(const __cheriseed_cap_t &) = default;
-  __cheriseed_cap_t &operator=(__cheriseed_cap_t const &) = default;
-
   u64 value;     // virtual address
   u64 metadata;  // compressed metadata
 } ALIGNED(abi::kCapabilityMinAlignment);
@@ -196,9 +185,6 @@ struct MaybeNull {
   T value;
 };  // struct MaybeNull
 
-/// Shorthand for a capability which may be null.
-using AllowNullCap = MaybeNull<const __cheriseed_cap_t *>;
-
 // Possible tag states.
 enum TagState : u8 {
   TS_CLEARED = 0,
@@ -209,7 +195,7 @@ enum TagState : u8 {
 // Locks a tag with spinlock and acquire semantics.
 //
 // Returns the previous tag value.
-static inline TagState AcquireTag(TagState *const ptr) {
+static ALWAYS_INLINE TagState AcquireTag(TagState *const ptr) {
   for (;;) {
     TagState prev_tag =
         __atomic_exchange_n(ptr, TagState::TS_LOCKED, __ATOMIC_ACQUIRE);
@@ -221,111 +207,19 @@ static inline TagState AcquireTag(TagState *const ptr) {
 // Writes a tag with release semantics.
 //
 // Returns the previous tag value.
-static inline TagState ReleaseTag(TagState *ptr, TagState tag) {
+static ALWAYS_INLINE TagState ReleaseTag(TagState *ptr, TagState tag) {
   return __atomic_exchange_n(ptr, tag, __ATOMIC_RELEASE);
 }
 
 // Writes a tag with relaxed semantics..
-static inline void WriteTag(TagState *ptr, TagState tag) {
+static ALWAYS_INLINE void WriteTag(TagState *ptr, TagState tag) {
   __atomic_store_n(ptr, tag, __ATOMIC_RELAXED);
 }
 
 // Reads a tag with relaxed semantics.
-static inline TagState ReadTag(TagState *ptr) {
+static ALWAYS_INLINE TagState ReadTag(TagState *ptr) {
   return __atomic_load_n(ptr, __ATOMIC_RELAXED);
 }
-
-/// Class which interacts with the public (opaque) type and creates an
-/// in-flight capability, which then can be modified and written to memory.
-struct LocalCap : public __cheriseed_cap_t {
-  // Note: not all the members are initialized on purpose.
-  explicit LocalCap(const Options &Opts) : Opts(Opts) { ClearTag(); }
-
-  // Note: not all the members are initialized on purpose.
-  LocalCap(const Options &Opts, u64 value, u64 metadata) : Opts(Opts) {
-    SetValue(value);
-    SetMetadata(metadata);
-    ClearTag();
-  }
-
-  // Note: not all the members are initialized on purpose.
-  LocalCap(const Options &Opts, const __cheriseed_cap_t *ptr,
-           memory_order memory_order = memory_order::memory_order_relaxed)
-      : LocalCap(Opts, ptr, memory_order, false) {}
-
-  // Note: not all the members are initialized on purpose.
-  LocalCap(const Options &Opts, AllowNullCap maybe_nullptr,
-           memory_order memory_order = memory_order::memory_order_relaxed)
-      : LocalCap(Opts, maybe_nullptr.value, memory_order, true) {}
-
-  __cheriseed_cap_t *Store(
-      __cheriseed_cap_t *ptr,
-      memory_order memory_order = memory_order::memory_order_relaxed) const;
-
-  void Store(LocalCap &scoped_cap) const;
-
-  const LocalCap &RequireValidAddress() const;
-  const LocalCap &RequireAligned() const;
-  const LocalCap &RequireTagged() const;
-  const LocalCap &RequirePermissions(u64 perms) const;
-  const LocalCap &RequireBounds(u64 size) const;
-
-  vaddr GetAddress() const { return address; }
-  TagState *GetShadowAddress() const {
-    return reinterpret_cast<TagState *>(
-        Globals::ShadowMap.GetShadowAddressFrom(address));
-  }
-  u64 GetValue() const { return value; }
-  u64 GetMetadata() const { return metadata; }
-  vaddr GetBase() const;
-  vaddr GetTop() const;
-  u64 GetPermissions() const;
-  bool IsTagged() const { return (tag_state == TagState::TS_TAGGED); }
-  void ClearTag() { tag_state = TagState::TS_CLEARED; }
-  const Options &GetOpts() const { return Opts; }
-
-#ifndef CHERISEED_UNIT_TESTING
- protected:
-#endif
-  LocalCap(const Options &Opts, const __cheriseed_cap_t *ptr,
-           memory_order memory_order, bool allow_nullcap);
-
-  void Load() {
-    const u64 *cap = reinterpret_cast<const u64 *>(GetAddress());
-    SetValue(cap[0]);
-    SetMetadata(cap[1]);
-  }
-
-  void SetAddress(const __cheriseed_cap_t *ptr) {
-    address = reinterpret_cast<vaddr>(ptr);
-  }
-
-  void SetValue(u64 value) { this->value = value; }
-  void SetMetadata(u64 metadata) { this->metadata = metadata; }
-  void SetTag() { tag_state = TagState::TS_TAGGED; }
-
-  /// Semantic configuration options for this capability
-  const Options &Opts;
-  /// The address this capability originates from, if any.
-  vaddr address;
-  /// The tagged state of this capability.
-  TagState tag_state;
-
-  // Allow access to all private methods and members for CCL interface.
-  friend struct ccl::methods;
-  // Allow access to all private methods and members for ScopeLockedLocalCap.
-  friend struct ScopeLockedLocalCap;
-};  // struct LocalCap
-
-struct ScopeLockedLocalCap final : public LocalCap {
-  ScopeLockedLocalCap(const Options &Opts, const __cheriseed_cap_t *ptr);
-
-  __cheriseed_cap_t *Store(
-      __cheriseed_cap_t *ptr,
-      memory_order memory_order = memory_order::memory_order_relaxed) const;
-
-  ~ScopeLockedLocalCap() { ReleaseTag(GetShadowAddress(), tag_state); }
-};  // struct ScopeLockedLocalCap
 
 // Helper class to search for environment variables.
 struct Environment {
@@ -362,7 +256,5 @@ struct Environment {
 void ControlChecksDynamic(const Environment &env);
 
 }  // namespace __cheriseed
-
-using __cheriseed::LocalCap;
 
 #endif  // CHERISEED_COMMON_H
