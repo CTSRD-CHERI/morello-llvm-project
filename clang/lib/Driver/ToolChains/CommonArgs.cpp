@@ -825,6 +825,10 @@ collectSanitizerRuntimes(const ToolChain &TC, const ArgList &Args,
   if (SanArgs.needsStatsRt() && SanArgs.linkRuntimes())
     StaticRuntimes.push_back("stats_client");
 
+  // The cheriseed-relocation library is also statically linked into DSOs.
+  if (SanArgs.needsCHERIseedRt() && SanArgs.linkRuntimes())
+    StaticRuntimes.push_back("cheriseed-relocation");
+
   // Collect static runtimes.
   if (Args.hasArg(options::OPT_shared)) {
     // Don't link static runtimes into DSOs.

@@ -75,6 +75,7 @@ if(COMPILER_RT_CAN_EXECUTE_TESTS AND NOT ANDROID)
 
     set(CHERISEED_TEST_RUNTIME_OBJECTS
         $<TARGET_OBJECTS:clang_rt.cheriseed-${arch}>
+        $<TARGET_OBJECTS:clang_rt.cheriseed-relocation-${arch}>
         $<TARGET_OBJECTS:RTSanitizerCommon.${arch}>
         $<TARGET_OBJECTS:RTSanitizerCommonNoLibc.${arch}>)
 

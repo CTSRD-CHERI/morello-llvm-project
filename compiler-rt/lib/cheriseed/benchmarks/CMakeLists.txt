@@ -27,6 +27,7 @@ foreach(arch ${CHERISEED_SUPPORTED_ARCH})
     add_benchmark(CHERIseedBenchmarks.${arch}
                   ${CHERISEED_BENCHMARK_SOURCES}
                   $<TARGET_OBJECTS:clang_rt.cheriseed-${arch}>
+                  $<TARGET_OBJECTS:clang_rt.cheriseed-relocation-${arch}>
                   $<TARGET_OBJECTS:RTSanitizerCommon.${arch}>
                   $<TARGET_OBJECTS:RTSanitizerCommonNoLibc.${arch}>)
 
