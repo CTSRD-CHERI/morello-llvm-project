@@ -584,14 +584,9 @@ void __cheriseed_static_init(uint64_t sp);
 
 /// Performs initialization of capabilities.
 ///
-/// \param[in] init_start Start address of the __cheriseed_initializers section,
-/// or zero.
-/// \param[in] init_stop End address of the __cheriseed_initializers section,
-/// or zero.
-///
 /// \note This API should be called before accessing any global variables,
 /// ideally early during libc init.
-void __cheriseed_relocate(uint64_t init_start, uint64_t init_stop);
+void __cheriseed_relocate(void);
 
 // -------------------------------------
 // APIs used by the compiler

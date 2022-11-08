@@ -128,6 +128,10 @@ static cl::opt<std::string> ClCompileTimeDisabledChecks(
 
 namespace {
 
+// Import some types
+using __cheriseed::abi::CompressInitSizeAndPerms;
+using __cheriseed::abi::Permissions;
+
 /// The address space which capabilities use.
 static constexpr unsigned kCapabilityAS = 200;
 /// Prefix to use in every CHERIseed-related names.
@@ -139,9 +143,7 @@ static constexpr char kInternalAttribute[] = "cheriseed-internal";
 /// The suffix to add to renamed symbols.
 static constexpr char kTakeNameSuffix[] = ".old";
 /// Initializer section
-static constexpr char kInitializerSection[] = "__cheriseed_initializers";
-/// Prefix for global initializer array names.
-static constexpr char kPrefixInitializers[] = "__cheriseed_inits_";
+static constexpr char kGlobalInitSection[] = "__cheriseed_initializers";
 /// Prefix for global initializer names.
 static constexpr char kPrefixInitializer[] = "__cheriseed_initializer_";
 /// Prefix for shadow capability names.
@@ -620,6 +622,25 @@ struct CHERIseed final : public InstVisitor<CHERIseed, Value *> {
     bool ReturnsCapability;
   }; // end of struct VisitorContext
 
+  /// RAII object to make usual setup operations on VisitorContext more
+  /// convenient.
+  struct ScopedVisitorContext final {
+    ScopedVisitorContext(LLVMContext &Ctx, VisitorContext &VC, Function *F,
+                         bool WithEmptyEntryBlock = false)
+        : IRB(Ctx), VC(VC) {
+      VC.reset();
+      VC.IRB = &IRB;
+      VC.F = F;
+      if (WithEmptyEntryBlock) {
+        VC.BB = BasicBlock::Create(Ctx, "", VC.F);
+        VC.IRB->SetInsertPoint(VC.BB);
+      }
+    }
+
+    IRBuilder<> IRB;
+    VisitorContext &VC;
+  }; // end of struct ScopedVisitorContext
+
   /// RAII object which holds the actual insertion point information of a
   /// context. When an instance is destructed, it restores the previously
   /// saved insertion point. This helper also restores the original BasicBlock
@@ -681,15 +702,14 @@ struct CHERIseed final : public InstVisitor<CHERIseed, Value *> {
     // the appropriate DataLayout string.
     // %__cheriseed_cap_t = type { i128 }
     CapTy =
-        StructType::create(Ctx, {Type::getInt128Ty(Ctx)}, "__cheriseed_cap_t");
+        StructType::create(Ctx, {AddrSizeTy, AddrSizeTy}, "__cheriseed_cap_t");
     CapTy->setMinimumAlignment(Align(16));
     CapPtrTy = CapTy->getPointerTo();
     CapPermsTy = Type::getInt32Ty(Ctx);
-    InitializerFuncTy = PointerType::get(FunctionType::get(VoidTy, false),
-                                         DL.getProgramAddressSpace());
     InitializerTy = StructType::create(
         Ctx,
-        {AddrSizeTy, AddrSizeTy, AddrSizeTy, CapPermsTy, InitializerFuncTy},
+        {CapPtrTy, PointerType::get(FunctionType::get(VoidTy, false),
+                                    DL.getProgramAddressSpace())},
         "__cheriseed_initializer_t");
   }
 
@@ -722,14 +742,10 @@ struct CHERIseed final : public InstVisitor<CHERIseed, Value *> {
     auto _ = DebugPrint::ScopedFunctionVisit(F);
     if (F.isDeclaration())
       return;
-    // Reset the context before visiting a new Function.
-    IRBuilder<> IRB{Ctx};
-    VC.reset();
-    VC.IRB = &IRB;
-    // Clone the original function but change its prototype, if required.
-    // The pass does this upfront because capabilities can appear anywhere
-    // within the function's body.
-    VC.F = mapFunction(&F);
+    // mapFunction() clones the original function but change its prototype,
+    // if required. The pass does this upfront because capabilities can
+    // appear anywhere within the function's body.
+    ScopedVisitorContext ScopedVC{Ctx, VC, mapFunction(&F)};
     // The pass inserts an indirect return argument
     // if the function returns a capability.
     VC.ReturnsCapability = IsCapability(F.getReturnType());
@@ -1030,10 +1046,10 @@ protected:
   ///
   /// \param GV The input GlobalVariable.
   /// \param NGV The mapped GlobalVariable.
-  /// \returns The pointer to the tuple containing data for global
-  /// initialization if used or else nullptr.
-  Constant *mapGlobalVariableInitializer(GlobalVariable *GV,
-                                         GlobalVariable *NGV);
+  /// \param GlobalCapInits The array to describe global capabilities
+  /// which need runtime initialization.
+  void mapGlobalVariableInitializer(GlobalVariable *GV, GlobalVariable *NGV,
+                                    SmallVector<Constant *> &GlobalCapInits);
 
   /// Maps a GlobalAlias to another Value.
   ///
@@ -1044,6 +1060,14 @@ protected:
   ///
   /// \param GA The input GlobalAlias.
   void mapGlobalAliasInitializer(GlobalAlias *GA);
+
+  /// Emits global arrays which contain data for runtime capability
+  /// initialization.
+  ///
+  /// \param Elements Vector of Constants to emit.
+  /// \param SectionName Name of the section in which to emit the global.
+  void emitGlobalInitArray(SmallVector<Constant *> Elements,
+                           const char *SectionName);
 
   /// Similar to Module::getOrInsertFunction(), but handles a case where the
   /// pass inserts a new function because of a library call. The named call
@@ -1271,8 +1295,6 @@ protected:
   Type *AddrSizeTy;
   /// Shorthand for '%__cheriseed_initializer_t'.
   StructType *InitializerTy;
-  /// Shorthand for the type of an initializer entry.
-  PointerType *InitializerFuncTy;
   /// A map used to map input Type-s.
   SimpleMap<Type> TypeMap{"TM"};
   /// A map used to map global Value-s per Module.
@@ -1405,8 +1427,7 @@ Value *CHERIseed::visitAtomicCmpXchgInst(AtomicCmpXchgInst &I) {
   Type *MNewTy = MNew->getType();
   Value *NBase = createCapAccessCheck(MBase, MNewTy->getPointerTo(),
                                       getTypeStoreSize(MNewTy),
-                                      __cheriseed::abi::Permissions::LOAD |
-                                          __cheriseed::abi::Permissions::STORE);
+                                      Permissions::LOAD | Permissions::STORE);
   Value *NI = VC.IRB->CreateAtomicCmpXchg(
       NBase, MCmp, MNew, I.getAlign(), I.getSuccessOrdering(),
       I.getFailureOrdering(), I.getSyncScopeID());
@@ -1445,8 +1466,7 @@ Value *CHERIseed::visitAtomicRMWInst(AtomicRMWInst &I) {
   Type *MValTy = MVal->getType();
   Value *NBase = createCapAccessCheck(MAddr, MValTy->getPointerTo(),
                                       getTypeStoreSize(MValTy),
-                                      __cheriseed::abi::Permissions::LOAD |
-                                          __cheriseed::abi::Permissions::STORE);
+                                      Permissions::LOAD | Permissions::STORE);
   Value *NI = VC.IRB->CreateAtomicRMW(I.getOperation(), NBase, MVal,
                                       I.getAlign(), I.getOrdering());
   DebugPrint::Emit(NI);
@@ -1498,7 +1518,7 @@ Value *CHERIseed::visitCallInst(CallInst &I) {
 
   if (Callee->getType() == CapPtrTy)
     Callee = createCapAccessCheck(Callee, FTy->getPointerTo(), 1,
-                                  __cheriseed::abi::Permissions::EXECUTE);
+                                  Permissions::EXECUTE);
   CallInst *NV = VC.IRB->CreateCall(FTy, Callee, Ctx.Args);
   InitializeCallInst(NV, I, Ctx.Attrs);
   DebugPrint::Emit(NV);
@@ -1602,8 +1622,7 @@ Value *CHERIseed::visitIndirectBrInst(IndirectBrInst &I) {
     return Base::visitIndirectBrInst(I);
 
   Value *Addr = mapValue(I.getAddress());
-  Value *Ptr = createCapAccessCheck(Addr, Int8PtrTy, 0,
-                                    __cheriseed::abi::Permissions::EXECUTE);
+  Value *Ptr = createCapAccessCheck(Addr, Int8PtrTy, 0, Permissions::EXECUTE);
   IndirectBrInst *IBR = VC.IRB->CreateIndirectBr(Ptr, I.getNumDestinations());
   for (BasicBlock *BB : I.successors())
     IBR->addDestination(cast<BasicBlock>(mapValue(BB)));
@@ -1721,8 +1740,8 @@ Value *CHERIseed::visitLoadInst(LoadInst &I) {
   // Handle any other loads.
   const unsigned StoreSize = getTypeStoreSize(ValTy);
   Type *NValTy = mapType(ValTy->getPointerTo());
-  Value *Ptr = createCapAccessCheck(NAddr, NValTy, StoreSize,
-                                    __cheriseed::abi::Permissions::LOAD);
+  Value *Ptr =
+      createCapAccessCheck(NAddr, NValTy, StoreSize, Permissions::LOAD);
   LoadInst *NI = VC.IRB->CreateLoad(mapType(ValTy), Ptr, I.isVolatile());
   NI->setOrdering(I.getOrdering());
   NI->setAlignment(I.getAlign());
@@ -1781,8 +1800,8 @@ Value *CHERIseed::visitStoreInst(StoreInst &I) {
   // Handle any other stores.
   unsigned StoreSize = getTypeStoreSize(ValTy);
   Type *NValTy = mapType(ValTy->getPointerTo());
-  Value *Ptr = createCapAccessCheck(NAddr, NValTy, StoreSize,
-                                    __cheriseed::abi::Permissions::STORE);
+  Value *Ptr =
+      createCapAccessCheck(NAddr, NValTy, StoreSize, Permissions::STORE);
   StoreInst *NI = VC.IRB->CreateStore(MV, Ptr, I.isVolatile());
   NI->setOrdering(I.getOrdering());
   NI->setAlignment(I.getAlign());
@@ -2303,36 +2322,20 @@ void CHERIseed::visitGlobals() {
   for (GlobalAlias *GA : Aliases)
     mapGlobalAlias(GA);
 
-  // A vector to store global initializer section tuples.
-  SmallVector<Constant *, 8> GlobalInitsSectionTuples;
+  // A vector to collect global capability initializer descriptors.
+  SmallVector<Constant *> GlobalCapInits;
+  GlobalCapInits.reserve(2 * GlobalsToInit.size());
 
   // 3rd step: map GlobalVariable initializers.
   for (auto &Pair : GlobalsToInit)
-    if (Constant *Init = mapGlobalVariableInitializer(Pair.first, Pair.second))
-      GlobalInitsSectionTuples.push_back(Init);
+    mapGlobalVariableInitializer(Pair.first, Pair.second, GlobalCapInits);
 
   // 4th step: map GlobalAlias aliasees.
   for (GlobalAlias *GA : Aliases)
     mapGlobalAliasInitializer(GA);
 
-  // 5th step: emit capability initializers.
-  if (!GlobalInitsSectionTuples.empty()) {
-    // Create a variable with section attribute '__cheriseed_initializers'
-    // containing all data for global initialization.
-    ArrayType *ArrayOfGlobalInitSectionTy =
-        ArrayType::get(InitializerTy, GlobalInitsSectionTuples.size());
-    GlobalVariable *GlobalInits = new GlobalVariable(
-        M, ArrayOfGlobalInitSectionTy, /* isConstant */ false,
-        GlobalVariable::InternalLinkage,
-        ConstantArray::get(ArrayOfGlobalInitSectionTy,
-                           GlobalInitsSectionTuples),
-        Twine(kPrefixInitializers, sys::path::stem(M.getModuleIdentifier())));
-    GlobalInits->setSection(kInitializerSection);
-    GlobalInits->setAlignment(Align(8));
-    // Append to llvm.used so that so that during linking this variable
-    // is retained.
-    appendToUsed(M, GlobalInits);
-  }
+  // 5th step: emit global capability initializers and init functions.
+  emitGlobalInitArray(GlobalCapInits, kGlobalInitSection);
 
   // There might be deferred values after mapping globals, process them now.
   DebugPrint::BeginProcessDeferred();
@@ -2872,8 +2875,7 @@ GlobalVariable *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
 
   // This is Purecap ABI, create the shadow capability to access the global.
   GlobalVariable *ShadowCap = new GlobalVariable(
-      M, CapTy, false, GetNonCommonLinkage(GV->getLinkage()),
-      ConstantStruct::get(CapTy, Constant::getNullValue(CapTy)));
+      M, CapTy, false, GetNonCommonLinkage(GV->getLinkage()), nullptr);
   ShadowCap->setThreadLocal(GV->isThreadLocal());
   // Call the shadow capability as the original global and call the original
   // global something like __cheriseed_shadowed_global_<name>.
@@ -2904,8 +2906,9 @@ GlobalVariable *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
   return NGV;
 }
 
-Constant *CHERIseed::mapGlobalVariableInitializer(GlobalVariable *GV,
-                                                  GlobalVariable *NGV) {
+void CHERIseed::mapGlobalVariableInitializer(
+    GlobalVariable *GV, GlobalVariable *NGV,
+    SmallVector<Constant *> &GlobalCapsInits) {
   StringRef NameRef = NGV->getName();
   if ((NameRef == "llvm.global_ctors") || (NameRef == "llvm.global_dtors")) {
     ArrayType *ATy = cast<ArrayType>(NGV->getValueType());
@@ -2930,7 +2933,7 @@ Constant *CHERIseed::mapGlobalVariableInitializer(GlobalVariable *GV,
       Initializer = ConstantAggregateZero::get(ATy);
     }
     NGV->setInitializer(Initializer);
-    return nullptr;
+    return;
   }
 
   if ((NameRef == "llvm.used") || (NameRef == "llvm.compiler.used")) {
@@ -2957,7 +2960,7 @@ Constant *CHERIseed::mapGlobalVariableInitializer(GlobalVariable *GV,
       else
         GO = cast<GlobalObject>(MaybeBitCast);
 
-      Constant *NV = nullptr;
+      Constant *NV;
       if (GlobalVariable *GV = dyn_cast<GlobalVariable>(GO))
         NV = GlobalMap.get(GO);
       else if (Function *F = dyn_cast<Function>(GO))
@@ -2969,7 +2972,7 @@ Constant *CHERIseed::mapGlobalVariableInitializer(GlobalVariable *GV,
     }
     NGV->setInitializer(
         ConstantArray::get(ATy, ArrayRef<Constant *>(Elements)));
-    return nullptr;
+    return;
   }
 
   GlobalVariable *MGV = cast<GlobalVariable>(GlobalMap.get(GV));
@@ -2983,35 +2986,27 @@ Constant *CHERIseed::mapGlobalVariableInitializer(GlobalVariable *GV,
   NGV->setInitializer(NGVI);
 
   // Set whether the global is a constant or not.
-  const bool IsConstant =
-      Analysis.needsRuntimeInitialization() ? false : GV->isConstant();
-  NGV->setConstant(IsConstant);
+  NGV->setConstant(Analysis.needsRuntimeInitialization() ? false
+                                                         : GV->isConstant());
 
-  // Create Initializer function body
-  SmallString<256> GlobalInitNameStorage;
-  StringRef GlobalInitNameRef;
-  if (ShadowCap)
-    GlobalInitNameRef = Twine(kPrefixInitializer, ShadowCap->getName())
-                            .toStringRef(GlobalInitNameStorage);
-  else
-    GlobalInitNameRef = Twine(kPrefixInitializer, NGV->getName())
-                            .toStringRef(GlobalInitNameStorage);
-  Function *InitFunction = cast<Function>(
-      M.getOrInsertFunction(GlobalInitNameRef, VoidTy).getCallee());
-  InitFunction->setLinkage(GlobalVariable::InternalLinkage);
-  InitFunction->addFnAttr(kInternalAttribute);
-  InitFunction->setComdat(NGV->getComdat());
-
-  auto _ = DebugPrint::ScopedFunctionVisit(*InitFunction);
-
-  IRBuilder<> IRB{Ctx};
-  VC.reset();
-  VC.F = InitFunction;
-  VC.IRB = &IRB;
-  VC.BB = BasicBlock::Create(Ctx, "", VC.F);
-  VC.IRB->SetInsertPoint(VC.BB);
-
+  Function *InitFunction{nullptr};
   if (Analysis.needsRuntimeInitialization()) {
+    // Create Initializer function.
+    SmallString<256> GlobalInitNameStorage;
+    StringRef GlobalInitNameRef =
+        Twine(kPrefixInitializer,
+              ShadowCap ? ShadowCap->getName() : NGV->getName())
+            .toStringRef(GlobalInitNameStorage);
+
+    InitFunction = cast<Function>(
+        M.getOrInsertFunction(GlobalInitNameRef, VoidTy).getCallee());
+    InitFunction->setLinkage(GlobalVariable::InternalLinkage);
+    InitFunction->addFnAttr(kInternalAttribute);
+    InitFunction->setComdat(NGV->getComdat());
+
+    auto _ = DebugPrint::ScopedFunctionVisit(*InitFunction);
+    ScopedVisitorContext ScopedVC{Ctx, VC, InitFunction,
+                                  /* WithEmptyEntryBlock */ true};
     // Some sanity checks
     if (!Analysis.isAggregateType())
       assert((Analysis.entries().size() <= 1) && "Expected at most one entry.");
@@ -3069,52 +3064,49 @@ Constant *CHERIseed::mapGlobalVariableInitializer(GlobalVariable *GV,
         llvm_unreachable("Not yet implemented");
       }
     }
+
+    // Remove init function if it does nothing.
+    if (VC.BB->size() != 0) {
+      VC.IRB->CreateRetVoid();
+    } else {
+      InitFunction->eraseFromParent();
+      InitFunction = nullptr;
+    }
   }
 
-  // Remove init if it does nothing i.e, just has instruction 'ret void'.
-  const bool HasInitFunction = VC.BB->size() != 0;
-  Constant *InitFunctionPtr;
-  if (HasInitFunction) {
-    VC.IRB->CreateRetVoid();
-    InitFunctionPtr = ConstantExpr::getPointerBitCastOrAddrSpaceCast(
-        InitFunction, InitializerFuncTy);
-  } else {
-    VC.F->eraseFromParent();
-    InitFunctionPtr = Constant::getNullValue(InitializerFuncTy);
-  }
-
-  VC.reset();
-
-  // Do not create an entry if there is no shadow capability or init function.
-  if (!ShadowCap && !HasInitFunction)
-    return nullptr;
-
-  // Constants to save in the initializer rodata.
-  Constant *ShadowCapAddr, *ShadowCapValue, *ShadowCapBoundsSize,
-      *ShadowCapClearPerms;
   if (ShadowCap) {
-    ShadowCapAddr = ConstantExpr::getPtrToInt(ShadowCap, AddrSizeTy);
-    ShadowCapValue = ConstantExpr::getPtrToInt(NGV, AddrSizeTy);
-    ShadowCapBoundsSize = ConstantInt::get(
-        AddrSizeTy, alignTo(DL.getTypeSizeInBits(NGV->getValueType()), 8) / 8);
-    // Determine which permissions should be cleared on the shadow cap.
-    uint64_t ClearPerms = __cheriseed::abi::Permissions::EXECUTE;
+    // Size the capability should describe.
+    uint64_t Size = alignTo(DL.getTypeSizeInBits(NGV->getValueType()), 8) / 8;
+    if (LLVM_UNLIKELY(Size >=
+                      (1ul << __cheriseed::abi::kEncodedPermissionShift)))
+      llvm_unreachable("Size is not supported");
+    //  Determine which permissions should be cleared on the shadow cap.
+    uint64_t ClearPerms = Permissions::EXECUTE;
     // Consider the constness of the original global. It might have been made
     // non-const because of runtime initializations, but the shadow capability
     // should still have STORE cleared if the original global was constant.
     if (GV->isConstant())
-      ClearPerms |= __cheriseed::abi::Permissions::STORE |
-                    __cheriseed::abi::Permissions::STORE_CAP;
-    ShadowCapClearPerms = ConstantInt::get(CapPermsTy, ClearPerms);
-  } else {
-    ShadowCapAddr = ShadowCapValue = ShadowCapBoundsSize =
-        Constant::getNullValue(AddrSizeTy);
-    ShadowCapClearPerms = Constant::getNullValue(CapPermsTy);
+      ClearPerms |= Permissions::STORE | Permissions::STORE_CAP;
+    // Compress Size and ClearPerms.
+    uint64_t Compressed =
+        CompressInitSizeAndPerms(Size, static_cast<Permissions>(ClearPerms));
+    // Store the address, size and permissions to clear in the capability.
+    ShadowCap->setInitializer(
+        ConstantStruct::get(CapTy, ConstantExpr::getPtrToInt(NGV, AddrSizeTy),
+                            ConstantInt::get(AddrSizeTy, Compressed)));
   }
 
-  return ConstantStruct::get(
-      InitializerTy, {ShadowCapAddr, ShadowCapValue, ShadowCapBoundsSize,
-                      ShadowCapClearPerms, InitFunctionPtr});
+  if (!ShadowCap && !InitFunction)
+    return;
+
+  Constant *Descriptor = ConstantStruct::get(
+      InitializerTy,
+      {ShadowCap ? ShadowCap
+                 : Constant::getNullValue(InitializerTy->getElementType(0)),
+       InitFunction
+           ? InitFunction
+           : Constant::getNullValue(InitializerTy->getElementType(1))});
+  GlobalCapsInits.push_back(Descriptor);
 }
 
 void CHERIseed::mapGlobalAlias(GlobalAlias *GA) {
@@ -3152,6 +3144,25 @@ void CHERIseed::mapGlobalAliasInitializer(GlobalAlias *GA) {
   }
 
   NGA->setAliasee(Aliasee);
+}
+
+void CHERIseed::emitGlobalInitArray(SmallVector<Constant *> Elements,
+                                    const char *SectionName) {
+  if (Elements.empty())
+    return;
+
+  Constant *Array = ConstantArray::get(
+      ArrayType::get(Elements[0]->getType(), Elements.size()), Elements);
+  GlobalVariable *GlobalInits =
+      new GlobalVariable(M, Array->getType(), /* isConstant */ false,
+                         GlobalVariable::InternalLinkage, Array,
+                         Twine(SectionName) + Twine('_') +
+                             sys::path::stem(M.getModuleIdentifier()));
+  GlobalInits->setSection(SectionName);
+  GlobalInits->setAlignment(Align(8));
+  // Append to llvm.used so that so that during linking this variable
+  // is retained.
+  appendToUsed(M, GlobalInits);
 }
 
 FunctionCallee CHERIseed::getOrInsertLibraryCall(const Twine &Name,
@@ -3329,7 +3340,7 @@ CHERIseed::CallContext CHERIseed::prepareCallArgs(CallInst &I) {
         DebugPrint::Emit(BC);
         Value *Ptr = createCapAccessCheck(MA, ByValType->getPointerTo(),
                                           getTypeStoreSize(ByValType),
-                                          __cheriseed::abi::Permissions::LOAD);
+                                          Permissions::LOAD);
         Value *Load =
             VC.IRB->CreateAlignedLoad(ByValType, Ptr, Align(SlotSize));
         DebugPrint::Emit(Load);
@@ -3702,13 +3713,11 @@ Value *CHERIseed::createBoundedCap(Value *Dst, Value *Addr, Value *Size,
   Size = Size ? Size : ConstantInt::get(AddrSizeTy, 0);
   uint64_t PermsToClear;
   if (IsCode) {
-    PermsToClear = __cheriseed::abi::Permissions::LOAD |
-                   __cheriseed::abi::Permissions::LOAD_CAP |
-                   __cheriseed::abi::Permissions::STORE |
-                   __cheriseed::abi::Permissions::STORE_CAP;
+    PermsToClear = Permissions::LOAD | Permissions::LOAD_CAP |
+                   Permissions::STORE | Permissions::STORE_CAP;
     Size = ConstantInt::get(AddrSizeTy, 1);
   } else {
-    PermsToClear = __cheriseed::abi::Permissions::EXECUTE;
+    PermsToClear = Permissions::EXECUTE;
   }
 
   return createRtCall(RtKind::GENERIC_CAP_INIT, Dst, IntAddr, Size,

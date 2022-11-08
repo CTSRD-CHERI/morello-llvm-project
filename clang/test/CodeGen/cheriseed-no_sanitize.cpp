@@ -27,7 +27,9 @@ int helper() {
 // CHECK-DISABLED: @ExternalGlobalHasSanitizeCHERIseed = external global i32, align 4
 // CHECK-DISABLED: @ExternalGlobalHasNoSanitizeCHERIseed = external global i32, align 4
 
-// CHECK-ENABLED:  @GlobalHasSanitizeCHERIseed = global %__cheriseed_cap_t zeroinitializer, align 16
+// CHECK-ENABLED:  @GlobalHasSanitizeCHERIseed = global %__cheriseed_cap_t {
+// CHECK-ENABLED-SAME i64 ptrtoint (i32* @__cheriseed_shadowed_global_GlobalHasSanitizeCHERIseed to i64),
+// CHECK-ENABLED-SAME i64 562949953421316 } , align 16
 // CHECK-ENABLED:  @GlobalHasNoSanitizeCHERIseed = global i32 0, align 4
 // CHECK-ENABLED:  @ExternalGlobalHasSanitizeCHERIseed = external global %__cheriseed_cap_t, align 16
 // CHECK-ENABLED:  @ExternalGlobalHasNoSanitizeCHERIseed = external global i32, align 4

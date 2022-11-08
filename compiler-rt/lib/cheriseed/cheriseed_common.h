@@ -153,6 +153,9 @@ struct __cheriseed_cap_t final : public DisableCopyAndMoveMixin {
   // Note: not all the members are initialized on purpose.
   __cheriseed_cap_t() {}
 
+  u64 GetValue() const { return value; }
+  u64 GetMetadata() const { return metadata; }
+
  protected:
   u64 value;     // virtual address
   u64 metadata;  // compressed metadata
@@ -164,18 +167,15 @@ struct __cheriseed_cmpxchg_result_t {
   u8 result;
 };  // struct __cheriseed_cmpxchg_result_t
 
+/// Shorthand for an initializer function type.
+using InitFnTy = void (*)();
+
 /// Internal representation of '__cheriseed_initializers' section tuples.
 struct __cheriseed_initializer_t {
   // Pointer to a capability.
   __cheriseed_cap_t *cap;
-  // Address to set for the capability.
-  u64 address;
-  // The size of the object pointed to by the capability.
-  u64 size;
-  // Permissions to be cleared.
-  u32 clear_perms;
   // Function which performs global initialization.
-  void (*init)();
+  InitFnTy init_fn;
 };  // struct __cheriseed_initializer_t
 
 /// Newtype to wrap pointers which may be nullptr.

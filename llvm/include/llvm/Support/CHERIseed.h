@@ -19,6 +19,7 @@ namespace __cheriseed {
 namespace abi {
 
 using CheckType = unsigned long;
+using AddrType = unsigned long long;
 
 // These permissions bits are used as the arguments for the function
 // __cheriseed_check_access as a platform independent representation.
@@ -49,6 +50,27 @@ enum Check : CheckType {
 
 static_assert(static_cast<CheckType>(Check::CHK_PERMS) < (1UL << 32),
               "LLVM permissions are out-of-range.");
+
+// Constant for the shift of permissions in the functions below.
+static constexpr unsigned kEncodedPermissionShift = 64 - 16;
+
+// Returns a "compressed" value which stores both the permissions to clear and
+// the size for a capability initializer.
+static constexpr AddrType CompressInitSizeAndPerms(AddrType size,
+                                                   Permissions clear_perms) {
+  // Supporting 16-bit of permissions for now.
+  // That leaves 48 bits for size, which is 256 TB.
+  return (static_cast<AddrType>(clear_perms) << kEncodedPermissionShift) |
+         (size & ((1ull << kEncodedPermissionShift) - 1));
+}
+
+// Returns the "decompressed" value of permissions to clear and size from a
+// compressed value.
+static constexpr void DecompressInitSizeAndPerms(AddrType value, AddrType &size,
+                                                 Permissions &clear_perms) {
+  size = value & ((1ull << kEncodedPermissionShift) - 1);
+  clear_perms = static_cast<Permissions>(value >> kEncodedPermissionShift);
+}
 
 // These flags helps selecting options while iterating.
 enum CheckOptionFlags : int {

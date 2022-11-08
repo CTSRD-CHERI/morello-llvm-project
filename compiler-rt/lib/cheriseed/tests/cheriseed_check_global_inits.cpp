@@ -17,14 +17,22 @@
 #include "cheriseed_test_utils.h"
 
 using namespace utils;
+using namespace __cheriseed;
 
-#define INSERT_INTO_SECTION(_cap, _addr, _size, _masks, _initFunc)       \
-  {                                                                      \
-    static __cheriseed::__cheriseed_initializer_t data                   \
-        __attribute__((section("__cheriseed_initializers"))) = {         \
-            reinterpret_cast<__cheriseed::__cheriseed_cap_t *>(_cap),    \
-            (u64)_addr, (u64)_size, (u32)_masks, (void (*)())_initFunc}; \
+#define INSERT_INTO_SECTION(_cap, _addr, _size, _masks, _initFunc)        \
+  {                                                                       \
+    if (_cap)                                                             \
+      LocalCap{NoOptionsEnabled{}, reinterpret_cast<u64>(_addr),          \
+               __cheriseed::abi::CompressInitSizeAndPerms(_size, _masks)} \
+          .Store(_cap);                                                   \
+    static __cheriseed_initializer_t data                                 \
+        __attribute__((section("__cheriseed_initializers"))) = {0, 0};    \
+    data.cap = _cap;                                                      \
+    data.init_fn = (void (*)())_initFunc;                                 \
   }
+
+static constexpr __cheriseed::abi::Permissions NoPermsToClear =
+    static_cast<__cheriseed::abi::Permissions>(0);
 
 // Test helpers
 static int a;
@@ -33,45 +41,45 @@ static void func_2() { a += 1; }
 
 TEST(CheckGlobalInits, ShadowCapInit) {
   static __cheriseed_cap_t cap;
-  __cheriseed_stack_cap_init(&cap, 0, 0);
-  INSERT_INTO_SECTION(&cap, &a, 0, 0, &func_1);
+  INSERT_INTO_SECTION(&cap, &a, sizeof(a), NoPermsToClear, &func_1);
 
-  ASSERT_CAPABILITY_VALUE_EQ(&cap, 0);
   __cheriseed_static_init(0);
-  __cheriseed_relocate(0, 0);
+  __cheriseed_relocate();
   ASSERT_CAPABILITY_VALUE_EQ(&cap, &a);
+  ASSERT_TAGGED(&cap);
 }
 
 TEST(CheckGlobalInits, InitializerFuncCall) {
   a = 1;
-  INSERT_INTO_SECTION(0, 0, 0, 0, &func_2);
+  INSERT_INTO_SECTION(0, nullptr, 0, NoPermsToClear, &func_2);
 
   ASSERT_EQ(a, 1);
   __cheriseed_static_init(0);
-  __cheriseed_relocate(0, 0);
+  __cheriseed_relocate();
   ASSERT_EQ(a, 2);
 }
 
 TEST(CheckGlobalInits, Bounds) {
   static int t;
   static __cheriseed_cap_t cap;
-  __cheriseed_stack_cap_init(&cap, 0, 0);
-  INSERT_INTO_SECTION(&cap, &t, sizeof(int), 0, &func_1);
+  INSERT_INTO_SECTION(&cap, &t, sizeof(t), NoPermsToClear, &func_1);
 
   __cheriseed_static_init(0);
-  __cheriseed_relocate(0, 0);
-  ASSERT_EQ(__cheriseed_length_get(&cap), sizeof(int));
+  __cheriseed_relocate();
+  ASSERT_EQ(__cheriseed_length_get(&cap), sizeof(t));
+  ASSERT_TAGGED(&cap);
 }
 
 TEST(CheckGlobalInits, Perms) {
   static int t;
   static __cheriseed_cap_t cap;
-  __cheriseed_stack_cap_init(&cap, 0, 0);
   INSERT_INTO_SECTION(&cap, &t, 0, __cheriseed::abi::Permissions::STORE,
                       &func_1);
 
   __cheriseed_static_init(0);
-  __cheriseed_relocate(0, 0);
+  __cheriseed_relocate();
   ASSERT_EQ(__cheriseed_perms_get(&cap),
-            ccl::permissions::ALL & ~ccl::permissions::STORE);
+            __cheriseed::abi::Permissions::ALL &
+                ~__cheriseed::abi::Permissions::STORE);
+  ASSERT_TAGGED(&cap);
 }

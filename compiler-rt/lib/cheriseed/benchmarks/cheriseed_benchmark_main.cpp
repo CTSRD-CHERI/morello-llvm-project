@@ -31,7 +31,7 @@ extern "C" void* __shim_syscall(long nr, long arg1, long arg2, long arg3,
 
 __attribute__((constructor)) void InitializeCHERIseedRuntime() {
   __cheriseed_static_init(0);
-  __cheriseed_relocate(0, 0);
+  __cheriseed_relocate();
 }
 
 BENCHMARK_MAIN();
