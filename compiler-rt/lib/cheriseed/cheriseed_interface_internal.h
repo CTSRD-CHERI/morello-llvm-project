@@ -199,6 +199,9 @@ void __cheriseed_static_init(u64 sp);
 SANITIZER_INTERFACE_ATTRIBUTE
 void __cheriseed_relocate(void);
 
+SANITIZER_INTERFACE_ATTRIBUTE
+void __cheriseed_tls_relocate(void);
+
 // -------------------------------------
 // APIs used by the compiler
 // -------------------------------------

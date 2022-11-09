@@ -30,6 +30,7 @@ int main(int argc, char** argv) {
   // Calling initializer routine before running tests.
   __cheriseed_static_init(0);
   __cheriseed_relocate();
+  __cheriseed_tls_relocate();
 
   testing::GTEST_FLAG(death_test_style) = "threadsafe";
   testing::InitGoogleTest(&argc, argv);

@@ -144,6 +144,8 @@ static constexpr char kInternalAttribute[] = "cheriseed-internal";
 static constexpr char kTakeNameSuffix[] = ".old";
 /// Initializer section
 static constexpr char kGlobalInitSection[] = "__cheriseed_initializers";
+/// TLS initializer section
+static constexpr char kTLSInitSection[] = "__cheriseed_tls_initializers";
 /// Prefix for global initializer names.
 static constexpr char kPrefixInitializer[] = "__cheriseed_initializer_";
 /// Prefix for shadow capability names.
@@ -1048,8 +1050,10 @@ protected:
   /// \param NGV The mapped GlobalVariable.
   /// \param GlobalCapInits The array to describe global capabilities
   /// which need runtime initialization.
+  /// \param TLSInits The array which collects TLS initializers.
   void mapGlobalVariableInitializer(GlobalVariable *GV, GlobalVariable *NGV,
-                                    SmallVector<Constant *> &GlobalCapInits);
+                                    SmallVector<Constant *> &GlobalCapInits,
+                                    SmallVector<Constant *> &TLSInits);
 
   /// Maps a GlobalAlias to another Value.
   ///
@@ -2326,9 +2330,14 @@ void CHERIseed::visitGlobals() {
   SmallVector<Constant *> GlobalCapInits;
   GlobalCapInits.reserve(2 * GlobalsToInit.size());
 
+  // A vector to collect TLS initializers.
+  SmallVector<Constant *> TLSInits;
+  TLSInits.reserve(GlobalsToInit.size());
+
   // 3rd step: map GlobalVariable initializers.
   for (auto &Pair : GlobalsToInit)
-    mapGlobalVariableInitializer(Pair.first, Pair.second, GlobalCapInits);
+    mapGlobalVariableInitializer(Pair.first, Pair.second, GlobalCapInits,
+                                 TLSInits);
 
   // 4th step: map GlobalAlias aliasees.
   for (GlobalAlias *GA : Aliases)
@@ -2336,6 +2345,7 @@ void CHERIseed::visitGlobals() {
 
   // 5th step: emit global capability initializers and init functions.
   emitGlobalInitArray(GlobalCapInits, kGlobalInitSection);
+  emitGlobalInitArray(TLSInits, kTLSInitSection);
 
   // There might be deferred values after mapping globals, process them now.
   DebugPrint::BeginProcessDeferred();
@@ -2908,7 +2918,8 @@ GlobalVariable *CHERIseed::mapGlobalVariable(GlobalVariable *GV) {
 
 void CHERIseed::mapGlobalVariableInitializer(
     GlobalVariable *GV, GlobalVariable *NGV,
-    SmallVector<Constant *> &GlobalCapsInits) {
+    SmallVector<Constant *> &GlobalCapsInits,
+    SmallVector<Constant *> &TLSInits) {
   StringRef NameRef = NGV->getName();
   if ((NameRef == "llvm.global_ctors") || (NameRef == "llvm.global_dtors")) {
     ArrayType *ATy = cast<ArrayType>(NGV->getValueType());
@@ -2988,9 +2999,30 @@ void CHERIseed::mapGlobalVariableInitializer(
   // Set whether the global is a constant or not.
   NGV->setConstant(Analysis.needsRuntimeInitialization() ? false
                                                          : GV->isConstant());
+  // Size the capability should describe.
+  uint64_t Size = alignTo(DL.getTypeSizeInBits(NGV->getValueType()), 8) / 8;
+  if (LLVM_UNLIKELY(Size >= (1ul << __cheriseed::abi::kEncodedPermissionShift)))
+    llvm_unreachable("Size is not supported");
+  //  Determine which permissions should be cleared on the shadow cap.
+  uint64_t ClearPerms = Permissions::EXECUTE;
+  // Consider the constness of the original global. It might have been made
+  // non-const because of runtime initializations, but the shadow capability
+  // should still have STORE cleared if the original global was constant.
+  if (GV->isConstant())
+    ClearPerms |= Permissions::STORE | Permissions::STORE_CAP;
+  // Compress Size and ClearPerms.
+  uint64_t Compressed =
+      CompressInitSizeAndPerms(Size, static_cast<Permissions>(ClearPerms));
+
+  if (ShadowCap && !ShadowCap->isThreadLocal()) {
+    // Store the address, size and permissions to clear in the capability.
+    ShadowCap->setInitializer(
+        ConstantStruct::get(CapTy, ConstantExpr::getPtrToInt(NGV, AddrSizeTy),
+                            ConstantInt::get(AddrSizeTy, Compressed)));
+  }
 
   Function *InitFunction{nullptr};
-  if (Analysis.needsRuntimeInitialization()) {
+  if (Analysis.needsRuntimeInitialization() || GV->isThreadLocal()) {
     // Create Initializer function.
     SmallString<256> GlobalInitNameStorage;
     StringRef GlobalInitNameRef =
@@ -3010,6 +3042,16 @@ void CHERIseed::mapGlobalVariableInitializer(
     // Some sanity checks
     if (!Analysis.isAggregateType())
       assert((Analysis.entries().size() <= 1) && "Expected at most one entry.");
+
+    // Thread locals must be fully runtime initialized, because their address
+    // is fully dynamic and cannot be relocated.
+    if (ShadowCap && ShadowCap->isThreadLocal()) {
+      createRtCall(RtKind::GENERIC_CAP_INIT, ShadowCap,
+                   ConstantExpr::getPtrToInt(NGV, AddrSizeTy),
+                   ConstantInt::get(AddrSizeTy, Size),
+                   ConstantInt::get(CapPermsTy, ClearPerms));
+      ShadowCap->setInitializer(Constant::getNullValue(CapTy));
+    }
 
     // Process initializations at specific GEP indices.
     for (auto &Entry : Analysis.entries()) {
@@ -3074,39 +3116,21 @@ void CHERIseed::mapGlobalVariableInitializer(
     }
   }
 
-  if (ShadowCap) {
-    // Size the capability should describe.
-    uint64_t Size = alignTo(DL.getTypeSizeInBits(NGV->getValueType()), 8) / 8;
-    if (LLVM_UNLIKELY(Size >=
-                      (1ul << __cheriseed::abi::kEncodedPermissionShift)))
-      llvm_unreachable("Size is not supported");
-    //  Determine which permissions should be cleared on the shadow cap.
-    uint64_t ClearPerms = Permissions::EXECUTE;
-    // Consider the constness of the original global. It might have been made
-    // non-const because of runtime initializations, but the shadow capability
-    // should still have STORE cleared if the original global was constant.
-    if (GV->isConstant())
-      ClearPerms |= Permissions::STORE | Permissions::STORE_CAP;
-    // Compress Size and ClearPerms.
-    uint64_t Compressed =
-        CompressInitSizeAndPerms(Size, static_cast<Permissions>(ClearPerms));
-    // Store the address, size and permissions to clear in the capability.
-    ShadowCap->setInitializer(
-        ConstantStruct::get(CapTy, ConstantExpr::getPtrToInt(NGV, AddrSizeTy),
-                            ConstantInt::get(AddrSizeTy, Compressed)));
+  if (InitFunction && GV->isThreadLocal()) {
+    TLSInits.push_back(InitFunction);
+    return;
   }
 
-  if (!ShadowCap && !InitFunction)
-    return;
-
-  Constant *Descriptor = ConstantStruct::get(
-      InitializerTy,
-      {ShadowCap ? ShadowCap
-                 : Constant::getNullValue(InitializerTy->getElementType(0)),
-       InitFunction
-           ? InitFunction
-           : Constant::getNullValue(InitializerTy->getElementType(1))});
-  GlobalCapsInits.push_back(Descriptor);
+  if (ShadowCap || InitFunction) {
+    Constant *Descriptor = ConstantStruct::get(
+        InitializerTy,
+        {ShadowCap ? ShadowCap
+                   : Constant::getNullValue(InitializerTy->getElementType(0)),
+         InitFunction
+             ? InitFunction
+             : Constant::getNullValue(InitializerTy->getElementType(1))});
+    GlobalCapsInits.push_back(Descriptor);
+  }
 }
 
 void CHERIseed::mapGlobalAlias(GlobalAlias *GA) {

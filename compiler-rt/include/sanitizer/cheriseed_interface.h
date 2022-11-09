@@ -588,6 +588,12 @@ void __cheriseed_static_init(uint64_t sp);
 /// ideally early during libc init.
 void __cheriseed_relocate(void);
 
+/// Performs initialization of capabilities in TLS.
+///
+/// \note This API should be called before accessing any TLS variables,
+/// ideally early during libc init.
+void __cheriseed_tls_relocate(void);
+
 // -------------------------------------
 // APIs used by the compiler
 // -------------------------------------

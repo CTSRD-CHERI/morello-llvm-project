@@ -17,36 +17,36 @@
 
 using namespace __cheriseed;
 
-void __cheriseed_relocate() {
-  u64 init_start;
-  u64 init_stop;
+// clang-format off
 #if defined(__aarch64__)
-  asm volatile(
-      ".weak __start___cheriseed_initializers\n"
-      ".hidden __start___cheriseed_initializers\n"
-      "adrp %0, __start___cheriseed_initializers\n"
-      "add  %0, %0, :lo12:__start___cheriseed_initializers\n"
-      : "=r"(init_start));
-  asm volatile(
-      ".weak __stop___cheriseed_initializers\n"
-      ".hidden __stop___cheriseed_initializers\n"
-      "adrp %0, __stop___cheriseed_initializers\n"
-      "add  %0, %0, :lo12:__stop___cheriseed_initializers\n"
-      : "=r"(init_stop));
+#define SYM_ADDR(__sym)                           \
+  ({                                              \
+    u64 __addr;                                   \
+    asm volatile(".weak " __sym "\n"              \
+                 ".hidden " __sym "\n"            \
+                 "adrp %0, " __sym "\n"           \
+                 "add  %0, %0, :lo12:" __sym "\n" \
+                 : "=r"(__addr));                 \
+    __addr;                                       \
+  })
 #elif defined(__x86_64__)
-  asm volatile(
-      ".weak __start___cheriseed_initializers\n"
-      ".hidden __start___cheriseed_initializers\n"
-      "lea __start___cheriseed_initializers(%%rip),%0\n"
-      : "=r"(init_start));
-  asm volatile(
-      ".weak __stop___cheriseed_initializers\n"
-      ".hidden __stop___cheriseed_initializers\n"
-      "lea __stop___cheriseed_initializers(%%rip),%0\n"
-      : "=r"(init_stop));
+#define SYM_ADDR(__sym)                      \
+  ({                                         \
+    u64 __addr;                              \
+    asm volatile(".weak " __sym "\n"         \
+                 ".hidden " __sym "\n"       \
+                 "lea " __sym "(%%rip),%0\n" \
+                 : "=r"(__addr));            \
+    __addr;                                  \
+  })
 #else
 #error "Unsupported architecture"
 #endif
+// clang-format on
+
+void __cheriseed_relocate() {
+  u64 init_start = SYM_ADDR("__start___cheriseed_initializers");
+  u64 init_stop = SYM_ADDR("__stop___cheriseed_initializers");
 
   if (!init_start)
     return;
@@ -83,4 +83,20 @@ void __cheriseed_relocate() {
   for (; glo_init < glo_init_end; ++glo_init)
     if (glo_init->init_fn)
       glo_init->init_fn();
+}
+
+void __cheriseed_tls_relocate() {
+  u64 init_start = SYM_ADDR("__start___cheriseed_tls_initializers");
+  u64 init_stop = SYM_ADDR("__stop___cheriseed_tls_initializers");
+
+  if (!init_start)
+    return;
+
+  if (((init_stop - init_start) % sizeof(u64)) != 0)
+    __builtin_trap();
+
+  auto *glo_init = reinterpret_cast<InitFnTy *>(init_start);
+  const auto *const glo_init_end = reinterpret_cast<InitFnTy *>(init_stop);
+
+  for (; glo_init < glo_init_end; ++glo_init) (*glo_init)();
 }

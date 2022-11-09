@@ -44,6 +44,7 @@
 __attribute__((constructor)) void pre_main(void) {
   __cheriseed_static_init(0);
   __cheriseed_relocate();
+  __cheriseed_tls_relocate();
   // Make sure violations don't trigger the call of a signal handler.
   __cheriseed_control_invoke_signal_handlers(CHERISEED_DISABLE);
 }

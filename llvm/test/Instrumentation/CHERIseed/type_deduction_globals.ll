@@ -459,6 +459,13 @@ declare void @case.8.f.2() addrspace(200);
 @case.22.g = addrspace(200) global i8 0
 
 ; ------------------------------------------------------------------------------
+; Regression for thread locals
+
+; CHECK-LABEL: @__cheriseed_shadowed_global_case.23 = thread_local global i64 0, align 8
+; CHECK:       @case.23 = thread_local global %__cheriseed_cap_t zeroinitializer, align 16
+@case.23 = thread_local addrspace(200) global i64 0, align 8
+
+; ------------------------------------------------------------------------------
 
 ; Checking for Global Initializer variable.
 
@@ -573,8 +580,17 @@ declare void @case.8.f.2() addrspace(200);
 ; CHECK-SAME:    }
 ; CHECK-SAME:  ], section "__cheriseed_initializers", align 8
 
-; CHECK-LABEL: @llvm.used = appending global [1 x i8*] [
-; CHECK-SAME:    i8* bitcast ([27 x %__cheriseed_initializer_t]* @"__cheriseed_initializers_<stdin>" to i8*)
+; ------------------------------------------------------------------------------
+
+; CHECK-LABEL: @"__cheriseed_tls_initializers_<stdin>" = internal global [1 x void ()*] [
+; CHECK-SAME:    void ()* @__cheriseed_initializer_case.23
+; CHECK-SAME:  ], section "__cheriseed_tls_initializers", align 8
+
+; ------------------------------------------------------------------------------
+
+; CHECK-LABEL: @llvm.used = appending global [2 x i8*] [
+; CHECK-SAME:    i8* bitcast ([27 x %__cheriseed_initializer_t]* @"__cheriseed_initializers_<stdin>" to i8*),
+; CHECK-SAME:    i8* bitcast ([1 x void ()*]* @"__cheriseed_tls_initializers_<stdin>" to i8*)
 ; CHECK-SAME:  ], section "llvm.metadata"
 
 ; ------------------------------------------------------------------------------
