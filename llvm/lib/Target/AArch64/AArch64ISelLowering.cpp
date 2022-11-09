@@ -2627,6 +2627,41 @@ static SDValue emitStrictFPComparison(SDValue LHS, SDValue RHS, const SDLoc &dl,
   return DAG.getNode(Opcode, dl, {VT, MVT::Other}, {Chain, LHS, RHS});
 }
 
+static SDValue simplifyCapAddr(SDValue N, const SDLoc &dl, SelectionDAG &DAG) {
+  assert(N.getValueType().isFatPointer() && "Expected fat pointer");
+  if (N->getOpcode() == ISD::INTTOPTR) {
+    // INTTOPTR will construct a capability from CZR in purecap. INTTTOPTR on
+    // zero gives us the null capability everywhere.
+    ConstantSDNode *Const = dyn_cast<ConstantSDNode>(N->getOperand(0));
+    bool HasPurecap =
+        static_cast<const AArch64Subtarget &>(DAG.getSubtarget()).hasPureCap();
+    if (Const && (HasPurecap || Const->getZExtValue() == 0))
+      return DAG.getZExtOrTrunc(SDValue(Const, 0), dl, MVT::i64);
+  }
+  if (N->getOpcode() == ISD::INTRINSIC_WO_CHAIN) {
+    unsigned IntNo = cast<ConstantSDNode>(N->getOperand(0))->getZExtValue();
+    if (IntNo == Intrinsic::cheri_cap_address_set)
+      return N->getOperand(2);
+  }
+  if (N->getOpcode() == ISD::PTRADD &&
+      N->getOperand(0)->getOpcode() == ISD::INTTOPTR) {
+    ConstantSDNode *Const =
+        dyn_cast<ConstantSDNode>(N->getOperand(0)->getOperand(0));
+    if (Const && Const->getZExtValue() == 0)
+      return N->getOperand(1);
+  }
+  return SDValue();
+}
+
+static SDValue getCapAddr(SDValue N, const SDLoc &dl, SelectionDAG &DAG) {
+  assert(N.getValueType().isFatPointer() && "Expected fat pointer");
+  if (SDValue V = simplifyCapAddr(N, dl, DAG))
+    return V;
+  SDValue SubReg = DAG.getTargetConstant(AArch64::sub_64, dl, MVT::i32);
+  return SDValue(DAG.getMachineNode(TargetOpcode::EXTRACT_SUBREG,
+                                    dl, MVT::i64, N, SubReg), 0);
+}
+
 static SDValue emitComparison(SDValue LHS, SDValue RHS, ISD::CondCode CC,
                               const SDLoc &dl, SelectionDAG &DAG) {
   EVT VT = LHS.getValueType();
@@ -2644,23 +2679,8 @@ static SDValue emitComparison(SDValue LHS, SDValue RHS, ISD::CondCode CC,
   }
 
   if (VT.isFatPointer()) {
-    SDValue SubReg = DAG.getTargetConstant(AArch64::sub_64, dl, MVT::i32);
-
-    auto getCapCmpOp = [&](SDValue Node) {
-      if (Node->getOpcode() == ISD::INTTOPTR) {
-        // INTTOPTR will construct a capability from CZR, so doing this on a
-        // constant and extracting the subregister will give us back the
-        // constant.
-        ConstantSDNode *Const = dyn_cast<ConstantSDNode>(Node->getOperand(0));
-        if (Const)
-          return DAG.getZExtOrTrunc(SDValue(Const, 0), dl, MVT::i64);
-      }
-      Node = SDValue(DAG.getMachineNode(TargetOpcode::EXTRACT_SUBREG,
-                                     dl, MVT::i64, Node, SubReg), 0);
-      return Node;
-    };
-    LHS = getCapCmpOp(LHS);
-    RHS = getCapCmpOp(RHS);
+    LHS = getCapAddr(LHS, dl, DAG);
+    RHS = getCapAddr(RHS, dl, DAG);
     VT = MVT::i64;
   }
 
@@ -2764,11 +2784,8 @@ static SDValue emitConditionalComparison(SDValue LHS, SDValue RHS,
     static_cast<const AArch64Subtarget &>(DAG.getSubtarget()).hasFullFP16();
 
   if (LHS.getValueType().isFatPointer()) {
-    SDValue SubReg = DAG.getTargetConstant(AArch64::sub_64, DL, MVT::i32);
-    LHS = SDValue(DAG.getMachineNode(TargetOpcode::EXTRACT_SUBREG,
-                                     DL, MVT::i64, LHS, SubReg), 0);
-    RHS = SDValue(DAG.getMachineNode(TargetOpcode::EXTRACT_SUBREG,
-                                     DL, MVT::i64, RHS, SubReg), 0);
+    LHS = getCapAddr(LHS, DL, DAG);
+    RHS = getCapAddr(RHS, DL, DAG);
   }
 
   if (LHS.getValueType().isFloatingPoint()) {
@@ -7892,16 +7909,8 @@ SDValue AArch64TargetLowering::LowerBR_CC(SDValue Op, SelectionDAG &DAG) const {
   }
 
   if (LHS.getValueType().isFatPointer()) {
-    auto GetOperand = [&](SDValue Op) {
-      if (Op.getOpcode() == ISD::INTTOPTR)
-        return Op.getOperand(0);
-      SDValue SubReg = DAG.getTargetConstant(AArch64::sub_64, dl, MVT::i32);
-      return SDValue(DAG.getMachineNode(TargetOpcode::EXTRACT_SUBREG,
-                                        dl, MVT::i64, Op, SubReg), 0);
-    };
-
-    RHS = GetOperand(RHS);
-    LHS = GetOperand(LHS);
+    RHS = getCapAddr(RHS, dl, DAG);
+    LHS = getCapAddr(LHS, dl, DAG);
   }
 
   // Optimize {s|u}{add|sub|mul}.with.overflow feeding into a branch
@@ -17126,6 +17135,25 @@ static SDValue performSETCCCombine(SDNode *N, SelectionDAG &DAG) {
   SDValue LHS = N->getOperand(0);
   SDValue RHS = N->getOperand(1);
   ISD::CondCode Cond = cast<CondCodeSDNode>(N->getOperand(2))->get();
+
+  if (LHS.getValueType() == MVT::iFATPTR128) {
+    // We will be comparing the address of the capabilities.
+    // See if we can simplify any of the sides and expose more
+    // information.
+    SDValue NewLHS = simplifyCapAddr(LHS, SDLoc(N), DAG);
+    SDValue NewRHS = simplifyCapAddr(RHS, SDLoc(N), DAG);
+    if (NewLHS || NewRHS) {
+      // We were able to simplify at least one of the operands.
+      // If there was anything that we couldn't simplfy use an
+      // EXTRACT_SUBREG.
+      if (!NewLHS)
+	NewLHS = getCapAddr(LHS, SDLoc(N), DAG);
+      if (!NewRHS)
+	NewRHS = getCapAddr(RHS, SDLoc(N), DAG);
+
+      return DAG.getSetCC(SDLoc(N), N->getValueType(0), NewLHS, NewRHS, Cond);
+    }
+  }
 
   // setcc (csel 0, 1, cond, X), 1, ne ==> csel 0, 1, !cond, X
   if (Cond == ISD::SETNE && isOneConstant(RHS) &&

@@ -31,3 +31,38 @@ vector.ph:
 for.body21:
   br label %for.body21
 }
+
+define i1 @bar(i8 addrspace(200)* %0) local_unnamed_addr addrspace(200) {
+; CHECK-LABEL: bar:
+; CHECK:       .Lfunc_begin1:
+; CHECK-NEXT:    .cfi_startproc purecap
+; CHECK-NEXT:  // %bb.0:
+; CHECK-NEXT:    tst x0, #0xf
+; CHECK-NEXT:    cset w0, eq
+; CHECK-NEXT:    ret c30
+  %2 = tail call i64 @llvm.cheri.cap.address.get.i64(i8 addrspace(200)* %0)
+  %3 = and i64 %2, 15
+  %4 = tail call i8 addrspace(200)* @llvm.cheri.cap.address.set.i64(i8 addrspace(200)* %0, i64 %3)
+  %5 = icmp ult i8 addrspace(200)* %4, getelementptr (i8, i8 addrspace(200)* null, i64 1)
+  ret i1 %5
+}
+
+define i1 @baz(i8 addrspace(200)* readnone %0) local_unnamed_addr addrspace(200) {
+; CHECK-LABEL: baz:
+; CHECK:       .Lfunc_begin2:
+; CHECK-NEXT:    .cfi_startproc purecap
+; CHECK-NEXT:  // %bb.0:
+; CHECK-NEXT:    cmp x0, #10 // =10
+; CHECK-NEXT:    cset w8, hi
+; CHECK-NEXT:    cmp x0, #100 // =100
+; CHECK-NEXT:    cset w9, lo
+; CHECK-NEXT:    and w0, w8, w9
+; CHECK-NEXT:    ret c30
+  %2 = icmp ugt i8 addrspace(200)* %0, getelementptr (i8, i8 addrspace(200)* null, i64 10)
+  %3 = icmp ult i8 addrspace(200)* %0, getelementptr (i8, i8 addrspace(200)* null, i64 100)
+  %4 = and i1 %2, %3
+  ret i1 %4
+}
+
+declare i64 @llvm.cheri.cap.address.get.i64(i8 addrspace(200)*) addrspace(200)
+declare i8 addrspace(200)* @llvm.cheri.cap.address.set.i64(i8 addrspace(200)*, i64) addrspace(200)
