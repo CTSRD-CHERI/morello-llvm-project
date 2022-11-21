@@ -58,9 +58,8 @@ define <4 x i8 addrspace(200)*> @vec_gep_with_poison_bases_first_pair(i8 addrspa
 ; PURECAP-LABEL: vec_gep_with_poison_bases_first_pair:
 ; PURECAP:       .Lfunc_begin2:
 ; PURECAP-NEXT:  // %bb.0: // %bb
-; PURECAP-NEXT:    mov w0, #123
-; PURECAP-NEXT:    gcvalue x2, c0
-; PURECAP-NEXT:    mov c3, c2
+; PURECAP-NEXT:    mov w2, #123
+; PURECAP-NEXT:    mov w3, #123
 ; PURECAP-NEXT:    ret c30
 bb:
   %gep = getelementptr i8, <4 x i8 addrspace(200)*> <i8 addrspace(200)* poison, i8 addrspace(200)* poison, i8 addrspace(200)* null, i8 addrspace(200)* null>, i64 123
@@ -79,10 +78,9 @@ define <4 x i8 addrspace(200)*> @vec_gep_with_null_base(i8 addrspace(200)* %ptr)
 ; PURECAP:       .Lfunc_begin3:
 ; PURECAP-NEXT:  // %bb.0: // %bb
 ; PURECAP-NEXT:    mov w0, #123
-; PURECAP-NEXT:    gcvalue x0, c0
-; PURECAP-NEXT:    mov c1, c0
-; PURECAP-NEXT:    mov c2, c0
-; PURECAP-NEXT:    mov c3, c0
+; PURECAP-NEXT:    mov w1, #123
+; PURECAP-NEXT:    mov w2, #123
+; PURECAP-NEXT:    mov w3, #123
 ; PURECAP-NEXT:    ret c30
 bb:
   %gep = getelementptr i8, <4 x i8 addrspace(200)*> <i8 addrspace(200)* null, i8 addrspace(200)* null, i8 addrspace(200)* null, i8 addrspace(200)* null>, i64 123
@@ -103,13 +101,10 @@ define <4 x i8 addrspace(200)*> @vec_gep_with_vec_offsets(i8 addrspace(200)* %pt
 ; PURECAP-LABEL: vec_gep_with_vec_offsets:
 ; PURECAP:       .Lfunc_begin4:
 ; PURECAP-NEXT:  // %bb.0: // %bb
-; PURECAP-NEXT:    mov w1, #1
-; PURECAP-NEXT:    mov w3, #2
-; PURECAP-NEXT:    gcvalue x4, c1
 ; PURECAP-NEXT:    add c2, c0, #3 // =3
-; PURECAP-NEXT:    gcvalue x1, c3
 ; PURECAP-NEXT:    add c3, c0, #4 // =4
-; PURECAP-NEXT:    mov c0, c4
+; PURECAP-NEXT:    mov w0, #1
+; PURECAP-NEXT:    mov w1, #2
 ; PURECAP-NEXT:    ret c30
 bb:
   %vec1 = insertelement <4 x i8 addrspace(200)*> <i8 addrspace(200)* null, i8 addrspace(200)* null, i8 addrspace(200)* null, i8 addrspace(200)* null>, i8 addrspace(200)* %ptr, i32 2

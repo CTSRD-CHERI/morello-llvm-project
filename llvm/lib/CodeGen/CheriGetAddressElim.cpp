@@ -57,6 +57,47 @@ FunctionPass *llvm::createCheriGetAddressElimPass() {
   return new CheriGetAddressElim();
 }
 
+static bool hasNullMetadata(MachineInstr *MI,
+                            MachineRegisterInfo &MRI,
+                            const TargetRegisterInfo *TRI,
+                            MVT CapTy) {
+  Register R = MI->getOperand(1).getReg();
+  if (Register::isPhysicalRegister(R))
+    return TRI->isConstantPhysReg(R);
+  MachineOperand *MO = MRI.getOneDef(R);
+  if (!MO)
+    return false;
+  MachineInstr *NewMI = MO->getParent();
+  while (NewMI->isSubregToReg() || NewMI->isCopy() ||
+         NewMI->isExtractSubreg() || NewMI->isInsertSubreg()) {
+    unsigned Idx = 1;
+    if (NewMI->isSubregToReg() || NewMI->isInsertSubreg())
+      Idx = 2;
+
+    if (NewMI->isInsertSubreg()) {
+      // Make sure we are inserting into an IMPDEF register.
+      Register Source = NewMI->getOperand(1).getReg();
+      if (!MRI.hasOneDef(Source) ||
+          !MRI.getOneDef(Source)->getParent()->isImplicitDef())
+        return false;
+    }
+
+    R = NewMI->getOperand(Idx).getReg();
+    if (Register::isPhysicalRegister(R))
+      return TRI->isConstantPhysReg(R);
+
+    MO = MRI.getOneDef(R);
+    if (!MO)
+      return false;
+    NewMI = MO->getParent();
+  }
+
+  if (NewMI->isTransient() || NewMI->isInlineAsm() || NewMI->isImplicitDef() ||
+      Register::isPhysicalRegister(MO->getReg()))
+    return false;
+  return !TRI->isTypeLegalForClass(*MRI.getRegClass(MO->getReg()), CapTy);
+}
+
 static bool couldReadCapMetadata(MachineInstr *MI,
                                  MachineRegisterInfo &MRI,
                                  const TargetRegisterInfo *TRI,
@@ -133,8 +174,10 @@ bool CheriGetAddressElim::runOnMachineFunction(MachineFunction &MF) {
   for (auto &MI : Insts) {
     // If something reads the metadata bits then we can't replace the
     // get address instruction since the copy might be eliminated and the top
-    // bits won't be cleared.
-    if (couldReadCapMetadata(MI, MRI, TRI, CapTy))
+    // bits won't be cleared. If the metadata is was already cleared we can
+    // always do this transformation since the instruction is a no-op.
+    if (!hasNullMetadata(MI, MRI, TRI, CapTy) &&
+        couldReadCapMetadata(MI, MRI, TRI, CapTy))
       continue;
 
     // Replace the get address instruction with a sub-register copy.

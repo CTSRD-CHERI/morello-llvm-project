@@ -36,17 +36,17 @@ define void @multiple_uses_big_constant() addrspace(200) nounwind {
 ; ASM-LABEL: multiple_uses_big_constant:
 ; ASM:       .Lfunc_begin1:
 ; ASM-NEXT:  // %bb.0:
-; ASM-NEXT:    stp c30, c19, [csp, #-32]! // 32-byte Folded Spill
+; ASM-NEXT:    str c30, [csp, #-16]! // 16-byte Folded Spill
 ; ASM-NEXT:    mov w0, #57920
 ; ASM-NEXT:    movk w0, #1, lsl #16
-; ASM-NEXT:    gcvalue x19, c0
-; ASM-NEXT:    mov c0, c19
 ; ASM-NEXT:    bl check_fold_i8ptr
-; ASM-NEXT:    mov c0, c19
+; ASM-NEXT:    mov w0, #57920
+; ASM-NEXT:    movk w0, #1, lsl #16
 ; ASM-NEXT:    bl check_fold_i8ptr
-; ASM-NEXT:    mov c0, c19
+; ASM-NEXT:    mov w0, #57920
+; ASM-NEXT:    movk w0, #1, lsl #16
 ; ASM-NEXT:    bl check_fold_i8ptr
-; ASM-NEXT:    ldp c30, c19, [csp], #32 // 32-byte Folded Reload
+; ASM-NEXT:    ldr c30, [csp], #16 // 16-byte Folded Reload
 ; ASM-NEXT:    ret c30
 ; CHECK-LABEL: define {{[^@]+}}@multiple_uses_big_constant
 ; CHECK-SAME: () addrspace(200) #[[ATTR1]] {
@@ -67,16 +67,14 @@ define void @multiple_uses_small_constant() addrspace(200) nounwind {
 ; ASM-LABEL: multiple_uses_small_constant:
 ; ASM:       .Lfunc_begin2:
 ; ASM-NEXT:  // %bb.0:
-; ASM-NEXT:    stp c30, c19, [csp, #-32]! // 32-byte Folded Spill
+; ASM-NEXT:    str c30, [csp, #-16]! // 16-byte Folded Spill
 ; ASM-NEXT:    mov w0, #123
-; ASM-NEXT:    gcvalue x19, c0
-; ASM-NEXT:    mov c0, c19
 ; ASM-NEXT:    bl check_fold_i8ptr
-; ASM-NEXT:    mov c0, c19
+; ASM-NEXT:    mov w0, #123
 ; ASM-NEXT:    bl check_fold_i8ptr
-; ASM-NEXT:    mov c0, c19
+; ASM-NEXT:    mov w0, #123
 ; ASM-NEXT:    bl check_fold_i8ptr
-; ASM-NEXT:    ldp c30, c19, [csp], #32 // 32-byte Folded Reload
+; ASM-NEXT:    ldr c30, [csp], #16 // 16-byte Folded Reload
 ; ASM-NEXT:    ret c30
 ; CHECK-LABEL: define {{[^@]+}}@multiple_uses_small_constant
 ; CHECK-SAME: () addrspace(200) #[[ATTR1]] {
