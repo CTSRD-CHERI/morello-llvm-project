@@ -664,6 +664,18 @@ def : InstAlias<"sttr\t$Ct, [$Rn]",
 // Morello-specific patterns common with both A64 and C64
 
 let Predicates = [HasMorello] in {
+// Use gcvalue to derive from the null capability. This is equivalent to an add
+// except we don't need to have a null capability in a register. Additionally
+// the gcvalue can usually be removed later.
+let AddedComplexity = 20 in
+def : Pat<(ptradd (inttoptr (i64 0)), GPR64sp:$Xn),
+          (iFATPTR128 (SUBREG_TO_REG (i64 0),
+	                  (i64 (CapGetValue
+			           (iFATPTR128 (INSERT_SUBREG (IMPLICIT_DEF),
+				                    GPR64sp:$Xn,
+						    sub_64)))),
+		          sub_64))>;
+
 // Add/Sub instructions.
 let AddedComplexity = 5 in
 def : Pat<(ptradd Capsp:$Cn, addsub_shifted_imm64:$imm),

@@ -8,14 +8,14 @@ define i8 addrspace(200)* @foo(i32 %x) {
 ; PURECAP:       .Lfunc_begin0:
 ; PURECAP-NEXT:    .cfi_startproc purecap
 ; PURECAP-NEXT:  // %bb.0: // %entry
-; PURECAP-NEXT:    mov x0, xzr
-; PURECAP-NEXT:    add c0, c0, #42 // =42
+; PURECAP-NEXT:    mov w0, #42
+; PURECAP-NEXT:    gcvalue x0, c0
 ; PURECAP-NEXT:    ret c30
 ;
 ; HYBRID-LABEL: foo:
 ; HYBRID:       // %bb.0: // %entry
-; HYBRID-NEXT:    mov x0, xzr
-; HYBRID-NEXT:    add c0, c0, #42 // =42
+; HYBRID-NEXT:    mov w0, #42
+; HYBRID-NEXT:    gcvalue x0, c0
 ; HYBRID-NEXT:    ret
 entry:
   ret i8 addrspace(200)* getelementptr (i8, i8 addrspace(200)* null, i64 42)
@@ -26,14 +26,16 @@ define i8 addrspace(200)* @bat(i32 %x) {
 ; PURECAP:       .Lfunc_begin1:
 ; PURECAP-NEXT:    .cfi_startproc purecap
 ; PURECAP-NEXT:  // %bb.0: // %entry
-; PURECAP-NEXT:    mov x1, xzr
-; PURECAP-NEXT:    add c0, c1, w0, sxtw
+; PURECAP-NEXT:    // kill: def $w0 killed $w0 def $x0
+; PURECAP-NEXT:    sxtw x0, w0
+; PURECAP-NEXT:    gcvalue x0, c0
 ; PURECAP-NEXT:    ret c30
 ;
 ; HYBRID-LABEL: bat:
 ; HYBRID:       // %bb.0: // %entry
-; HYBRID-NEXT:    mov x1, xzr
-; HYBRID-NEXT:    add c0, c1, w0, sxtw
+; HYBRID-NEXT:    // kill: def $w0 killed $w0 def $x0
+; HYBRID-NEXT:    sxtw x0, w0
+; HYBRID-NEXT:    gcvalue x0, c0
 ; HYBRID-NEXT:    ret
 entry:
   %conv = sext i32 %x to i64
@@ -46,16 +48,16 @@ define i8 addrspace(200)* @baz(i32 %x) {
 ; PURECAP:       .Lfunc_begin2:
 ; PURECAP-NEXT:    .cfi_startproc purecap
 ; PURECAP-NEXT:  // %bb.0: // %entry
-; PURECAP-NEXT:    mov x1, xzr
 ; PURECAP-NEXT:    add w8, w0, #1 // =1
-; PURECAP-NEXT:    add c0, c1, w8, sxtw
+; PURECAP-NEXT:    sxtw x0, w8
+; PURECAP-NEXT:    gcvalue x0, c0
 ; PURECAP-NEXT:    ret c30
 ;
 ; HYBRID-LABEL: baz:
 ; HYBRID:       // %bb.0: // %entry
-; HYBRID-NEXT:    mov x1, xzr
 ; HYBRID-NEXT:    add w8, w0, #1 // =1
-; HYBRID-NEXT:    add c0, c1, w8, sxtw
+; HYBRID-NEXT:    sxtw x0, w8
+; HYBRID-NEXT:    gcvalue x0, c0
 ; HYBRID-NEXT:    ret
 entry:
   %add = add nsw i32 %x, 1
@@ -91,14 +93,14 @@ define i8 addrspace(200)* @baf(i64 %y) {
 ; PURECAP:       .Lfunc_begin4:
 ; PURECAP-NEXT:    .cfi_startproc purecap
 ; PURECAP-NEXT:  // %bb.0: // %entry
-; PURECAP-NEXT:    mov x1, xzr
-; PURECAP-NEXT:    add c0, c1, x0, uxtx
+; PURECAP-NEXT:    // kill: def $x0 killed $x0 def $c0
+; PURECAP-NEXT:    gcvalue x0, c0
 ; PURECAP-NEXT:    ret c30
 ;
 ; HYBRID-LABEL: baf:
 ; HYBRID:       // %bb.0: // %entry
-; HYBRID-NEXT:    mov x1, xzr
-; HYBRID-NEXT:    add c0, c1, x0, uxtx
+; HYBRID-NEXT:    // kill: def $x0 killed $x0 def $c0
+; HYBRID-NEXT:    gcvalue x0, c0
 ; HYBRID-NEXT:    ret
 entry:
   %0 = getelementptr i8, i8 addrspace(200)* null, i64 %y
