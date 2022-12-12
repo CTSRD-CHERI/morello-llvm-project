@@ -8594,10 +8594,11 @@ SDValue AArch64TargetLowering::LowerBR_JT(SDValue Op,
     // the capability from PCC we don't actually need a capability branch
     // anyway, though it would be nice if it worked as well and could be used.
     //
-    // NB: EXTRACT_SUBREG doesn't work if PCCBO is enabled, since integer BR
-    // will subtract PCC's base even in C64, so use CVTP instead.
-    Dest = DAG.getMachineNode(AArch64::CapConvertCapTo64PCC, DL, MVT::i64,
-                              SDValue(Dest, 0));
+    // NB: This is purecap so we don't need to worry about PCCBO being enabled,
+    // so just use EXTRACT_SUBREG.
+    SDValue SubReg = DAG.getTargetConstant(AArch64::sub_64, DL, MVT::i32);
+    Dest = DAG.getMachineNode(TargetOpcode::EXTRACT_SUBREG,
+                              DL, MVT::i64, SDValue(Dest, 0), SubReg);
   } else
     Dest =
         DAG.getMachineNode(AArch64::JumpTableDest32, DL, MVT::i64, MVT::i64, JT,
