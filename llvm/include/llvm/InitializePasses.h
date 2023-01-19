@@ -135,6 +135,7 @@ void initializeDeadMachineInstructionElimPass(PassRegistry&);
 void initializeDebugifyMachineModulePass(PassRegistry &);
 void initializeDelinearizationPass(PassRegistry&);
 void initializeDemandedBitsWrapperPassPass(PassRegistry&);
+void initializeDemandedCheriMetadataWrapperPassPass(PassRegistry&);
 void initializeDependenceAnalysisPass(PassRegistry&);
 void initializeDependenceAnalysisWrapperPassPass(PassRegistry&);
 void initializeDetectDeadLanesPass(PassRegistry&);

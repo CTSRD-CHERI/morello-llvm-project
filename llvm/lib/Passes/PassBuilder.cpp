@@ -33,6 +33,7 @@
 #include "llvm/Analysis/DDGPrinter.h"
 #include "llvm/Analysis/Delinearization.h"
 #include "llvm/Analysis/DemandedBits.h"
+#include "llvm/Analysis/DemandedCheriMetadata.h"
 #include "llvm/Analysis/DependenceAnalysis.h"
 #include "llvm/Analysis/DivergenceAnalysis.h"
 #include "llvm/Analysis/DomPrinter.h"
