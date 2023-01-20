@@ -112,8 +112,8 @@ struct SystemCall final {
   }
 
   template <typename I>
-  SystemCall &Arg(I arg, u64 perms = ccl::permissions::LOAD) {
-    return BuildArg(static_cast<u64>(arg), sizeof(I), perms);
+  SystemCall &Arg(I arg) {
+    return BuildArg(static_cast<u64>(arg), 0, 0);
   }
 
   template <typename P>
@@ -149,10 +149,14 @@ struct SystemCall final {
     if (UNLIKELY(num_args == kMaxArgs))
       Trap();
 
-    if (IsPureCapabilityABI())
-      CreateBoundedCap(args_cap[num_args].Data(), arg, size, perms);
-    else
+    if (IsPureCapabilityABI()) {
+      if (size)
+        CreateBoundedCap(args_cap[num_args].Data(), arg, size, perms);
+      else
+        LocalCap{LibcOpts, arg, 0}.Store(args_cap[num_args].Data());
+    } else {
       args[num_args] = arg;
+    }
 
     ++num_args;
     return *this;
