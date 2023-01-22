@@ -3342,11 +3342,20 @@ CHERIseed::CallContext CHERIseed::prepareCallArgs(CallInst &I) {
     ArrayRef<Use> VarArgs = AllArgs.drop_front(NumFixedArgs);
     // Create stack slots for variadic arguments
     AllocaInst *Alloca = nullptr;
-    Value *AllocaSize = ConstantInt::get(AddrSizeTy, VarArgs.size() * SlotSize);
+    const size_t VASlotSize = VarArgs.size() * SlotSize;
+    Value *AllocaSize = ConstantInt::get(AddrSizeTy, VASlotSize);
     if (!VarArgs.empty())
       Alloca = createAlloca(Int8Ty, AllocaSize, Align(SlotSize), "va_slot");
     // Create a shadow capability pointing to the stack slot
     Value *VASlot = createShadowCapOnStack(Alloca, AllocaSize, "va_slot", true);
+    // Clear the stack slot if the slot has size greater than zero.
+    if (VASlotSize) {
+      Value *VASlotAddr =
+          createCapAccessCheck(VASlot, Int8PtrTy, VASlotSize, 0);
+      createCapAccessCheckEnd(VASlotAddr);
+      // The intermediate bitcast is no longer necessary.
+      cast<BitCastInst>(VASlotAddr)->eraseFromParent();
+    }
     // Copy variadic arguments into the stack slots
     IntegerType *IdxType = Type::getInt32Ty(I.getContext());
     unsigned Idx = 0;

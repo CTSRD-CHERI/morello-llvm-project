@@ -41,6 +41,9 @@ define void @caller() addrspace(200) {
 ; CHECK-NEXT:  [[VA_SLOT_CAP:%.*]] = call %__cheriseed_cap_t*
 ; CHECK-SAME:      @__cheriseed_stack_cap_init(%__cheriseed_cap_t*
 ; CHECK-SAME:      [[VA_SLOT_SHADOW_CAP]], i64 [[VA_SLOT_ADDR]], i64 112)
+; CHECK-NEXT:  [[VA_SLOT_CLR:%.*]] = call i64 @__cheriseed_check_access(
+; CHECK-SAME:      [[VA_SLOT_CAP]], i64 112, i32 0, i64 0)
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 [[VA_SLOT_CLR]], i64 112)
 
 ; i8 1,
 ; CHECK-NEXT:  [[AG:%.*]] = getelementptr inbounds i8, i8* [[VA_SLOT]], i32 0
@@ -110,11 +113,14 @@ define void @caller_byval_16bytes() addrspace(200) {
 ; CHECK-NEXT:  [[VA_SLOT_CAP:%.*]] = call %__cheriseed_cap_t*
 ; CHECK-SAME:      @__cheriseed_stack_cap_init(%__cheriseed_cap_t*
 ; CHECK-SAME:      [[VA_SLOT_SHADOW_CAP]], i64 [[VA_SLOT_ADDR]], i64 16)
+; CHECK-NEXT:  [[VA_SLOT_CLR:%.*]] = call i64 @__cheriseed_check_access(
+; CHECK-SAME:      [[VA_SLOT_CAP]], i64 16, i32 0, i64 0)
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 [[VA_SLOT_CLR]], i64 16)
 ; CHECK-NEXT:  [[AG:%.*]] = getelementptr inbounds i8, i8* %va_slot, i32 0
 ; CHECK-NEXT:  [[AB:%.*]] = bitcast i8* [[AG]] to %union.U1*
 ; CHECK-NEXT:  [[U_ADDR:%.*]] = call i64 @__cheriseed_check_access(
 ; CHECK-SAME:      %__cheriseed_cap_t* %u.cap, i64 16, i32 4, i64 0)
-; CHECK-NEXT:  [[I2P:%.*]] = inttoptr i64 %3 to %union.U1*
+; CHECK-NEXT:  [[I2P:%.*]] = inttoptr i64 [[U_ADDR]] to %union.U1*
 ; CHECK-NEXT:  [[U:%.*]] = load %union.U1, %union.U1* [[I2P]], align 16
 ; CHECK-NEXT:  store %union.U1 [[U]], %union.U1* [[AB]], align 16
 ; CHECK-NEXT:  call void @callee(i32 0, %__cheriseed_cap_t* %va_slot.cap)
@@ -143,6 +149,9 @@ define void @caller_byval() addrspace(200) {
 ; CHECK-NEXT:  [[VA_SLOT_CAP:%.*]] = call %__cheriseed_cap_t*
 ; CHECK-SAME:      @__cheriseed_stack_cap_init(%__cheriseed_cap_t*
 ; CHECK-SAME:      [[VA_SLOT_SHADOW_CAP]], i64 [[VA_SLOT_ADDR]], i64 16)
+; CHECK-NEXT:  [[VA_SLOT_CLR:%.*]] = call i64 @__cheriseed_check_access(
+; CHECK-SAME:      [[VA_SLOT_CAP]], i64 16, i32 0, i64 0)
+; CHECK-NEXT:  call void @__cheriseed_check_access_end(i64 [[VA_SLOT_CLR]], i64 16)
 ; CHECK-NEXT:  [[AG:%.*]] = getelementptr inbounds i8, i8* %va_slot, i32 0
 ; CHECK-NEXT:  [[AB:%.*]] = bitcast i8* [[AG]] to %__cheriseed_cap_t*
 ; CHECK-NEXT:  call void @__cheriseed_store_cap_hybrid(%__cheriseed_cap_t*
