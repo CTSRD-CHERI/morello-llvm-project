@@ -48,6 +48,8 @@ public:
     return TLOF.get();
   }
 
+  void registerPassBuilderCallbacks(PassBuilder &PB) override;
+
   bool IsMorello() const { return isMorello; }
   bool IsPureCap() const { return isPureCap; }
   bool IsPurecapBenchmark() const { return isPurecapBenchmark; }

@@ -487,6 +487,7 @@ ModulePass *createRewriteStatepointsForGCLegacyPass();
 //
 FunctionPass *createFloat2IntPass();
 
+FunctionPass *createCheriCapToIntPass();
 //===----------------------------------------------------------------------===//
 //
 // NaryReassociate - Simplify n-ary operations by reassociation.
