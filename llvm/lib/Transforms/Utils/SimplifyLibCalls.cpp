@@ -2867,10 +2867,20 @@ Value *LibCallSimplifier::optimizePuts(CallInst *CI, IRBuilderBase &B) {
   return nullptr;
 }
 
+static bool supportsCheriCapabilities(const DataLayout &DL) {
+  // FIXME: don't use a hard-coded address space.
+  return DL.isFatPointer(200);
+}
+
 Value *LibCallSimplifier::optimizeBCopy(CallInst *CI, IRBuilderBase &B) {
   // bcopy(src, dst, n) -> llvm.memmove(dst, src, n)
-  return B.CreateMemMove(CI->getArgOperand(1), Align(1), CI->getArgOperand(0),
-                         Align(1), CI->getArgOperand(2));
+  CallInst *Ret = B.CreateMemMove(CI->getArgOperand(1), Align(1),
+                                  CI->getArgOperand(0),
+                                  Align(1), CI->getArgOperand(2));
+  if (supportsCheriCapabilities(DL))
+    Ret->addAttribute(AttributeList::FunctionIndex,
+                      Attribute::MustPreserveCheriTags);
+  return Ret;
 }
 
 bool LibCallSimplifier::hasFloatVersion(StringRef FuncName) {
