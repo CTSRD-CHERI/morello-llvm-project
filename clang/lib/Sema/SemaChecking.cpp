@@ -2037,6 +2037,8 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
     break;
   }
   case Builtin::BI__builtin_cheri_tag_clear:
+  case Builtin::BI__builtin_cheri_seal_indirect_pair:
+  case Builtin::BI__builtin_cheri_seal_indirect_entry:
   case Builtin::BI__builtin_cheri_seal_entry: {
     // Tag-clear and seal-entry behave like the mutator functions but don't have
     // a second argument.

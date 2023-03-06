@@ -4126,6 +4126,18 @@ SDValue AArch64TargetLowering::LowerINTRINSIC_WO_CHAIN(SDValue Op,
     return DAG.getNode(AArch64ISD::CapSealImm, dl, MVT::iFATPTR128,
                        Op.getOperand(1), DAG.getConstant(1, dl, MVT::i32));
   }
+  case Intrinsic::cheri_cap_seal_indirect_entry: {
+    if (!Subtarget->hasMorello())
+      return SDValue();
+    return DAG.getNode(AArch64ISD::CapSealImm, dl, MVT::iFATPTR128,
+                       Op.getOperand(1), DAG.getConstant(3, dl, MVT::i32));
+  }
+  case Intrinsic::cheri_cap_seal_indirect_pair: {
+    if (!Subtarget->hasMorello())
+      return SDValue();
+    return DAG.getNode(AArch64ISD::CapSealImm, dl, MVT::iFATPTR128,
+                       Op.getOperand(1), DAG.getConstant(2, dl, MVT::i32));
+  }
   case Intrinsic::cheri_cap_flags_get:
     return DAG.getConstant(0, dl, Op.getValueType());
   case Intrinsic::cheri_cap_flags_set:

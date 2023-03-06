@@ -151,6 +151,8 @@ bool CheriNeedBoundsChecker::useNeedsBounds(const Use &U,
     case Intrinsic::cheri_cap_flags_get:
     case Intrinsic::cheri_cap_seal:
     case Intrinsic::cheri_cap_seal_entry:
+    case Intrinsic::cheri_cap_seal_indirect_entry:
+    case Intrinsic::cheri_cap_seal_indirect_pair:
     case Intrinsic::cheri_cap_sealed_get:
     case Intrinsic::cheri_cap_subset_test:
     case Intrinsic::cheri_cap_tag_clear:
