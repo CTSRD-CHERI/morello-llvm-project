@@ -560,7 +560,10 @@ bool llvm::tryPromoteCall(CallBase &CB) {
       VTablePtrLoad, VTablePtrLoad->getParent(), BBI, 0, nullptr, nullptr);
   if (!VTablePtr)
     return false; // No vtable found.
-  APInt VTableOffsetGVBase(DL.getPointerAddrSizeInBits(VTablePtr->getType()),
+  Type *VTablePtrType = VTablePtr->getType();
+  if (!VTablePtrType->isPointerTy())
+    return false; //Not of pointer type.
+  APInt VTableOffsetGVBase(DL.getPointerAddrSizeInBits(VTablePtrType),
                            0);
   Value *VTableGVBase = VTablePtr->stripAndAccumulateConstantOffsets(
       DL, VTableOffsetGVBase, /* AllowNonInbounds */ true);
