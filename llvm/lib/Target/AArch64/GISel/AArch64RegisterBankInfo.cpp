@@ -273,10 +273,12 @@ AArch64RegisterBankInfo::getRegBankFromRegClass(const TargetRegisterClass &RC,
   case AArch64::WSeqPairsAllClassRegClassID:
   case AArch64::XSeqPairsAllClassRegClassID:
   case AArch64::MatrixIndexGPR32_12_15RegClassID:
+  case AArch64::GPR64_with_sub_32_in_MatrixIndexGPR32_12_15RegClassID:
     return getRegBank(AArch64::GPRRegBankID);
   case AArch64::CCRRegClassID:
     return getRegBank(AArch64::CCRegBankID);
   default:
+    fprintf(stderr, "Register class id = %d\n", RC.getID());
     llvm_unreachable("Register class not supported");
   }
 }
