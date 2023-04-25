@@ -21,6 +21,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/IR/Type.h"
+#include "llvm/Support/Alignment.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/TypeSize.h"
@@ -225,6 +226,7 @@ class StructType : public Type {
   /// This is null if the type is an literal struct or if it is a identified
   /// type that has an empty name.
   void *SymbolTableEntry = nullptr;
+  Align MinimumAlignment = Align(1);
 
 public:
   StructType(const StructType &) = delete;
@@ -333,6 +335,12 @@ public:
   Type *getTypeAtIndex(unsigned N) const { return getElementType(N); }
   bool indexValid(const Value *V) const;
   bool indexValid(unsigned Idx) const { return Idx < getNumElements(); }
+
+  /// Specify the minimum alignment constraint for this struct.
+  void setMinimumAlignment(Align Alignment) { MinimumAlignment = Alignment; }
+
+  /// Returns the minimum alignment this structure requires.
+  Align getMinimumAlignment() const { return MinimumAlignment; }
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast.
   static bool classof(const Type *T) {

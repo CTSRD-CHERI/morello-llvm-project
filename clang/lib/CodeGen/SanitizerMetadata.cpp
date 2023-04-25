@@ -77,6 +77,47 @@ void SanitizerMetadata::reportGlobalToASan(llvm::GlobalVariable *GV,
                      IsExcluded);
 }
 
+void SanitizerMetadata::reportGlobalToCHERIseed(llvm::GlobalValue *GV,
+                                                const VarDecl *D) {
+  // Check for -fsanitize=cheriseed.
+  // If it is not enabled, there is no need to emit metadata.
+  if (!CGM.getLangOpts().Sanitize.has(SanitizerKind::CHERIseed))
+    return;
+
+  // Check for no_sanitize("cheriseed") attribute on this GlobalValue.
+  // If it is not set, there is no need to emit metadata.
+  bool HasNoSanitizeAttr = false;
+  if (D) {
+    for (auto Attr : D->specific_attrs<NoSanitizeAttr>()) {
+      if (Attr->getMask() & SanitizerKind::CHERIseed) {
+        HasNoSanitizeAttr = true;
+        break;
+      }
+    }
+  }
+
+  // Add attribute for GlobalVariables only
+  if (llvm::GlobalVariable *GVar = dyn_cast<llvm::GlobalVariable>(GV)) {
+    // Check that the GlobalVariable is not excluded.
+    // If it is not there is no need to add metadata.
+    if (!HasNoSanitizeAttr) {
+      if (D && CGM.isInNoSanitizeList(GVar, D->getLocation(), D->getType()))
+        ; // The symbol is listed, must add no_sanitize attribute.
+      else
+        return;
+    }
+
+    // Add metadata to indicate that this GlobalVariable should not be
+    // instrumented. For now, this is the only case we add "cheriseed".
+    if (!GVar->getMetadata("cheriseed"))
+      GVar->addMetadata(
+          "cheriseed",
+          *llvm::MDNode::get(
+              CGM.getLLVMContext(),
+              llvm::MDString::get(CGM.getLLVMContext(), "no_sanitize")));
+  }
+}
+
 void SanitizerMetadata::disableSanitizerForGlobal(llvm::GlobalVariable *GV) {
   // For now, just make sure the global is not modified by the ASan
   // instrumentation.

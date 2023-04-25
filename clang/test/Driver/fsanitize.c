@@ -189,6 +189,30 @@
 // RUN: %clang -target aarch64-linux-android -fsanitize=memtag,hwaddress -fno-rtti %s -### 2>&1 | FileCheck %s --check-prefix=CHECK-SANMT-SANHA
 // CHECK-SANMT-SANHA: '-fsanitize=memtag' not allowed with '-fsanitize=hwaddress'
 
+// RUN: %clang -target aarch64-linux-android -fsanitize=address,cheriseed -fno-rtti %s -### 2>&1 | FileCheck %s --check-prefix=CHECK-SANA-CHERISEED
+// CHECK-SANA-CHERISEED: '-fsanitize=cheriseed' not allowed with '-fsanitize=address'
+
+// RUN: %clang -target aarch64-linux -fsanitize=thread,cheriseed -fno-rtti %s -### 2>&1 | FileCheck %s --check-prefix=CHECK-TSAN-CHERISEED
+// CHECK-TSAN-CHERISEED: '-fsanitize=cheriseed' not allowed with '-fsanitize=thread'
+
+// RUN: %clang -target aarch64-linux -fsanitize=hwaddress,cheriseed -fno-rtti %s -### 2>&1 | FileCheck %s --check-prefix=CHECK-SANHA-CHERISEED
+// CHECK-SANHA-CHERISEED: '-fsanitize=cheriseed' not allowed with '-fsanitize=hwaddress'
+
+// RUN: %clang %s -fsanitize=cheriseed -target x86_64-linux %s -### 2>&1
+// OK
+
+// RUN: %clang %s -fsanitize=cheriseed -target x86_64-linux -mabi=purecap %s -### 2>&1
+// OK
+
+// RUN: %clang %s -fsanitize=cheriseed -target aarch64-linux %s -### 2>&1
+// OK
+
+// RUN: %clang %s -fsanitize=cheriseed -target aarch64-linux -mabi=purecap %s -### 2>&1
+// OK
+
+// RUN: not %clang %s -S -target aarch64-linux -march=morello+c64 -mabi=purecap -fsanitize=cheriseed 2>&1 | FileCheck %s -check-prefix=CHECK-MORELLO-TARGET
+// CHECK-MORELLO-TARGET: error: option '-fsanitize=cheriseed' cannot be specified on this target
+
 // RUN: %clang -target i386-linux-android -fsanitize=memtag -fno-rtti %s -### 2>&1 | FileCheck %s --check-prefix=CHECK-SANMT-BAD-ARCH
 // RUN: %clang -target x86_64-linux-android -fsanitize=memtag -fno-rtti %s -### 2>&1 | FileCheck %s --check-prefix=CHECK-SANMT-BAD-ARCH
 // CHECK-SANMT-BAD-ARCH: unsupported option '-fsanitize=memtag' for target

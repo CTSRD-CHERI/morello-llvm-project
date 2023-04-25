@@ -1094,7 +1094,7 @@ vaddr GetMaxUserVirtualAddress() {
 }
 
 #if !SANITIZER_ANDROID
-usize GetPageSize() {
+__attribute__((weak)) usize GetPageSize() {
 #if SANITIZER_LINUX && (defined(__x86_64__) || defined(__i386__)) && \
     defined(EXEC_PAGESIZE)
   return EXEC_PAGESIZE;

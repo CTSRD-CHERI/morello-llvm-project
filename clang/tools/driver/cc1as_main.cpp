@@ -93,6 +93,7 @@ struct AssemblerInvocation {
   unsigned RelaxELFRelocations : 1;
   unsigned Dwarf64 : 1;
   unsigned DwarfVersion;
+  unsigned HasCHERIseed : 1;
   std::string DwarfDebugFlags;
   std::string DwarfDebugProducer;
   std::string DebugCompilationDir;
@@ -335,6 +336,8 @@ bool AssemblerInvocation::CreateFromArgs(AssemblerInvocation &Opts,
     }
   }
 
+  Opts.HasCHERIseed = Args.hasArg(OPT_cheriseed);
+
   return Success;
 }
 
@@ -383,6 +386,7 @@ static bool ExecuteAssemblerImpl(AssemblerInvocation &Opts,
 
   MCTargetOptions MCOptions;
   MCOptions.ABIName = Opts.TargetABI;
+  MCOptions.HasCHERIseed = Opts.HasCHERIseed;
   std::unique_ptr<MCRegisterInfo> MRI(
       TheTarget->createMCRegInfo(Opts.Triple, MCOptions));
   assert(MRI && "Unable to create target register info!");

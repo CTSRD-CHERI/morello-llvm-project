@@ -4496,6 +4496,9 @@ bool CompilerInvocation::CreateFromArgsImpl(
       !LangOpts.Sanitize.has(SanitizerKind::Memory) &&
       !LangOpts.Sanitize.has(SanitizerKind::KernelMemory);
 
+  Res.getTargetOpts().HasCHERIseed =
+      LangOpts.Sanitize.has(SanitizerKind::CHERIseed);
+
   ParsePreprocessorArgs(Res.getPreprocessorOpts(), Args, Diags,
                         Res.getFrontendOpts().ProgramAction,
                         Res.getFrontendOpts());

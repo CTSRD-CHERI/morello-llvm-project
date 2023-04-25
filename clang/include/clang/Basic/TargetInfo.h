@@ -197,13 +197,16 @@ protected:
   bool TLSSupported;
   bool VLASupported;
   bool NoAsmVariants;  // True if {|} are normal characters.
-  bool CapabilityABI = false;
+  bool CapabilityABI;
   bool HasLegalHalfType; // True if the backend supports operations on the half
                          // LLVM IR type.
   bool HasFloat128;
   bool HasFloat16;
   bool HasBFloat16;
   bool HasStrictFP;
+  bool HasCHERIseed;
+
+  unsigned CapSize;
 
   unsigned short MaxAtomicPromoteWidth, MaxAtomicInlineWidth;
   unsigned short SimdDefaultAlign;
@@ -456,11 +459,11 @@ public:
   /// \param AddrSpace address space of pointee in source language.
   virtual uint64_t getNullPointerValue(LangAS AddrSpace) const { return 0; }
 
-  virtual uint64_t getCHERICapabilityWidth() const { return -1; }
+  virtual uint64_t getCHERICapabilityWidth() const { return CapSize; }
 
-  virtual uint64_t getCHERICapabilityAlign() const { return -1; }
+  virtual uint64_t getCHERICapabilityAlign() const { return CapSize; }
 
-  virtual uint64_t getPointerRangeForCHERICapability() const { return -1; }
+  virtual uint64_t getPointerRangeForCHERICapability() const { return 64; }
 
   /// Return the size of '_Bool' and C++ 'bool' for this target, in bits.
   unsigned getBoolWidth() const { return BoolWidth; }
@@ -486,9 +489,9 @@ public:
 
   /// getIntWidth/Align/Range - Return the size of '__intcap_t' and '__uintcap_t' for
   /// this target, in bits.
-  virtual unsigned getIntCapWidth() const { return LongWidth; }
-  virtual unsigned getIntCapAlign() const { return LongAlign; }
-  virtual unsigned getIntCapRange() const { return LongWidth; }
+  virtual unsigned getIntCapWidth() const { return CapSize; }
+  virtual unsigned getIntCapAlign() const { return CapSize; }
+  virtual unsigned getIntCapRange() const { return 64; }
 
   /// getLongWidth/Align - Return the size of 'signed long' and 'unsigned long'
   /// for this target, in bits.
@@ -1472,7 +1475,6 @@ public:
   bool isLittleEndian() const { return !BigEndian; }
 
   bool areAllPointersCapabilities() const { return CapabilityABI; }
-  virtual bool hasCapabilities() const { return false; }
 
   /// Whether the option -fextend-arguments={32,64} is supported on the target.
   virtual bool supportsExtendIntArgs() const { return false; }
@@ -1510,7 +1512,7 @@ public:
   }
 
   /// SupportsCapabilities - Returns true if the target supports capabilities.
-  virtual bool SupportsCapabilities() const { return false; }
+  virtual bool SupportsCapabilities() const { return HasCHERIseed; }
 
   enum CallingConvKind {
     CCK_Default,
@@ -1624,13 +1626,14 @@ protected:
   /// Copy type and layout related info.
   void copyAuxTarget(const TargetInfo *Aux);
   virtual uint64_t getPointerWidthV(unsigned AddrSpace) const {
-    return PointerWidth;
+    return (AddrSpace == 200) ? CapSize : PointerWidth;
   }
   virtual uint64_t getPointerRangeV(unsigned AddrSpace) const {
-    return getPointerWidthV(AddrSpace);
+    return (AddrSpace == 200) ? getPointerRangeForCHERICapability()
+                              : PointerWidth;
   }
   virtual uint64_t getPointerAlignV(unsigned AddrSpace) const {
-    return PointerAlign;
+    return (AddrSpace == 200) ? CapSize : PointerAlign;
   }
   virtual enum IntType getPtrDiffTypeV(unsigned AddrSpace) const {
     return PtrDiffType;
@@ -1641,7 +1644,9 @@ protected:
     return None;
   }
 
- private:
+  virtual void setDataLayout(){};
+
+private:
   // Assert the values for the fractional and integral bits for each fixed point
   // type follow the restrictions given in clause 6.2.6.3 of N1169.
   void CheckFixedPointBits() const;

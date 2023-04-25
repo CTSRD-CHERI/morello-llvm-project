@@ -18,6 +18,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringSwitch.h"
+#include "llvm/IR/DataLayout.h"
 #include "llvm/Support/AArch64TargetParser.h"
 
 using namespace clang;
@@ -43,8 +44,7 @@ const Builtin::Info AArch64TargetInfo::BuiltinInfo[] = {
 
 AArch64TargetInfo::AArch64TargetInfo(const llvm::Triple &Triple,
                                      const TargetOptions &Opts)
-    : TargetInfo(Triple), Morello(false), C64(false),
-      CapSize(128), ABI("aapcs") {
+    : TargetInfo(Triple), Morello(false), C64(false), ABI("aapcs") {
   if (getTriple().isOSOpenBSD()) {
     Int64Type = SignedLongLong;
     IntMaxType = SignedLongLong;
@@ -329,11 +329,11 @@ void AArch64TargetInfo::getTargetDefines(const LangOptions &Opts,
   if (getTriple().getObjectFormat() == llvm::Triple::ELF)
       Builder.defineMacro("__ELF__");
 
-  if (Morello) {
+  if (SupportsCapabilities()) {
     if (C64)
       Builder.defineMacro("__ARM_FEATURE_C64", "1");
 
-    if (CapabilityABI) {
+    if (areAllPointersCapabilities() && C64) {
       Builder.defineMacro("__CHERI_SANDBOX__", Twine(4));
       auto CapTableABI = llvm::MCTargetOptions::cheriCapabilityTableABI();
       Builder.defineMacro("__CHERI_CAPABILITY_TABLE__",
@@ -341,33 +341,33 @@ void AArch64TargetInfo::getTargetDefines(const LangOptions &Opts,
       Builder.defineMacro("__CHERI_CAPABILITY_TLS__", Twine(1));
     }
 
-    Builder.defineMacro("__CHERI_CAP_PERMISSION_GLOBAL__", Twine(1 << 0));
-    Builder.defineMacro("__ARM_CAP_PERMISSION_EXECUTIVE__",
-            Twine(1 << 1));
-    Builder.defineMacro("__ARM_CAP_PERMISSION_MUTABLE_LOAD__",
-            Twine(1 << 6));
-    Builder.defineMacro("__ARM_CAP_PERMISSION_COMPARTMENT_ID__",
-            Twine(1 << 7));
-    Builder.defineMacro("__ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR__",
-            Twine(1 << 8));
-    Builder.defineMacro("__CHERI_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__",
-            Twine(1 << 9));
-    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_UNSEAL__",
-            Twine(1 << 10));
-    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_SEAL__",
-            Twine(1 << 11));
-    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_STORE_LOCAL__",
-            Twine(1 << 12));
-    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__",
-            Twine(1 << 13));
-    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_LOAD_CAPABILITY__",
-            Twine(1 << 14));
-    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_EXECUTE__",
-            Twine(1 << 15));
-    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_STORE__",
-            Twine(1 << 16));
-    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_LOAD__",
-            Twine(1 << 17));
+    if (Morello) {
+      Builder.defineMacro("__CHERI_CAP_PERMISSION_GLOBAL__", Twine(1 << 0));
+      Builder.defineMacro("__ARM_CAP_PERMISSION_EXECUTIVE__", Twine(1 << 1));
+      Builder.defineMacro("__ARM_CAP_PERMISSION_MUTABLE_LOAD__", Twine(1 << 6));
+      Builder.defineMacro("__ARM_CAP_PERMISSION_COMPARTMENT_ID__",
+                          Twine(1 << 7));
+      Builder.defineMacro("__ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR__",
+                          Twine(1 << 8));
+      Builder.defineMacro("__CHERI_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__",
+                          Twine(1 << 9));
+      Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_UNSEAL__",
+                          Twine(1 << 10));
+      Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_SEAL__",
+                          Twine(1 << 11));
+      Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_STORE_LOCAL__",
+                          Twine(1 << 12));
+      Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__",
+                          Twine(1 << 13));
+      Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_LOAD_CAPABILITY__",
+                          Twine(1 << 14));
+      Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_EXECUTE__",
+                          Twine(1 << 15));
+      Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_STORE__",
+                          Twine(1 << 16));
+      Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_LOAD__",
+                          Twine(1 << 17));
+    }
   }
 
   if (HasDotProd)
@@ -633,9 +633,9 @@ bool AArch64TargetInfo::handleTargetFeatures(std::vector<std::string> &Features,
   if (C64 && !Morello)
     Morello = true;
 
-  if (CapabilityABI && !Morello)
-    Diags.Report(diag::err_target_feature_unsupported_abi) << ABI
-        << "morello";
+  if (areAllPointersCapabilities() && !SupportsCapabilities())
+    Diags.Report(diag::err_target_feature_unsupported_abi)
+        << ABI << "morello or cheriseed";
 
   setDataLayout();
 
@@ -665,7 +665,8 @@ AArch64TargetInfo::checkCallingConvention(CallingConv CC) const {
 bool AArch64TargetInfo::isCLZForZeroUndef() const { return false; }
 
 TargetInfo::BuiltinVaListKind AArch64TargetInfo::getBuiltinVaListKind() const {
-  if (hasPureCap() && HasMorelloNewVarArg)
+  if (areAllPointersCapabilities() &&
+      (HasMorelloNewVarArg || getTargetOpts().HasCHERIseed))
     return TargetInfo::VoidPtrBuiltinVaList;
   return TargetInfo::AArch64ABIBuiltinVaList;
 }
@@ -850,13 +851,23 @@ const char *AArch64TargetInfo::getClobbers() const { return ""; }
 
 int AArch64TargetInfo::getEHDataRegisterNumber(unsigned RegNo) const {
   if (RegNo == 0)
-    return hasPureCap() ? 198 : 0;
+    return areAllPointersCapabilities() ? 198 : 0;
   if (RegNo == 1)
     return 1;
   return -1;
 }
 
 bool AArch64TargetInfo::hasInt128Type() const { return true; }
+
+bool AArch64TargetInfo::validateTarget(DiagnosticsEngine &Diags) const {
+  if (Morello && HasCHERIseed) {
+    Diags.Report(diag::err_opt_not_valid_on_target) << "-fsanitize=cheriseed"
+                                                    << "morello";
+    return false;
+  }
+
+  return true;
+}
 
 AArch64leTargetInfo::AArch64leTargetInfo(const llvm::Triple &Triple,
                                          const TargetOptions &Opts)
@@ -871,11 +882,11 @@ void AArch64leTargetInfo::setDataLayout() {
   } else {
     std::string Desc;
     Desc = "e-m:e";
-    if (hasCapabilities())
-      Desc += "-pf200:128:128:128:64";
+    if (SupportsCapabilities())
+      Desc += llvm::DataLayout::PF200_128;
     Desc += "-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128";
-    if (hasPureCap())
-      Desc += "-A200-P200-G200";
+    if (areAllPointersCapabilities())
+      Desc += llvm::DataLayout::APG200;
 
     resetDataLayout(Desc);
   }
@@ -902,11 +913,11 @@ void AArch64beTargetInfo::getTargetDefines(const LangOptions &Opts,
 void AArch64beTargetInfo::setDataLayout() {
   assert(!getTriple().isOSBinFormatMachO());
   std::string Desc = "E-m:e";
-  if (hasCapabilities())
-    Desc += "-pf200:128:128:128:64";
+  if (SupportsCapabilities())
+    Desc += llvm::DataLayout::PF200_128;
   Desc += "-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128";
-  if (hasPureCap())
-    Desc += "-A200-P200-G200";
+  if (areAllPointersCapabilities())
+    Desc += llvm::DataLayout::APG200;
 
   resetDataLayout(Desc);
 }

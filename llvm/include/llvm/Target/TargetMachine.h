@@ -109,6 +109,8 @@ protected: // Can only create subclasses.
 
   unsigned RequireStructuredCFG : 1;
   unsigned O0WantsFastISel : 1;
+  std::string adjustDataLayout(StringRef DataLayoutString,
+                               const TargetOptions &Options);
 
 public:
   const TargetOptions DefaultOptions;
@@ -175,9 +177,7 @@ public:
   /// The LLVM Module owns a DataLayout that is used for the target independent
   /// optimizations and code generation. This hook provides a target specific
   /// check on the validity of this DataLayout.
-  bool isCompatibleDataLayout(const DataLayout &Candidate) const {
-    return DL == Candidate;
-  }
+  bool isCompatibleDataLayout(const DataLayout &Candidate) const;
 
   /// Get the pointer size for this target.
   ///

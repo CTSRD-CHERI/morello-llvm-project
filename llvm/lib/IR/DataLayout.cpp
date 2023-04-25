@@ -50,6 +50,7 @@ StructLayout::StructLayout(StructType *ST, const DataLayout &DL) {
   StructSize = 0;
   IsPadded = false;
   NumElements = ST->getNumElements();
+  StructAlignment = ST->getMinimumAlignment();
 
   // Loop over each of the elements, placing them in memory.
   for (unsigned i = 0, e = NumElements; i != e; ++i) {

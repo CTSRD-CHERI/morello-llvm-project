@@ -244,7 +244,7 @@ static std::unique_ptr<TargetLoweringObjectFile> createTLOF(const Triple &TT) {
 
 // Helper function to build a DataLayout string
 static std::string computeDataLayout(const Triple &TT, StringRef FS,
-                                     const MCTargetOptions &Options,
+                                     const TargetOptions &Options,
                                      bool LittleEndian) {
   if (TT.isOSBinFormatMachO()) {
     if (TT.getArch() == Triple::aarch64_32)
@@ -258,10 +258,10 @@ static std::string computeDataLayout(const Triple &TT, StringRef FS,
   std::string Ptr32 = TT.getEnvironment() == Triple::GNUILP32 ? "-p:32:32" : "";
   std::string Cap = "";
   if (FS.find("+c64") != StringRef::npos ||
-      FS.find("+morello") != StringRef::npos)
+      FS.find("+morello") != StringRef::npos || Options.EnableCHERIseed)
     Cap = "-pf200:128:128:128:64";
-  std::string PurecapAS = (Options.getABIName() == "purecap") ? "-A200-P200-G200"
-                                                              : "";
+  std::string PurecapAS =
+      (Options.MCOptions.getABIName() == "purecap") ? "-A200-P200-G200" : "";
   return Endian + "-m:e" + Cap + Ptr32 +
          "-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128" + PurecapAS;
 }
@@ -308,13 +308,14 @@ getEffectiveAArch64CodeModel(const Triple &TT, Optional<CodeModel::Model> CM,
   return CodeModel::Small;
 }
 
-static void checkC64AndABI(bool isC64, bool isPureCap) {
+static void checkC64AndABI(bool isC64, bool isPureCap, bool HasCHERIseed) {
   if (isC64 && !isPureCap)
     report_fatal_error("C64 code generation only supported "
                        "with the purecap ABI", false);
-  if (isPureCap && !isC64)
+  if (isPureCap && !isC64 && !HasCHERIseed)
     report_fatal_error("purecap ABI code generation only supported "
-                       "with C64", false);
+                       "with C64 or CHERIseed",
+                       false);
 }
 
 /// Create an AArch64 architecture model.
@@ -326,9 +327,8 @@ AArch64TargetMachine::AArch64TargetMachine(const Target &T, const Triple &TT,
                                            Optional<CodeModel::Model> CM,
                                            CodeGenOpt::Level OL, bool JIT,
                                            bool LittleEndian)
-    : LLVMTargetMachine(T,
-                        computeDataLayout(TT, FS, Options.MCOptions, LittleEndian),
-                        TT, computeDefaultCPU(TT, CPU), FS, Options,
+    : LLVMTargetMachine(T, computeDataLayout(TT, FS, Options, LittleEndian), TT,
+                        computeDefaultCPU(TT, CPU), FS, Options,
                         getEffectiveRelocModel(TT, RM),
                         getEffectiveAArch64CodeModel(TT, CM, JIT), OL),
       TLOF(createTLOF(getTargetTriple())), isLittle(LittleEndian),
@@ -337,7 +337,7 @@ AArch64TargetMachine::AArch64TargetMachine(const Target &T, const Triple &TT,
       isC64(FS.find("+c64") != StringRef::npos) {
   initAsmInfo();
 
-  checkC64AndABI(isC64, isPureCap);
+  checkC64AndABI(isC64, isPureCap, Options.EnableCHERIseed);
 
   if (TT.isOSBinFormatMachO()) {
     this->Options.TrapUnreachable = true;

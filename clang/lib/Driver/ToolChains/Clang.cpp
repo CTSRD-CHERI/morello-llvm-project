@@ -2265,6 +2265,12 @@ void Clang::AddX86TargetArgs(const ArgList &Args,
     CmdArgs.push_back("-tune-cpu");
     CmdArgs.push_back(Args.MakeArgString(TuneCPU));
   }
+
+  // CHERIseed requires 'purecap' ABI.
+  if (Arg *A = Args.getLastArg(options::OPT_mabi_EQ)) {
+    CmdArgs.push_back("-target-abi");
+    CmdArgs.push_back(A->getValue());
+  }
 }
 
 void Clang::AddHexagonTargetArgs(const ArgList &Args,
@@ -5842,6 +5848,10 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   const SanitizerArgs &Sanitize = TC.getSanitizerArgs();
   Sanitize.addArgs(TC, Args, CmdArgs, InputType);
 
+  // Workaround an issue around tail calls with CHERIseed.
+  if (Sanitize.needsCHERIseedRt())
+    CmdArgs.push_back("-mdisable-tail-calls");
+
   const XRayArgs &XRay = TC.getXRayArgs();
   XRay.addArgs(TC, Args, CmdArgs, InputType);
 
@@ -6478,7 +6488,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       EnableSLPVec ? options::OPT_O_Group : options::OPT_fslp_vectorize;
   if (Args.hasFlag(options::OPT_fslp_vectorize, SLPVectAliasOption,
                    options::OPT_fno_slp_vectorize, EnableSLPVec))
-    CmdArgs.push_back("-vectorize-slp");
+    // FIXME: CHERIseed workaround
+    // SLP vectorizer can create vectors of capabilities which
+    // CHERISeed cannot cope with.
+    if (!Sanitize.needsCHERIseedRt())
+      CmdArgs.push_back("-vectorize-slp");
 
   ParseMPreferVectorWidth(D, Args, CmdArgs);
 
@@ -7686,6 +7700,10 @@ void ClangAs::ConstructJob(Compilation &C, const JobAction &JA,
 
   if (Triple.isAMDGPU())
     handleAMDGPUCodeObjectVersionOptions(D, Args, CmdArgs);
+
+  // If instrumented with CHERIseed pass on that flag.
+  if (getToolChain().getSanitizerArgs().needsCHERIseedRt())
+    CmdArgs.push_back("-cheriseed");
 
   assert(Input.isFilename() && "Invalid input.");
   CmdArgs.push_back(Input.getFilename());

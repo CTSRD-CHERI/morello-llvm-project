@@ -69,7 +69,10 @@
 
 /* Object types, sealing and unsealing: */
 typedef long cheri_otype_t;
-#if defined(__mips__) || defined(__riscv)
+#if __has_feature(cheriseed_sanitizer)
+#define CHERI_OTYPE_UNSEALED ((cheri_otype_t)0x3ffff)
+#define CHERI_OTYPE_SENTRY ((cheri_otype_t)0x3fffe)
+#elif defined(__mips__) || defined(__riscv)
 /* CHERI-MIPS and CHERI-RISC-V use negative numbers for hardware-interpreted
  * otypes */
 #define CHERI_OTYPE_UNSEALED ((cheri_otype_t)-1)
@@ -105,13 +108,21 @@ typedef enum __attribute__((flag_enum, enum_extensibility(open))) {
   CHERI_PERM_STORE_CAP = __CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__,
   CHERI_PERM_STORE_LOCAL_CAP = __CHERI_CAP_PERMISSION_PERMIT_STORE_LOCAL__,
   CHERI_PERM_SEAL = __CHERI_CAP_PERMISSION_PERMIT_SEAL__,
-#if !defined(__aarch64__)
+#if defined(__CHERI_CAP_PERMISSION_PERMIT_CCALL__)
   CHERI_PERM_CCALL = __CHERI_CAP_PERMISSION_PERMIT_CCALL__,
-#else
+#endif
+#if defined(__ARM_CAP_PERMISSION_EXECUTIVE__)
   ARM_CAP_PERMISSION_EXECUTIVE = __ARM_CAP_PERMISSION_EXECUTIVE__,
+#endif
+#if defined(__ARM_CAP_PERMISSION_MUTABLE_LOAD__)
   ARM_CAP_PERMISSION_MUTABLE_LOAD = __ARM_CAP_PERMISSION_MUTABLE_LOAD__,
+#endif
+#if defined(__ARM_CAP_PERMISSION_COMPARTMENT_ID__)
   ARM_CAP_PERMISSION_COMPARTMENT_ID = __ARM_CAP_PERMISSION_COMPARTMENT_ID__,
-  ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR = __ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR__,
+#endif
+#if defined(__ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR__)
+  ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR =
+      __ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR__,
 #endif
   CHERI_PERM_UNSEAL = __CHERI_CAP_PERMISSION_PERMIT_UNSEAL__,
   CHERI_PERM_SYSTEM_REGS = __CHERI_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__,

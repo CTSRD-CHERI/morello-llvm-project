@@ -228,7 +228,8 @@ FEATURE(shadow_call_stack,
         LangOpts.Sanitize.has(SanitizerKind::ShadowCallStack))
 FEATURE(tls, PP.getTargetInfo().isTLSSupported())
 FEATURE(underlying_type, LangOpts.CPlusPlus)
-
+FEATURE(cheriseed_sanitizer,
+        LangOpts.Sanitize.has(SanitizerKind::CHERIseed))
 
 // CHERI features:
 FEATURE(capabilities, PP.getTargetInfo().SupportsCapabilities())

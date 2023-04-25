@@ -14,11 +14,13 @@
 #include "clang/Driver/ToolChain.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringSwitch.h"
+#include "llvm/Support/CHERIseed.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/SpecialCaseList.h"
 #include "llvm/Support/TargetParser.h"
 #include "llvm/Support/VirtualFileSystem.h"
 #include "llvm/Transforms/Instrumentation/AddressSanitizerOptions.h"
+#include <cstring>
 #include <memory>
 
 using namespace clang;
@@ -102,6 +104,11 @@ static SanitizerMask parseArgValues(const Driver &D, const llvm::opt::Arg *A,
 /// Parse -f(no-)?sanitize-coverage= flag values, diagnosing any invalid
 /// components. Returns OR of members of \c CoverageFeature enumeration.
 static int parseCoverageFeatures(const Driver &D, const llvm::opt::Arg *A);
+
+/// Parse -fsanitize-cheriseed-checks= flag values, diagnosing any invalid
+/// components. Returns a value for CHERIseedEnabledChecks.
+static llvm::__cheriseed::abi::CheckType
+parseCHERIseedChecks(const Driver &D, const llvm::opt::ArgList &Args);
 
 /// Produce an argument string from ArgList \p Args, which shows how it
 /// provides some sanitizer kind from \p Mask. For example, the argument list
@@ -467,10 +474,15 @@ SanitizerArgs::SanitizerArgs(const ToolChain &TC,
                          SanitizerKind::Leak | SanitizerKind::Thread |
                          SanitizerKind::Memory | SanitizerKind::KernelAddress |
                          SanitizerKind::Scudo | SanitizerKind::SafeStack),
-      std::make_pair(SanitizerKind::MemTag,
-                     SanitizerKind::Address | SanitizerKind::KernelAddress |
-                         SanitizerKind::HWAddress |
-                         SanitizerKind::KernelHWAddress)};
+      std::make_pair(SanitizerKind::MemTag, SanitizerKind::Address |
+                                                SanitizerKind::KernelAddress |
+                                                SanitizerKind::HWAddress |
+                                                SanitizerKind::KernelHWAddress),
+      std::make_pair(SanitizerKind::CHERIseed,
+                     SanitizerKind::Address | SanitizerKind::HWAddress |
+                         SanitizerKind::Leak | SanitizerKind::Thread |
+                         SanitizerKind::Memory | SanitizerKind::KernelAddress |
+                         SanitizerKind::Scudo | SanitizerKind::SafeStack)};
   // Enable toolchain specific default sanitizers if not explicitly disabled.
   SanitizerMask Default = TC.getDefaultSanitizers() & ~AllRemove;
 
@@ -763,6 +775,9 @@ SanitizerArgs::SanitizerArgs(const ToolChain &TC,
         clang::diag::err_drv_malformed_sanitizer_coverage_ignorelist);
   }
 
+  // Parse -fsanitize-cheriseed-checks.
+  CHERIseedEnabledChecks = parseCHERIseedChecks(D, Args);
+
   SharedRuntime =
       Args.hasFlag(options::OPT_shared_libsan, options::OPT_static_libsan,
                    TC.getTriple().isAndroid() || TC.getTriple().isOSFuchsia() ||
@@ -1014,6 +1029,15 @@ void SanitizerArgs::addArgs(const ToolChain &TC, const llvm::opt::ArgList &Args,
   addSpecialCaseListOpt(Args, CmdArgs, "-fsanitize-coverage-ignorelist=",
                         CoverageIgnorelistFiles);
 
+  if (needsCHERIseedRt()) {
+    uint64_t disabledChecks =
+        (~CHERIseedEnabledChecks) & llvm::__cheriseed::abi::Check::CHK_ALL;
+    CmdArgs.push_back("-mllvm");
+    CmdArgs.push_back(Args.MakeArgString(
+        "-cheriseed-disabled-checks=" +
+        Twine(llvm::utohexstr(disabledChecks, /* LowerCase */ true))));
+  }
+
   if (TC.getTriple().isOSWindows() && needsUbsanRt()) {
     // Instruct the code generator to embed linker directives in the object file
     // that cause the required runtime libraries to be linked.
@@ -1251,6 +1275,70 @@ int parseCoverageFeatures(const Driver &D, const llvm::opt::Arg *A) {
     Features |= F;
   }
   return Features;
+}
+
+llvm::__cheriseed::abi::CheckType
+parseCHERIseedChecks(const Driver &D, const llvm::opt::ArgList &Args) {
+  Arg *A = Args.getLastArg(options::OPT_fsanitize_cheriseed_checks);
+  if (!A || A->getNumValues() == 0)
+    return llvm::__cheriseed::abi::Check::CHK_ALL;
+
+  llvm::__cheriseed::abi::CheckType checks = 0;
+  int cheriseed_exclude_option_flags =
+      llvm::__cheriseed::abi::CheckOptionFlags::NO_COMPILE_TIME_OPTION;
+  for (const char *cheriseed_checks_str : A->getValues()) {
+    llvm::__cheriseed::parser::ParsedOption option;
+    llvm::__cheriseed::parser::Parse(cheriseed_checks_str,
+                                     {
+                                         &strchrnul,
+                                         &strncmp,
+                                     },
+                                     option, cheriseed_exclude_option_flags);
+    switch (option.Result()) {
+    case llvm::__cheriseed::parser::ParseResult::VALID_OPTION: {
+      checks = option.Enabled() ? checks | option.GetCheck()
+                                : checks & ~option.GetCheck();
+    } break;
+    case llvm::__cheriseed::parser::ParseResult::HELP_OPTION: {
+      llvm::outs() << "\nUsage: -fsanitize-cheriseed-checks=[[-]options,...]"
+                   << "\n";
+      llvm::__cheriseed::parser::Help(llvm::outs(),
+                                      cheriseed_exclude_option_flags);
+    } break;
+    case llvm::__cheriseed::parser::ParseResult::UNKNOWN_OPTION:
+    default: {
+      struct {
+        unsigned distance;
+        StringRef name;
+      } Best{UINT_MAX, ""}, Candidate;
+      // Iterate through all options and pick the closest match.
+      llvm::__cheriseed::parser::ForeachOption(
+          [&](const llvm::__cheriseed::abi::AvailableCheckOption &option) {
+            Candidate.name = option.name;
+            Candidate.distance = Candidate.name.edit_distance(
+                cheriseed_checks_str, /*AllowReplacements=*/true,
+                /*MaxEditDistance=*/Best.distance);
+            if (Candidate.distance < Best.distance)
+              Best = Candidate;
+          },
+          cheriseed_exclude_option_flags);
+      // Considering maximum 5 mismatches are acceptable.
+      const unsigned match_thresold =
+          (StringRef(cheriseed_checks_str).size() < 5)
+              ? StringRef(cheriseed_checks_str).size()
+              : 5;
+      // If we have small edit distance between the best option and the
+      // passed argument, we print error with a suggestion. Else, the best name
+      // is ignored.
+      D.Diag((Best.distance < match_thresold)
+                 ? clang::diag::err_drv_invalid_value_with_suggestion_2
+                 : clang::diag::err_drv_invalid_value)
+          << A->getAsString(Args) << cheriseed_checks_str << Best.name;
+    } break;
+    }
+  }
+
+  return checks & llvm::__cheriseed::abi::Check::CHK_ALL;
 }
 
 std::string lastArgumentForMask(const Driver &D, const llvm::opt::ArgList &Args,

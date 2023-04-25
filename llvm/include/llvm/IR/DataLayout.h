@@ -629,6 +629,12 @@ public:
   ///
   /// This includes an explicitly requested alignment (if the global has one).
   Align getPreferredAlign(const GlobalVariable *GV) const;
+
+  /// Fat pointer address space for 128-bit capabilities.
+  static constexpr char const *PF200_128 = "-pf200:128:128:128:64";
+
+  /// Default alloca, program and global address spaces for Pure-cap ABI.
+  static constexpr char const *APG200 = "-A200-P200-G200";
 };
 
 inline DataLayout *unwrap(LLVMTargetDataRef P) {

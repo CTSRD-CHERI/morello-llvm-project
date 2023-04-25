@@ -34,10 +34,11 @@ using namespace llvm;
 TargetMachine::TargetMachine(const Target &T, StringRef DataLayoutString,
                              const Triple &TT, StringRef CPU, StringRef FS,
                              const TargetOptions &Options)
-    : TheTarget(T), DL(DataLayoutString), TargetTriple(TT),
-      TargetCPU(std::string(CPU)), TargetFS(std::string(FS)), AsmInfo(nullptr),
-      MRI(nullptr), MII(nullptr), STI(nullptr), RequireStructuredCFG(false),
-      O0WantsFastISel(false), DefaultOptions(Options), Options(Options) {}
+    : TheTarget(T), DL(adjustDataLayout(DataLayoutString, Options)),
+      TargetTriple(TT), TargetCPU(std::string(CPU)), TargetFS(std::string(FS)),
+      AsmInfo(nullptr), MRI(nullptr), MII(nullptr), STI(nullptr),
+      RequireStructuredCFG(false), O0WantsFastISel(false),
+      DefaultOptions(Options), Options(Options) {}
 
 TargetMachine::~TargetMachine() = default;
 
@@ -253,4 +254,37 @@ std::pair<int, int> TargetMachine::parseBinutilsVersion(StringRef Version) {
   if (!Version.consumeInteger(10, Ret.first) && Version.consume_front("."))
     Version.consumeInteger(10, Ret.second);
   return Ret;
+}
+
+std::string TargetMachine::adjustDataLayout(StringRef DataLayoutString,
+                                            const TargetOptions &Options) {
+  std::string Desc(DataLayoutString.str());
+  if (!Options.EnableCHERIseed)
+    return Desc;
+
+  // Address space for 128 bit capabilities if CHERIseed enabled.
+  if (Desc.find(DataLayout::PF200_128) == std::string::npos)
+    Desc += DataLayout::PF200_128;
+
+  if ((Options.MCOptions.getABIName() == "purecap") &&
+      Desc.find(DataLayout::APG200) == std::string::npos)
+    Desc += DataLayout::APG200;
+
+  return Desc;
+}
+
+bool TargetMachine::isCompatibleDataLayout(const DataLayout &Candidate) const {
+  // CHERIseed changes the DataLayout
+  if (Options.EnableCHERIseed) {
+    std::string CDL = DL.getStringRepresentation();
+    size_t Pos = CDL.find(DataLayout::PF200_128);
+    if (Pos != std::string::npos)
+      CDL.erase(Pos, strlen(DataLayout::PF200_128));
+    Pos = CDL.find(DataLayout::APG200);
+    if (Pos != std::string::npos)
+      CDL.erase(Pos, strlen(DataLayout::APG200));
+    return DataLayout(CDL) == Candidate;
+  }
+
+  return DL == Candidate;
 }

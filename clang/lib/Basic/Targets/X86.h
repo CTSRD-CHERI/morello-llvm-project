@@ -17,6 +17,7 @@
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Basic/TargetOptions.h"
 #include "llvm/ADT/Triple.h"
+#include "llvm/IR/DataLayout.h"
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/X86TargetParser.h"
 
@@ -379,11 +380,20 @@ public:
       return 32;
     if (AddrSpace == ptr64)
       return 64;
-    return PointerWidth;
+    return TargetInfo::getPointerWidthV(AddrSpace);
   }
 
   uint64_t getPointerAlignV(unsigned AddrSpace) const override {
     return getPointerWidthV(AddrSpace);
+  }
+
+  bool setABI(const std::string &Name) override {
+    if (Name != "purecap")
+      return false;
+
+    CapabilityABI = true;
+    IntPtrType = TargetInfo::SignedIntCap;
+    return true;
   }
 };
 
@@ -676,7 +686,9 @@ public:
     SuitableAlign = 128;
     SizeType = IsX32 ? UnsignedInt : UnsignedLong;
     PtrDiffType = IsX32 ? SignedInt : SignedLong;
-    IntPtrType = IsX32 ? SignedInt : SignedLong;
+    IntPtrType = IsX32                    ? SignedInt
+                 : SupportsCapabilities() ? IntPtrType
+                                          : SignedLong;
     IntMaxType = IsX32 ? SignedLongLong : SignedLong;
     Int64Type = IsX32 ? SignedLongLong : SignedLong;
     RegParmMax = 6;
@@ -704,6 +716,8 @@ public:
   }
 
   BuiltinVaListKind getBuiltinVaListKind() const override {
+    if (areAllPointersCapabilities() && getTargetOpts().HasCHERIseed)
+      return TargetInfo::VoidPtrBuiltinVaList;
     return TargetInfo::X86_64ABIBuiltinVaList;
   }
 
@@ -767,6 +781,18 @@ public:
   ArrayRef<Builtin::Info> getTargetBuiltins() const override;
 
   bool hasExtIntType() const override { return true; }
+
+private:
+  void setDataLayout() override {
+    if (!SupportsCapabilities())
+      return;
+    std::string Desc = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128"
+                       "-n8:16:32:64-S128";
+    Desc += llvm::DataLayout::PF200_128;
+    if (areAllPointersCapabilities())
+      Desc += llvm::DataLayout::APG200;
+    resetDataLayout(Desc);
+  }
 };
 
 // x86-64 Windows target

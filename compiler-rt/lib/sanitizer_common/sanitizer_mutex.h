@@ -228,7 +228,7 @@ class MUTEX Mutex : CheckedMutex {
     if (UNLIKELY(wake_writer))
       writers_.Post();
     else if (UNLIKELY(wake_readers))
-      readers_.Post(wake_readers);
+      readers_.Post(static_cast<u32>(wake_readers));
   }
 
   void ReadLock() ACQUIRE_SHARED() {
@@ -407,7 +407,7 @@ class MUTEX RWMutex {
  private:
   atomic_uint32_t state_;
 
-  enum {
+  enum : u32 {
     kUnlocked = 0,
     kWriteLock = 1,
     kReadLock = 2

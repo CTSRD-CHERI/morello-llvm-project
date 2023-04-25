@@ -7575,7 +7575,8 @@ static void handleNoSanitizeAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
             SanitizerMask() &&
         SanitizerName != "coverage")
       S.Diag(LiteralLoc, diag::warn_unknown_sanitizer_ignored) << SanitizerName;
-    else if (isGlobalVar(D) && SanitizerName != "address")
+    else if (isGlobalVar(D) && SanitizerName != "address" &&
+             SanitizerName != "cheriseed")
       S.Diag(D->getLocation(), diag::err_attribute_wrong_decl_type)
           << AL << ExpectedFunctionOrMethod;
     Sanitizers.push_back(SanitizerName);

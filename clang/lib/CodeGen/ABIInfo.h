@@ -101,6 +101,9 @@ namespace swiftcall {
     virtual bool isHomogeneousAggregateSmallEnough(const Type *Base,
                                                    uint64_t Members) const;
 
+    Address EmitOnStackVAArg(CodeGenFunction &CGF, Address VAListAddr,
+                             QualType Ty) const;
+
     bool isHomogeneousAggregate(QualType Ty, const Type *&Base,
                                 uint64_t &Members) const;
 

@@ -1599,6 +1599,11 @@ are listed below.
    -  ``-fsanitize=safe-stack``: :doc:`safe stack <SafeStack>`
       protection against stack-based memory corruption errors.
 
+   -  ``-fsanitize=cheriseed``: :doc:`CHERIseed`, a software-only
+      implementation of CHERI-like semantics which supports anyone interested
+      in the CHERI approach in porting their code bases and experimenting
+      with benefits of the capability semantics.
+
    There are more fine-grained checks available: see
    the :ref:`list <ubsan-checks>` of specific kinds of
    undefined behavior that can be detected and the :ref:`list <cfi-schemes>`
