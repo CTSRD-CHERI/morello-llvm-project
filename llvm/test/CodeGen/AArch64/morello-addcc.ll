@@ -6,10 +6,10 @@ define dso_local i8 addrspace(200)* @foo(i8 addrspace(200)* noundef readonly %pt
 ; CHECK:       .Lfunc_begin0:
 ; CHECK-NEXT:    .cfi_startproc purecap
 ; CHECK-NEXT:  // %bb.0: // %entry
-; CHECK-NEXT:    ldrb w8, [c0]
+; CHECK-NEXT:    mov c1, c0
+; CHECK-NEXT:    ldrb w8, [c1], #1
 ; CHECK-NEXT:    cmp w8, #0 // =0
-; CHECK-NEXT:    cset w8, ne
-; CHECK-NEXT:    add c0, c0, x8, uxtx
+; CHECK-NEXT:    csel c0, c0, c1, eq
 ; CHECK-NEXT:    ret c30
 entry:
   %0 = load i8, i8 addrspace(200)* %ptr, align 1
@@ -25,8 +25,8 @@ define dso_local i8 addrspace(200)* @bar(i64 %x, i8 addrspace(200)* noundef read
 ; CHECK-NEXT:    .cfi_startproc purecap
 ; CHECK-NEXT:  // %bb.0: // %entry
 ; CHECK-NEXT:    cmp x0, #0 // =0
-; CHECK-NEXT:    cset w8, ne
-; CHECK-NEXT:    add c0, c1, x8, uxtx
+; CHECK-NEXT:    add c0, c1, #1 // =1
+; CHECK-NEXT:    csel c0, c1, c0, eq
 ; CHECK-NEXT:    ret c30
 entry:
   %tobool.not = icmp ne i64 %x, 0
@@ -41,8 +41,8 @@ define dso_local i8 addrspace(200)* @baz(i8 addrspace(200)* %x, i8 addrspace(200
 ; CHECK-NEXT:    .cfi_startproc purecap
 ; CHECK-NEXT:  // %bb.0: // %entry
 ; CHECK-NEXT:    cmp x0, #0 // =0
-; CHECK-NEXT:    cset w8, ne
-; CHECK-NEXT:    add c0, c1, x8, uxtx
+; CHECK-NEXT:    add c0, c1, #1 // =1
+; CHECK-NEXT:    csel c0, c1, c0, eq
 ; CHECK-NEXT:    ret c30
 entry:
   %tobool.not = icmp ne i8 addrspace(200)* %x, null
