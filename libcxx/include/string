@@ -1957,7 +1957,7 @@ basic_string<_CharT, _Traits, _Allocator>::basic_string(const basic_string& __st
     : __r_(__default_init_tag(), __alloc_traits::select_on_container_copy_construction(__str.__alloc()))
 {
     if (!__str.__is_long())
-        __r_.first().__r = __str.__r_.first().__r;
+        __r_.first() = __str.__r_.first();
     else
         __init_copy_ctor_external(_VSTD::__to_address(__str.__get_long_pointer()),
                                   __str.__get_long_size());
@@ -1970,7 +1970,7 @@ basic_string<_CharT, _Traits, _Allocator>::basic_string(
     : __r_(__default_init_tag(), __a)
 {
     if (!__str.__is_long())
-        __r_.first().__r = __str.__r_.first().__r;
+        __r_.first() = __str.__r_.first();
     else
         __init_copy_ctor_external(_VSTD::__to_address(__str.__get_long_pointer()),
                                   __str.__get_long_size());
@@ -2025,7 +2025,7 @@ basic_string<_CharT, _Traits, _Allocator>::basic_string(basic_string&& __str, co
         __init(_VSTD::__to_address(__str.__get_long_pointer()), __str.__get_long_size());
     else
     {
-        __r_.first().__r = __str.__r_.first().__r;
+        __r_.first() = __str.__r_.first();
         __str.__zero();
     }
     _VSTD::__debug_db_insert_c(this);
@@ -2416,7 +2416,7 @@ basic_string<_CharT, _Traits, _Allocator>::operator=(const basic_string& __str)
     __copy_assign_alloc(__str);
     if (!__is_long()) {
       if (!__str.__is_long()) {
-        __r_.first().__r = __str.__r_.first().__r;
+        __r_.first() = __str.__r_.first();
       } else {
         return __assign_no_alias<true>(__str.data(), __str.size());
       }
