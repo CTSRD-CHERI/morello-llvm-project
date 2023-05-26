@@ -750,9 +750,10 @@ void AggExprEmitter::VisitCastExpr(CastExpr *E) {
     llvm::Value *SizeVal = llvm::ConstantInt::get(
         CGF.SizeTy,
         CGF.getContext().getTypeSizeInChars(E->getType()).getQuantity());
+    // FIXME: E is a reference not a pointer. Therefore we can't directly
+    // pass it to copyShouldPreserveTags.
     Builder.CreateMemCpy(
-        DestAddress, SourceAddress, SizeVal,
-        CGF.getTypes().copyShouldPreserveTags(E, E->getSubExpr(), SizeVal));
+        DestAddress, SourceAddress, SizeVal, llvm::PreserveCheriTags::TODO);
     break;
   }
 
