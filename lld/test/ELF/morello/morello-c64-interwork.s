@@ -18,64 +18,64 @@ _start: b func2
  .size func, 4
 func:  bl func2
 
-// CHECK: 0000000000210120 <_start>:
-// CHECK-NEXT:   210120:       b       0x210134 <__C64ADRPThunk_func2>
+// CHECK-LABEL: <_start>:
+// CHECK-NEXT:   210190:       b       0x2101a4 <__C64ADRPThunk_func2>
 
-// CHECK: 0000000000210124 <func>:
-// CHECK-NEXT:   210124:       bl      0x210134 <__C64ADRPThunk_func2>
+// CHECK-LABEL: <func>:
+// CHECK-NEXT:   210194:       bl      0x2101a4 <__C64ADRPThunk_func2>
 
-// CHECK: 0000000000210128 <func2>:
-// CHECK-NEXT:   210128:       bl      0x210140 <__A64ToC64Thunk_func>
-// CHECK-NEXT:   21012c:       b       0x210150 <__A64ToC64Thunk__start>
-// CHECK-NEXT:   210130:       ret
+// CHECK-LABEL: <func2>:
+// CHECK-NEXT:   210198:       bl      0x2101b0 <__A64ToC64Thunk_func>
+// CHECK-NEXT:                 b       0x2101c0 <__A64ToC64Thunk__start>
+// CHECK-NEXT:                 ret
 
-// CHECK: 0000000000210134 <__C64ADRPThunk_func2>:
-// CHECK-NEXT:   210134:       adrp    c16, 0x210000 <__C64ADRPThunk_func2>
-// CHECK-NEXT:   210138:       add     c16, c16, #296
-// CHECK-NEXT:   21013c:       br      c16
+// CHECK-LABEL: <__C64ADRPThunk_func2>:
+// CHECK-NEXT:   2101a4:       adrp    c16, 0x210000 <__C64ADRPThunk_func2>
+// CHECK-NEXT:                 add     c16, c16, #408
+// CHECK-NEXT:                 br      c16
 
-// CHECK: 0000000000210140 <__A64ToC64Thunk_func>:
-// CHECK-NEXT:   210140:       bx      #4
+// CHECK-LABEL: <__A64ToC64Thunk_func>:
+// CHECK-NEXT:   2101b0:       bx      #4
 // CHECK-EMPTY:
-// CHECK-NEXT:   0000000000210144 <$c>:
-// CHECK-NEXT:   210144:       adrp    c16, 0x210000 <$c>
-// CHECK-NEXT:   210148:       add     c16, c16, #293
-// CHECK-NEXT:   21014c:       br      c16
+// CHECK-LABEL:   <$c>:
+// CHECK-NEXT:   2101b4:       adrp    c16, 0x210000 <$c>
+// CHECK-NEXT:                 add     c16, c16, #405
+// CHECK-NEXT:                 br      c16
 
-// CHECK: 0000000000210150 <__A64ToC64Thunk__start>:
-// CHECK-NEXT:   210150:       bx      #4
+// CHECK-LABEL: <__A64ToC64Thunk__start>:
+// CHECK-NEXT:   2101c0:       bx      #4
 // CHECK-EMPTY:
-// CHECK-NEXT:   0000000000210154 <$c>:
-// CHECK-NEXT:   210154:       adrp    c16, 0x210000 <$c>
-// CHECK-NEXT:   210158:       add     c16, c16, #289
-// CHECK-NEXT:   21015c:       br      c16
+// CHECK-LABEL:   <$c>:
+// CHECK-NEXT:   2101c4:       adrp    c16, 0x210000 <$c>
+// CHECK-NEXT:                 add     c16, c16, #401
+// CHECK-NEXT:                 br      c16
 
 // CHECK-SYM:        Name: __C64ADRPThunk_func2
-// CHECK-SYM-NEXT:   Value: 0x210135
+// CHECK-SYM-NEXT:   Value: 0x2101A5
 // CHECK-SYM-NEXT:   Size: 12
 // CHECK-SYM-NEXT:   Binding: Local
 // CHECK-SYM-NEXT:   Type: Function
 
 // CHECK-SYM:        Name: $c
-// CHECK-SYM-NEXT:   Value: 0x210134
+// CHECK-SYM-NEXT:   Value: 0x2101A4
 // CHECK-SYM-NEXT:   Size: 0
 // CHECK-SYM-NEXT:   Binding: Local
 // CHECK-SYM-NEXT:   Type: None
 
 // CHECK-SYM:        Name: __A64ToC64Thunk_func
-// CHECK-SYM-NEXT:   Value: 0x210140
+// CHECK-SYM-NEXT:   Value: 0x2101B0
 // CHECK-SYM-NEXT:   Size: 16
 // CHECK-SYM-NEXT:   Binding: Local
 // CHECK-SYM-NEXT:   Type: Function
 
 // CHECK-SYM:        Name: $x
-// CHECK-SYM-NEXT:   Value: 0x210140
+// CHECK-SYM-NEXT:   Value: 0x2101B0
 // CHECK-SYM-NEXT:   Size: 0
 // CHECK-SYM-NEXT:   Binding: Local
 // CHECK-SYM-NEXT:   Type: None
 
 // CHECK-SYM:        Name: $c
-// CHECK-SYM-NEXT:   Value: 0x210144
+// CHECK-SYM-NEXT:   Value: 0x2101B4
 // CHECK-SYM-NEXT:   Size: 0
 // CHECK-SYM-NEXT:   Binding: Local
 // CHECK-SYM-NEXT:   Type: None

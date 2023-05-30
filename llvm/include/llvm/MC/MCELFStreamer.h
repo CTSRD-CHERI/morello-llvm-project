@@ -111,6 +111,7 @@ public:
                              unsigned Type, MCSection *&AttributeSection) {
     createAttributesSection(Vendor, Section, Type, AttributeSection, Contents);
   }
+  void createCHERINotesSection();
 
 private:
   AttributeItem *getAttributeItem(unsigned Attribute);

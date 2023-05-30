@@ -101,31 +101,31 @@ _start:
 
 // CHECK: CHERI __cap_relocs [
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x230000
-// CHECK-NEXT:     Base: small (0x2001A0)
+// CHECK-NEXT:     Location: 0x230000 ($d.4)
+// CHECK-NEXT:     Base: small (0x200200)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 1
 // CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Location: 0x230010
-// CHECK-NEXT:     Base: no_alignment (0x2001A1)
+// CHECK-NEXT:     Base: no_alignment (0x200201)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 16383
 // CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Location: 0x230020
-// CHECK-NEXT:     Base: rodata2_start (0x2041A0)
+// CHECK-NEXT:     Base: rodata2_start (0x204200)
 // CHECK-NEXT:     Offset: 4
 // CHECK-NEXT:     Length: 16392
 // CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Location: 0x230030
-// CHECK-NEXT:     Base: small (0x2001A0)
-// CHECK-NEXT:     Offset: 130656
-// CHECK-NEXT:     Length: 130656
+// CHECK-NEXT:     Base: $d.5 (0x2001E0)
+// CHECK-NEXT:     Offset: 130592
+// CHECK-NEXT:     Length: 130592
 // CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {

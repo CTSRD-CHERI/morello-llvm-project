@@ -69,36 +69,36 @@ foo:
 /// Check that we write the size, permissions and address if relevant to the
 /// Fragment.
 // DATA: Contents of section .data:
-// DATA:       303b0 f0030300 00000000 0c000000 00000002
-// DATA-NEXT:  303c0 f0030300 00000000 0c000000 00000002
-// DATA-NEXT:  303d0 06040300 00000000 08000000 00000002
-// DATA-NEXT:  303e0 fc030300 00000000 0a000000 00000002
-// DATA-NEXT:  303f0 48656c6c 6f20576f 726c6400 42796520 Hello World.Bye
-// DATA-NEXT:  30400 576f726c 64000000 00000000 00000000 World
+// DATA:       30410 50040300 00000000 0c000000 00000002
+// DATA-NEXT:  30420 50040300 00000000 0c000000 00000002
+// DATA-NEXT:  30430 66040300 00000000 08000000 00000002
+// DATA-NEXT:  30440 5c040300 00000000 0a000000 00000002
+// DATA-NEXT:  30450 48656c6c 6f20576f 726c6400 42796520 Hello World.Bye
+// DATA-NEXT:  30460 576f726c 64000000 00000000 00000000 World
 
 /// Dynamic relocations
 // CHECK: Relocations [
-// CHECK-NEXT:   Section (5) .rela.dyn {
+// CHECK-NEXT:   Section {{.*}} .rela.dyn {
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x303B0
+// CHECK-NEXT:       Offset: 0x30410
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x8
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x303C0
+// CHECK-NEXT:       Offset: 0x30420
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
-// CHECK-NEXT:    Relocation {
-// CHECK-NEXT:      Offset: 0x303E0
-// CHECK-NEXT:      Type: R_MORELLO_RELATIVE
-// CHECK-NEXT:      Symbol: - (0)
-// CHECK-NEXT:      Addend: 0x0
-// CHECK-NEXT:    }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x303D0
+// CHECK-NEXT:       Offset: 0x30440
+// CHECK-NEXT:       Type: R_MORELLO_RELATIVE
+// CHECK-NEXT:       Symbol: - (0)
+// CHECK-NEXT:       Addend: 0x0
+// CHECK-NEXT:     }
+// CHECK-NEXT:     Relocation {
+// CHECK-NEXT:       Offset: 0x30430
 // CHECK-NEXT:       Type: R_MORELLO_CAPINIT
 // CHECK-NEXT:       Symbol: foo (2)
 // CHECK-NEXT:       Addend: 0x10
@@ -109,7 +109,7 @@ foo:
 /// Symbols
 // CHECK:   Symbol {
 // CHECK:     Name: str
-// CHECK-NEXT:     Value: 0x303F0
+// CHECK-NEXT:     Value: 0x30450
 // CHECK-NEXT:     Size: 12
 // CHECK-NEXT:     Binding: Local
 // CHECK-NEXT:     Type: Object
@@ -118,7 +118,7 @@ foo:
 // CHECK-NEXT:   }
 
 // CHECK:     Name: unsized_str
-// CHECK-NEXT:     Value: 0x303FC
+// CHECK-NEXT:     Value: 0x3045C
 // CHECK-NEXT:     Size: 0
 // CHECK-NEXT:     Binding: Local
 // CHECK-NEXT:     Type: Object
@@ -127,7 +127,7 @@ foo:
 // CHECK-NEXT:   }
 
 // CHECK:     Name: foo
-// CHECK-NEXT:     Value: 0x30406
+// CHECK-NEXT:     Value: 0x30466
 // CHECK-NEXT:     Size: 8
 // CHECK-NEXT:     Binding: Global
 // CHECK-NEXT:     Type: Object

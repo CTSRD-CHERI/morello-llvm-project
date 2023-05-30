@@ -42,23 +42,23 @@ from_app:
 
 // CHECK: Contents of section .data.rel.ro:
 /// rodata (shlib.so) rw (default) size 8
-// CHECK-NEXT:  220340 00000000 00000000 08000000 00000002
+// CHECK-NEXT:  2203a0 00000000 00000000 08000000 00000002
 /// data (shlib.so) rw (default) size 8
-// CHECK-NEXT:  220350 00000000 00000000 08000000 00000002
+// CHECK-NEXT:  2203b0 00000000 00000000 08000000 00000002
 /// appdata 0x230440 rw size 8
-// CHECK-NEXT:  220360 50042300 00000000 08000000 00000002
+// CHECK-NEXT:  2203c0 b0042300 00000000 08000000 00000002
 /// from_app 21032c exec size 4
-// CHECK-NEXT:  220370 00022000 00000000 40010100 00000004
+// CHECK-NEXT:  2203d0 40022000 00000000 60010100 00000004
 
 // CHECK-PIE: Contents of section .data.rel.ro:
 /// rodata (shlib.so) rw (default) size 8
-// CHECK-PIE-NEXT:  20340 00000000 00000000 08000000 00000002
+// CHECK-PIE-NEXT:  203a0 00000000 00000000 08000000 00000002
 /// data (shlib.so) rw (default) size 8
-// CHECK-PIE-NEXT:  20350 00000000 00000000 08000000 00000002
+// CHECK-PIE-NEXT:  203b0 00000000 00000000 08000000 00000002
 /// appdata 0x30450 rw size 8
-// CHECK-PIE-NEXT:  20360 60040300 00000000 08000000 00000002
+// CHECK-PIE-NEXT:  203c0 c0040300 00000000 08000000 00000002
 /// from_app 1032c exec size 4
-// CHECK-PIE-NEXT:  20370 00020000 00000000 40010100 00000004
+// CHECK-PIE-NEXT:  203d0 40020000 00000000 60010100 00000004
 
  .data
  .global appdata
@@ -67,37 +67,37 @@ from_app:
 appdata: .xword 8
 
 // CHECK: Contents of section .data:
-// CHECK-NEXT:  230450 08000000 00000000
+// CHECK-NEXT:  2304b0 08000000 00000000
 
 // CHECK-PIE: Contents of section .data:
-// CHECK-PIE-NEXT:  30460 08000000 00000000
+// CHECK-PIE-NEXT:  304c0 08000000 00000000
 
-// CHECK: 0000000000210328 <_start>:
-// CHECK-NEXT:   210328:        ret
+// CHECK-LABEL: <_start>:
+// CHECK-NEXT:   210380:        ret
 
-// CHECK: 000000000021032c <from_app>:
-// CHECK-NEXT:   21032c:        ret
+// CHECK-LABEL: <from_app>:
+// CHECK-NEXT:   210384:        ret
 
-// CHECK-PIE: 0000000000010328 <_start>:
-// CHECK-PIE-NEXT:    10328:            ret
+// CHECK-PIE-LABEL: <_start>:
+// CHECK-PIE-NEXT:    10380:            ret
 
-// CHECK-PIE: 000000000001032c <from_app>:
-// CHECK-PIE-NEXT:    1032c:            ret
+// CHECK-PIE-LABEL: <from_app>:
+// CHECK-PIE-NEXT:    10384:            ret
 
 /// Check that the dynamic table holds the correct number of RELATIVE relocs
 // RELS: DynamicSection [
 // RELS: 0x000000006FFFFFF9 RELACOUNT 2
 
 // RELS: Relocations [
-// RELS-NEXT:   Section (5) .rela.dyn {
+// RELS-NEXT:   Section {{.*}} .rela.dyn {
 /// .capinit appdata
-// RELS-NEXT:     0x220360 R_MORELLO_RELATIVE - 0x0
+// RELS-NEXT:     0x2203C0 R_MORELLO_RELATIVE - 0x0
 /// .capinit from_app (strictly speaking don't need symbol here)
-// RELS-NEXT:     0x220370 R_MORELLO_RELATIVE from_app 0x1012D
+// RELS-NEXT:     0x2203D0 R_MORELLO_RELATIVE from_app 0x10145
 /// .capinit rodata
-// RELS-NEXT:     0x220340 R_MORELLO_CAPINIT rodata 0x0
+// RELS-NEXT:     0x2203A0 R_MORELLO_CAPINIT rodata 0x0
 /// .capinit data
-// RELS-NEXT:     0x220350 R_MORELLO_CAPINIT data 0x0
+// RELS-NEXT:     0x2203B0 R_MORELLO_CAPINIT data 0x0
 // RELS-NEXT:   }
 
 /// Check that the dynamic table holds the correct number of RELATIVE relocs
@@ -105,13 +105,13 @@ appdata: .xword 8
 // RELS-PIE: 0x000000006FFFFFF9 RELACOUNT 2
 
 // RELS-PIE: Relocations [
-// RELS-PIE-NEXT:   Section (5) .rela.dyn {
+// RELS-PIE-NEXT:   Section {{.*}} .rela.dyn {
 /// .capinit appdata
-// RELS-PIE-NEXT:     0x20360 R_MORELLO_RELATIVE - 0x0
+// RELS-PIE-NEXT:     0x203C0 R_MORELLO_RELATIVE - 0x0
 /// .capinit from_app (strictly speaking don't need symbol here)
-// RELS-PIE-NEXT:     0x20370 R_MORELLO_RELATIVE from_app 0x1012D
+// RELS-PIE-NEXT:     0x203D0 R_MORELLO_RELATIVE from_app 0x10145
 /// .capinit rodata
-// RELS-PIE-NEXT:     0x20340 R_MORELLO_CAPINIT rodata 0x0
+// RELS-PIE-NEXT:     0x203A0 R_MORELLO_CAPINIT rodata 0x0
 /// .capinit data
-// RELS-PIE-NEXT:     0x20350 R_MORELLO_CAPINIT data 0x0
+// RELS-PIE-NEXT:     0x203B0 R_MORELLO_CAPINIT data 0x0
 // RELS-PIE-NEXT:   }

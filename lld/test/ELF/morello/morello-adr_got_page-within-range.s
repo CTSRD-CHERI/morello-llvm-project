@@ -11,7 +11,7 @@
 // CHECK-NEXT:   SHF_ALLOC
 // CHECK-NEXT:   SHF_WRITE
 // CHECK-NEXT: ]
-// CHECK-NEXT: Address: 0x220220
+// CHECK-NEXT: Address: 0x220260
 // CHECK-NEXT: Offset:
 // CHECK-NEXT: Size:
 // CHECK-NEXT: Link:
@@ -22,16 +22,14 @@
 // RELOCS-NEXT: Section
 // RELOCS-NEXT:   0x0 R_MORELLO_ADR_GOT_PAGE foo 0x0
 
-// DISASM: 2101e0: adrp c25, 0x220000 <_start+0x40>
+// DISASM: 210220: adrp c25, 0x220000 <_start+0x40>
 
-/// P = 0x210200
-/// Address of .got = 0x220220
-///   -> foo@GOT = 0x220220 + 16 = 0x220230
-/// A = 0
-/// G( GDAT (S + A) ) = 0x220230
-/// Page ( G( GDAT (S + A) ) ) - Page (P)
-///   = (0x220230 & ~0xFFF) - (0x2101E0 & ~0xFFF)
-///   = 0x10000 = 65536
+/// P = 210220
+/// Address of .got = 0x220260
+///   -> foo@GOT = 0x220260 + 0 = 0x220260
+/// Page ( foo@GOT )
+///   = (0x220260 & ~0xFFF)
+///   = 0x220000
 
   .balign 16
   .text

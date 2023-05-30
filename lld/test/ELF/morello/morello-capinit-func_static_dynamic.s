@@ -76,16 +76,16 @@ bss:
 // CHECK-NEXT:     Flags [
 // CHECK-NEXT:       SHF_ALLOC
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x200200
-// CHECK-NEXT:     Offset: 0x200
+// CHECK-NEXT:     Address: 0x200218
+// CHECK-NEXT:     Offset: 0x218
 // CHECK-NEXT:     Size: 144
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
-// CHECK-NEXT:     AddressAlignment: 64
+// CHECK-NEXT:     AddressAlignment: 8
 // CHECK-NEXT:     EntrySize: 24
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
-// CHECK-NEXT:     Index:
+// CHECK-NEXT:     Index: 3
 // CHECK-NEXT:     Name: .rodata
 // CHECK-NEXT:     Type: SHT_PROGBITS
 // CHECK-NEXT:     Flags [
@@ -100,7 +100,7 @@ bss:
 // CHECK-NEXT:     EntrySize: 0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
-// CHECK-NEXT:     Index:
+// CHECK-NEXT:     Index: 4
 // CHECK-NEXT:     Name: .text
 // CHECK-NEXT:     Type: SHT_PROGBITS
 // CHECK-NEXT:     Flags [
@@ -116,7 +116,7 @@ bss:
 // CHECK-NEXT:     EntrySize: 0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
-// CHECK-NEXT:     Index:
+// CHECK-NEXT:     Index: 5
 // CHECK-NEXT:     Name: .data.rel.ro
 // CHECK-NEXT:     Type: SHT_PROGBITS
 // CHECK-NEXT:     Flags [
@@ -132,7 +132,7 @@ bss:
 // CHECK-NEXT:     EntrySize: 0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
-// CHECK-NEXT:     Index:
+// CHECK-NEXT:     Index: 6
 // CHECK-NEXT:     Name: .data
 // CHECK-NEXT:     Type: SHT_PROGBITS
 // CHECK-NEXT:     Flags [
@@ -148,7 +148,7 @@ bss:
 // CHECK-NEXT:     EntrySize: 0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
-// CHECK-NEXT:     Index:
+// CHECK-NEXT:     Index: 7
 // CHECK-NEXT:     Name: .bss
 // CHECK-NEXT:     Type: SHT_NOBITS
 // CHECK-NEXT:     Flags [
@@ -306,7 +306,7 @@ bss:
 // CHECK-SCRIPT-NEXT:       SHF_EXECINSTR
 // CHECK-SCRIPT-NEXT:     ]
 // CHECK-SCRIPT-NEXT:     Address: 0x210000
-// CHECK-SCRIPT-NEXT:     Offset: 0x10000
+// CHECK-SCRIPT-NEXT:     Offset: 0x20000
 // CHECK-SCRIPT-NEXT:     Size: 8
 // CHECK-SCRIPT-NEXT:     Link: 0
 // CHECK-SCRIPT-NEXT:     Info: 0
@@ -321,7 +321,7 @@ bss:
 // CHECK-SCRIPT-NEXT:       SHF_ALLOC
 // CHECK-SCRIPT-NEXT:     ]
 // CHECK-SCRIPT-NEXT:     Address: 0x210008
-// CHECK-SCRIPT-NEXT:     Offset: 0x10008
+// CHECK-SCRIPT-NEXT:     Offset: 0x20008
 // CHECK-SCRIPT-NEXT:     Size: 144
 // CHECK-SCRIPT-NEXT:     Link: 0
 // CHECK-SCRIPT-NEXT:     Info: 0
@@ -336,8 +336,8 @@ bss:
 // CHECK-SCRIPT-NEXT:       SHF_ALLOC
 // CHECK-SCRIPT-NEXT:     ]
 // CHECK-SCRIPT-NEXT:     Address: 0x220000
-// CHECK-SCRIPT-NEXT:     Offset: 0x20000
-// CHECK-SCRIPT-NEXT:     Size: 32
+// CHECK-SCRIPT-NEXT:     Offset: 0x30000
+// CHECK-SCRIPT-NEXT:     Size: 1024
 // CHECK-SCRIPT-NEXT:     Link: 0
 // CHECK-SCRIPT-NEXT:     Info: 0
 // CHECK-SCRIPT-NEXT:     AddressAlignment: 65536
@@ -351,8 +351,8 @@ bss:
 // CHECK-SCRIPT-NEXT:       SHF_ALLOC
 // CHECK-SCRIPT-NEXT:       SHF_WRITE
 // CHECK-SCRIPT-NEXT:     ]
-// CHECK-SCRIPT-NEXT:     Address: 0x220020
-// CHECK-SCRIPT-NEXT:     Offset: 0x20020
+// CHECK-SCRIPT-NEXT:     Address: 0x220400
+// CHECK-SCRIPT-NEXT:     Offset: 0x30400
 // CHECK-SCRIPT-NEXT:     Size: 96
 // CHECK-SCRIPT-NEXT:     Link: 0
 // CHECK-SCRIPT-NEXT:     Info: 0
@@ -368,7 +368,7 @@ bss:
 // CHECK-SCRIPT-NEXT:       SHF_WRITE
 // CHECK-SCRIPT-NEXT:     ]
 // CHECK-SCRIPT-NEXT:     Address: 0x230000
-// CHECK-SCRIPT-NEXT:     Offset: 0x30000
+// CHECK-SCRIPT-NEXT:     Offset: 0x40000
 // CHECK-SCRIPT-NEXT:     Size: 4
 // CHECK-SCRIPT-NEXT:     Link: 0
 // CHECK-SCRIPT-NEXT:     Info: 0
@@ -384,7 +384,7 @@ bss:
 // CHECK-SCRIPT-NEXT:       SHF_WRITE
 // CHECK-SCRIPT-NEXT:     ]
 // CHECK-SCRIPT-NEXT:     Address: 0x230004
-// CHECK-SCRIPT-NEXT:     Offset: 0x30004
+// CHECK-SCRIPT-NEXT:     Offset: 0x40004
 // CHECK-SCRIPT-NEXT:     Size: 4
 // CHECK-SCRIPT-NEXT:     Link: 0
 // CHECK-SCRIPT-NEXT:     Info: 0
@@ -395,37 +395,37 @@ bss:
 // CHECK-SCRIPT: Relocations [
 // CHECK-SCRIPT-NEXT:   .rela.dyn {
 // CHECK-SCRIPT-NEXT:     Relocation {
-// CHECK-SCRIPT-NEXT:       Offset: 0x220020
+// CHECK-SCRIPT-NEXT:       Offset: 0x220400
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
 // CHECK-SCRIPT-NEXT:       Addend: 0x0
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:     Relocation {
-// CHECK-SCRIPT-NEXT:       Offset: 0x220030
+// CHECK-SCRIPT-NEXT:       Offset: 0x220410
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
 // CHECK-SCRIPT-NEXT:       Addend: 0x0
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:     Relocation {
-// CHECK-SCRIPT-NEXT:       Offset: 0x220040
+// CHECK-SCRIPT-NEXT:       Offset: 0x220420
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
-// CHECK-SCRIPT-NEXT:       Addend: 0x1
+// CHECK-SCRIPT-NEXT:       Addend: 0x210001
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:     Relocation {
-// CHECK-SCRIPT-NEXT:       Offset: 0x220050
+// CHECK-SCRIPT-NEXT:       Offset: 0x220430
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
-// CHECK-SCRIPT-NEXT:       Addend: 0x5
+// CHECK-SCRIPT-NEXT:       Addend: 0x210005
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:     Relocation {
-// CHECK-SCRIPT-NEXT:       Offset: 0x220060
+// CHECK-SCRIPT-NEXT:       Offset: 0x220440
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
 // CHECK-SCRIPT-NEXT:       Addend: 0x0
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:     Relocation {
-// CHECK-SCRIPT-NEXT:       Offset: 0x220070
+// CHECK-SCRIPT-NEXT:       Offset: 0x220450
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
 // CHECK-SCRIPT-NEXT:       Addend: 0x0
@@ -499,19 +499,19 @@ bss:
 // CHECK-SCRIPT:      Hex dump of section '.data.rel.ro':
 
 /// ro: address: 0x220000, size = 4, perms = RO(0x1)
-// CHECK-SCRIPT-NEXT: 0x00220020 00002200 00000000 04000000 00000001
+// CHECK-SCRIPT-NEXT: 0x00220400 00002200 00000000 04000000 00000001
 
 /// ro2: address: 0x220004, size = 4, perms = RO(0x1)
-// CHECK-SCRIPT-NEXT: 0x00220030 04002200 00000000 04000000 00000001
+// CHECK-SCRIPT-NEXT: 0x00220410 04002200 00000000 04000000 00000001
 
 /// _start: address: 0x210001, size = 4, perms = EXEC(0x4)
-// CHECK-SCRIPT-NEXT: 0x00220040 00002100 00000000 20000100 00000004
+// CHECK-SCRIPT-NEXT: 0x00220420 00000000 00000000 00042200 00000004
 
 /// func: address: 0x210005, size = 4, perms = EXEC(0x4)
-// CHECK-SCRIPT-NEXT: 0x00220050 00002100 00000000 20000100 00000004
+// CHECK-SCRIPT-NEXT: 0x00220430 00000000 00000000 00042200 00000004
 
 /// rw: address: 0x230000, size = 4, perms = RW(0x2)
-// CHECK-SCRIPT-NEXT: 0x00220060 00002300 00000000 04000000 00000002
+// CHECK-SCRIPT-NEXT: 0x00220440 00002300 00000000 04000000 00000002
 
 /// bss: address: 0x230004, size = 4, perms = RW(0x2)
-// CHECK-SCRIPT-NEXT: 0x00220070 04002300 00000000 04000000 00000002
+// CHECK-SCRIPT-NEXT: 0x00220450 04002300 00000000 04000000 00000002

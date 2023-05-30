@@ -3,21 +3,21 @@
 // RUN: llvm-mc -filetype=obj --triple=arm64 -target-abi purecap -mattr=+c64,+morello %s -o %t.o
 // RUN: not ld.lld %t.o -o /dev/null  2>&1 | FileCheck %s
 
-// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x220251 is not aligned to 16 bytes
-// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x220252 is not aligned to 16 bytes
-// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x220253 is not aligned to 16 bytes
-// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x220254 is not aligned to 16 bytes
-// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x220255 is not aligned to 16 bytes
-// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x220256 is not aligned to 16 bytes
-// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x220257 is not aligned to 16 bytes
-// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x220258 is not aligned to 16 bytes
-// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x220259 is not aligned to 16 bytes
-// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x22025A is not aligned to 16 bytes
-// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x22025B is not aligned to 16 bytes
-// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x22025C is not aligned to 16 bytes
-// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x22025D is not aligned to 16 bytes
-// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x22025E is not aligned to 16 bytes
-// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x22025F is not aligned to 16 bytes
+// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x{{.*}}1 is not aligned to 16 bytes
+// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x{{.*}}2 is not aligned to 16 bytes
+// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x{{.*}}3 is not aligned to 16 bytes
+// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x{{.*}}4 is not aligned to 16 bytes
+// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x{{.*}}5 is not aligned to 16 bytes
+// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x{{.*}}6 is not aligned to 16 bytes
+// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x{{.*}}7 is not aligned to 16 bytes
+// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x{{.*}}8 is not aligned to 16 bytes
+// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x{{.*}}9 is not aligned to 16 bytes
+// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x{{.*}}A is not aligned to 16 bytes
+// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x{{.*}}B is not aligned to 16 bytes
+// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x{{.*}}C is not aligned to 16 bytes
+// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x{{.*}}D is not aligned to 16 bytes
+// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x{{.*}}E is not aligned to 16 bytes
+// CHECK: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC: 0x{{.*}}F is not aligned to 16 bytes
 // CHECK-NOT: improper alignment for relocation R_MORELLO_LD128_GOT_LO12_NC:
 
   .balign 16

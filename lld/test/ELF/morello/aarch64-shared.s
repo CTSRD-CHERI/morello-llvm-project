@@ -74,208 +74,208 @@ caller:
  .xword 0
  .xword 0
 // CHECK: Contents of section .data.rel.ro:
-// CHECK-NEXT:  20640 79050100 00000000 10000000 00000004
+// CHECK-NEXT:  20690 d1050100 00000000 10000000 00000004
  .capinit hiddenfunc
  .xword 0
  .xword 0
-// CHECK-NEXT:  20650 00020000 00000000 40070300 00000004
+// CHECK-NEXT:  206a0 40020000 00000000 40070300 00000004
  .capinit localfunc
  .xword 0
  .xword 0
-// CHECK-NEXT:  20660 00020000 00000000 40070300 00000004
+// CHECK-NEXT:  206b0 40020000 00000000 40070300 00000004
  .capinit importfunc
  .xword 0
  .xword 0
-// CHECK-NEXT:  20670 00000000 00000000 00000000 00000002
+// CHECK-NEXT:  206c0 00000000 00000000 00000000 00000002
  .capinit global
  .xword 0
  .xword 0
-// CHECK-NEXT:  20680 a0080300 00000000 08000000 00000002
+// CHECK-NEXT:  206d0 f0080300 00000000 08000000 00000002
  .capinit hidden
  .xword 0
  .xword 0
-// CHECK-NEXT:  20690 a8080300 00000000 08000000 00000002
+// CHECK-NEXT:  206e0 f8080300 00000000 08000000 00000002
  .capinit local
  .xword 0
  .xword 0
-// CHECK-NEXT:  206a0 b0080300 00000000 08000000 00000002
+// CHECK-NEXT:  206f0 00090300 00000000 08000000 00000002
  .capinit import
  .xword 0
  .xword 0
-// CHECK-NEXT:  206b0 00000000 00000000 00000000 00000002
+// CHECK-NEXT:  20700 00000000 00000000 00000000 00000002
  .capinit globalfunc + 4
  .xword 0
  .xword 0
-// CHECK-NEXT:  206c0 79050100 00000000 10000000 00000004
+// CHECK-NEXT:  20710 d1050100 00000000 10000000 00000004
  .capinit hiddenfunc + 8
  .xword 0
  .xword 0
-// CHECK-NEXT:  206d0 00020000 00000000 40070300 00000004
+// CHECK-NEXT:  20720 40020000 00000000 40070300 00000004
  .capinit localfunc + 12
  .xword 0
  .xword 0
-// CHECK-NEXT:  206e0 00020000 00000000 40070300 00000004
+// CHECK-NEXT:  20730 40020000 00000000 40070300 00000004
  .capinit importfunc + 16
  .xword 0
  .xword 0
-// CHECK-NEXT:  206f0 00000000 00000000 00000000 00000002
+// CHECK-NEXT:  20740 00000000 00000000 00000000 00000002
  .capinit global + 1
  .xword 0
  .xword 0
-// CHECK-NEXT:  20700 a0080300 00000000 08000000 00000002
+// CHECK-NEXT:  20750 f0080300 00000000 08000000 00000002
  .capinit hidden + 2
  .xword 0
  .xword 0
-// CHECK-NEXT:  20710 a8080300 00000000 08000000 00000002
+// CHECK-NEXT:  20760 f8080300 00000000 08000000 00000002
  .capinit local + 3
  .xword 0
  .xword 0
-// CHECK-NEXT:  20720 b0080300 00000000 08000000 00000002
+// CHECK-NEXT:  20770 00090300 00000000 08000000 00000002
  .capinit import +4
  .xword 0
  .xword 0
-// CHECK-NEXT:  20730 00000000 00000000 00000000 00000002
+// CHECK-NEXT:  20780 00000000 00000000 00000000 00000002
 
 // CHECK: Contents of section .got:
 /// globalfunc 0x10001 executable 10
-// CHECK:       20830 79050100 00000000 10000000 00000004
+// CHECK:       20880 d1050100 00000000 10000000 00000004
 /// hiddenfunc 0x10011 executable 10
-// CHECK-NEXT:  20840 00020000 00000000 40070300 00000004
+// CHECK-NEXT:  20890 40020000 00000000 40070300 00000004
 /// importfunc 0x00000 readwrite
-// CHECK-NEXT:  20850 00000000 00000000 00000000 00000002
+// CHECK-NEXT:  208a0 00000000 00000000 00000000 00000002
 /// import     0x00000 readwrite
-// CHECK-NEXT:  20860 00000000 00000000 00000000 00000002
+// CHECK-NEXT:  208b0 00000000 00000000 00000000 00000002
 /// global     0x30000 global readwrite 8
-// CHECK-NEXT:  20870 a0080300 00000000 08000000 00000002
+// CHECK-NEXT:  208c0 f0080300 00000000 08000000 00000002
 /// hidden     0x30008 hidden readwrite 8
-// CHECK-NEXT:  20880 a8080300 00000000 08000000 00000002
+// CHECK-NEXT:  208d0 f8080300 00000000 08000000 00000002
 /// localfunc  0x10021 executable 10
-// CHECK-NEXT:  20890 00020000 00000000 40070300 00000004
+// CHECK-NEXT:  208e0 40020000 00000000 40070300 00000004
 
 // CHECK: Contents of section .data:
-/// global 308a0, hidden 308a8, local 308b0
-// CHECK-NEXT:  308a0 01000000 00000000 02000000 00000000
-// CHECK-NEXT:  308b0 03000000 00000000
+/// global 308f0, hidden 308f8, local 30900
+// CHECK-NEXT: 308f0 01000000 00000000 02000000 00000000
+// CHECK-NEXT: 30900 03000000 00000000
 
 // CHECK: Contents of section .got.plt:
-// CHECK-NEXT:  308c0 00000000 00000000 00000000 00000000
-// CHECK-NEXT:  308d0 00000000 00000000 00000000 00000000
-// CHECK-NEXT:  308e0 00000000 00000000 00000000 00000000
+// CHECK-NEXT:  30910 00000000 00000000 00000000 00000000
+// CHECK-NEXT:  30920 00000000 00000000 00000000 00000000
+// CHECK-NEXT:  30930 00000000 00000000 00000000 00000000
 /// Initialised to PLT[0]
-// CHECK-NEXT:  308f0 01060100 00000000 00000000 00000000
-// CHECK-NEXT:  30900 01060100 00000000 00000000 00000000
+// CHECK-NEXT:  30940 51060100 00000000 00000000 00000000
+// CHECK-NEXT:  30950 51060100 00000000 00000000 00000000
 
-// CHECK: 0000000000010578 <globalfunc>:
-// CHECK-NEXT:    10578:        nop
-// CHECK-NEXT:    1057c:        nop
-// CHECK-NEXT:    10580:        nop
-// CHECK-NEXT:    10584:        ret
+// CHECK-LABEL: <globalfunc>:
+// CHECK-NEXT: 105d0: nop
+// CHECK-NEXT:        nop
+// CHECK-NEXT:        nop
+// CHECK-NEXT:        ret c30
 
-// CHECK: 0000000000010588 <hiddenfunc>:
-// CHECK-NEXT:    10588:        nop
-// CHECK-NEXT:    1058c:        nop
-// CHECK-NEXT:    10590:        nop
-// CHECK-NEXT:    10594:        ret
+// CHECK-LABEL: <hiddenfunc>:
+// CHECK-NEXT: 105e0: nop
+// CHECK-NEXT:        nop
+// CHECK-NEXT:        nop
+// CHECK-NEXT:        ret c30
 
-// CHECK: 0000000000010598 <localfunc>:
-// CHECK-NEXT:    10598:        nop
-// CHECK-NEXT:    1059c:        nop
-// CHECK-NEXT:    105a0:        nop
-// CHECK-NEXT:    105a4:        ret
+// CHECK-LABEL: <localfunc>:
+// CHECK-NEXT: 105f0: nop
+// CHECK-NEXT:        nop
+// CHECK-NEXT:        nop
+// CHECK-NEXT:        ret c30
 
-// CHECK: 00000000000105a8 <caller>:
-// CHECK-NEXT:    105a8:        bl      0x10620 <importfunc+0x10620>
-// CHECK-NEXT:    105ac:        bl      0x10588 <hiddenfunc>
-// CHECK-NEXT:    105b0:        bl      0x10598 <localfunc>
-// CHECK-NEXT:    105b4:        bl      0x10630 <importfunc+0x10630>
-// CHECK-NEXT:    105b8:        ret
-// CHECK-NEXT:    105bc:        adrp    c0, 0x20000 <caller+0x54>
-// CHECK-NEXT:    105c0:        ldr     c0, [c0, #0x830]
-// CHECK-NEXT:    105c4:        adrp    c1, 0x20000 <importfunc+0x10604>
-// CHECK-NEXT:    105c8:        ldr     c1, [c1, #0x840]
-// CHECK-NEXT:    105cc:        adrp    c2, 0x20000 <importfunc+0x1060c>
-// CHECK-NEXT:    105d0:        ldr     c2, [c2, #0x890]
-// CHECK-NEXT:    105d4:        adrp    c3, 0x20000 <importfunc+0x10614>
-// CHECK-NEXT:    105d8:        ldr     c3, [c3, #0x850]
-// CHECK-NEXT:    105dc:        adrp    c4, 0x20000 <importfunc+0x1061c>
-// CHECK-NEXT:    105e0:        ldr     c4, [c4, #0x870]
-// CHECK-NEXT:    105e4:        adrp    c5, 0x20000 <importfunc+0x10624>
-// CHECK-NEXT:    105e8:        ldr     c5, [c5, #0x880]
-// CHECK-NEXT:    105ec:        adrp    c17, 0x20000 <importfunc+0x1062c>
-// CHECK-NEXT:    105f0:        ldr     c17, [c17, #0x860]
+// CHECK-LABEL: <caller>:
+// CHECK-NEXT: 10600: bl  0x10670
+// CHECK-NEXT:        bl  0x105e0
+// CHECK-NEXT:        bl  0x105f0
+// CHECK-NEXT:        bl  0x10680
+// CHECK-NEXT:        ret  c30
+// CHECK-NEXT:        adrp c0, 0x20000
+// CHECK-NEXT:        ldr  c0, [c0, #0x880]
+// CHECK-NEXT:        adrp c1, 0x20000
+// CHECK-NEXT:        ldr  c1, [c1, #0x890]
+// CHECK-NEXT:        adrp c2, 0x20000
+// CHECK-NEXT:        ldr  c2, [c2, #0x8e0]
+// CHECK-NEXT:        adrp c3, 0x20000
+// CHECK-NEXT:        ldr  c3, [c3, #0x8a0]
+// CHECK-NEXT:        adrp c4, 0x20000
+// CHECK-NEXT:        ldr  c4, [c4, #0x8c0]
+// CHECK-NEXT:        adrp c5, 0x20000
+// CHECK-NEXT:        ldr  c5, [c5, #0x8d0]
+// CHECK-NEXT:        adrp c17, 0x20000
+// CHECK-NEXT:        ldr  c17, [c17, #0x8b0]
 
-// CHECK: 0000000000010600 <.plt>:
-// CHECK-NEXT:    10600:        stp     c16, c30, [csp, #-0x20]!
-// CHECK-NEXT:    10604:        adrp    c16, 0x30000 <.plt+0x84>
-// CHECK-NEXT:    10608:        ldr     c17, [c16, #0x8e0]
-// CHECK-NEXT:    1060c:        add     c16, c16, #0x8e0
-// CHECK-NEXT:    10610:        br      c17
-// CHECK-NEXT:    10614:        nop
-// CHECK-NEXT:    10618:        nop
-// CHECK-NEXT:    1061c:        nop
-// CHECK-NEXT:    10620:        adrp    c16, 0x30000 <.plt+0xa0>
-// CHECK-NEXT:    10624:        add     c16, c16, #0x8f0
-// CHECK-NEXT:    10628:        ldr     c17, [c16, #0x0]
-// CHECK-NEXT:    1062c:        br      c17
-// CHECK-NEXT:    10630:        adrp    c16, 0x30000 <.plt+0xb0>
-// CHECK-NEXT:    10634:        add     c16, c16, #0x900
-// CHECK-NEXT:    10638:        ldr     c17, [c16, #0x0]
-// CHECK-NEXT:    1063c:        br      c17
+// CHECK-LABEL: <.plt>:
+// CHECK-NEXT: 10650: stp  c16, c30, [csp, #-0x20]!
+// CHECK-NEXT:        adrp c16, 0x30000
+// CHECK-NEXT:        ldr  c17, [c16, #0x930]
+// CHECK-NEXT:        add  c16, c16, #0x930
+// CHECK-NEXT:        br   c17
+// CHECK-NEXT:        nop
+// CHECK-NEXT:        nop
+// CHECK-NEXT:        nop
+// CHECK-NEXT:        adrp  c16, 0x30000
+// CHECK-NEXT:        add  c16, c16, #0x940
+// CHECK-NEXT:        ldr  c17, [c16, #0x0]
+// CHECK-NEXT:        br   c17
+// CHECK-NEXT:        adrp c16, 0x30000
+// CHECK-NEXT:        add  c16, c16, #0x950
+// CHECK-NEXT:        ldr  c17, [c16, #0x0]
+// CHECK-NEXT:        br   c17
 
 // RELS: Relocations [
-// RELS-NEXT:   Section (5) .rela.dyn {
+// RELS-NEXT:   Section {{.*}} .rela.dyn {
 /// .capinit hiddenfunc
-// RELS-NEXT:     0x20650 R_MORELLO_RELATIVE - 0x10389
+// RELS-NEXT:     0x206A0 R_MORELLO_RELATIVE - 0x103A1
 /// .capinit localfunc
-// RELS-NEXT:     0x20660 R_MORELLO_RELATIVE - 0x10399
+// RELS-NEXT:     0x206B0 R_MORELLO_RELATIVE - 0x103B1
 /// .capinit hidden
-// RELS-NEXT:     0x20690 R_MORELLO_RELATIVE - 0x0
+// RELS-NEXT:     0x206E0 R_MORELLO_RELATIVE - 0x0
 /// .capinit local
-// RELS-NEXT:     0x206A0 R_MORELLO_RELATIVE - 0x0
+// RELS-NEXT:     0x206F0 R_MORELLO_RELATIVE - 0x0
 /// .capinit hiddenfunc + 8
-// RELS-NEXT:     0x206D0 R_MORELLO_RELATIVE - 0x10391
+// RELS-NEXT:     0x20720 R_MORELLO_RELATIVE - 0x103A9
 /// .capinit localfunc + 12
-// RELS-NEXT:     0x206E0 R_MORELLO_RELATIVE - 0x103A5
+// RELS-NEXT:     0x20730 R_MORELLO_RELATIVE - 0x103BD
 /// .capinit hidden + 2
-// RELS-NEXT:     0x20710 R_MORELLO_RELATIVE - 0x2
+// RELS-NEXT:     0x20760 R_MORELLO_RELATIVE - 0x2
 /// .capinit import + 4
-// RELS-NEXT:     0x20720 R_MORELLO_RELATIVE - 0x3
+// RELS-NEXT:     0x20770 R_MORELLO_RELATIVE - 0x3
 /// .got hiddenfunc
-// RELS-NEXT:     0x20840 R_MORELLO_RELATIVE - 0x10389
+// RELS-NEXT:     0x20890 R_MORELLO_RELATIVE - 0x103A1
 /// .got hidden
-// RELS-NEXT:     0x20880 R_MORELLO_RELATIVE - 0x0
+// RELS-NEXT:     0x208D0 R_MORELLO_RELATIVE - 0x0
 /// .got localfunc
-// RELS-NEXT:     0x20890 R_MORELLO_RELATIVE - 0x10399
-// RELS-NEXT:     0x20670 R_MORELLO_CAPINIT importfunc 0x0
-// RELS-NEXT:     0x206F0 R_MORELLO_CAPINIT importfunc 0x10
-// RELS-NEXT:     0x20850 R_MORELLO_GLOB_DAT importfunc 0x0
-// RELS-NEXT:     0x206B0 R_MORELLO_CAPINIT import 0x0
-// RELS-NEXT:     0x20730 R_MORELLO_CAPINIT import 0x4
-// RELS-NEXT:     0x20860 R_MORELLO_GLOB_DAT import 0x0
-// RELS-NEXT:     0x20640 R_MORELLO_CAPINIT globalfunc 0x0
+// RELS-NEXT:     0x208E0 R_MORELLO_RELATIVE - 0x103B1
+// RELS-NEXT:     0x206C0 R_MORELLO_CAPINIT importfunc 0x0
+// RELS-NEXT:     0x20740 R_MORELLO_CAPINIT importfunc 0x10
+// RELS-NEXT:     0x208A0 R_MORELLO_GLOB_DAT importfunc 0x0
+// RELS-NEXT:     0x20700 R_MORELLO_CAPINIT import 0x0
+// RELS-NEXT:     0x20780 R_MORELLO_CAPINIT import 0x4
+// RELS-NEXT:     0x208B0 R_MORELLO_GLOB_DAT import 0x0
+// RELS-NEXT:     0x20690 R_MORELLO_CAPINIT globalfunc 0x0
 /// .data.rel.ro globalfunc+4
-// RELS-NEXT:     0x206C0 R_MORELLO_CAPINIT globalfunc 0x4
+// RELS-NEXT:     0x20710 R_MORELLO_CAPINIT globalfunc 0x4
 /// .got globalfunc
-// RELS-NEXT:     0x20830 R_MORELLO_GLOB_DAT globalfunc 0x0
-// RELS-NEXT:     0x20680 R_MORELLO_CAPINIT global 0x0
-// RELS-NEXT:     0x20700 R_MORELLO_CAPINIT global 0x1
-// RELS-NEXT:     0x20870 R_MORELLO_GLOB_DAT global 0x0
+// RELS-NEXT:     0x20880 R_MORELLO_GLOB_DAT globalfunc 0x0
+// RELS-NEXT:     0x206D0 R_MORELLO_CAPINIT global 0x0
+// RELS-NEXT:     0x20750 R_MORELLO_CAPINIT global 0x1
+// RELS-NEXT:     0x208C0 R_MORELLO_GLOB_DAT global 0x0
 // RELS-NEXT:   }
-// RELS-NEXT:   Section (6) .rela.plt {
-// RELS-NEXT:     0x308F0 R_MORELLO_JUMP_SLOT globalfunc 0x0
-// RELS-NEXT:     0x30900 R_MORELLO_JUMP_SLOT importfunc 0x0
+// RELS-NEXT:   Section {{.*}} .rela.plt {
+// RELS-NEXT:     0x30940 R_MORELLO_JUMP_SLOT globalfunc 0x0
+// RELS-NEXT:     0x30950 R_MORELLO_JUMP_SLOT importfunc 0x0
 
 // SYMS: Symbols [
 // SYMS:        Name: localfunc
-// SYMS-NEXT:   Value: 0x10599
+// SYMS-NEXT:   Value: 0x105F1
 // SYMS:        Name: local
-// SYMS-NEXT:   Value: 0x308B0
+// SYMS-NEXT:   Value: 0x30900
 // SYMS:        Name: hiddenfunc
-// SYMS-NEXT:   Value: 0x10589
+// SYMS-NEXT:   Value: 0x105E1
 // SYMS:        Name: hidden
-// SYMS-NEXT:   Value: 0x308A8
+// SYMS-NEXT:   Value: 0x308F8
 // SYMS:        Name: globalfunc
-// SYMS-NEXT:   Value: 0x10579
+// SYMS-NEXT:   Value: 0x105D1
 // SYMS:        Name: importfunc
 // SYMS-NEXT:   Value: 0x0
 // SYMS:        Name: import
