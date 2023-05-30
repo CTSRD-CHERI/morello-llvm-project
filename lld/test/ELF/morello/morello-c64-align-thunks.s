@@ -4,6 +4,7 @@
 // RUN:       .text 0xfff000 : { *(.text.1) } \
 // RUN:       .text_space : { *(.text.2) } \
 // RUN:       .text_targets : { *(.text.3) *(.text.4) } \
+// RUN:       .note.cheri : { *(.note.cheri) } \
 // RUN:       } " > %t.script
 // RUN: ld.lld %t.o -o %t --script=%t.script -zmax-page-size=4096 2>&1 | FileCheck --check-prefix=WARN %s
 // RUN: llvm-objdump --no-show-raw-insn -d --triple=aarch64-none-elf --mattr=+morello --start-address=0xfff000 --stop-address=0xfff008 %t | FileCheck %s
@@ -58,6 +59,7 @@ target2:
 // RUN:       .text : { *(.text.1) } \
 // RUN:       .text_space : { *(.text.2) } \
 // RUN:       .text_targets : { *(.text.3) *(.text.4) } \
+// RUN:       .note.cheri : { *(.note.cheri) } \
 // RUN:       } " > %t.script3
 // RUN: ld.lld %t.o -o %t3 --script=%t.script3 -zmax-page-size=4096
 // RUN: llvm-objdump --no-show-raw-insn -d --triple=aarch64-none-elf --mattr=+morello --start-address=0x1000000 --stop-address=0x1000020 %t3 | FileCheck %s --check-prefix=ALIGN

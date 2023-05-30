@@ -80,9 +80,9 @@ bss:
 /// boundary.
 
 // CHECK:          Name: .rodata
-// CHECK-NEXT:     Type: SHT_PROGBITS (0x1)
-// CHECK-NEXT:     Flags [ (0x2)
-// CHECK-NEXT:       SHF_ALLOC (0x2)
+// CHECK-NEXT:     Type: SHT_PROGBITS
+// CHECK-NEXT:     Flags [
+// CHECK-NEXT:       SHF_ALLOC
 // CHECK-NEXT:     ]
 // CHECK-NEXT:     Address: 0x210000
 // CHECK-NEXT:     Offset: 0x10000
@@ -93,12 +93,12 @@ bss:
 // CHECK-NEXT:     EntrySize: 0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
-// CHECK-NEXT:     Index: 2
+// CHECK-NEXT:     Index:
 // CHECK-NEXT:     Name: .text
-// CHECK-NEXT:     Type: SHT_PROGBITS (0x1)
-// CHECK-NEXT:     Flags [ (0x6)
-// CHECK-NEXT:       SHF_ALLOC (0x2)
-// CHECK-NEXT:       SHF_EXECINSTR (0x4)
+// CHECK-NEXT:     Type: SHT_PROGBITS
+// CHECK-NEXT:     Flags [
+// CHECK-NEXT:       SHF_ALLOC
+// CHECK-NEXT:       SHF_EXECINSTR
 // CHECK-NEXT:     ]
 // CHECK-NEXT:     Address: 0x230000
 // CHECK-NEXT:     Offset: 0x20000
@@ -109,12 +109,12 @@ bss:
 // CHECK-NEXT:     EntrySize: 0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
-// CHECK-NEXT:     Index: 3
+// CHECK-NEXT:     Index:
 // CHECK-NEXT:     Name: .data.rel.ro
-// CHECK-NEXT:     Type: SHT_PROGBITS (0x1)
-// CHECK-NEXT:     Flags [ (0x3)
-// CHECK-NEXT:       SHF_ALLOC (0x2)
-// CHECK-NEXT:       SHF_WRITE (0x1)
+// CHECK-NEXT:     Type: SHT_PROGBITS
+// CHECK-NEXT:     Flags [
+// CHECK-NEXT:       SHF_ALLOC
+// CHECK-NEXT:       SHF_WRITE
 // CHECK-NEXT:     ]
 // CHECK-NEXT:     Address: 0x240040
 // CHECK-NEXT:     Offset: 0x20040
@@ -125,12 +125,12 @@ bss:
 // CHECK-NEXT:     EntrySize: 0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
-// CHECK-NEXT:     Index: 4
+// CHECK-NEXT:     Index:
 // CHECK-NEXT:     Name: __cap_relocs
-// CHECK-NEXT:     Type: SHT_PROGBITS (0x1)
-// CHECK-NEXT:     Flags [ (0x3)
-// CHECK-NEXT:       SHF_ALLOC (0x2)
-// CHECK-NEXT:       SHF_WRITE (0x1)
+// CHECK-NEXT:     Type: SHT_PROGBITS
+// CHECK-NEXT:     Flags [
+// CHECK-NEXT:       SHF_ALLOC
+// CHECK-NEXT:       SHF_WRITE
 // CHECK-NEXT:     ]
 // CHECK-NEXT:     Address: 0x2400A0
 // CHECK-NEXT:     Offset: 0x200A0
@@ -141,12 +141,12 @@ bss:
 // CHECK-NEXT:     EntrySize: 40
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
-// CHECK-NEXT:     Index: 5
+// CHECK-NEXT:     Index:
 // CHECK-NEXT:     Name: .data
-// CHECK-NEXT:     Type: SHT_PROGBITS (0x1)
-// CHECK-NEXT:     Flags [ (0x3)
-// CHECK-NEXT:       SHF_ALLOC (0x2)
-// CHECK-NEXT:       SHF_WRITE (0x1)
+// CHECK-NEXT:     Type: SHT_PROGBITS
+// CHECK-NEXT:     Flags [
+// CHECK-NEXT:       SHF_ALLOC
+// CHECK-NEXT:       SHF_WRITE
 // CHECK-NEXT:     ]
 // CHECK-NEXT:     Address: 0x260000
 // CHECK-NEXT:     Offset: 0x30000
@@ -157,12 +157,12 @@ bss:
 // CHECK-NEXT:     EntrySize: 0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
-// CHECK-NEXT:     Index: 6
+// CHECK-NEXT:     Index:
 // CHECK-NEXT:     Name: .bss
 // CHECK-NEXT:     Type: SHT_NOBITS (0x8)
-// CHECK-NEXT:     Flags [ (0x3)
-// CHECK-NEXT:       SHF_ALLOC (0x2)
-// CHECK-NEXT:       SHF_WRITE (0x1)
+// CHECK-NEXT:     Flags [
+// CHECK-NEXT:       SHF_ALLOC
+// CHECK-NEXT:       SHF_WRITE
 // CHECK-NEXT:     ]
 // CHECK-NEXT:     Address: 0x260004
 // CHECK-NEXT:     Offset: 0x30004
@@ -191,16 +191,16 @@ bss:
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Location: 0x240060
-// CHECK-NEXT:     Base: ro (0x210000)
-// CHECK-NEXT:     Offset: 131073
-// CHECK-NEXT:     Length: 131136
+// CHECK-NEXT:     Base: $d.5 (0x200200)
+// CHECK-NEXT:     Offset: 196097
+// CHECK-NEXT:     Length: 196160
 // CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Location: 0x240070
-// CHECK-NEXT:     Base: ro (0x210000)
-// CHECK-NEXT:     Offset: 131077
-// CHECK-NEXT:     Length: 131136
+// CHECK-NEXT:     Base: $d.5 (0x200200)
+// CHECK-NEXT:     Offset: 196101
+// CHECK-NEXT:     Length: 196160
 // CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
@@ -231,42 +231,42 @@ bss:
 
 // CHECK-SCRIPT: CHERI __cap_relocs [
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220020
+// CHECK-SCRIPT-NEXT:     Location: 0x220400 ($d.2)
 // CHECK-SCRIPT-NEXT:     Base: ro (0x220000)
 // CHECK-SCRIPT-NEXT:     Offset: 0
 // CHECK-SCRIPT-NEXT:     Length: 4
 // CHECK-SCRIPT-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220030
+// CHECK-SCRIPT-NEXT:     Location: 0x220410
 // CHECK-SCRIPT-NEXT:     Base: ro2 (0x220004)
 // CHECK-SCRIPT-NEXT:     Offset: 0
 // CHECK-SCRIPT-NEXT:     Length: 4
 // CHECK-SCRIPT-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220040
-// CHECK-SCRIPT-NEXT:     Base: $c.1 (0x210000)
-// CHECK-SCRIPT-NEXT:     Offset: 1
-// CHECK-SCRIPT-NEXT:     Length: 65568
+// CHECK-SCRIPT-NEXT:     Location: 0x220420
+// CHECK-SCRIPT-NEXT:     Base: <unknown symbol> (0x0)
+// CHECK-SCRIPT-NEXT:     Offset: 2162689
+// CHECK-SCRIPT-NEXT:     Length: 2229248
 // CHECK-SCRIPT-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220050
-// CHECK-SCRIPT-NEXT:     Base: $c.1 (0x210000)
-// CHECK-SCRIPT-NEXT:     Offset: 5
-// CHECK-SCRIPT-NEXT:     Length: 65568
+// CHECK-SCRIPT-NEXT:     Location: 0x220430
+// CHECK-SCRIPT-NEXT:     Base: <unknown symbol> (0x0)
+// CHECK-SCRIPT-NEXT:     Offset: 2162693
+// CHECK-SCRIPT-NEXT:     Length: 2229248
 // CHECK-SCRIPT-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220060
+// CHECK-SCRIPT-NEXT:     Location: 0x220440
 // CHECK-SCRIPT-NEXT:     Base: rw (0x230000)
 // CHECK-SCRIPT-NEXT:     Offset: 0
 // CHECK-SCRIPT-NEXT:     Length: 4
 // CHECK-SCRIPT-NEXT:     Permissions: (RWDATA) (0x8FBE)
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220070
+// CHECK-SCRIPT-NEXT:     Location: 0x220450
 // CHECK-SCRIPT-NEXT:     Base: bss (0x230004)
 // CHECK-SCRIPT-NEXT:     Offset: 0
 // CHECK-SCRIPT-NEXT:     Length: 4

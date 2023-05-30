@@ -15,10 +15,10 @@
 // create target specific dynamic TLSDESC relocation where addend is
 // the symbol VMA in tls block.
 
-// CHECK:      10298: adrp    c0, 0x20000 <$d.1+0x10>
-// CHECK-NEXT: 1029c: ldr     c1, [c0, #864]
-// CHECK-NEXT: 102a0: add     c0, c0, #864
-// CHECK-NEXT: 102a4: blr     c1
+// CHECK:      102f0: adrp    c0, 0x20000 <$d.1+0x10>
+// CHECK-NEXT: 102f4: ldr     c1, [c0, #944]
+// CHECK-NEXT: 102f8: add     c0, c0, #944
+// CHECK-NEXT: 102fc: blr     c1
 
 	adrp	c0, :tlsdesc:local1
 	ldr	c1, [c0, :tlsdesc_lo12:local1]
@@ -26,10 +26,10 @@
   .tlsdesccall local1
   blr     c1
 
-// CHECK:      102a8: adrp    c0, 0x20000 <$d.1+0x20>
-// CHECK-NEXT: 102ac: ldr     c1, [c0, #896]
-// CHECK-NEXT: 102b0: add     c0, c0, #896
-// CHECK-NEXT: 102b4: blr     c1
+// CHECK:      10300: adrp    c0, 0x20000 <$d.1+0x20>
+// CHECK-NEXT: 10304: ldr     c1, [c0, #976]
+// CHECK-NEXT: 10308: add     c0, c0, #976
+// CHECK-NEXT: 1030c: blr     c1
 
   adrp	c0, :tlsdesc:local2
   ldr	c1, [c0, :tlsdesc_lo12:local2]
@@ -37,10 +37,10 @@
   .tlsdesccall local2
   blr     c1
 
-// CHECK:      102b8: adrp    c0, 0x20000 <$d.1+0x30>
-// CHECK-NEXT: 102bc: ldr     c1, [c0, #928]
-// CHECK-NEXT: 102c0: add     c0, c0, #928
-// CHECK-NEXT: 102c4: blr     c1
+// CHECK:      10310: adrp    c0, 0x20000 <$d.1+0x30>
+// CHECK-NEXT: 10314: ldr     c1, [c0, #1008]
+// CHECK-NEXT: 10318: add     c0, c0, #1008
+// CHECK-NEXT: 1031c: blr     c1
 
   .section .tbss,"awT",@nobits
   .type   local1,@object
@@ -64,8 +64,8 @@ local2:
 
 // REL:      Relocations [
 // REL-NEXT:   .rela.dyn {
-// REL-NEXT:     0x20380 R_MORELLO_TLSDESC - 0x0
-// REL-NEXT:     0x203A0 R_MORELLO_TLSDESC - 0x8
-// REL-NEXT:     0x20360 R_MORELLO_TLSDESC a 0x0
+// REL-NEXT:     0x203D0 R_MORELLO_TLSDESC - 0x0
+// REL-NEXT:     0x203F0 R_MORELLO_TLSDESC - 0x8
+// REL-NEXT:     0x203B0 R_MORELLO_TLSDESC a 0x0
 // REL-NEXT:   }
 // REL-NEXT: ]

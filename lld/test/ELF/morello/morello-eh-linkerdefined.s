@@ -64,28 +64,28 @@ _start: ret
 // CHECK-NEXT: Relocation {
 // CHECK-NEXT:   Location: 0x25AC80 ($d.2)
 // CHECK-NEXT:   Base: <unknown symbol> (0x213A80)
-// CHECK-NEXT:   Offset: 12
+// CHECK-NEXT:   Offset: 36
 // CHECK-NEXT:   Length: 160064
 // CHECK-NEXT:   Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT: }
 // CHECK-NEXT: Relocation {
 // CHECK-NEXT:   Location: 0x25AC90
-// CHECK-NEXT:   Base: __eh_frame_end (0x23ABA0)
+// CHECK-NEXT:   Base: __eh_frame_end (0x23ABB8)
 // CHECK-NEXT:   Offset: 0
 // CHECK-NEXT:   Length: 0
 // CHECK-NEXT:   Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT: }
-// CHECK-NEXT:  Relocation {
-// CHECK-NEXT:    Location: 0x25ACA0
-// CHECK-NEXT:    Base: __eh_frame_hdr_start (0x200200)
-// CHECK-NEXT:    Offset: 0
-// CHECK-NEXT:    Length: 80032
-// CHECK-NEXT:    Permissions: (RODATA) (0x1BFBE)
-// CHECK-NEXT:  }
-// CHECK-NEXT:  Relocation {
-// CHECK-NEXT:    Location: 0x25ACB0
-// CHECK-NEXT:    Base: __eh_frame_start (0x213A8C)
-// CHECK-NEXT:    Offset: 0
-// CHECK-NEXT:    Length: 0
-// CHECK-NEXT:    Permissions: (RODATA) (0x1BFBE)
-// CHECK-NEXT:  }
+// CHECK-NEXT: Relocation {
+// CHECK-NEXT:   Location: 0x25ACA0
+// CHECK-NEXT:   Base: $d.3 (0x200200)
+// CHECK-NEXT:   Offset: 24
+// CHECK-NEXT:   Length: 80064
+// CHECK-NEXT:   Permissions: (RODATA) (0x1BFBE)
+// CHECK-NEXT: }
+// CHECK-NEXT: Relocation {
+// CHECK-NEXT:   Location: 0x25ACB0
+// CHECK-NEXT:   Base: __eh_frame_start (0x213AA4)
+// CHECK-NEXT:   Offset: 0
+// CHECK-NEXT:   Length: 0
+// CHECK-NEXT:   Permissions: (RODATA) (0x1BFBE)
+// CHECK-NEXT: }

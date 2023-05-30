@@ -16,12 +16,11 @@
 ;; Check that the purecap ABI was inferred for LTO and we generated a purecap return instruction:
 ; DISASM: Disassembly of section .text:
 ; DISASM-EMPTY:
-; DISASM-NEXT: 0000000000210120 <_start>:
-; DISASM-NEXT:   210120: 01 00 00 94  	bl	0x210124 <main>
+; DISASM-NEXT: 0000000000210190 <_start>:
+; DISASM-NEXT:   210190: 01 00 00 94  	bl	0x210194 <main>
 ; DISASM-EMPTY:
-; DISASM-NEXT: 0000000000210124 <main>:
-; DISASM-NEXT:   210124: c0 53 c2 c2  	ret	c30
-; DISASM-EMPTY:
+; DISASM-NEXT: 0000000000210194 <main>:
+; DISASM-NEXT:   210194: c0 53 c2 c2  	ret	c30
 
 
 

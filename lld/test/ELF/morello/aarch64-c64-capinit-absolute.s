@@ -34,34 +34,34 @@ _start:
 // CHECK-NEXT:       SHF_ALLOC (0x2)
 // CHECK-NEXT:       SHF_WRITE (0x1)
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x2201D0
-// CHECK-NEXT:     Offset: 0x1D0
+// CHECK-NEXT:     Address: 0x220260
+// CHECK-NEXT:     Offset: 0x260
 // CHECK-NEXT:     Size: 160
 
 // CHECK: CHERI __cap_relocs [
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x2201B0 ($d.1)
-// CHECK-NEXT:     Base: $c.0 (0x2101A0)
-// CHECK-NEXT:     Offset: 32353
-// CHECK-NEXT:     Length: 65792
+// CHECK-NEXT:     Location: 0x220240 ($d.1)
+// CHECK-NEXT:     Base: $d.0 (0x200200)
+// CHECK-NEXT:     Offset: 97793
+// CHECK-NEXT:     Length: 131392
 // CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x2201C0
+// CHECK-NEXT:     Location: 0x220250
 // CHECK-NEXT:     Base: bar (0x400000)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 8
 // CHECK-NEXT:     Permissions: (RWDATA) (0x8FBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x220270
-// CHECK-NEXT:     Base: $c.0 (0x2101A0)
-// CHECK-NEXT:     Offset: 32353
-// CHECK-NEXT:     Length: 65792
+// CHECK-NEXT:     Location: 0x220300
+// CHECK-NEXT:     Base: $d.0 (0x200200)
+// CHECK-NEXT:     Offset: 97793
+// CHECK-NEXT:     Length: 131392
 // CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x220280
+// CHECK-NEXT:     Location: 0x220310
 // CHECK-NEXT:     Base: bar (0x400000)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 8
