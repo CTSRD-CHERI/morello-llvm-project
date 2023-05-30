@@ -157,6 +157,14 @@ public:
   size_t getSize() const override { return 0; }
 };
 
+class CheriNotesSection : public SyntheticSection {
+public:
+  CheriNotesSection();
+  bool isNeeded() const override;
+  void writeTo(uint8_t *buf) override;
+  size_t getSize() const override;
+};
+
 class GnuPropertySection : public SyntheticSection {
 public:
   GnuPropertySection();

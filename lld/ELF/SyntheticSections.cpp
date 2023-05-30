@@ -321,6 +321,28 @@ static size_t getHashSize() {
   }
 }
 
+// FreeBSD follows the NetBSD spec which is always 4 byte aligned.
+CheriNotesSection::CheriNotesSection()
+    : SyntheticSection(llvm::ELF::SHF_ALLOC, llvm::ELF::SHT_NOTE, 4,
+                       ".note.cheri") {}
+bool CheriNotesSection::isNeeded() const {
+  return !config->cheriABIVariants.empty();
+}
+void CheriNotesSection::writeTo(uint8_t *buf) {
+  for (auto &entry : config->cheriABIVariants) {
+    write32(buf, 6);                 // Name size
+    write32(buf + 4, 4);             // Content size
+    write32(buf + 8, entry.first);   // ABI
+    memcpy(buf + 12, "CHERI", 6);    // Name string
+    write16(buf + 18, 0);            // Padding
+    write32(buf + 20, entry.second); // ABI variant
+    buf += 24;
+  }
+}
+size_t CheriNotesSection::getSize() const {
+  return 24 * config->cheriABIVariants.size();
+}
+
 // This class represents a linker-synthesized .note.gnu.property section.
 //
 // In x86 and AArch64, object files may contain feature flags indicating the

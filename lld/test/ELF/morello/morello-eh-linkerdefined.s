@@ -77,7 +77,7 @@ _start: ret
 // CHECK-NEXT: }
 // CHECK-NEXT: Relocation {
 // CHECK-NEXT:   Location: 0x25ACA0
-// CHECK-NEXT:   Base: $d.3 (0x200200)
+// CHECK-NEXT:   Base: {{.*}} (0x200200)
 // CHECK-NEXT:   Offset: 24
 // CHECK-NEXT:   Length: 80064
 // CHECK-NEXT:   Permissions: (RODATA) (0x1BFBE)

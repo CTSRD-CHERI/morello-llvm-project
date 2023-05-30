@@ -221,6 +221,7 @@ protected:
 
 public:
   uint32_t andFeatures = 0;
+  llvm::DenseMap<unsigned, unsigned> cheriABIVariants;
   bool hasCommonSyms = false;
 };
 

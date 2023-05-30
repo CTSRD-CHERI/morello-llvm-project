@@ -191,14 +191,14 @@ bss:
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Location: 0x240060
-// CHECK-NEXT:     Base: $d.5 (0x200200)
+// CHECK-NEXT:     Base: {{.*}} (0x200200)
 // CHECK-NEXT:     Offset: 196097
 // CHECK-NEXT:     Length: 196160
 // CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Location: 0x240070
-// CHECK-NEXT:     Base: $d.5 (0x200200)
+// CHECK-NEXT:     Base: {{.*}} (0x200200)
 // CHECK-NEXT:     Offset: 196101
 // CHECK-NEXT:     Length: 196160
 // CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
