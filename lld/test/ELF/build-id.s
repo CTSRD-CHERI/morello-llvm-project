@@ -48,7 +48,8 @@ _start:
   nop
 
 .section .note.test, "a", @note
-   .quad 42
+   .quad 0
+   .long 0
 
 # ALIGN:      Name: .note.gnu.build-id
 # ALIGN-NEXT: Type: SHT_NOTE
@@ -65,15 +66,16 @@ _start:
 # DEFAULT:      Contents of section .note.test:
 # DEFAULT:      Contents of section .note.gnu.build-id:
 # DEFAULT-NEXT: 04000000 08000000 03000000 474e5500  ............GNU.
-# DEFAULT-NEXT: 7e8ddeff 3ed41fa3
+# DEFAULT-NEXT: b677435d 3c9738cf
 
 # MD5:      Contents of section .note.gnu.build-id:
 # MD5-NEXT: 04000000 10000000 03000000 474e5500  ............GNU.
-# MD5-NEXT: 7b00fd9e 054ceb4b 06f64d0e 482cb476
+# MD5-NEXT: beba5cd9 b95cb394 b3f56095 9cea4f2a
 
 # SHA1:      Contents of section .note.gnu.build-id:
 # SHA1-NEXT: 04000000 14000000 03000000 474e5500  ............GNU.
-# SHA1-NEXT: 221a99da dd1d2bf3 05e48a91 dde8a0cb
+# SHA1-NEXT: 2afa640b 6ba5c9b0 0dce3a9e e35fa8ef
+# SHA1-NEXT: 2b0fc66f
 
 # UUID:      Contents of section .note.gnu.build-id:
 # UUID-NEXT: 04000000 10000000 03000000 474e5500  ............GNU.
@@ -88,12 +90,14 @@ _start:
 # RUN: llvm-readelf -x .note.gnu.build-id %t2 | FileCheck --check-prefix=SEPARATE %s
 
 # SEPARATE:      Hex dump of section '.note.gnu.build-id':
-# SEPARATE-NEXT: 0x00200198 04000000 14000000 03000000 474e5500
-# SEPARATE-NEXT: 0x002001a8 96820adf d90d5470 0a0c32ff a88c4017
+# SEPARATE-NEXT: 0x0020019c 04000000 14000000 03000000 474e5500
+# SEPARATE-NEXT: 0x002001ac 4a815a93 6b805d45 f65e5408 843dde68
+# SEPARATE-NEXT: 0x002001bc 57163e3c
 
 # RUN: ld.lld --build-id=sha1 --no-rosegment %t -o %t2
 # RUN: llvm-readelf -x .note.gnu.build-id %t2 | FileCheck --check-prefix=NORO %s
 
 # NORO:      Hex dump of section '.note.gnu.build-id':
-# NORO-NEXT: 0x00200160 04000000 14000000 03000000 474e5500
-# NORO-NEXT: 0x00200170 cf6d7b3a 0b3297c3 5b47c079 ce048349
+# NORO-NEXT: 0x00200164 04000000 14000000 03000000 474e5500
+# NORO-NEXT: 0x00200174 967213d3 209cbce7 8c92eec0 cc0588f5
+# NORO-NEXT: 0x00200184 bb50bc76

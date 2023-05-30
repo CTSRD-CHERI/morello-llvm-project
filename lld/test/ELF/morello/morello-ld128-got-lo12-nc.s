@@ -91,7 +91,7 @@ foo:
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Location: 0x2202D0
-// CHECK-NEXT:     Base: $d.3 (0x200200)
+// CHECK-NEXT:     Base: {{.*}} (0x200200)
 // CHECK-NEXT:     Offset: 65577
 // CHECK-NEXT:     Length: 131328
 // CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)

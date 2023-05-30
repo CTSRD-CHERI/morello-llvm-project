@@ -7,9 +7,9 @@
 # The possible 4-byte padding before the 8-byte align note may make consumers
 # fail to parse it.
 
-# CHECK: NOTE {{0x[0-9a-f]+}} {{0x[0-9a-f]+}} {{0x[0-9a-f]+}} 0x000004 0x000004 R   0x4
-# CHECK: NOTE {{0x[0-9a-f]+}} {{0x[0-9a-f]+}} {{0x[0-9a-f]+}} 0x000010 0x000010 R   0x8
-# CHECK: NOTE {{0x[0-9a-f]+}} {{0x[0-9a-f]+}} {{0x[0-9a-f]+}} 0x000008 0x000008 R   0x4
+# CHECK: NOTE {{0x[0-9a-f]+}} {{0x[0-9a-f]+}} {{0x[0-9a-f]+}} 0x00000c 0x00000c R   0x4
+# CHECK: NOTE {{0x[0-9a-f]+}} {{0x[0-9a-f]+}} {{0x[0-9a-f]+}} 0x00001c 0x00001c R   0x8
+# CHECK: NOTE {{0x[0-9a-f]+}} {{0x[0-9a-f]+}} {{0x[0-9a-f]+}} 0x000018 0x000018 R   0x4
 
 # CHECK:      03     .note.a
 # CHECK-NEXT: 04     .note.b .note.c
@@ -18,19 +18,27 @@
 .section .note.a, "a", @note
 .align 4
 .long 0
+.long 0
+.long 0
 
 .section .note.b, "a", @note
 .align 8
 .quad 0
+.long 0
 
 .section .note.c, "a", @note
 .align 8
 .quad 0
+.long 0
 
 .section .note.d, "a", @note
 .align 4
 .long 0
+.long 0
+.long 0
 
 .section .note.e, "a", @note
 .align 4
+.long 0
+.long 0
 .long 0

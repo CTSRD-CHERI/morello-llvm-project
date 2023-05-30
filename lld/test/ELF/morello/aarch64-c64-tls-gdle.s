@@ -36,7 +36,7 @@ _start:
 // SEC-NEXT:    Flags [
 // SEC-NEXT:      SHF_ALLOC
 // SEC-NEXT:    ]
-// SEC-NEXT:    Address: 0x200230
+// SEC-NEXT:    Address: 0x200220
 // SEC-NEXT:    Offset:
 // SEC-NEXT:    Size: 32
 
@@ -46,22 +46,22 @@ _start:
 
 // The offset and size of foo and bar are encoded in .rodata.
 // DATA: Hex dump of section '.rodata':
-// DATA-NEXT: 0x00200230 20edfe00 00000000 00efbe00 00000000
-// DATA-NEXT: 0x00200240 20000000 00000000 00edfe00 00000000
+// DATA-NEXT: 0x00200220 20edfe00 00000000 00efbe00 00000000
+// DATA-NEXT: 0x00200230 20000000 00000000 00edfe00 00000000
 
-// CHECK-LABEL:      <_start>:
-// CHECK-NEXT:  210250:	adrp	c0, 0x200000
-// CHECK-NEXT:  210254:	add	c0, c0, #0x230
-// CHECK-NEXT:  210258:	ldp	x0, x1, [c0]
-// CHECK-NEXT:  21025c:	add	c0, c2, x0, uxtx
-// CHECK-NEXT:  210260:	scbnds	c0, c0, x1
-// CHECK-NEXT:  210264:	adrp	c0, 0x200000
-// CHECK-NEXT:  210268:	add	c0, c0, #0x240
-// CHECK-NEXT:  21026c:	ldp	x0, x1, [c0]
-// CHECK-NEXT:  210270:	add	c0, c2, x0, uxtx
-// CHECK-NEXT:  210274:	scbnds	c0, c0, x1
-// CHECK-NEXT:  210278:	adrp	c0, 0x200000
-// CHECK-NEXT:  21027c:	add	c0, c0, #0x230
-// CHECK-NEXT:  210280:	ldp	x0, x1, [c0]
-// CHECK-NEXT:  210284:	add	c0, c2, x0, uxtx
-// CHECK-NEXT:  210288:	scbnds	c0, c0, x1
+// CHECK-LABEL: <_start>:
+// CHECK-NEXT:  210240: adrp   c0, 0x200000
+// CHECK-NEXT:          add    c0, c0, #0x220
+// CHECK-NEXT:          ldp    x0, x1, [c0]
+// CHECK-NEXT:          add    c0, c2, x0, uxtx
+// CHECK-NEXT:          scbnds c0, c0, x1
+// CHECK-NEXT:          adrp   c0, 0x200000
+// CHECK-NEXT:          add    c0, c0, #0x230
+// CHECK-NEXT:          ldp    x0, x1, [c0]
+// CHECK-NEXT:          add    c0, c2, x0, uxtx
+// CHECK-NEXT:          scbnds c0, c0, x1
+// CHECK-NEXT:          adrp   c0, 0x200000
+// CHECK-NEXT:          add    c0, c0, #0x220
+// CHECK-NEXT:          ldp    x0, x1, [c0]
+// CHECK-NEXT:          add    c0, c2, x0, uxtx
+// CHECK-NEXT:          scbnds c0, c0, x1

@@ -11,18 +11,18 @@
 // CHECK-NEXT: Offset: 0x1000
 // CHECK-NEXT: VirtualAddress: 0x0
 // CHECK-NEXT: PhysicalAddress: 0x1000
-// CHECK-NEXT: FileSize: 8
-// CHECK-NEXT: MemSize: 8
+// CHECK-NEXT: FileSize: 12
+// CHECK-NEXT: MemSize: 12
 // CHECK-NEXT:   Flags [
 // CHECK-NEXT:   PF_R
 // CHECK-NEXT: ]
 // CHECK-NEXT: Alignment: 1
 // CHECK:      Type: PT_NOTE
-// CHECK-NEXT: Offset: 0x1008
-// CHECK-NEXT: VirtualAddress: 0x8
+// CHECK-NEXT: Offset: 0x100C
+// CHECK-NEXT: VirtualAddress: 0xC
 // CHECK-NEXT: PhysicalAddress: 0x2000
-// CHECK-NEXT: FileSize: 8
-// CHECK-NEXT: MemSize: 8
+// CHECK-NEXT: FileSize: 12
+// CHECK-NEXT: MemSize: 12
 // CHECK-NEXT:   Flags [
 // CHECK-NEXT:   PF_R
 // CHECK-NEXT: ]
@@ -30,6 +30,8 @@
 
 .section .note.a, "a", @note
 .quad 0
+.long 0
 
 .section .note.b, "a", @note
 .quad 0
+.long 0

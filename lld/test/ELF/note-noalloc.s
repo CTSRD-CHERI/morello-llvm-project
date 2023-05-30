@@ -35,4 +35,5 @@
 .quad 2
 
 .section        .note.b,"",@note
-.quad 3
+.quad 0
+.long 0

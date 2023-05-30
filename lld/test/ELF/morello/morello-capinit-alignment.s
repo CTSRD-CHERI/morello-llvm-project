@@ -123,7 +123,7 @@ _start:
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Location: 0x230030
-// CHECK-NEXT:     Base: $d.5 (0x2001E0)
+// CHECK-NEXT:     Base: {{.*}} (0x2001E0)
 // CHECK-NEXT:     Offset: 130592
 // CHECK-NEXT:     Length: 130592
 // CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)

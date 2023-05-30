@@ -9,3 +9,4 @@
 
 .section  .note,"",@note
 .quad 0
+.long 0

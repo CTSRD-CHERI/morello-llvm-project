@@ -1550,6 +1550,22 @@ enum {
   NT_LLVM_HWASAN_GLOBALS = 3,
 };
 
+// CHERI-specific notes.
+enum {
+  NT_CHERI_GLOBALS_ABI = 0,
+  NT_CHERI_TLS_ABI = 1,
+};
+// ABI variants used in NT_CHERI_GLOBALS_ABI notes.
+enum : unsigned {
+  CHERI_GLOBALS_ABI_PCREL = 0,
+  CHERI_GLOBALS_ABI_PLT_FPTR = 1,
+  CHERI_GLOBALS_ABI_FDESC = 2,
+};
+// ABI variants used in NT_CHERI_TLS_ABI notes.
+enum : unsigned {
+  CHERI_TLS_ABI_TRAD = 0,
+};
+
 // GNU note types.
 enum {
   NT_GNU_ABI_TAG = 1,

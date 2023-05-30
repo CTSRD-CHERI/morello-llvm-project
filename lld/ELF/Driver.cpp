@@ -2343,6 +2343,23 @@ static uint32_t getAndFeatures() {
   return ret;
 }
 
+static void getCheriABIVariant() {
+  if (!config->isCheriAbi)
+    return;
+
+  for (ELFFileBase *f : objectFiles) {
+    for (auto &entry : f->cheriABIVariants) {
+      if (config->cheriABIVariants.count(entry.first) &&
+          config->cheriABIVariants[entry.first] != entry.second)
+        error(toString(f) + ": CHERI ABI variant mismatch.");
+      else
+        config->cheriABIVariants[entry.first] = entry.second;
+    }
+  }
+  if (config->cheriABIVariants.empty())
+    config->cheriABIVariants[NT_CHERI_GLOBALS_ABI] = CHERI_GLOBALS_ABI_PCREL;
+}
+
 // Do actual linking. Note that when this function is called,
 // all linker scripts have already been parsed.
 void LinkerDriver::link(opt::InputArgList &args) {
@@ -2599,6 +2616,7 @@ void LinkerDriver::link(opt::InputArgList &args) {
 
   config->eflags = target->calcEFlags();
   config->isCheriAbi = target->calcIsCheriAbi();
+  getCheriABIVariant();
   // maxPageSize (sometimes called abi page size) is the maximum page size that
   // the output can be run on. For example if the OS can use 4k or 64k page
   // sizes then maxPageSize must be 64k for the output to be useable on both.

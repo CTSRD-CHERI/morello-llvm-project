@@ -18,5 +18,5 @@ code_cap:
 	.size code_cap, . - code_cap
 
 // CHECK:      CHERI __cap_relocs [
-// CHECK-NEXT:   0x100030250 (code_cap) Base: 0x100000200 ($d.2+65561) Length: 65568 Perms: (FUNC)
+// CHECK-NEXT:   0x100030250 (code_cap) Base: 0x100000200 {{.*}} Length: 65568 Perms: (FUNC)
 // CHECK-NEXT: ]

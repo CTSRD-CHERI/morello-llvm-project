@@ -30,4 +30,6 @@ bx lr
 .fnend
 
 .section .note._start,"G",%note,_start,comdat
-.byte 0
+.word 0
+.word 0
+.word 0

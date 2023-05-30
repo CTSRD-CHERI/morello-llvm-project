@@ -7,12 +7,13 @@
 // CHECK-NEXT: Offset:
 // CHECK-NEXT: VirtualAddress:
 // CHECK-NEXT: PhysicalAddress:
-// CHECK-NEXT: FileSize:        8
-// CHECK-NEXT: MemSize:         8
+// CHECK-NEXT: FileSize:        12
+// CHECK-NEXT: MemSize:         12
 // CHECK-NEXT:   Flags [
 // CHECK-NEXT:   PF_R
 // CHECK-NEXT: ]
 // CHECK-NEXT: Alignment:       1
 
         .section        .note.test,"a",@note
-        .quad 42
+        .quad 0
+        .long 0

@@ -160,6 +160,7 @@ struct Configuration {
   bool armJ1J2BranchEncoding = false;
   bool morelloC64Plt = false;
   bool forceMorelloC64Plt = false;
+  llvm::DenseMap<unsigned, unsigned> cheriABIVariants;
   bool asNeeded = false;
   BsymbolicKind bsymbolic = BsymbolicKind::None;
   // make dynamic relocations that are not supported by

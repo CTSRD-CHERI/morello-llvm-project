@@ -853,6 +853,52 @@ template <class ELFT> static uint32_t readAndFeatures(const InputSection &sec) {
   return featuresSet;
 }
 
+// Reads the ABI Variant from an entry in a SHT_NOTE Section.
+// Returns a non-empty error string on failure.
+// The caller should check return status before using value.
+template <class ELFT>
+static std::string
+readCheriABIVariant(const typename ELFT::Note &note,
+                    DenseMap<unsigned, unsigned> &variantMap) {
+  static DenseMap<unsigned, StringRef> AbiStringMap = {
+      {NT_CHERI_GLOBALS_ABI, "NT_CHERI_GLOBALS_ABI"},
+      {NT_CHERI_TLS_ABI, "NT_CHERI_TLS_ABI"}};
+  auto reportInvalidVariant = [&](unsigned abi, unsigned variant) {
+    return Twine(" invalid " + AbiStringMap[abi] + " variant: 0x" +
+                 Twine::utohexstr(variant))
+        .str();
+  };
+  // Each entry is a 4-byte word.
+  ArrayRef<uint8_t> desc = note.getDesc();
+  if (desc.size() != 4)
+    return Twine("invalid desc size: 0x" + Twine::utohexstr(desc.size())).str();
+
+  unsigned abi = note.getType();
+  uint32_t variant = read32<ELFT::TargetEndianness>(desc.data());
+  if (abi == NT_CHERI_GLOBALS_ABI) {
+    switch (variant) {
+    case CHERI_GLOBALS_ABI_PCREL:
+    case CHERI_GLOBALS_ABI_PLT_FPTR:
+    case CHERI_GLOBALS_ABI_FDESC:
+      break;
+    default:
+      return reportInvalidVariant(abi, variant);
+    }
+  } else if (abi == NT_CHERI_TLS_ABI) {
+    switch (variant) {
+    case CHERI_TLS_ABI_TRAD:
+      break;
+    default:
+      return reportInvalidVariant(abi, variant);
+    }
+  }
+  if (variantMap.count(abi) && variantMap[abi] != variant)
+    return Twine(" conflicting " + AbiStringMap[abi] + " variants").str();
+
+  variantMap[abi] = variant;
+  return "";
+}
+
 template <class ELFT>
 InputSectionBase *ObjFile<ELFT>::getRelocTarget(uint32_t idx,
                                                 const Elf_Shdr &sec,
@@ -1017,6 +1063,40 @@ InputSectionBase *ObjFile<ELFT>::createInputSection(uint32_t idx,
   // class. For relocatable outputs, they are just passed through.
   if (name == ".eh_frame" && !config->relocatable)
     return make<EhInputSection>(*this, sec, name);
+
+  if (sec.sh_type == SHT_NOTE) {
+    ArrayRef<uint8_t> contents = check(this->getObj().getSectionContents(sec));
+    bool discard = false;
+    while (!contents.empty()) {
+      if (contents.size() < sizeof(Elf_Nhdr)) {
+        fatal(toString(this) + name + " header size too short: 0x" +
+              Twine::utohexstr(contents.size()));
+        break;
+      }
+
+      const Elf_Nhdr *header =
+          reinterpret_cast<const Elf_Nhdr *>(contents.data());
+      if (contents.size() < header->getSize()) {
+        fatal(toString(this) + name + " data size too short. Expected: 0x" +
+              Twine::utohexstr(header->getSize()) + " Actual: 0x" +
+              Twine::utohexstr(contents.size()));
+        break;
+      }
+      typename ELFT::Note note(*header);
+      if (note.getName() == "CHERI") {
+        discard = true;
+        std::string errMsg =
+            readCheriABIVariant<ELFT>(note, this->cheriABIVariants);
+        if (!errMsg.empty()) {
+          error(toString(this) + name + " " + errMsg);
+          break;
+        }
+      }
+      contents = contents.drop_front(header->getSize());
+    }
+    if (discard)
+      return &InputSection::discarded;
+  }
 
   if ((sec.sh_flags & SHF_MERGE) && shouldMerge(sec, name))
     return make<MergeInputSection>(*this, sec, name);

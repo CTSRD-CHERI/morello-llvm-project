@@ -8,7 +8,7 @@
 # RUN: llvm-readelf -S %t | FileCheck %s
 
 # CHECK: .foo2 PROGBITS {{.*}} 000002 00 A
-# CHECK: .foo  PROGBITS {{.*}} 000028 00 WA
+# CHECK: .foo  PROGBITS {{.*}} 00002c 00 WA
 # CHECK: .foo1 PROGBITS {{.*}} 000010 00 WA
 
 .section .foo, "aw", @progbits, unique, 1
@@ -25,6 +25,7 @@
 
 .section .foo, "aw", @note, unique, 5
 .quad 0
+.long 0
 
 .section .foo1, "aw", @progbits, unique, 1
 .quad 0

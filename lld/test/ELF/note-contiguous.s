@@ -8,8 +8,8 @@
 // CHECK-NEXT: Offset:
 // CHECK-NEXT: VirtualAddress:
 // CHECK-NEXT: PhysicalAddress:
-// CHECK-NEXT: FileSize: 16
-// CHECK-NEXT: MemSize: 16
+// CHECK-NEXT: FileSize: 24
+// CHECK-NEXT: MemSize: 24
 // CHECK-NEXT: Flags [
 // CHECK-NEXT:   PF_R
 // CHECK-NEXT: ]
@@ -24,8 +24,8 @@
 // SCRIPT-NEXT: Offset:
 // SCRIPT-NEXT: VirtualAddress:
 // SCRIPT-NEXT: PhysicalAddress:
-// SCRIPT-NEXT: FileSize: 16
-// SCRIPT-NEXT: MemSize: 16
+// SCRIPT-NEXT: FileSize: 24
+// SCRIPT-NEXT: MemSize: 24
 // SCRIPT-NEXT: Flags [
 // SCRIPT-NEXT:   PF_R
 // SCRIPT-NEXT: ]
@@ -34,9 +34,11 @@
 
 .section .note.a, "a", @note
 .quad 0
+.long 0
 
 .section .foo, "a"
 .quad 0
 
 .section .note.b, "a", @note
 .quad 0
+.long 0

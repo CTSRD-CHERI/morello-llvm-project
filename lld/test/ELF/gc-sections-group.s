@@ -67,7 +67,9 @@
 
 .section .myanote.aaa,"aG",@note,aaa
 anote_aaa:
-.byte 0
+.long 0
+.long 0
+.long 0
 
 .section .mytext.aaa,"axG",@progbits,aaa
 aaa:
@@ -79,14 +81,18 @@ bss_aaa:
 
 .section .mynote.aaa,"G",@note,aaa
 note_aaa:
-.byte 0
+.long 0
+.long 0
+.long 0
 
 ## These sections are in a COMDAT group `bbb`.
 .globl anote_bbb, bbb, bss_bbb, note_bbb
 
 .section .myanote.bbb,"aG",@note,bbb,comdat
 anote_bbb:
-.byte 0
+.long 0
+.long 0
+.long 0
 
 .section .mytext.bbb,"axG",@progbits,bbb,comdat
 bbb:
@@ -98,8 +104,12 @@ bss_bbb:
 
 .section .mynote.bbb,"G",@note,bbb,comdat
 note_bbb:
-.byte 0
+.long 0
+.long 0
+.long 0
 
 ## This section isn't in any group.
 .section .mynote.ccc,"",@note
-.byte 0
+.long 0
+.long 0
+.long 0
