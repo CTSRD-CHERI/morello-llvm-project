@@ -1211,6 +1211,31 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
         return I;
     }
 
+    if (DL.hasCheriCapabilities()) {
+      if (AnyMemTransferInst *MTI = dyn_cast<AnyMemTransferInst>(MI)) {
+        if (shouldPreserveTags(MI) != PreserveCheriTags::Unnecessary) {
+          // If all objects are constants with no relocations then this
+          // doesn't transfer tags.
+          SmallVector<const Value *, 8> SrcObjs;
+          getUnderlyingObjects(MTI->getSource(), SrcObjs);
+          if (llvm::all_of(SrcObjs, [&](const Value *Obj) {
+            const Constant *Ct = dyn_cast<Constant>(Obj);
+            if (Ct && Ct->isNullValue())
+              return true;
+            const GlobalVariable *GV = dyn_cast<GlobalVariable>(Obj);
+            if (GV && GV->isConstant() && GV->hasDefinitiveInitializer() &&
+                !GV->getInitializer()->needsRelocation() &&
+                !GV->isInterposable())
+              return true;
+            return false;
+          })) {
+            setPreserveCheriTags(MTI, PreserveCheriTags::Unnecessary, DL);
+            return MTI;
+          }
+        }
+      }
+    }
+
     if (Changed) return II;
   }
 
