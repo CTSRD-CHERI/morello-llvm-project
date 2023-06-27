@@ -1103,7 +1103,7 @@ std::string ARMTargetInfo::convertConstraint(const char *&Constraint) const {
 
 bool ARMTargetInfo::validateConstraintModifier(
     StringRef Constraint, char Modifier, unsigned Size,
-    std::string &SuggestedModifier) const {
+    bool IsCHERICap, std::string &SuggestedModifier) const {
   bool isOutput = (Constraint[0] == '=');
   bool isInOut = (Constraint[0] == '+');
 

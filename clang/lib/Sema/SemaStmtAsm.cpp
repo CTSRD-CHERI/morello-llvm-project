@@ -536,6 +536,7 @@ StmtResult Sema::ActOnGCCAsmStmt(SourceLocation AsmLoc, bool IsSimple,
     std::string SuggestedModifier;
     if (!Context.getTargetInfo().validateConstraintModifier(
             Literal->getString(), Piece.getModifier(), Size,
+            Ty->isCHERICapabilityType(Context, true),
             SuggestedModifier)) {
       targetDiag(Exprs[ConstraintIdx]->getBeginLoc(),
                  diag::warn_asm_mismatched_size_modifier);

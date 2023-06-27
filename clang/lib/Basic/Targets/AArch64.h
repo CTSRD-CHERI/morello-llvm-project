@@ -169,6 +169,7 @@ public:
                              TargetInfo::ConstraintInfo &Info) const override;
   bool
   validateConstraintModifier(StringRef Constraint, char Modifier, unsigned Size,
+                             bool IsCHERICap,
                              std::string &SuggestedModifier) const override;
   const char *getClobbers() const override;
 
