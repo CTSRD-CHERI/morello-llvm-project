@@ -14,14 +14,8 @@
 // RUN: %clang -### -target aarch64-none-elf -O1 %s 2>&1 | FileCheck -check-prefix=CHECK-GCSECTIONS %s
 // CHECK-GCSECTIONS: "--gc-sections"
 
-// RUN: %clang -### -target aarch64-none-elf -O1 %s 2>&1 | FileCheck -check-prefix=CHECK-LOCALCAPRELOCS-ELF %s
-// RUN: %clang -### -target aarch64-none-elf -O1 -Wl,--local-caprelocs=elf %s 2>&1 | FileCheck -check-prefix=CHECK-LOCALCAPRELOCS-ELF %s
+// RUN: %clang -### -target aarch64-none-elf -O1 %s 2>&1 | FileCheck --implicit-check-not --local-caprelocs=legacy -check-prefix=CHECK-LOCALCAPRELOCS-ELF %s
 // CHECK-LOCALCAPRELOCS-ELF: "--local-caprelocs=elf"
-// CHECK-LOCALCAPRELOCS-ELF-NOT: "--local-caprelocs=legacy"
-
-// RUN: %clang -### -target aarch64-none-elf -O1 %s -Wl,--local-caprelocs=legacy 2>&1 | FileCheck -check-prefix=CHECK-LOCALCAPRELOCS-LEGACY %s
-// CHECK-LOCALCAPRELOCS-LEGACY: "--local-caprelocs=legacy"
-// CHECK-LOCALCAPRELOCS-LEGACY-NOT: "--local-caprelocs=elf"
 
 // RUN: %clang -### -target aarch64-none-elf -O1 %s 2>&1 | FileCheck -check-prefix=CHECK-STARTFILE %s
 // RUN: %clang -### -target aarch64-none-elf -O1 -nostartfiles %s 2>&1 | FileCheck -check-prefix=CHECK-NOSTARTFILE %s
