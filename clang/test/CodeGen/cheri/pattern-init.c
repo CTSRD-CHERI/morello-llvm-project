@@ -60,7 +60,7 @@ struct S {
 // RISCV32-NEXT:    [[TMP0:%.*]] = bitcast %struct.S* [[AGG_RESULT:%.*]] to i8*
 // RISCV32-NEXT:    store i8* [[TMP0]], i8** [[RESULT_PTR]], align 4
 // RISCV32-NEXT:    [[TMP1:%.*]] = bitcast %struct.S* [[AGG_RESULT]] to i8*
-// RISCV32-NEXT:    call void @llvm.memcpy.p0i8.p0i8.i32(i8* align 8 [[TMP1]], i8* align 8 bitcast (%struct.S* @__const.get_uninitialised_struct.s to i8*), i32 32, i1 false), !annotation !4
+// RISCV32-NEXT:    call void @llvm.memcpy.p0i8.p0i8.i32(i8* align 8 [[TMP1]], i8* align 8 bitcast (%struct.S* @__const.get_uninitialised_struct.s to i8*), i32 32, i1 false) #[[ATTR2:[0-9]+]], !annotation !4
 // RISCV32-NEXT:    ret void
 //
 // RISCV64-LABEL: @get_uninitialised_struct(

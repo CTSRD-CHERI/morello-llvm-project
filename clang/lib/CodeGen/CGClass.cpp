@@ -984,7 +984,12 @@ namespace {
       CharUnits MoreAlignedOffset = CharUnits::Zero();
       CharUnits NewAlign = CharUnits::Zero();
 
-      if (CGF.getTarget().SupportsCapabilities()) {
+      // We can pass EffectiveTypeKnown=true since this a C++ field copy.
+      auto PreserveTags = CGF.getTypes().copyShouldPreserveTagsForPointee(
+          RecordTy, /*EffectiveTypeKnown=*/true, MemcpySize);
+
+      if (CGF.getTarget().SupportsCapabilities() &&
+            PreserveTags != llvm::PreserveCheriTags::Unnecessary) {
         // If the memcpy should preserve tags but the first field is not
         // capability aligned, emit a memcpy to copy the unaligned part
         // first and a second memcpy for the rest.
@@ -1011,8 +1016,7 @@ namespace {
       emitMemcpyIR(
           Dest.isBitField() ? Dest.getBitFieldAddress() : Dest.getAddress(CGF),
           Src.isBitField() ? Src.getBitFieldAddress() : Src.getAddress(CGF),
-          MoreAlignedOffset, MemcpySize, NewAlign,
-          llvm::PreserveCheriTags::TODO);
+          MoreAlignedOffset, MemcpySize, NewAlign, PreserveTags);
       reset();
     }
 

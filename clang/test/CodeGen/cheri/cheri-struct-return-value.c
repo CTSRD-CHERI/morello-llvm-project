@@ -140,18 +140,23 @@ typedef struct {
 // CHECK-SAME: ([[STRUCT_THREELONGS:%.*]] addrspace(200)* noalias nocapture writeonly sret([[STRUCT_THREELONGS]]) align 8 [[AGG_RESULT:%.*]]) local_unnamed_addr addrspace(200) #[[ATTR3:[0-9]+]] {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[TMP0:%.*]] = bitcast [[STRUCT_THREELONGS]] addrspace(200)* [[AGG_RESULT]] to i8 addrspace(200)*
-// CHECK-NEXT:    tail call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* noundef nonnull align 8 dereferenceable(24) [[TMP0]], i8 addrspace(200)* noundef nonnull align 8 dereferenceable(24) bitcast ([[STRUCT_THREELONGS]] addrspace(200)* @__const.three_longs.t to i8 addrspace(200)*), i64 24, i1 false)
+// CHECK-NEXT:    tail call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* noundef nonnull align 8 dereferenceable(24) [[TMP0]], i8 addrspace(200)* noundef nonnull align 8 dereferenceable(24) bitcast ([[STRUCT_THREELONGS]] addrspace(200)* @__const.three_longs.t to i8 addrspace(200)*), i64 24, i1 false) #[[ATTR6:[0-9]+]]
 // CHECK-NEXT:    ret void
 //
 ThreeLongs three_longs() {
   ThreeLongs t = { 1, 2, 3 };
   return t;
   // ASM-LABEL: three_longs
-  // Clang uses a memcpy from a global for cheri128.
-  // For cheri256 it inlined the memcpy from a global (since it is smaller than 1 cap)
-  // CHERI128-ASM: clcbi $c4, %captab20(.L__const.three_longs.t)($c{{.+}})
-  // CHERI128-ASM: clcbi   $c12, %capcall20(memcpy)($c{{.+}})
-
+  // Clang uses a memcpy from a global for cheri128 (and it can be inlined despite being less than cap aligned
+  // since longs don't contain tags):
+  // CHERI128-ASM: clcbi $c1, %captab20(.L__const.three_longs.t)($c1)
+  // CHERI128-ASM-NEXT: cld $1, $zero, 16($c1)
+  // CHERI128-ASM-NEXT: cld $2, $zero, 8($c1)
+  // CHERI128-ASM-NEXT: cld $3, $zero, 0($c1)
+  // CHERI128-ASM-NEXT: csd $1, $zero, 16($c3)
+  // CHERI128-ASM-NEXT: csd $2, $zero, 8($c3)
+  // CHERI128-ASM-NEXT: cjr $c17
+  // CHERI128-ASM-NEXT: csd $3, $zero, 0($c3)
 }
 
 typedef struct {
@@ -192,7 +197,7 @@ extern IntAndLong extern_int_and_long();
 // CHECK-LABEL: define {{[^@]+}}@read_int_and_long_1
 // CHECK-SAME: () local_unnamed_addr addrspace(200) #[[ATTR4:[0-9]+]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[CALL:%.*]] = tail call inreg { i64, i64 } bitcast ({ i64, i64 } (...) addrspace(200)* @extern_int_and_long to { i64, i64 } () addrspace(200)*)() #[[ATTR6:[0-9]+]]
+// CHECK-NEXT:    [[CALL:%.*]] = tail call inreg { i64, i64 } bitcast ({ i64, i64 } (...) addrspace(200)* @extern_int_and_long to { i64, i64 } () addrspace(200)*)() #[[ATTR7:[0-9]+]]
 // CHECK-NEXT:    [[TMP0:%.*]] = extractvalue { i64, i64 } [[CALL]], 0
 // CHECK-NEXT:    [[COERCE_SROA_0_0_EXTRACT_SHIFT:%.*]] = lshr i64 [[TMP0]], 32
 // CHECK-NEXT:    [[COERCE_SROA_0_0_EXTRACT_TRUNC:%.*]] = trunc i64 [[COERCE_SROA_0_0_EXTRACT_SHIFT]] to i32
@@ -216,7 +221,7 @@ int read_int_and_long_1() {
 // CHECK-LABEL: define {{[^@]+}}@read_int_and_long_2
 // CHECK-SAME: () local_unnamed_addr addrspace(200) #[[ATTR4]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[CALL:%.*]] = tail call inreg { i64, i64 } bitcast ({ i64, i64 } (...) addrspace(200)* @extern_int_and_long to { i64, i64 } () addrspace(200)*)() #[[ATTR6]]
+// CHECK-NEXT:    [[CALL:%.*]] = tail call inreg { i64, i64 } bitcast ({ i64, i64 } (...) addrspace(200)* @extern_int_and_long to { i64, i64 } () addrspace(200)*)() #[[ATTR7]]
 // CHECK-NEXT:    [[TMP0:%.*]] = extractvalue { i64, i64 } [[CALL]], 1
 // CHECK-NEXT:    ret i64 [[TMP0]]
 //
@@ -606,3 +611,6 @@ Int128AndCap int128_and_cap(Int128AndCap in) {
   // ASM-NEXT:  cjr    $c17
   // ASM-NEXT:  csc    $c1, $zero, 16($c3)
 }
+
+// UTC_ARGS: --disabble
+// CHECK: attributes #[[ATTR6]] = { no_preserve_cheri_tags }
