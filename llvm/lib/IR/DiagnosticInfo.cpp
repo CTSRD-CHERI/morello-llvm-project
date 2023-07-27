@@ -378,6 +378,16 @@ void DiagnosticInfoCheriInefficient::print(DiagnosticPrinter &DP) const {
   DP << Str;
 }
 
+void DiagnosticInfoMorelloNumArgs::print(DiagnosticPrinter &DP) const {
+  std::string Str;
+  raw_string_ostream OS(Str);
+
+  OS << getLocationStr() << ": in function " << getFunction().getName() << ' '
+     << *getFunction().getFunctionType() << ": " << Msg;
+  OS.flush();
+  DP << Str;
+}
+
 void DiagnosticInfoISelFallback::print(DiagnosticPrinter &DP) const {
   DP << "Instruction selection used fallback path for " << getFunction();
 }

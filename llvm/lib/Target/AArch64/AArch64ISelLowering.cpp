@@ -5614,9 +5614,9 @@ SDValue AArch64TargetLowering::LowerFormalArguments(
       unsigned NumRegs = (Size + 7) / 8;
 
       if (Subtarget->hasMorelloBoundedMemArgsCallee()) {
-	SDValue ArgLoc = DAG.getPointerAdd(DL, C9Args, VA.getLocMemOffset());
+        SDValue ArgLoc = DAG.getPointerAdd(DL, C9Args, VA.getLocMemOffset());
         InVals.push_back(ArgLoc);
-	continue;
+        continue;
       }
 
       // FIXME: This works on big-endian for composite byvals, which are the common
@@ -5704,7 +5704,7 @@ SDValue AArch64TargetLowering::LowerFormalArguments(
       SDValue FIN;
       int FI;
       if (Subtarget->hasMorelloBoundedMemArgsCallee()) {
-	FIN = DAG.getPointerAdd(DL, C9Args, ArgOffset + BEAlign);
+        FIN = DAG.getPointerAdd(DL, C9Args, ArgOffset + BEAlign);
       } else {
         FI = MFI.CreateFixedObject(ArgSize, ArgOffset + BEAlign, true);
 
@@ -6732,10 +6732,19 @@ AArch64TargetLowering::LowerCall(CallLoweringInfo &CLI,
   if (Subtarget->hasMorelloBoundedMemArgsCaller()) {
     if (FirstArgAddr != SDValue()) {
       std::string BoundsDetails = "memargs call bounds setting";
+      uint64_t MemArgsSize = MemArgEndOffset - MemArgStartOffset;
       SDValue MemArgs = DAG.getCSetBounds(
-          FirstArgAddr, DL, MemArgEndOffset - MemArgStartOffset, Align(),
+          FirstArgAddr, DL, MemArgsSize, Align(),
           "AArch64 memory argument passing",
           cheri::SetBoundsPointerSource::Stack, BoundsDetails);
+      auto ReqAlign = getAlignmentForPreciseBounds(MemArgsSize);
+      if (ReqAlign > Align(16)) {
+        DiagnosticInfoMorelloNumArgs Warning(
+            DAG.getMachineFunction().getFunction(), DL.getDebugLoc(),
+            "too many arguments for call causes imprecise bounds on c9"
+        );
+        DAG.getContext()->diagnose(Warning);
+      }
       RegsToPass.push_back(std::make_pair(AArch64::C9, MemArgs));
     } else {
       bool ShouldClearC9 = IsVarArg;
@@ -6745,7 +6754,7 @@ AArch64TargetLowering::LowerCall(CallLoweringInfo &CLI,
       }
       if (ShouldClearC9) {
           // If no arguments are passed in memory and the callee is variadic,
-	  // or if the callee might be in another DSO, set C9 to null.
+          // or if the callee might be in another DSO, set C9 to null.
           RegsToPass.push_back(
               std::make_pair(AArch64::C9, DAG.getNullCapability(DL)));
       }
