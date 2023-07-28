@@ -334,6 +334,9 @@ public:
   // The partition whose dynamic symbol table contains this symbol's definition.
   uint8_t partition = 1;
 
+  // The signature of the symbol as specified in section .c18n.signature
+  llvm::SymbolSignature signature{};
+
   bool isSection() const { return type == llvm::ELF::STT_SECTION; }
   bool isTls() const { return type == llvm::ELF::STT_TLS; }
   bool isFunc() const { return type == llvm::ELF::STT_FUNC; }

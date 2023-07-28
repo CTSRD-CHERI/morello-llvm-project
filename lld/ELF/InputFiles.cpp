@@ -376,6 +376,18 @@ template <class ELFT> void ELFFileBase::init() {
   elfSyms = reinterpret_cast<const void *>(eSyms.data());
   numELFSyms = uint32_t(eSyms.size());
   stringTable = CHECK(obj.getStringTableForSymtab(*symtabSec, sections), this);
+
+  const Elf_Shdr *sigSec = findSection(sections, SHT_LOOS+0x3);
+  if (sigSec) {
+    ArrayRef<SymbolSignature> eSigs =
+        CHECK(obj.template getSectionContentsAsArray<SymbolSignature> (*sigSec),
+            this);
+    if (eSigs.size() < numELFSyms)
+      fatal(toString(this) + ": signature section has " + Twine(eSigs.size()) +
+          " entries, less than " + Twine(numELFSyms));
+    elfSigs = eSigs.data();
+    config->hasSigTab = true;
+  }
 }
 
 template <class ELFT>
@@ -1125,6 +1137,9 @@ InputSectionBase *ObjFile<ELFT>::createInputSection(uint32_t idx,
   if (name == ".eh_frame" && !config->relocatable)
     return make<EhInputSection>(*this, sec, name);
 
+  if (name == ".c18n.signature")
+    return &InputSection::discarded;
+
   if ((sec.sh_flags & SHF_MERGE) && shouldMerge(sec, name))
     return make<MergeInputSection>(*this, sec, name);
   return make<InputSection>(*this, sec, name);
@@ -1215,8 +1230,10 @@ void ObjFile<ELFT>::initializeSymbols(const object::ELFFile<ELFT> &obj) {
         fatal(toString(this) + ": common symbol '" + name +
               "' has invalid alignment: " + Twine(value));
       hasCommonSyms = true;
-      sym->resolve(
-          CommonSymbol{this, name, binding, stOther, type, value, size});
+      CommonSymbol newSym{this, name, binding, stOther, type, value, size};
+      if (elfSigs)
+        newSym.signature = elfSigs[i];
+      sym->resolve(newSym);
       continue;
     }
 
@@ -1227,6 +1244,8 @@ void ObjFile<ELFT>::initializeSymbols(const object::ELFFile<ELFT> &obj) {
     // defined symbol in a .eh_frame becomes dangling symbols.
     if (sec == &InputSection::discarded) {
       Undefined und{this, name, binding, stOther, type, secIdx};
+      if (elfSigs)
+        und.signature = elfSigs[i];
       // !ArchiveFile::parsed or !LazyObjFile::lazy means that the file
       // containing this object has not finished processing, i.e. this symbol is
       // a result of a lazy symbol extract. We should demote the lazy symbol to
@@ -1247,8 +1266,10 @@ void ObjFile<ELFT>::initializeSymbols(const object::ELFFile<ELFT> &obj) {
     // Handle global defined symbols.
     if (binding == STB_GLOBAL || binding == STB_WEAK ||
         binding == STB_GNU_UNIQUE) {
-      sym->resolve(
-          Defined{this, name, binding, stOther, type, value, size, sec});
+      Defined newSym{this, name, binding, stOther, type, value, size, sec};
+      if (elfSigs)
+        newSym.signature = elfSigs[i];
+      sym->resolve(newSym);
       continue;
     }
 
@@ -1264,8 +1285,11 @@ void ObjFile<ELFT>::initializeSymbols(const object::ELFFile<ELFT> &obj) {
   for (unsigned i : undefineds) {
     const Elf_Sym &eSym = eSyms[i];
     Symbol *sym = symbols[i];
-    sym->resolve(Undefined{this, sym->getName(), eSym.getBinding(),
-                           eSym.st_other, eSym.getType()});
+    Undefined newSym{this, sym->getName(), eSym.getBinding(), eSym.st_other,
+        eSym.getType()};
+    if (elfSigs)
+      newSym.signature = elfSigs[i];
+    sym->resolve(newSym);
     sym->referenced = true;
   }
 }
@@ -1624,8 +1648,11 @@ template <class ELFT> void SharedFile::parse() {
             (name + "@" + verName).toStringRef(versionedNameBuffer));
       }
       if (config->exportUndefDynSyms) {
-	Symbol *s = symtab.addSymbol(
-          Undefined{this, name, sym.getBinding(), sym.st_other, sym.getType()});
+        Undefined newSym{this, name, sym.getBinding(), sym.st_other,
+            sym.getType()};
+        if (elfSigs)
+          newSym.signature = elfSigs[firstGlobal + i];
+        Symbol *s = symtab.addSymbol(newSym);
         s->exportDynamic = true;
         if (s->isUndefined() && sym.getBinding() != STB_WEAK &&
             config->unresolvedSymbolsInShlib != UnresolvedPolicy::Ignore)
@@ -1645,9 +1672,11 @@ template <class ELFT> void SharedFile::parse() {
 
     uint32_t alignment = getAlignment<ELFT>(sections, sym);
     if (!(versyms[i] & VERSYM_HIDDEN)) {
-      symtab.addSymbol(SharedSymbol{*this, name, sym.getBinding(), sym.st_other,
-                                    sym.getType(), sym.st_value, sym.st_size,
-                                    alignment, idx});
+      SharedSymbol newSym{*this, name, sym.getBinding(), sym.st_other,
+          sym.getType(), sym.st_value, sym.st_size, alignment, idx};
+      if (elfSigs)
+        newSym.signature = elfSigs[firstGlobal + i];
+      symtab.addSymbol(newSym);
     }
 
     // Also add the symbol with the versioned name to handle undefined symbols
@@ -1667,9 +1696,11 @@ template <class ELFT> void SharedFile::parse() {
         reinterpret_cast<const Elf_Verdef *>(verdefs[idx])->getAux()->vda_name;
     versionedNameBuffer.clear();
     name = (name + "@" + verName).toStringRef(versionedNameBuffer);
-    symtab.addSymbol(SharedSymbol{*this, saver().save(name), sym.getBinding(),
-                                  sym.st_other, sym.getType(), sym.st_value,
-                                  sym.st_size, alignment, idx});
+    SharedSymbol newSym{*this, saver().save(name), sym.getBinding(),
+        sym.st_other, sym.getType(), sym.st_value, sym.st_size, alignment, idx};
+    if (elfSigs)
+      newSym.signature = elfSigs[firstGlobal + i];
+    symtab.addSymbol(newSym);
   }
 }
 

@@ -1554,6 +1554,8 @@ DynamicSection<ELFT>::computeContents() {
 
   addInSec(DT_SYMTAB, *part.dynSymTab);
   addInt(DT_SYMENT, sizeof(Elf_Sym));
+  if (config->hasSigTab)
+    addInSec(DT_LOOS, *part.sigTab);
   addInSec(DT_STRTAB, *part.dynStrTab);
   addInt(DT_STRSZ, part.dynStrTab->getSize());
   if (!config->zText)
@@ -4080,6 +4082,27 @@ void InStruct::reset() {
   symTab.reset();
   symTabShndx.reset();
   relaDyn.reset();
+}
+
+SignatureSection::SignatureSection()
+    : SyntheticSection(SHF_ALLOC, SHT_LOOS + 3, alignof(Ent),
+                       ".c18n.signature") {
+  this->entsize = sizeof(Ent);
+}
+
+size_t SignatureSection::getSize() const {
+  return getPartition().dynSymTab->getNumSymbols() * sizeof(Ent);
+}
+
+void SignatureSection::writeTo(uint8_t *buf) {
+  *buf++ = 0; // The first entry of the symbol table is a null entry
+  for (const SymbolTableEntry &s : getPartition().dynSymTab->getSymbols()) {
+    *buf++ = s.sym->signature.toInt();
+  }
+}
+
+bool SignatureSection::isNeeded() const {
+  return true;
 }
 
 InStruct elf::in;
