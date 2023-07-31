@@ -1555,7 +1555,7 @@ DynamicSection<ELFT>::computeContents() {
   addInSec(DT_SYMTAB, *part.dynSymTab);
   addInt(DT_SYMENT, sizeof(Elf_Sym));
   if (config->hasSigTab)
-    addInSec(DT_LOOS, *part.sigTab);
+    addInSec(DT_CHERI_C18N_SIG, *part.sigTab);
   addInSec(DT_STRTAB, *part.dynStrTab);
   addInt(DT_STRSZ, part.dynStrTab->getSize());
   if (!config->zText)
@@ -4085,7 +4085,7 @@ void InStruct::reset() {
 }
 
 SignatureSection::SignatureSection()
-    : SyntheticSection(SHF_ALLOC, SHT_LOOS + 3, alignof(Ent),
+    : SyntheticSection(SHF_ALLOC, SHT_CHERI_C18N_SIG, alignof(Ent),
                        ".c18n.signature") {
   this->entsize = sizeof(Ent);
 }

@@ -377,7 +377,7 @@ template <class ELFT> void ELFFileBase::init() {
   numELFSyms = uint32_t(eSyms.size());
   stringTable = CHECK(obj.getStringTableForSymtab(*symtabSec, sections), this);
 
-  const Elf_Shdr *sigSec = findSection(sections, SHT_LOOS+0x3);
+  const Elf_Shdr *sigSec = findSection(sections, SHT_CHERI_C18N_SIG);
   if (sigSec) {
     ArrayRef<SymbolSignature> eSigs =
         CHECK(obj.template getSectionContentsAsArray<SymbolSignature> (*sigSec),
