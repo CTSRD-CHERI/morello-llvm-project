@@ -30,6 +30,7 @@
 #include "llvm/Support/MD5.h"
 #include "llvm/Support/SMLoc.h"
 #include "llvm/Support/ARMTargetParser.h"
+#include "llvm/Support/SymbolSignature.h"
 #include "llvm/Support/TargetParser.h"
 #include "llvm/Support/VersionTuple.h"
 #include "llvm/MC/MCDwarf.h"
@@ -1180,6 +1181,8 @@ public:
 
   /// Do finalization for the streamer at the end of a section.
   virtual void doFinalizationAtSectionEnd(MCSection *Section) {}
+
+  virtual void emitC18NSignature(MCSymbol *, SymbolSignature, bool);
 };
 
 /// Create a dummy machine code streamer, which does nothing. This is useful for

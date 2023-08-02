@@ -104,6 +104,7 @@ public:
   /// generated.
   virtual uint64_t writeObject(MCAssembler &Asm, const MCAsmLayout &Layout) = 0;
 
+  virtual void emitC18NSignatureSection() {};
   /// @}
 };
 

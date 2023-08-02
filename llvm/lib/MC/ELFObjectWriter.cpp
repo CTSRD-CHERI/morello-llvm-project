@@ -128,6 +128,8 @@ struct ELFWriter {
 
   StringTableBuilder StrTabBuilder{StringTableBuilder::ELF};
 
+  std::vector<uint8_t> Sigtab;
+
   /// @}
 
   // This holds the symbol table index of the last local symbol.
@@ -225,6 +227,7 @@ class ELFObjectWriter : public MCObjectWriter {
 
   bool SeenGnuAbi = false;
   bool EmitAddrsigSection = false;
+  bool EmitC18NSignatureSection = false;
   std::vector<const MCSymbol *> AddrsigSyms;
 
   bool hasRelocationAddend() const;
@@ -269,6 +272,8 @@ public:
   void addAddrsigSymbol(const MCSymbol *Sym) override {
     AddrsigSyms.push_back(Sym);
   }
+
+  void emitC18NSignatureSection() override { EmitC18NSignatureSection = true; };
 
   friend struct ELFWriter;
 };
@@ -633,6 +638,7 @@ void ELFWriter::computeSymbolTable(
 
   // The first entry is the undefined symbol entry.
   Writer.writeSymbol(0, 0, 0, 0, 0, 0, false);
+  Sigtab.push_back(0);
 
   std::vector<ELFSymbolData> LocalSymbolData;
   std::vector<ELFSymbolData> ExternalSymbolData;
@@ -746,6 +752,7 @@ void ELFWriter::computeSymbolTable(
       Writer.writeSymbol(StrTabBuilder.getOffset(FileNameIt->first),
                          ELF::STT_FILE | ELF::STB_LOCAL, 0, 0, ELF::STV_DEFAULT,
                          ELF::SHN_ABS, true);
+      Sigtab.push_back(0);
       ++Index;
     }
 
@@ -754,11 +761,13 @@ void ELFWriter::computeSymbolTable(
                                : StrTabBuilder.getOffset(MSD.Name);
     MSD.Symbol->setIndex(Index++);
     writeSymbol(Writer, StringIndex, MSD, Layout);
+    Sigtab.push_back(MSD.Symbol->Signature.toInt());
   }
   for (; FileNameIt != FileNames.end(); ++FileNameIt) {
     Writer.writeSymbol(StrTabBuilder.getOffset(FileNameIt->first),
                        ELF::STT_FILE | ELF::STB_LOCAL, 0, 0, ELF::STV_DEFAULT,
                        ELF::SHN_ABS, true);
+    Sigtab.push_back(0);
     ++Index;
   }
 
@@ -769,6 +778,7 @@ void ELFWriter::computeSymbolTable(
     unsigned StringIndex = StrTabBuilder.getOffset(MSD.Name);
     MSD.Symbol->setIndex(Index++);
     writeSymbol(Writer, StringIndex, MSD, Layout);
+    Sigtab.push_back(MSD.Symbol->Signature.toInt());
     assert(MSD.Symbol->getBinding() != ELF::STB_LOCAL);
   }
 
@@ -1096,6 +1106,13 @@ uint64_t ELFWriter::writeObject(MCAssembler &Asm, const MCAsmLayout &Layout) {
 
   std::map<const MCSymbol *, std::vector<const MCSectionELF *>> GroupMembers;
 
+  MCSectionELF *SigtabSection;
+  if (OWriter.EmitC18NSignatureSection) {
+    SigtabSection = Ctx.getELFSection(".c18n.signature",
+        ELF::SHT_CHERI_C18N_SIG, 0, 1);
+    SectionIndexMap[SigtabSection] = addToSectionTable(SigtabSection);
+  }
+
   // Write out the ELF header ...
   writeHeader(Asm);
 
@@ -1201,6 +1218,12 @@ uint64_t ELFWriter::writeObject(MCAssembler &Asm, const MCAsmLayout &Layout) {
     uint64_t SecStart = W.OS.tell();
     StrTabBuilder.write(W.OS);
     SectionOffsets[StrtabSection] = std::make_pair(SecStart, W.OS.tell());
+  }
+
+  if (OWriter.EmitC18NSignatureSection) {
+    uint64_t SecStart = W.OS.tell();
+    W.write<ArrayRef<uint8_t>>(Sigtab);
+    SectionOffsets[SigtabSection] = std::make_pair(SecStart, W.OS.tell());
   }
 
   const uint64_t SectionHeaderOffset = align(is64Bit() ? 8 : 4);

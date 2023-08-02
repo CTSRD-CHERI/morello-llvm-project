@@ -414,6 +414,8 @@ public:
                                 unsigned PointerSize) override;
 
   void doFinalizationAtSectionEnd(MCSection *Section) override;
+
+  void emitC18NSignature(MCSymbol *, SymbolSignature, bool) override;
 };
 
 } // end anonymous namespace.
@@ -2570,6 +2572,15 @@ void MCAsmStreamer::doFinalizationAtSectionEnd(MCSection *Section) {
 
   if (!Sym->isInSection())
     emitLabel(Sym);
+}
+
+void MCAsmStreamer::emitC18NSignature(MCSymbol *Sym,
+                                      SymbolSignature Sig,
+                                      bool Callee) {
+  OS << "\t.c18n_signature\t" << Sym->getName() << ", 0x";
+  OS.write_hex(Sig.toInt());
+  OS << ", " << (Callee ? 1 : 0);
+  EmitEOL();
 }
 
 MCStreamer *llvm::createAsmStreamer(MCContext &Context,

@@ -226,6 +226,7 @@ private:
   bool parseDirectiveSEHMachineFrame(SMLoc L);
   bool parseDirectiveSEHContext(SMLoc L);
   bool parseDirectiveSEHClearUnwoundToCall(SMLoc L);
+  bool parseC18NSignature(SMLoc L);
 
   bool validateInstruction(MCInst &Inst, SMLoc &IDLoc,
                            SmallVectorImpl<SMLoc> &Loc);
@@ -6744,6 +6745,8 @@ bool AArch64AsmParser::ParseDirective(AsmToken DirectiveID) {
     parseDirectiveVariantPCS(Loc);
   else if (IDVal == ".code")
     parseDirectiveCode(Loc);
+  else if (IDVal == ".c18n_signature")
+    parseC18NSignature(Loc);
   else if (IsMachO) {
     if (IDVal == MCLOHDirectiveName())
       parseDirectiveLOH(IDVal, Loc);
@@ -7338,6 +7341,45 @@ bool AArch64AsmParser::parseDirectiveVariantPCS(SMLoc L) {
   if (parseEOL())
     return true;
   getTargetStreamer().emitDirectiveVariantPCS(Sym);
+  return false;
+}
+
+/// parseC18NSignature
+/// ::= .c18n_signature
+bool AArch64AsmParser::parseC18NSignature(SMLoc L) {
+  MCAsmParser &Parser = getParser();
+
+  const AsmToken &Tok = Parser.getTok();
+  if (Tok.isNot(AsmToken::Identifier))
+    return TokError("expected symbol name");
+  MCSymbol *Sym = getContext().lookupSymbol(Tok.getIdentifier());
+  if (!Sym)
+    return TokError("unknown symbol");
+  Parser.Lex();
+
+  if (parseComma())
+    return true;
+
+  unsigned char RawSig = Parser.getTok().getIntVal();
+  SymbolSignature Sig{};
+  Sig.valid = RawSig >> 7;
+  Sig.reg_args = (RawSig >> 3) & 0b1111;
+  Sig.mem_args = (RawSig >> 2) & 0b1;
+  Sig.ret_args = RawSig & 0b11;
+  Parser.Lex();
+
+  if (parseComma())
+    return true;
+
+  auto CalleeRaw = Parser.getTok().getIntVal();
+  bool Callee = CalleeRaw != 0;
+  Parser.Lex();
+
+  if (parseEOL())
+    return true;
+
+  getStreamer().emitC18NSignature(Sym, Sig, Callee);
+
   return false;
 }
 
