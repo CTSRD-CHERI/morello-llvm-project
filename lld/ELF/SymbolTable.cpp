@@ -153,6 +153,7 @@ Symbol *SymbolTable::addAndCheckDuplicate(const Defined &newSym) {
   if (sym->isDefined())
     sym->checkDuplicate(newSym);
   sym->resolve(newSym);
+  sym->isUsedInRegularObj = true;
   return sym;
 }
 

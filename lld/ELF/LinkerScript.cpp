@@ -249,6 +249,7 @@ void LinkerScript::addSymbol(SymbolAssignment *cmd) {
   Symbol *sym = symtab->insert(cmd->name);
   sym->mergeProperties(newSym);
   sym->replace(newSym);
+  sym->isUsedInRegularObj = true;
   cmd->sym = cast<Defined>(sym);
 }
 
@@ -269,6 +270,7 @@ static void declareSymbol(SymbolAssignment *cmd) {
 
   cmd->sym = cast<Defined>(sym);
   cmd->provide = false;
+  sym->isUsedInRegularObj = true;
   sym->scriptDefined = true;
 }
 
