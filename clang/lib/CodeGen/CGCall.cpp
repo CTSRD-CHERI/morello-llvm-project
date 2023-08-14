@@ -5566,7 +5566,7 @@ RValue CodeGenFunction::EmitCall(const CGFunctionInfo &CallInfo,
                 if (Key) {
                   llvm::Value *KeyV = CGM.GetAddrOfGlobalVar(Key);
                   CharUnits Alignment = getContext().getDeclAlign(Key);
-                  Address Addr(V, Alignment);
+                  Address Addr(V, ConvertTypeForMem(Key->getType()), Alignment);
                   KeyV = Builder.CreateLoad(Addr);
                   // If this is CHERI, enforce this in hardware
                   if (RetTy->isCHERICapabilityType(CGM.getContext())) {
