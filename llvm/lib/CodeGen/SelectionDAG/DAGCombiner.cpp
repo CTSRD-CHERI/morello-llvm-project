@@ -2414,7 +2414,7 @@ SDValue DAGCombiner::visitPTRADD(SDNode *N) {
   // so would not allow the SHL to be used for the addressing mode.
   if (N0.getOpcode() == ISD::PTRADD &&
       !addUsedForScaledAddressing(SDValue(N, 0), DAG, TLI) &&
-      !reassociationCanBreakAddressingModePattern(ISD::PTRADD, DL, N0, N1)) {
+      !reassociationCanBreakAddressingModePattern(ISD::PTRADD, DL, N, N0, N1)) {
     SDValue X = N0.getOperand(0);
     SDValue Y = N0.getOperand(1);
     SDValue Z = N1;
