@@ -90,11 +90,11 @@ void MCELFStreamer::mergeFragment(MCDataFragment *DF,
 
 void MCELFStreamer::initSections(bool NoExecStack, const MCSubtargetInfo &STI) {
   MCContext &Ctx = getContext();
-  SwitchSection(Ctx.getObjectFileInfo()->getTextSection());
+  switchSection(Ctx.getObjectFileInfo()->getTextSection());
   emitCodeAlignment(Ctx.getObjectFileInfo()->getTextSectionAlignment(), &STI);
 
   if (NoExecStack)
-    SwitchSection(Ctx.getAsmInfo()->getNonexecutableStackSection(Ctx));
+    switchSection(Ctx.getAsmInfo()->getNonexecutableStackSection(Ctx));
 }
 
 void MCELFStreamer::emitLabel(MCSymbol *S, SMLoc Loc) {
@@ -322,13 +322,13 @@ void MCELFStreamer::emitCommonSymbol(MCSymbol *S, uint64_t Size,
     MCSection &Section = *getAssembler().getContext().getELFSection(
         ".bss", ELF::SHT_NOBITS, ELF::SHF_WRITE | ELF::SHF_ALLOC);
     MCSectionSubPair P = getCurrentSection();
-    SwitchSection(&Section);
+    switchSection(&Section);
 
     emitValueToAlignment(ByteAlignment, 0, 1, 0);
     emitLabel(Symbol);
     emitZeros(Size);
 
-    SwitchSection(P.first, P.second);
+    switchSection(P.first, P.second);
   } else {
     if (Symbol->declareCommon(Size, ByteAlignment))
       report_fatal_error("Symbol: " + Symbol->getName() +
@@ -388,7 +388,7 @@ void MCELFStreamer::emitIdent(StringRef IdentString) {
   MCSection *Comment = getAssembler().getContext().getELFSection(
       ".comment", ELF::SHT_PROGBITS, ELF::SHF_MERGE | ELF::SHF_STRINGS, 1);
   pushSection();
-  SwitchSection(Comment);
+  switchSection(Comment);
   if (!SeenIdent) {
     emitInt8(0);
     SeenIdent = true;
@@ -518,7 +518,7 @@ void MCELFStreamer::finalizeCGProfile() {
       ".llvm.call-graph-profile", ELF::SHT_LLVM_CALL_GRAPH_PROFILE,
       ELF::SHF_EXCLUDE, /*sizeof(Elf_CGProfile_Impl<>)=*/8);
   pushSection();
-  SwitchSection(CGProfile);
+  switchSection(CGProfile);
   uint64_t Offset = 0;
   for (MCAssembler::CGProfileEntry &E : Asm.CGProfile) {
     finalizeCGProfileEntry(E.From, Offset);
@@ -845,10 +845,10 @@ void MCELFStreamer::createAttributesSection(
 
   // Switch section to AttributeSection or get/create the section.
   if (AttributeSection) {
-    SwitchSection(AttributeSection);
+    switchSection(AttributeSection);
   } else {
     AttributeSection = getContext().getELFSection(Section, Type, 0);
-    SwitchSection(AttributeSection);
+    switchSection(AttributeSection);
 
     // Format version
     emitInt8(0x41);
@@ -921,7 +921,7 @@ void MCELFStreamer::createCHERINotesSection() {
       Ctx.getELFSection(".note.cheri", ELF::SHT_NOTE, ELF::SHF_ALLOC);
   pushSection();
   Nt->setAlignment(llvm::Align(4));
-  SwitchSection(Nt);
+  switchSection(Nt);
   for (const auto &Note : CHERINotes) {
     emitInt32(6);                     // data size for "CHERI\0"
     emitInt32(4);                     // descz
