@@ -37,7 +37,7 @@ public:
 
   bool emitSymbolAttribute(MCSymbol *, MCSymbolAttr) override { return false; }
   void emitCommonSymbol(MCSymbol *, uint64_t, unsigned,
-                        TailPaddingAmount) override {}
+                        TailPaddingAmount TailPadding) override {}
   void emitZerofill(MCSection *, MCSymbol *Symbol, uint64_t Size,
                     unsigned ByteAlignment, TailPaddingAmount TailPadding,
                     SMLoc Loc = SMLoc()) override {}
