@@ -346,9 +346,15 @@ public:
   }
 
   static bool classof(const Symbol *s) { return s->isDefined(); }
-  void setSize(uint64_t newSize) { size = newSize; }
-  void reduceSize(uint64_t diff) { size -= diff; }
   uint64_t getSize(bool forCheriCap = false) const;
+  void setSize(uint64_t newSize) {
+    assert(!isSectionStartSymbol);
+    size = newSize;
+  }
+  void reduceSize(uint64_t diff) {
+    assert(!isSectionStartSymbol);
+    size -= diff;
+  }
 
   uint64_t value;
 private:
