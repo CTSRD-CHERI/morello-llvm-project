@@ -85,6 +85,8 @@ void test_loadtags(void * ptr);
 // CHECK-NEXT:    tail call void @use_size_t(i64 noundef zeroext [[TMP29]]) #[[ATTR5]]
 // CHECK-NEXT:    [[TMP30:%.*]] = tail call ptr addrspace(200) @llvm.cheri.cap.high.set.i64(ptr addrspace(200) [[CAP]], i64 [[I]])
 // CHECK-NEXT:    tail call void @use_cap(ptr addrspace(200) noundef [[TMP30]]) #[[ATTR5]]
+// CHECK-NEXT:    [[TMP31:%.*]] = tail call i64 @llvm.cheri.cap.load.tags.i64(ptr addrspace(200) [[CAP]])
+// CHECK-NEXT:    tail call void @use_size_t(i64 noundef zeroext [[TMP31]]) #[[ATTR5]]
 // CHECK-NEXT:    ret void
 //
 void test(void *__capability cap, char *__capability cap2, __SIZE_TYPE__ i) {
