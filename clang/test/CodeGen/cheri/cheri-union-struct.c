@@ -1,6 +1,7 @@
-// XFAIL: *
-// RUN: %cheri_purecap_cc1 %s -O0 -emit-llvm -o - | %cheri_FileCheck %s
-// RXUN: %cheri_purecap_cc1 %s -O2 -S -o - | %cheri_FileCheck %s -check-prefixes ASM
+// REQUIRES: mips-registered-target
+/// Check calling conventions for passing unions
+// RUN: %cheri_purecap_cc1 %s -no-opaque-pointers -O0 -emit-llvm -o - | %cheri_FileCheck %s
+// RUN: %cheri_purecap_cc1 %s -O2 -S -o - | %cheri_FileCheck %s -check-prefixes ASM
 
 // example union from WebKit
 union CallData {
