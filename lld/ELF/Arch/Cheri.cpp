@@ -125,9 +125,7 @@ SymbolAndOffset SymbolAndOffset::findRealSymbol() const {
 }
 
 std::string CheriCapRelocLocation::toString() const {
-  SymbolAndOffset resolved =
-      SymbolAndOffset::fromSectionWithOffset(section, offset);
- return resolved.verboseToString();
+ return SymbolAndOffset(section, offset).verboseToString();
 }
 
 template <class ELFT>
@@ -1060,7 +1058,7 @@ void CheriCapTableSection::addEntry(Symbol &sym, RelExpr expr,
   CapTableIndex idx;
   idx.needsSmallImm = false;
   idx.usedInCallExpr = false;
-  idx.firstUse = SymbolAndOffset::fromSectionWithOffset(isec, offset);
+  idx.firstUse = SymbolAndOffset(isec, offset);
   assert(!idx.firstUse->symOrSec.isNull());
   switch (expr) {
   case R_CHERI_CAPABILITY_TABLE_INDEX_SMALL_IMMEDIATE:
