@@ -8836,8 +8836,10 @@ SDValue TargetLowering::getVectorSubVecPointer(SelectionDAG &DAG,
                                                SDValue Index) const {
   SDLoc dl(Index);
   // Make sure the index type is big enough to compute in.
-  EVT IndexTy = VecPtr.getValueType().isFatPointer() ? MVT::i64
-                                                 : VecPtr.getValueType();
+  EVT IndexTy =
+      VecPtr.getValueType().isFatPointer()
+          ? DAG.getTargetLoweringInfo().getPointerRangeTy(DAG.getDataLayout())
+          : VecPtr.getValueType();
   Index = DAG.getZExtOrTrunc(Index, dl, IndexTy);
 
   EVT EltVT = VecVT.getVectorElementType();
