@@ -11,6 +11,12 @@
 // RUN: %clang -### -target aarch64-none-elf -nodefaultlibs -lc -O1 %s 2>&1 | FileCheck -check-prefix=CHECK-NEWLIB %s
 // CHECK-NEWLIB: "--start-group" "-lc" "-lrdimon" "--end-group"
 
+// RUN: %clang -### -target aarch64-none-elf -O1 %s -nolibc 2>&1 | FileCheck -check-prefix=CHECK-NOLIBC %s
+// CHECK-NOLIBC-NOT: "-lc"
+// CHECK-NOLIBC-NOT: "-lrdimon"
+// CHECK-NOLIBC: "{{.*}}/crti.o"
+// CHECK-NOLIBC: "-lclang_rt.builtins-aarch64"
+
 // RUN: %clang -### -target aarch64-none-elf -O1 %s 2>&1 | FileCheck -check-prefix=CHECK-GCSECTIONS %s
 // CHECK-GCSECTIONS: "--gc-sections"
 

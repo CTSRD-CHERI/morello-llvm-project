@@ -270,10 +270,12 @@ void Linker::ConstructJob(Compilation &C, const JobAction &JA,
       TC.AddCXXStdlibLibArgs(Args, CmdArgs);
     }
 
-    CmdArgs.push_back("--start-group");
-    CmdArgs.push_back("-lc");
-    CmdArgs.push_back("-lrdimon");
-    CmdArgs.push_back("--end-group");
+    if (!Args.hasArg(options::OPT_nolibc)) {
+      CmdArgs.push_back("--start-group");
+      CmdArgs.push_back("-lc");
+      CmdArgs.push_back("-lrdimon");
+      CmdArgs.push_back("--end-group");
+    }
 
     CmdArgs.push_back("-lclang_rt.builtins-aarch64");
   } else {
