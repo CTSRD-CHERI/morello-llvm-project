@@ -220,9 +220,6 @@ void Linker::ConstructJob(Compilation &C, const JobAction &JA,
     CmdArgs.push_back("-Ttext-segment");
     CmdArgs.push_back(Args.MakeArgString(TextSegment));
   } else {
-    CmdArgs.push_back("-entry");
-    CmdArgs.push_back("_start");
-
     // LLD does not support -Ttext-segment, the equivalent option is
     // --image-base=value this sets the initial value of the location counter.
     std::string ImageBase = "0x80000000";
@@ -254,6 +251,8 @@ void Linker::ConstructJob(Compilation &C, const JobAction &JA,
   CmdArgs.push_back(Args.MakeArgString(TC.getStdLibDir()));
 
   CmdArgs.push_back("--gc-sections");
+
+  Args.AddAllArgs(CmdArgs, {options::OPT_L, options::OPT_T_Group});
 
   bool UseStartfiles = !Args.hasArg(options::OPT_nostdlib, options::OPT_nostartfiles);
   if (UseStartfiles) {

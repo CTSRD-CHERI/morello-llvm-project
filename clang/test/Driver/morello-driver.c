@@ -11,6 +11,11 @@
 // RUN: %clang -### -target aarch64-none-elf -nodefaultlibs -lc -O1 %s 2>&1 | FileCheck -check-prefix=CHECK-NEWLIB %s
 // CHECK-NEWLIB: "--start-group" "-lc" "-lrdimon" "--end-group"
 
+// RUN: %clang -### -target aarch64-none-elf -O1 %s -L/some/search/path -T script.ld 2>&1 | FileCheck -check-prefix=CHECK-LINKER-SCRIPT %s
+// CHECK-LINKER-SCRIPT-NOT: "-entry"
+// CHECK-LINKER-SCRIPT: "-L/some/search/path"
+// CHECK-LINKER-SCRIPT: "-T" "script.ld"
+
 // RUN: %clang -### -target aarch64-none-elf -O1 %s 2>&1 | FileCheck -check-prefix=CHECK-GCSECTIONS %s
 // CHECK-GCSECTIONS: "--gc-sections"
 
