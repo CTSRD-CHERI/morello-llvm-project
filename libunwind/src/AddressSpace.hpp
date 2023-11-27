@@ -590,6 +590,13 @@ __attribute__((weak)) extern "C" Elf_Dyn _DYNAMIC[];
 // #pragma weak _DYNAMIC
 #endif
 
+#ifdef __CHERI_PURE_CAPABILITY__
+#if !defined(Elf_Dyn)
+typedef ElfW(Dyn) Elf_Dyn;
+#endif
+__attribute__((weak)) extern "C" Elf_Dyn _DYNAMIC[];
+#endif
+
 static uintptr_t calculateImageBase(struct dl_phdr_info *pinfo) {
   uintptr_t image_base = static_cast<uintptr_t>(pinfo->dlpi_addr);
 #if defined(__ANDROID__) && __ANDROID_API__ < 18
@@ -862,8 +869,8 @@ inline bool LocalAddressSpace::findUnwindSections(pc_t targetAddr,
   ds = ds + ((addr_t)&__eh_frame_start - (addr_t)ds);
 #endif
   info.set_dwarf_section(ds);
-  _LIBUNWIND_TRACE_UNWINDING("findUnwindSections: section %p length %p",
-                             (void *)info.dwarf_section(), (void *)info.dwarf_section_length);
+  _LIBUNWIND_TRACE_UNWINDING("findUnwindSections: section %p length %#zx",
+                             (void *)info.dwarf_section(), info.dwarf_section_length);
 #if defined(_LIBUNWIND_SUPPORT_DWARF_INDEX)
   uintptr_t dhs;
 #if !defined(__CHERI_PURE_CAPABILITY__)
@@ -874,8 +881,8 @@ inline bool LocalAddressSpace::findUnwindSections(pc_t targetAddr,
 #endif
   info.set_dwarf_index_section(dhs);
   info.dwarf_index_section_length = (size_t)(&__eh_frame_hdr_end - &__eh_frame_hdr_start);
-  _LIBUNWIND_TRACE_UNWINDING("findUnwindSections: index section %p length %p",
-                             (void *)info.dwarf_index_section(), (void *)info.dwarf_index_section_length);
+  _LIBUNWIND_TRACE_UNWINDING("findUnwindSections: index section %p length %#zx",
+                             (void *)info.dwarf_index_section(), info.dwarf_index_section_length);
 #endif
   if (info.dwarf_section_length)
     return true;
@@ -883,8 +890,8 @@ inline bool LocalAddressSpace::findUnwindSections(pc_t targetAddr,
   // Bare metal is statically linked, so no need to ask the dynamic loader
   info.arm_section =        (uintptr_t)(&__exidx_start);
   info.arm_section_length = (size_t)(&__exidx_end - &__exidx_start);
-  _LIBUNWIND_TRACE_UNWINDING("findUnwindSections: section %p length %p",
-                             (void *)info.arm_section, (void *)info.arm_section_length);
+  _LIBUNWIND_TRACE_UNWINDING("findUnwindSections: section %p length %#zx",
+                             (void *)info.arm_section, info.arm_section_length);
   if (info.arm_section && info.arm_section_length)
     return true;
 #elif defined(_LIBUNWIND_SUPPORT_DWARF_UNWIND) && defined(_WIN32)
