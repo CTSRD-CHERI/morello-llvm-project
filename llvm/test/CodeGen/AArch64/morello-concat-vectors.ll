@@ -13,18 +13,7 @@ define void @foo() local_unnamed_addr addrspace(200) align 2 {
 ; CHECK-NEXT:  // %bb.0: // %entry
 ; CHECK-NEXT:    sub csp, csp, #16 // =16
 ; CHECK-NEXT:    .cfi_def_cfa_offset 16
-; CHECK-NEXT:    cmp xzr, x8
-; CHECK-NEXT:    cset w8, hi
-; CHECK-NEXT:    sbfx x8, x8, #0, #1
-; CHECK-NEXT:    dup v0.2d, x8
-; CHECK-NEXT:    fmov w8, s0
-; CHECK-NEXT:    and w9, w8, #0x1
-; CHECK-NEXT:    lsl w10, w9, #1
-; CHECK-NEXT:    sub w8, w10, w8
-; CHECK-NEXT:    orr w8, w8, w9, lsl #2
-; CHECK-NEXT:    orr w8, w8, w9, lsl #3
-; CHECK-NEXT:    tst w8, #0xf
-; CHECK-NEXT:    b.ne .LBB0_4
+; CHECK-NEXT:    cbnz wzr, .LBB0_4
 ; CHECK-NEXT:  // %bb.1: // %entry
 ; CHECK-NEXT:    cbnz wzr, .LBB0_4
 ; CHECK-NEXT:  // %bb.2: // %entry
