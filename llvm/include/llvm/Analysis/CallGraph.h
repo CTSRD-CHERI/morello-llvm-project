@@ -45,6 +45,7 @@
 #ifndef LLVM_ANALYSIS_CALLGRAPH_H
 #define LLVM_ANALYSIS_CALLGRAPH_H
 
+#include "llvm/IR/DebugInfoMetadata.h"
 #include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/PassManager.h"
@@ -195,6 +196,13 @@ public:
 
   /// Returns the function that this call graph node represents.
   Function *getFunction() const { return F; }
+
+  StringRef getFilename() const {
+    if (F && F->getSubprogram() && F->getSubprogram()->getUnit())
+      return F->getSubprogram()->getUnit()->getFilename();
+    else
+      return "";
+  }
 
   inline iterator begin() { return CalledFunctions.begin(); }
   inline iterator end() { return CalledFunctions.end(); }

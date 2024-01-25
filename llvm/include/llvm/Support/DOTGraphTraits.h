@@ -77,6 +77,13 @@ public:
     return "";
   }
 
+  /// getNodeFilename - Given a node and a pointer to the top level graph, return
+  /// the node's source file name to print in the node.
+  template<typename GraphType>
+  std::string getNodeFilename(const void *, const GraphType &) {
+    return "";
+  }
+
   // getNodeIdentifierLabel - Returns a string representing the
   // address or other unique identifier of the node. (Only used if
   // non-empty.)

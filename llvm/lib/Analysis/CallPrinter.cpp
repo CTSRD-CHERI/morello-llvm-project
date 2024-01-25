@@ -24,6 +24,7 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/DOTGraphTraits.h"
 #include "llvm/Support/GraphWriter.h"
+#include "llvm/Support/Path.h"
 
 using namespace llvm;
 
@@ -166,6 +167,12 @@ struct DOTGraphTraits<CallGraphDOTInfo *> : public DefaultDOTGraphTraits {
       return std::string(Func->getName());
     return "external node";
   }
+
+  std::string getNodeFilename(const CallGraphNode *Node,
+                              const CallGraphDOTInfo *CGInfo) {
+    return std::string(sys::path::filename(Node->getFilename()));
+  }
+
   static const CallGraphNode *CGGetValuePtr(CallGraphNode::CallRecord P) {
     return P.second;
   }

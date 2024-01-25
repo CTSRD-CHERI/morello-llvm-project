@@ -180,6 +180,13 @@ public:
     else
       O << "record,";
 
+    std::string NodeFilename = DTraits.getNodeFilename(Node, G);
+    if (!NodeFilename.empty()) {
+      O << "file=\"{";
+      O << DOT::EscapeString(NodeFilename);
+      O << "}\",";
+    }
+
     if (!NodeAttributes.empty()) O << NodeAttributes << ",";
     O << "label=";
 
