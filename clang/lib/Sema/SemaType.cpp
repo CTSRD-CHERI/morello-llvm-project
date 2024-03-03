@@ -6372,8 +6372,7 @@ fillDependentPointerTypeLoc(DependentPointerTypeLoc DPTL,
     }
   }
 
-  llvm_unreachable(
-      "no cheri_capability attribute found at the expected location!");
+  llvm_unreachable("no __capability qualifier found at the expected location!");
 }
 
 static void fillMatrixTypeLoc(MatrixTypeLoc MTL,
@@ -8213,18 +8212,19 @@ QualType Sema::BuildPointerInterpretationAttr(QualType T,
   } else if (T->isDependentType()) {
     T = Context.getDependentPointerType(T, PIK, QualifierLoc);
   } else {
-    Diag(QualifierLoc, diag::err_cheri_capability_attribute_pointers_only)
-        << T;
+    Diag(QualifierLoc, diag::err_cheri_capability_qualifier_pointers_only) << T;
   }
 
   return T;
 }
 
-/// HandleCHERICapabilityAttr - Process the cheri_capability attribute. It is
+/// HandleCHERICapabilityQualifier - Process the __capability qualifier. It is
 /// only applicable to pointer and reference types and specifies that this
 /// pointer/reference should be treated as a capability.
-static void HandleCHERICapabilityAttr(QualType &CurType, TypeProcessingState &state,
-                                      TypeAttrLocation TAL, ParsedAttr& attr) {
+static void HandleCHERICapabilityQualifier(QualType &CurType,
+                                           TypeProcessingState &state,
+                                           TypeAttrLocation TAL,
+                                           ParsedAttr &attr) {
   Declarator &declarator = state.getDeclarator();
   Sema& S = state.getSema();
   std::string Name = attr.getAttrName()->getName().str();
@@ -8236,62 +8236,61 @@ static void HandleCHERICapabilityAttr(QualType &CurType, TypeProcessingState &st
     // create a new instance of this type with a memory capability as the
     // underlying type.
     if (CurType->isPointerType() || CurType->isReferenceType()) {
-      // typedef'd types are special as they cache their capability
-      // counterparts; all other cases are shared with the declarator chunk
-      // case at the end of the function.
-      if (const TypedefType *TT = CurType->getAs<TypedefType>()) {
-        CurType = S.Context.getTypedefType(TT->getDecl(), QualType(), true);
+      // typedef'd types/typeof/decltype are special: a __capability qualifier
+      // before/after transforms the underlying type to the capability
+      // equivalent rather than pushing the capability qualifier to the
+      // outermost pointer type.
+      // So in `typedef int *intptr; __capability intptr *foo`, foo will be of
+      // type `int * __capability *` rather than `int **__capability`.
+      break;
+    }
+    for (unsigned i = state.getCurrentChunkIndex(); i != 0; --i) {
+      DeclaratorChunk &chunk = declarator.getTypeObject(i - 1);
+      switch (chunk.Kind) {
+      case DeclaratorChunk::Pointer: {
+        // Check for an ambiguous use where this is more than one pointer
+        // level, like __capability T **. We do this by checking that the next
+        // chunk isn't a pointer without the attribute.
+        if (i > 1) {
+          DeclaratorChunk &nextChunk = declarator.getTypeObject(i - 2);
+          if (nextChunk.Kind == DeclaratorChunk::Pointer) {
+            auto Attr = nextChunk.getAttrs();
+            if (!Attr.hasAttribute(ParsedAttr::AT_CHERICapability)) {
+              S.Diag(nextChunk.Loc,
+                     diag::err_cheri_capability_qualifier_ambiguous);
+              return;
+            }
+          }
+        }
+
+        // Output a deprecated usage warning with a FixItHint
+        S.Diag(chunk.Loc, diag::warn_cheri_capability_qualifier_location)
+            << FixItHint::CreateRemoval(attr.getRange())
+            << FixItHint::CreateInsertion(chunk.Loc.getLocWithOffset(1),
+                                          " " + Name + " ");
+
+        // Put this attribute in the right place after the next pointer
+        // chunk so we are called again with the parsed pointer type.
+        ParsedAttr *attrCopy = declarator.getAttributePool().create(
+            const_cast<IdentifierInfo *>(attr.getAttrName()), attr.getRange(),
+            const_cast<IdentifierInfo *>(attr.getScopeName()),
+            attr.getScopeLoc(), nullptr, 0, ParsedAttr::AS_Keyword);
+        chunk.getAttrs().addAtEnd(attrCopy);
         return;
       }
-    } else {
-      for (unsigned i = state.getCurrentChunkIndex(); i != 0; --i) {
-        DeclaratorChunk &chunk = declarator.getTypeObject(i-1);
-        switch (chunk.Kind) {
-          case DeclaratorChunk::Pointer: {
-            // Check for an ambiguous use where this is more than one pointer
-            // level, like __capability T **. We do this by checking that the next
-            // chunk isn't a pointer without the attribute.
-            if (i > 1) {
-              DeclaratorChunk &nextChunk = declarator.getTypeObject(i-2);
-              if (nextChunk.Kind == DeclaratorChunk::Pointer) {
-                auto Attr = nextChunk.getAttrs();
-                if (!Attr.hasAttribute(ParsedAttr::AT_CHERICapability)) {
-                  S.Diag(nextChunk.Loc, diag::err_cheri_capability_attribute_ambiguous);
-                  return;
-                }
-              }
-            }
-
-            // Output a deprecated usage warning with a FixItHint
-            S.Diag(chunk.Loc, diag::warn_cheri_capability_attribute_location)
-                << FixItHint::CreateRemoval(attr.getRange())
-                << FixItHint::CreateInsertion(chunk.Loc.getLocWithOffset(1),
-                                              " " + Name + " ");
-
-            // Put this attribute in the right place after the next pointer
-            // chunk so we are called again with the parsed pointer type.
-            ParsedAttr *attrCopy = declarator.getAttributePool()
-                   .create(const_cast<IdentifierInfo *>(attr.getAttrName()),
-                           attr.getRange(),
-                           const_cast<IdentifierInfo *>(attr.getScopeName()),
-                           attr.getScopeLoc(), nullptr, 0,
-                           ParsedAttr::AS_Keyword);
-            chunk.getAttrs().addAtEnd(attrCopy);
-            return;
-          }
-          case DeclaratorChunk::BlockPointer:
-          case DeclaratorChunk::Paren:
-          case DeclaratorChunk::Array:
-          case DeclaratorChunk::Function:
-          case DeclaratorChunk::Reference:
-          case DeclaratorChunk::Pipe:
-            continue;
-          case DeclaratorChunk::MemberPointer:
-            llvm_unreachable("Should this be handled?"); continue;
-
-        }
+      case DeclaratorChunk::BlockPointer:
+      case DeclaratorChunk::Paren:
+      case DeclaratorChunk::Array:
+      case DeclaratorChunk::Function:
+      case DeclaratorChunk::Reference:
+      case DeclaratorChunk::Pipe:
+        continue;
+      case DeclaratorChunk::MemberPointer:
+        llvm_unreachable("Should this be handled?");
+        continue;
       }
     }
+
     break;
 
   case TAL_DeclChunk: {
@@ -8328,11 +8327,9 @@ static void HandleCHERICapabilityAttr(QualType &CurType, TypeProcessingState &st
   case TAL_DeclName:
     llvm_unreachable(
         "Keyword attribute should never be parsed after declaration's name");
-
-  default:
-    llvm_unreachable("Unknown type attribute location");
   }
 
+  assert(S.Context.getTargetInfo().SupportsCapabilities());
   CurType = S.BuildPointerInterpretationAttr(CurType, PIK_Capability,
                                              attr.getLoc());
 }
@@ -8645,7 +8642,7 @@ static void processTypeAttrs(TypeProcessingState &state, QualType &type,
 
     case ParsedAttr::AT_CHERICapability:
       attr.setUsedAsTypeAttr();
-      HandleCHERICapabilityAttr(type, state, TAL, attr);
+      HandleCHERICapabilityQualifier(type, state, TAL, attr);
       break;
     case ParsedAttr::AT_CHERINoSubobjectBounds:
       attr.setUsedAsTypeAttr();

@@ -52,42 +52,6 @@ CheriCapRelocsSection::CheriCapRelocsSection()
   this->entsize = config->wordsize * 5;
 }
 
-// TODO: copy MipsABIFlagsSection::create() instead of current impl?
-template <class ELFT>
-void CheriCapRelocsSection::addSection(InputSectionBase *s) {
-  // FIXME: can this happen with ld -r ?
-  // error("Compiler should not have generated __cap_relocs section for " + toString(S));
-  assert(s->name == "__cap_relocs");
-  const RelsOrRelas<ELFT> rels = s->relsOrRelas<ELFT>();
-  assert(!rels.areRelocsRel() && "__cap_relocs should be RELA");
-  // make sure the section is no longer processed
-  s->markDead();
-
-  if ((s->getSize() % entsize) != 0) {
-    error("__cap_relocs section size is not a multiple of " + Twine(entsize) +
-          ": " + toString(s));
-    return;
-  }
-  size_t numCapRelocs = s->getSize() / InMemoryCapRelocEntry<ELFT>::relocSize;
-  if (numCapRelocs * 2 != rels.relas.size()) {
-    error("expected " + Twine(numCapRelocs * 2) + " relocations for " +
-          toString(s) + " but got " + Twine(rels.relas.size()));
-    return;
-  }
-  if (config->verboseCapRelocs)
-    message("Adding cap relocs from " + toString(s->file) + "\n");
-
-  legacyInputs.push_back(s);
-}
-
-void CheriCapRelocsSection::finalizeContents() {
-  for (InputSectionBase *s : legacyInputs) {
-    if (config->verboseCapRelocs)
-      message("Processing legacy cap relocs from " + toString(s->file) + "\n");
-    invokeELFT(processSection, s);
-  }
-}
-
 SymbolAndOffset
 SymbolAndOffset::fromSectionWithOffset(InputSectionBase *isec, int64_t offset,
                                        const SymbolAndOffset *Default) {
@@ -376,7 +340,7 @@ void CheriCapRelocsSection::addCapReloc(CheriCapRelocLocation loc,
 
 template<typename ELFT>
 static uint64_t getTargetSize(const CheriCapRelocLocation &location,
-                              const SymbolAndOffset &target, bool strict) {
+                              const SymbolAndOffset &target) {
   uint64_t targetSize = target.sym()->getSize(/*forCheriCap=*/true);
   if (targetSize > INT_MAX) {
     error("Insanely large symbol size for " + target.verboseToString() +
@@ -480,10 +444,7 @@ static uint64_t getTargetSize(const CheriCapRelocLocation &location,
       std::string msg = "could not determine size of cap reloc against " +
           target.verboseToString() +
           "\n>>> referenced by " + location.toString();
-      if (strict)
-        warn(msg);
-      else
-        nonFatalWarning(msg);
+      warn(msg);
     }
     if (UnknownSectionSize) {
       warn("Could not find size for symbol " + target.verboseToString() +
@@ -542,8 +503,7 @@ void CheriCapRelocsSection::writeToImpl(uint8_t *buf) {
       targetVA = reloc.target.offset;
     } else {
       // For non-preemptible symbols we can write the target size:
-      targetSize = getTargetSize<ELFT>(location, reloc.target,
-                                       /*strict=*/!containsLegacyCapRelocs());
+      targetSize = getTargetSize<ELFT>(location, reloc.target);
     }
     uint64_t targetOffset = reloc.capabilityOffset;
     uint64_t permissions = 0;
@@ -731,8 +691,7 @@ void MorelloCapRelocsSection::writeTo(uint8_t *buf) {
     uint64_t locationVA =
         location.section->getOutputSection()->addr + outSecOffset;
     uint64_t targetVA = reloc.target.sym()->getVA(reloc.target.offset);
-    uint64_t targetSize = getTargetSize<ELF64LE>(
-        location, reloc.target, /*strict=*/true);
+    uint64_t targetSize = getTargetSize<ELF64LE>(location, reloc.target);
     uint64_t targetOffset = reloc.capabilityOffset;
     uint64_t permissions = getPermissions(*reloc.target.sym(), Permissions::Type::STATIC);
 
@@ -788,10 +747,9 @@ uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
     return sizeAndPerm | (shared->size << 8);
   } else if (const Defined *definedSym = dyn_cast<Defined>(&sym)) {
     sizeAndPerm = getPermissions(*definedSym, Permissions::Type::DYNAMIC);
-    uint64_t size = getTargetSize<ELF64LE>(
-        {const_cast<InputSectionBase *>(isec), offset},
-        SymbolAndOffset(const_cast<Symbol *>(&sym), 0),
-        /*strict=*/true);
+    uint64_t size =
+        getTargetSize<ELF64LE>({const_cast<InputSectionBase *>(isec), offset},
+                               SymbolAndOffset(const_cast<Symbol *>(&sym), 0));
     // Increase bounds of executable capabilities.
     if (isExecRel)
       size = config->morelloPCCLimit - config->morelloPCCBase;
@@ -1432,11 +1390,6 @@ void CheriCapTableSection::assignValuesAndAddCapTableSymbols() {
 
   valuesAssigned = true;
 }
-
-template void CheriCapRelocsSection::addSection<ELF32LE>(InputSectionBase *s);
-template void CheriCapRelocsSection::addSection<ELF32BE>(InputSectionBase *s);
-template void CheriCapRelocsSection::addSection<ELF64LE>(InputSectionBase *s);
-template void CheriCapRelocsSection::addSection<ELF64BE>(InputSectionBase *s);
 
 template void
 CheriCapTableSection::assignValuesAndAddCapTableSymbols<ELF32LE>();
