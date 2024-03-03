@@ -2710,10 +2710,8 @@ void LinkerDriver::link(opt::InputArgList &args) {
   // output sections in the usual way.
   if (!config->relocatable) {
     combineEhSections();
-    if (in.capRelocs) {
-      combineCapRelocsSections();
+    if (in.capRelocs)
       inputSections.push_back(in.capRelocs.get());
-    }
   }
 
   {

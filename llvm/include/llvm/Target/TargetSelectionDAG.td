@@ -112,7 +112,7 @@ def SDTUNDEF  : SDTypeProfile<1, 0, []>;                     // for 'undef'.
 def SDTUnaryOp  : SDTypeProfile<1, 1, []>;                   // for bitconvert.
 
 def SDTFatPtrAddOp : SDTypeProfile<1, 2, [
-  SDTCisSameAs<0, 1>, SDTCisFatPtrTy<1>
+  SDTCisSameAs<0, 1>, SDTCisPtrTy<0>, SDTCisInt<2>
 ]>;
 
 def SDTFatPtrToInt : SDTypeProfile<1, 1, [

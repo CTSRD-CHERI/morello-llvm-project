@@ -51,6 +51,6 @@
 // RUN: %clang -### -target aarch64-unknown-freebsd12.0  -mabi=purecap %s 2>&1 | FileCheck -check-prefix=C64-PLT %s
 // C64-PLT: "-target-abi" "purecap"
 
-// RUN: %clang -### -target aarch64-unknown-freebsd12.0  -march=morello+c64 -mabi=purecap %s --sysroot=%S/cheri/Inputs/basic_cheribsd_libcheri_tree 2>&1| FileCheck --check-prefix=LIBCHERI %s
-// LIBCHERI: --sysroot=[[SYSROOT:[^"]+]]
-// LIBCHERI: "-L[[SYSROOT]]/usr/libcheri"
+// RUN: %clang -### -target aarch64-unknown-freebsd12.0  -march=morello+c64 -mabi=purecap %s --sysroot=%S/cheri/Inputs/basic_cheribsd_libcompat_tree 2>&1| FileCheck --check-prefix=LIBCOMPAT %s
+// LIBCOMPAT: --sysroot=[[SYSROOT:[^"]+]]
+// LIBCOMPAT: "-L[[SYSROOT]]/usr/lib64c"

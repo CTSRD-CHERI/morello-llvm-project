@@ -81,7 +81,7 @@
 // CHECK-SHLIB-NEXT:  Symbol {
 // CHECK-SHLIB-NEXT:    Name: check_if_default (
 // CHECK-SHLIB-NEXT:    Value:
-// CHECK-SHLIB-NEXT:    Size: 40
+// CHECK-SHLIB-NEXT:    Size: 36
 // CHECK-SHLIB-NEXT:    Binding: Global (0x1)
 // CHECK-SHLIB-NEXT:    Type: Function (0x2)
 // CHECK-SHLIB-NEXT:    Other [ (0x3)

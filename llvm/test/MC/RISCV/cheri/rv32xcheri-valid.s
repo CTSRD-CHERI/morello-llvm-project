@@ -33,9 +33,12 @@ cgetoffset x1, c2
 # CHECK-INST: cgetflags ra, csp
 # CHECK: encoding: [0xdb,0x00,0x71,0xfe]
 cgetflags x1, c2
-# CHECK-INST: cgetaddr ra, csp
-# CHECK: encoding: [0xdb,0x00,0xf1,0xfe]
+# CHECK-INST: addi ra, sp, 0
+# CHECK: encoding: [0x93,0x00,0x01,0x00]
 cgetaddr x1, c2
+# CHECK-INST: cgethigh ra, csp
+# CHECK: encoding: [0xdb,0x00,0x71,0xff]
+cgethigh x1, c2
 
 # CHECK-INST: cseal cra, csp, cgp
 # CHECK: encoding: [0xdb,0x00,0x31,0x16]
@@ -55,6 +58,9 @@ csetoffset c1, c2, x3
 # CHECK-INST: csetaddr cra, csp, gp
 # CHECK: encoding: [0xdb,0x00,0x31,0x20]
 csetaddr c1, c2, x3
+# CHECK-INST: csethigh cra, csp, gp
+# CHECK: encoding: [0xdb,0x00,0x31,0x2c]
+csethigh c1, c2, x3
 # CHECK-INST: cincoffset cra, csp, gp
 # CHECK: encoding: [0xdb,0x00,0x31,0x22]
 cincoffset c1, c2, x3
@@ -107,8 +113,8 @@ cfromptr c1, c2, x3
 # CHECK-INST: cfromptr cra, ddc, gp
 # CHECK: encoding: [0xdb,0x00,0x30,0x26]
 cfromptr c1, ddc, x3
-# CHECK-INST: csub ra, csp, cgp
-# CHECK: encoding: [0xdb,0x00,0x31,0x28]
+# CHECK-INST: sub ra, sp, gp
+# CHECK: encoding: [0xb3,0x00,0x31,0x40]
 csub x1, c2, c3
 # CHECK-INST: cmove cra, csp
 # CHECK: encoding: [0xdb,0x00,0xa1,0xfe]

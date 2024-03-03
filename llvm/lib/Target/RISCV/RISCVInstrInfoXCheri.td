@@ -315,7 +315,11 @@ def CGetTag    : Cheri_r<0x4, "cgettag">;
 def CGetSealed : Cheri_r<0x5, "cgetsealed">;
 def CGetOffset : Cheri_r<0x6, "cgetoffset">;
 def CGetFlags  : Cheri_r<0x7, "cgetflags">;
-def CGetAddr   : Cheri_r<0xf, "cgetaddr">;
+def CGetHigh   : Cheri_r<0x17, "cgethigh">;
+// For backwards compatibility we still accept cgetaddr from assembly.
+let mayStore = false, mayLoad = false, Size = 4, isCodeGenOnly = false in
+def PseudoCGetAddr : Pseudo<(outs GPR:$rd), (ins GPCR:$cs1), [],
+                            "cgetaddr", "$rd, $cs1">;
 }
 
 //===----------------------------------------------------------------------===//
@@ -333,6 +337,7 @@ def CAndPerm        : Cheri_rr<0xd, "candperm">;
 def CSetFlags       : Cheri_rr<0xe, "csetflags">;
 def CSetOffset      : Cheri_rr<0xf, "csetoffset">;
 def CSetAddr        : Cheri_rr<0x10, "csetaddr">;
+def CSetHigh        : Cheri_rr<0x16, "csethigh">;
 let isReMaterializable = 1, isAsCheapAsAMove = 1 in
 def CIncOffset      : Cheri_rr<0x11, "cincoffset">;
 let isReMaterializable = 1, isAsCheapAsAMove = 1 in
@@ -365,12 +370,15 @@ def : InstAlias<"csetboundsimm $cd, $cs1, $imm",
 // Pointer-Arithmetic Instructions
 //===----------------------------------------------------------------------===//
 
-let Predicates = [HasCheri] in {
-let mayTrap = 1 in {
+let Predicates = [HasCheri, NotCheriISAv9], mayTrap = 1 in {
 def CToPtr      : Cheri_rr<0x12, "ctoptr", GPR, GPCRC0IsDDC>;
 def CFromPtr    : Cheri_rr<0x13, "cfromptr", GPCR, GPR, GPCRC0IsDDC>;
 }
-def CSub        : Cheri_rr<0x14, "csub", GPR, GPCR>;
+let Predicates = [HasCheri] in {
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0, isCodeGenOnly = 0,
+    isAsmParserOnly = 1 in
+def PseudoCSub : Pseudo<(outs GPR:$rd), (ins GPCR:$cs1, GPCR:$cs2), [],
+                        "csub", "$rd, $cs1, $cs2">;
 let isMoveReg = 1, isReMaterializable = 1, isAsCheapAsAMove = 1,
     defsCanBeSealed = 1 in
 def CMove       : Cheri_r<0xa, "cmove", GPCR>;
@@ -1167,7 +1175,8 @@ def : PatGpcr<riscv_cap_tag_get, CGetTag>;
 def : PatGpcr<riscv_cap_sealed_get, CGetSealed>;
 def : PatGpcr<int_cheri_cap_offset_get, CGetOffset>;
 def : PatGpcr<int_cheri_cap_flags_get, CGetFlags>;
-def : PatGpcr<int_cheri_cap_address_get, CGetAddr>;
+def : Pat<(int_cheri_cap_address_get GPCR:$cs1), (PseudoCGetAddr GPCR:$cs1)>;
+def : PatGpcr<int_cheri_cap_high_get, CGetHigh>;
 
 /// Capability-Modification Instructions
 
@@ -1177,6 +1186,7 @@ def : PatGpcrGpr<int_cheri_cap_perms_and, CAndPerm>;
 def : PatGpcrGpr<int_cheri_cap_flags_set, CSetFlags>;
 def : PatGpcrGpr<int_cheri_cap_offset_set, CSetOffset>;
 def : PatGpcrGpr<int_cheri_cap_address_set, CSetAddr>;
+def : PatGpcrGpr<int_cheri_cap_high_set, CSetHigh>;
 def : PatGpcrGpr<ptradd, CIncOffset>;
 def : PatGpcrSimm12<ptradd, CIncOffsetImm>;
 def : PatGpcrGpr<int_cheri_cap_bounds_set, CSetBounds>;
@@ -1201,33 +1211,39 @@ def : Pat<(ptradd CapFI128:$rs1, simm12:$imm12),
 
 /// Pointer-Arithmetic Instructions
 
+// int_cheri_cap_to_pointer and int_cheri_cap_from_pointer are expanded in C++
+// code for ISAv9, so we don't need replacement patterns here.
+// TODO: these intrinsics should probably be removed at some point.
+let Predicates = [HasCheri, NotCheriISAv9] in {
 def : Pat<(int_cheri_cap_to_pointer GPCR:$rs1, GPCRC0IsDDC:$rs2),
           (CToPtr GPCR:$rs1, GPCRC0IsDDC:$rs2)>;
+def : Pat<(int_cheri_cap_to_pointer (CLenVT (int_cheri_ddc_get)), GPCR:$rs1),
+          (CToPtr $rs1, DDC)>;
 def : Pat<(int_cheri_cap_from_pointer GPCRC0IsDDC:$rs1, GPR:$rs2),
           (CFromPtr GPCRC0IsDDC:$rs1, GPR:$rs2)>;
-def : PatGpcrGpcr<int_cheri_cap_diff, CSub>;
+def : Pat<(int_cheri_cap_from_pointer (CLenVT (int_cheri_ddc_get)), GPR:$rs2),
+          (CFromPtr DDC, $rs2)>;
+}  // let Predicates = [HasCheri, NotCheriISAv9]
+def : Pat<(int_cheri_cap_diff GPCR:$cs1, GPCR:$cs2),
+          (SUB (EXTRACT_SUBREG GPCR:$cs1, sub_cap_addr),
+               (EXTRACT_SUBREG GPCR:$cs2, sub_cap_addr))>;
 
 let Predicates = [IsPureCapABI] in {
 def : Pat<(inttoptr GPR:$rs2), (CIncOffset C0, GPR:$rs2)>;
 def : Pat<(inttoptr simm12:$imm12), (CIncOffsetImm C0, simm12:$imm12)>;
-def : Pat<(ptrtoint GPCR:$rs1), (CGetAddr GPCR:$rs1)>;
+def : Pat<(ptrtoint GPCR:$rs1), (PseudoCGetAddr GPCR:$rs1)>;
 }
 
-let Predicates = [NotPureCapABI] in {
+let Predicates = [NotPureCapABI, NotCheriISAv9] in {
 def : Pat<(inttoptr GPR:$rs2), (CFromPtr DDC, GPR:$rs2)>;
 def : Pat<(ptrtoint GPCR:$rs1), (CToPtr GPCR:$rs1, DDC)>;
 }
 
-def : Pat<(int_cheri_cap_to_pointer (CLenVT (int_cheri_ddc_get)), GPCR:$rs1),
-          (CToPtr $rs1, DDC)>;
-def : Pat<(int_cheri_cap_from_pointer (CLenVT (int_cheri_ddc_get)), GPR:$rs2),
-          (CFromPtr DDC, $rs2)>;
-
 /// Null Capability Patterns
 
-def : Pat<(int_cheri_cap_from_pointer DDC, (XLenVT 0)), (CLenVT (COPY C0))>;
 def : Pat<(inttoptr (XLenVT 0)), (CLenVT (COPY C0))>;
-def : Pat<(XLenVT (ptrtoint (CLenVT C0))), (XLenVT (COPY (XLenVT X0)))>;
+def : Pat<(XLenVT (ptrtoint (CLenVT (inttoptr (XLenVT 0))))),
+          (XLenVT (COPY (XLenVT X0)))>;
 
 /// Pointer-Comparison Instructions
 

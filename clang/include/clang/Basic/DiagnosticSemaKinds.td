@@ -1298,9 +1298,12 @@ def note_cheri_func_noproto_explanation : Note<
   "values from the argument registers.">;
 def note_cheri_func_decl_add_types : Note<
   "candidate function declaration needs parameter types">;
-def err_cheri_capability_attribute_ambiguous : Error<
+def err_cheri_capability_qualifier_not_supported : Error<
+  "use of __capability is not supported without CHERI; "
+  "specify an appropriate -march= or -mcpu=">;
+def err_cheri_capability_qualifier_ambiguous : Error<
   "use of __capability is ambiguous">;
-def err_cheri_capability_attribute_pointers_only : Error<
+def err_cheri_capability_qualifier_pointers_only : Error<
   "__capability only applies to pointers; type here is %0">;
 
 def err_objc_var_decl_inclass :
@@ -7134,9 +7137,6 @@ def warn_cheri_offset_addr_smaller_target_type: Warning<
   "target type %0 is smaller than the type '%1' of the "
   "%select{address|capability offset field}2; truncation may occur">,
   InGroup<CHERICapabilityToIntegerCast>;
-
-def err_cheri_cast : Error<
-  "using __cheri_cast is no longer valid; use __cheri_tocap or __cheri_fromcap instead">;
 
 def warn_cheri_implicit_ctoptr : Warning<
   "the following conversion will result in a CToPtr operation; the behaviour of CToPtr can "
