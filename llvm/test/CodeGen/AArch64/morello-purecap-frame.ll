@@ -13,6 +13,7 @@ entry:
 }
 
 ; PCS16:	stp	d15, d14, [csp, #-192]! // 16-byte Folded Spill
+; PCS16-NEXT:	.cfi_def_cfa_offset 192
 ; PCS16-NEXT:	stp	d13, d12, [csp, #16]    // 16-byte Folded Spill
 ; PCS16-NEXT:	str	c28, [csp, #64]         // 16-byte Folded Spill
 ; PCS16-NEXT:	stp	d11, d10, [csp, #32]    // 16-byte Folded Spill
@@ -35,6 +36,7 @@ entry:
 ; PCS16-NEXT:	ldp	d15, d14, [csp], #192   // 16-byte Folded Reload
 
 ; PCS32:	stp	d15, d14, [csp, #-224]! // 16-byte Folded Spill
+; PCS32-NEXT:	.cfi_def_cfa_offset 224
 ; PCS32-NEXT:	stp	d13, d12, [csp, #16]    // 16-byte Folded Spill
 ; PCS32-NEXT:	stp	c28, c27, [csp, #64]    // 32-byte Folded Spill
 ; PCS32-NEXT:	stp	d11, d10, [csp, #32]    // 16-byte Folded Spill
@@ -58,6 +60,7 @@ entry:
 ; Make sure we don't emit ldr	d14, [csp], #256.
 ; PCS32-LABEL: bar
 ; PCS32:	str	d14, [csp, #-256]!      // 8-byte Folded Spill
+; PCS32-NEXT:   .cfi_def_cfa_offset 256
 ; PCS32-NEXT:   stp	d13, d12, [csp, #16]    // 16-byte Folded Spill
 ; PCS32-NEXT:   stp	c29, c30, [csp, #64]    // 32-byte Folded Spill
 ; PCS32-NEXT:   stp	d11, d10, [csp, #32]    // 16-byte Folded Spill
