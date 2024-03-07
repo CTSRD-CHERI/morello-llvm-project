@@ -36,13 +36,19 @@ define dso_local i32 @_Z8do_catchv() local_unnamed_addr addrspace(200) uwtable p
 ; CHECK-NEXT:    .cfi_def_cfa_offset 32
 ; CHECK-NEXT:    .cfi_offset c19, -16
 ; CHECK-NEXT:    .cfi_offset c30, -32
+; CHECK-NEXT:    .cfi_remember_state
 ; CHECK-NEXT:  .Ltmp0:
 ; CHECK-NEXT:    bl _Z3foov
 ; CHECK-NEXT:  .Ltmp1:
 ; CHECK-NEXT:  // %bb.1: // %return
 ; CHECK-NEXT:    ldp c30, c19, [csp], #32 // 32-byte Folded Reload
+; CHECK-NEXT:    .cfi_def_cfa_offset 0
+; CHECK-NEXT:    .cfi_restore c19
+; CHECK-NEXT:    .cfi_restore c30
 ; CHECK-NEXT:    ret c30
 ; CHECK-NEXT:  .LBB0_2: // %lpad
+; CHECK-NEXT:    .cfi_restore_state
+; CHECK-NEXT:    .cfi_remember_state
 ; CHECK-NEXT:  .Ltmp2:
 ; CHECK-NEXT:    mov x19, x1
 ; CHECK-NEXT:    bl __cxa_begin_catch
@@ -52,11 +58,18 @@ define dso_local i32 @_Z8do_catchv() local_unnamed_addr addrspace(200) uwtable p
 ; CHECK-NEXT:    bl __cxa_end_catch
 ; CHECK-NEXT:    mov w0, #1
 ; CHECK-NEXT:    ldp c30, c19, [csp], #32 // 32-byte Folded Reload
+; CHECK-NEXT:    .cfi_def_cfa_offset 0
+; CHECK-NEXT:    .cfi_restore c19
+; CHECK-NEXT:    .cfi_restore c30
 ; CHECK-NEXT:    ret c30
 ; CHECK-NEXT:  .LBB0_4: // %catch
+; CHECK-NEXT:    .cfi_restore_state
 ; CHECK-NEXT:    bl __cxa_end_catch
 ; CHECK-NEXT:    mov w0, #2
 ; CHECK-NEXT:    ldp c30, c19, [csp], #32 // 32-byte Folded Reload
+; CHECK-NEXT:    .cfi_def_cfa_offset 0
+; CHECK-NEXT:    .cfi_restore c19
+; CHECK-NEXT:    .cfi_restore c30
 ; CHECK-NEXT:    ret c30
 entry:
   %call = invoke i32 @_Z3foov() to label %return unwind label %lpad
