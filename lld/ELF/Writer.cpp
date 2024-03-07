@@ -995,15 +995,15 @@ static unsigned getSectionRank(const OutputSection &osec) {
   }
 
   // The PT_MORELLO_DESC segment
-  if (isMorelloDescSection(sec)) {
+  if (isMorelloDescSection(&osec)) {
     rank |= RF_MORELLO_DESCDATA;
-    if (!isRelroSection(sec))
+    if (!isRelroSection(&osec))
       rank |= RF_MORELLO_DESCDATA_NOT_RO;
     // Start with .desc.data.rel.ro
-    if (sec->name == ".desc.data.rel.ro")
+    if (osec.name == ".desc.data.rel.ro")
       return rank;
     // End with .got*
-    if (sec->name == ".got.plt")
+    if (osec.name == ".got.plt")
       return rank;
   }
   // Place RelRo sections first. After considering SHT_NOBITS below, the
