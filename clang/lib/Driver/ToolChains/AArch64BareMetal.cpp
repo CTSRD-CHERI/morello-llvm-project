@@ -71,7 +71,7 @@ static const char *getLinkerName(const Driver &D, const ArgList &Args) {
       return "ld.lld";
     if (Ld.endswith_insensitive("bfd"))
       return "aarch64-none-elf-ld.bfd";
-    D.Diag(diag::err_drv_unsupported_linker) << Ld;
+    D.Diag(diag::err_drv_unsupported_option_argument) << "-fuse-ld=" << Ld;
   }
 
   // By default, use the lld linker.

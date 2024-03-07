@@ -1040,8 +1040,8 @@ namespace {
                                                          MoreAlignedOffset);
         SrcPtr = CGF.Builder.CreateConstInBoundsByteGEP(SrcPtr,
                                                         MoreAlignedOffset);
-        DestPtr = Address(DestPtr.getPointer(), NewAlign);
-        SrcPtr = Address(SrcPtr.getPointer(), NewAlign);
+        DestPtr = Address(DestPtr.getPointer(), CGF.Int8Ty, NewAlign);
+        SrcPtr = Address(SrcPtr.getPointer(), CGF.Int8Ty, NewAlign);
       }
 
       CGF.Builder.CreateMemCpy(DestPtr, SrcPtr, Size.getQuantity(),
