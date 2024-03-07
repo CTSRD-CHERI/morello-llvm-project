@@ -901,11 +901,6 @@ static MachineBasicBlock::iterator convertCalleeSaveRestoreToSPPrePostIncDec(
     MachineBasicBlock &MBB, MachineBasicBlock::iterator MBBI,
     const DebugLoc &DL, const TargetInstrInfo *TII, int CSStackSizeInc,
     bool NeedsWinCFI, bool *HasWinCFI, bool EmitCFI, bool InProlog = true) {
-  MachineFunction &MF = *MBB.getParent();
-  const AArch64RegisterInfo *MRI = static_cast<const AArch64RegisterInfo *>(
-      MF.getSubtarget().getRegisterInfo());
-  unsigned SP = MRI->getStackPointerRegister(MF);
-  const bool HasPurecap = MF.getSubtarget<AArch64Subtarget>().hasPureCap();
   unsigned NewOpc;
   switch (MBBI->getOpcode()) {
   default:
@@ -1015,6 +1010,9 @@ static MachineBasicBlock::iterator convertCalleeSaveRestoreToSPPrePostIncDec(
   // If the first store isn't right where we want SP then we can't fold the
   // update in so create a normal arithmetic instruction instead.
   MachineFunction &MF = *MBB.getParent();
+  const AArch64RegisterInfo *MRI = static_cast<const AArch64RegisterInfo *>(
+      MF.getSubtarget().getRegisterInfo());
+  unsigned SP = MRI->getStackPointerRegister(MF);
   if (MBBI->getOperand(MBBI->getNumOperands() - 1).getImm() != 0 ||
       CSStackSizeInc < MinOffset || CSStackSizeInc > MaxOffset) {
     emitFrameOffset(MBB, MBBI, DL, SP, SP,
@@ -1767,7 +1765,6 @@ void AArch64FrameLowering::emitEpilogue(MachineFunction &MF,
   int64_t NumBytes = IsFunclet ? getWinEHFuncletFrameSize(MF)
                                : MFI.getStackSize();
   AArch64FunctionInfo *AFI = MF.getInfo<AArch64FunctionInfo>();
-  const bool HasCap = MF.getSubtarget<AArch64Subtarget>().hasMorello();
 
   // All calls are tail calls in GHC calling conv, and functions have no
   // prologue/epilogue.
