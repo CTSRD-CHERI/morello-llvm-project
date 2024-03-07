@@ -2423,6 +2423,7 @@ static void computeCalleeSaveRegisterPairs(
         break;
       }
     }
+
     // GPRs and FPRs are saved in pairs of 64-bit regs. We expect the CSI
     // list to come in sorted by frame index so that we can issue the store
     // pair instructions directly. Assert if we see anything otherwise.
@@ -2547,8 +2548,6 @@ bool AArch64FrameLowering::spillCalleeSavedRegisters(
   computeCalleeSaveRegisterPairs(MF, CSI, TRI, RegPairs, hasFP(MF));
 
   const MachineRegisterInfo &MRI = MF.getRegInfo();
-  unsigned SP = RegInfo.getStackPointerRegister(MF);
-
   if (homogeneousPrologEpilog(MF)) {
     auto MIB = BuildMI(MBB, MI, DL, TII.get(AArch64::HOM_Prolog))
                    .setMIFlag(MachineInstr::FrameSetup);
@@ -2660,7 +2659,7 @@ bool AArch64FrameLowering::spillCalleeSavedRegisters(
     }
 
     MIB.addReg(Reg1, getPrologueDeath(MF, Reg1))
-        .addReg(SP)
+        .addReg(RegInfo.getStackPointerRegister(MF))
         .addImm(RPI.Offset) // [sp, #offset*scale],
                             // where factor*scale is implicit
         .setMIFlag(MachineInstr::FrameSetup);
