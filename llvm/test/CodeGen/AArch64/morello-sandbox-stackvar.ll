@@ -35,6 +35,7 @@ entry:
   ret i32 %rv
 
 ; CHECK:      sub csp, csp, #160
+; CHECK-NEXT: .cfi_def_cfa csp, -160
 ; CHECK-NEXT: str c29, [csp, #32]
 ; CHECK-NEXT: stp c30, c28, [csp, #48]
 ; CHECK-NEXT: stp c27, c26, [csp, #80]

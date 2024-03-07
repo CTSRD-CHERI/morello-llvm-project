@@ -9,6 +9,7 @@ entry:
 ; Capabilities are not callee-saved, so they don't get spilled.
 ; CHECK-LABEL: func
 ; CHECK:	stp	d15, d14, [sp, #-144]!  // 16-byte Folded Spill
+; CHECK-NEXT: .cfi_def_cfa_offset 144
 ; CHECK-NEXT:	stp	d13, d12, [sp, #16]     // 16-byte Folded Spill
 ; CHECK-NEXT:	stp	d11, d10, [sp, #32]     // 16-byte Folded Spill
 ; CHECK-NEXT:	stp	d9, d8, [sp, #48]       // 16-byte Folded Spill
@@ -33,6 +34,7 @@ entry:
 define i32 @frameWithCapabilityRegisters(i32 %argc, i8** %argv) {
 entry:
 ; CHECK: str x30, [sp, #-32]!
+; CHECK-NEXT: .cfi_def_cfa_offset 32
 ; CHECK-NEXT: stp x20, x19, [sp, #16]
 ; CHECK: ldp x20, x19, [sp, #16]
 ; CHECK: ldr x30, [sp], #32

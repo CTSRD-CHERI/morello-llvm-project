@@ -14,7 +14,7 @@ define void @hoge.1(i1 %cond, i1 %cond2, i8 addrspace(200)* %arg, i64 %arg2) loc
 ; CHECK-NEXT:    %tmp3 = getelementptr i8, i8 addrspace(200)* %tmp, i64 1
 ; CHECK-NEXT:    --> {(1 + %arg),+,1}<%bb1> U: full-set S: full-set Exits: <<Unknown>> LoopDispositions: { %bb1: Computable }
 ; CHECK-NEXT:    %tmp6 = select i1 %tmp5, i1 true, i1 %cond2
-; CHECK-NEXT:    --> %tmp6 U: full-set S: full-set
+; CHECK-NEXT:    --> (true + ((true + %tmp5) umin_seq (true + %cond2))) U: full-set S: full-set
 ; CHECK-NEXT:    %tmp17 = phi i8 addrspace(200)* [ %tmp18, %bb13 ], [ null, %bb4 ]
 ; CHECK-NEXT:    --> {null,+,1}<%bb13> U: [0,-1) S: [0,-1) Exits: (-1 + (1 umax {(ptrtoint i8 addrspace(200)* %arg to i64),+,1}<%bb1>) + null) LoopDispositions: { %bb13: Computable }
 ; CHECK-NEXT:    %tmp18 = getelementptr i8, i8 addrspace(200)* %tmp17, i64 1

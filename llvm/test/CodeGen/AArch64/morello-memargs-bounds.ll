@@ -4,15 +4,15 @@
 target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128-A200-P200-G200"
 target triple = "aarch64-none-unknown-elf"
 
-define i32 @foo() local_unnamed_addr addrspace(200) {
+define i32 @foo() local_unnamed_addr addrspace(200) nounwind {
 entry:
 ; CHECK-LABEL: foo
 ; CHECK:      mov	c29, csp
 ; CHECK-NEXT: sub	csp, csp, #17, lsl #12
 ; CHECK-NEXT: sub	csp, csp, #1856
 ; CHECK-NEXT: alignd	csp, csp, #5
-; CHECK-NEXT: mov	c19, csp
-; CHECK: mov w8, #5952
+; CHECK-DAG: mov w8, #5952
+; CHECK-DAG: mov	c19, csp
 ; CHECK: movk  w8, #1, lsl #16
 ; CHECK: scbnds  c9, c0, x8
 ; CHECK: str	czr, [c19, #0]

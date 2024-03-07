@@ -93,11 +93,11 @@ define <4 x i8 addrspace(200)*> @vec_gep_with_vec_offsets(i8 addrspace(200)* %pt
 ; AARCH64-LABEL: vec_gep_with_vec_offsets:
 ; AARCH64:       // %bb.0: // %bb
 ; AARCH64-NEXT:    adrp x8, .LCPI4_0
-; AARCH64-NEXT:    dup v1.2d, x0
-; AARCH64-NEXT:    ldr q0, [x8, :lo12:.LCPI4_0]
-; AARCH64-NEXT:    adrp x8, .LCPI4_1
-; AARCH64-NEXT:    add v1.2d, v1.2d, v0.2d
-; AARCH64-NEXT:    ldr q0, [x8, :lo12:.LCPI4_1]
+; AARCH64-NEXT:    adrp x9, .LCPI4_1
+; AARCH64-NEXT:    dup v2.2d, x0
+; AARCH64-NEXT:    ldr q1, [x8, :lo12:.LCPI4_0]
+; AARCH64-NEXT:    ldr q0, [x9, :lo12:.LCPI4_1]
+; AARCH64-NEXT:    add v1.2d, v2.2d, v1.2d
 ; AARCH64-NEXT:    ret
 ;
 ; PURECAP-LABEL: vec_gep_with_vec_offsets:

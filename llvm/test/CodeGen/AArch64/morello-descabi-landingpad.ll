@@ -16,8 +16,8 @@ define noundef i32 @foo() addrspace(200) #0 personality i8 addrspace(200)* bitca
 ; CHECK-NEXT:  // %bb.0: // %entry
 ; CHECK-NEXT:    mov c28, c29
 ; CHECK-NEXT:    sub csp, csp, #80
+; CHECK-NEXT:    .cfi_def_cfa csp, -80
 ; CHECK-NEXT:    stp c30, c19, [csp, #48] // 32-byte Folded Spill
-; CHECK-NEXT:    .cfi_def_cfa_offset 80
 ; CHECK-NEXT:    .cfi_offset c19, -16
 ; CHECK-NEXT:    .cfi_offset c30, -32
 ; CHECK-NEXT:    mov w0, #4

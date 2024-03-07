@@ -10,8 +10,8 @@ define i32 @foo(i32 %x, i32 %y, i32 %z, i32 %u, i32 %v, i32 %w, i32 %t1, i32 %t2
 ; CHECK-NEXT:    .cfi_startproc purecap
 ; CHECK-NEXT:  // %bb.0: // %entry
 ; CHECK-NEXT:    str c30, [csp, #-48]! // 16-byte Folded Spill
-; CHECK-NEXT:    stp c20, c19, [csp, #16] // 32-byte Folded Spill
 ; CHECK-NEXT:    .cfi_def_cfa_offset 48
+; CHECK-NEXT:    stp c20, c19, [csp, #16] // 32-byte Folded Spill
 ; CHECK-NEXT:    .cfi_offset c19, -16
 ; CHECK-NEXT:    .cfi_offset c20, -32
 ; CHECK-NEXT:    .cfi_offset c30, -48
@@ -42,9 +42,9 @@ define i32 @baf(i32 %x, i32 %y, i32 %z, i32 %u, i32 %v, i32 %w, i32 %t1, i32 %t2
 ; CHECK-NEXT:    .cfi_startproc purecap
 ; CHECK-NEXT:  // %bb.0: // %entry
 ; CHECK-NEXT:    sub csp, csp, #80
+; CHECK-NEXT:    .cfi_def_cfa csp, -80
 ; CHECK-NEXT:    str c30, [csp, #32] // 16-byte Folded Spill
 ; CHECK-NEXT:    stp c20, c19, [csp, #48] // 32-byte Folded Spill
-; CHECK-NEXT:    .cfi_def_cfa_offset 80
 ; CHECK-NEXT:    .cfi_offset c19, -16
 ; CHECK-NEXT:    .cfi_offset c20, -32
 ; CHECK-NEXT:    .cfi_offset c30, -48
@@ -146,9 +146,9 @@ define i32 @biz() local_unnamed_addr addrspace(200) {
 ; CHECK-NEXT:    .cfi_startproc purecap
 ; CHECK-NEXT:  // %bb.0: // %entry
 ; CHECK-NEXT:    sub csp, csp, #112
+; CHECK-NEXT:    .cfi_def_cfa csp, -112
 ; CHECK-NEXT:    str c30, [csp, #64] // 16-byte Folded Spill
 ; CHECK-NEXT:    stp c20, c19, [csp, #80] // 32-byte Folded Spill
-; CHECK-NEXT:    .cfi_def_cfa_offset 112
 ; CHECK-NEXT:    .cfi_offset c19, -16
 ; CHECK-NEXT:    .cfi_offset c20, -32
 ; CHECK-NEXT:    .cfi_offset c30, -48

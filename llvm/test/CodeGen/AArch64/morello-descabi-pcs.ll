@@ -10,6 +10,7 @@ define i8 addrspace(200)* @foo(i32 %max) local_unnamed_addr addrspace(200) {
 entry:
 ; CHECK:  mov c28, c29
 ; CHECK-NEXT: sub csp, csp, #208
+; CHECK-NEXT: .cfi_def_cfa csp, -208
 ; CHECK-NEXT: str c17, [csp, #32]
 ; CHECK-NEXT: stp c30, c27, [csp, #48]
 ; CHECK-NEXT: stp c26, c25, [csp, #80]

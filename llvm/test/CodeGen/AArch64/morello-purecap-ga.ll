@@ -38,8 +38,8 @@ define void @foo(i32 %a) local_unnamed_addr addrspace(200) {
 ; CHECK-NEXT:    .cfi_startproc purecap
 ; CHECK-NEXT:  // %bb.0: // %entry
 ; CHECK-NEXT:    stp c30, c21, [csp, #-64]! // 32-byte Folded Spill
-; CHECK-NEXT:    stp c20, c19, [csp, #32] // 32-byte Folded Spill
 ; CHECK-NEXT:    .cfi_def_cfa_offset 64
+; CHECK-NEXT:    stp c20, c19, [csp, #32] // 32-byte Folded Spill
 ; CHECK-NEXT:    .cfi_offset c19, -16
 ; CHECK-NEXT:    .cfi_offset c20, -32
 ; CHECK-NEXT:    .cfi_offset c21, -48
