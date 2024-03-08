@@ -47,7 +47,9 @@ END-SCRIPT
 #include <ccomplex>
 #include <cctype>
 #include <cerrno>
-#include <cfenv>
+#if !defined(_LIBCPP_HAS_NEWLIB)
+#   include <cfenv>
+#endif
 #include <cfloat>
 #include <charconv>
 #include <chrono>
@@ -90,7 +92,9 @@ END-SCRIPT
 #include <errno.h>
 #include <exception>
 #include <execution>
-#include <fenv.h>
+#if !defined(_LIBCPP_HAS_NEWLIB)
+#   include <fenv.h>
+#endif
 #if !defined(_LIBCPP_HAS_NO_FILESYSTEM_LIBRARY)
 #   include <filesystem>
 #endif

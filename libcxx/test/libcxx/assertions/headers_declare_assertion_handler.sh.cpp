@@ -119,7 +119,7 @@ int main(int, char**) { return 0; }
 #endif
 
 // RUN: %{build} -DTEST_11
-#if defined(TEST_11)
+#if defined(TEST_11) && !defined(_LIBCPP_HAS_NEWLIB)
 #   include <cfenv>
     using HandlerType = decltype(std::__libcpp_assertion_handler);
 #endif

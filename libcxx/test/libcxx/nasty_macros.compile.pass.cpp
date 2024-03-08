@@ -162,8 +162,8 @@ END-SCRIPT
 #include <ccomplex>
 #include <cctype>
 #include <cerrno>
-#ifndef _LIBCPP_HAS_NEWLIB
-#include <cfenv>
+#if !defined(_LIBCPP_HAS_NEWLIB)
+#   include <cfenv>
 #endif
 #include <cfloat>
 #include <charconv>
@@ -207,8 +207,8 @@ END-SCRIPT
 #include <errno.h>
 #include <exception>
 #include <execution>
-#ifndef _LIBCPP_HAS_NEWLIB
-#include <fenv.h>
+#if !defined(_LIBCPP_HAS_NEWLIB)
+#   include <fenv.h>
 #endif
 #if !defined(_LIBCPP_HAS_NO_FILESYSTEM_LIBRARY)
 #   include <filesystem>

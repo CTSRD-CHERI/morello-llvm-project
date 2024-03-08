@@ -38,6 +38,9 @@ header_restrictions = {
     "cwchar": "!defined(_LIBCPP_HAS_NO_WIDE_CHARACTERS)",
     "wchar.h": "!defined(_LIBCPP_HAS_NO_WIDE_CHARACTERS)",
 
+    "cfenv": "!defined(_LIBCPP_HAS_NEWLIB)",
+    "fenv.h": "!defined(_LIBCPP_HAS_NEWLIB)",
+
     "experimental/coroutine": "!defined(_LIBCPP_HAS_NO_EXPERIMENTAL_COROUTINES)",
 
     "experimental/regex": "!defined(_LIBCPP_HAS_NO_LOCALIZATION) && __cplusplus >= 201103L",

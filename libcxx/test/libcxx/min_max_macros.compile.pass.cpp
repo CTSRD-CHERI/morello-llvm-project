@@ -61,9 +61,8 @@ TEST_MACROS();
 TEST_MACROS();
 #include <cerrno>
 TEST_MACROS();
-#if !defined(_NEWLIB_VERSION)
-// newlib doesn't have fenv.h
-#include <cfenv>
+#if !defined(_LIBCPP_HAS_NEWLIB)
+#   include <cfenv>
 TEST_MACROS();
 #endif
 #include <cfloat>
@@ -142,9 +141,8 @@ TEST_MACROS();
 TEST_MACROS();
 #include <execution>
 TEST_MACROS();
-#if !defined(_NEWLIB_VERSION)
-// newlib doesn't have fenv.h
-#include <fenv.h>
+#if !defined(_LIBCPP_HAS_NEWLIB)
+#   include <fenv.h>
 TEST_MACROS();
 #endif
 #if !defined(_LIBCPP_HAS_NO_FILESYSTEM_LIBRARY)
