@@ -13313,15 +13313,16 @@ bool AArch64TargetLowering::getTgtMemIntrinsic(IntrinsicInfo &Info,
   case Intrinsic::aarch64_ldxr:
   case Intrinsic::aarch64_cldaxr:
   case Intrinsic::aarch64_cldxr: {
-    PointerType *PtrTy = cast<PointerType>(I.getArgOperand(0)->getType());
+    Type *ValTy = I.getParamElementType(0);
     Info.opc = ISD::INTRINSIC_W_CHAIN;
-    Info.memVT = MVT::getVT(PtrTy->getPointerElementType());
+    Info.memVT = MVT::getVT(ValTy);
     if (Intrinsic == Intrinsic::aarch64_cldaxr ||
-        Intrinsic == Intrinsic::aarch64_cldxr)
-      Info.memVT = MVT::iFATPTR128;
+        Intrinsic == Intrinsic::aarch64_cldxr) {
+      assert(Info.memVT == MVT::iFATPTR128);
+    }
     Info.ptrVal = I.getArgOperand(0);
     Info.offset = 0;
-    Info.align = DL.getABITypeAlign(PtrTy->getPointerElementType());
+    Info.align = DL.getABITypeAlign(ValTy);
     Info.flags = MachineMemOperand::MOLoad | MachineMemOperand::MOVolatile;
     return true;
   }
@@ -13329,15 +13330,16 @@ bool AArch64TargetLowering::getTgtMemIntrinsic(IntrinsicInfo &Info,
   case Intrinsic::aarch64_stxr:
   case Intrinsic::aarch64_cstlxr:
   case Intrinsic::aarch64_cstxr: {
-    PointerType *PtrTy = cast<PointerType>(I.getArgOperand(1)->getType());
+    Type *ValTy = I.getParamElementType(1);
     Info.opc = ISD::INTRINSIC_W_CHAIN;
-    Info.memVT = MVT::getVT(PtrTy->getPointerElementType());
+    Info.memVT = MVT::getVT(ValTy);
     if (Intrinsic == Intrinsic::aarch64_cstlxr ||
-        Intrinsic == Intrinsic::aarch64_cstxr)
-      Info.memVT = MVT::iFATPTR128;
+        Intrinsic == Intrinsic::aarch64_cstxr) {
+      assert(Info.memVT == MVT::iFATPTR128);
+    }
     Info.ptrVal = I.getArgOperand(1);
     Info.offset = 0;
-    Info.align = DL.getABITypeAlign(PtrTy->getPointerElementType());
+    Info.align = DL.getABITypeAlign(ValTy);
     Info.flags = MachineMemOperand::MOStore | MachineMemOperand::MOVolatile;
     return true;
   }
@@ -21021,7 +21023,10 @@ Value *AArch64TargetLowering::emitLoadLinked(IRBuilderBase &Builder,
       IsAcquire ? Intrinsic::aarch64_ldaxr : Intrinsic::aarch64_ldxr;
   Function *Ldxr = Intrinsic::getDeclaration(M, Int, Tys);
 
-  Value *Trunc = Builder.CreateTrunc(Builder.CreateCall(Ldxr, Addr), IntEltTy);
+  CallInst *CI = Builder.CreateCall(Ldxr, Addr);
+  CI->addParamAttr(0, Attribute::get(Builder.getContext(),
+                                     Attribute::ElementType, IntEltTy));
+  Value *Trunc = Builder.CreateTrunc(CI, IntEltTy);
   // For atomicrmw xchg it's possible that Addr is a pointer not an integer
   assert(!DL.isFatPointer(ValueTy) && "Should not be handled here!");
   if (ValueTy->isPointerTy())
@@ -21092,10 +21097,13 @@ Value *AArch64TargetLowering::emitStoreConditional(IRBuilderBase &Builder,
   else
     Val = Builder.CreateBitCast(Val, IntValTy);
 
-  return Builder.CreateCall(Stxr,
-                            {Builder.CreateZExtOrBitCast(
-                                 Val, Stxr->getFunctionType()->getParamType(0)),
-                             Addr});
+  CallInst *CI = Builder.CreateCall(
+      Stxr, {Builder.CreateZExtOrBitCast(
+                 Val, Stxr->getFunctionType()->getParamType(0)),
+             Addr});
+  CI->addParamAttr(1, Attribute::get(Builder.getContext(),
+                                     Attribute::ElementType, Val->getType()));
+  return CI;
 }
 
 bool AArch64TargetLowering::functionArgumentNeedsConsecutiveRegisters(
