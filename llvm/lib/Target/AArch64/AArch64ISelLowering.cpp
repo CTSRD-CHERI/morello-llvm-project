@@ -21006,11 +21006,14 @@ Value *AArch64TargetLowering::emitLoadLinked(IRBuilderBase &Builder,
   }
 
   if (DL.isFatPointer(ValueTy)) {
-    Intrinsic::ID Int = IsAcquire ? Intrinsic::aarch64_cldaxr :
-                                    Intrinsic::aarch64_cldxr;
-    Type *Tys[] = { Addr->getType() };
+    Intrinsic::ID Int =
+        IsAcquire ? Intrinsic::aarch64_cldaxr : Intrinsic::aarch64_cldxr;
+    Type *Tys[] = {Addr->getType()};
     Function *Ldxr = llvm::Intrinsic::getDeclaration(M, Int, Tys);
-    return Builder.CreateBitCast(Builder.CreateCall(Ldxr, Addr), ValueTy);
+    CallInst *CI = Builder.CreateCall(Ldxr, Addr);
+    CI->addParamAttr(0, Attribute::get(Builder.getContext(),
+                                       Attribute::ElementType, ValueTy));
+    return Builder.CreateBitCast(CI, ValueTy);
   }
 
   IntegerType *IntEltTy = Builder.getIntNTy(DL.getTypeSizeInBits(ValueTy));
@@ -21073,11 +21076,16 @@ Value *AArch64TargetLowering::emitStoreConditional(IRBuilderBase &Builder,
   if (IsFatPointer) {
     Intrinsic::ID Int =
         IsRelease ? Intrinsic::aarch64_cstlxr : Intrinsic::aarch64_cstxr;
-    Type *Tys[] = { Addr->getType() };
+    auto CapAS = Val->getType()->getPointerAddressSpace();
+    Type* I8Cap = Builder.getInt8PtrTy(CapAS);
+    Addr = Builder.CreateBitCast(Addr, I8Cap->getPointerTo(CapAS));
+    Type *Tys[] = {Addr->getType()};
     Function *Stxr = Intrinsic::getDeclaration(M, Int, Tys);
-    Val = Builder.CreateBitCast(Val,
-                                Stxr->getFunctionType()->getParamType(0));
-    return Builder.CreateCall(Stxr, {Val, Addr});
+    Val = Builder.CreateBitCast(Val, Stxr->getFunctionType()->getParamType(0));
+    CallInst *CI = Builder.CreateCall(Stxr, {Val, Addr});
+    CI->addParamAttr(
+        1, Attribute::get(Builder.getContext(), Attribute::ElementType, I8Cap));
+    return CI;
   }
   Intrinsic::ID Int =
       IsRelease ? Intrinsic::aarch64_stlxr : Intrinsic::aarch64_stxr;

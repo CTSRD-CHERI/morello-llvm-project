@@ -40,7 +40,7 @@ define void @test_load_i8(i8 addrspace(200)* %addr) {
 ; CHECK-NOT: and
 ; CHECK: str x[[LOADVAL]], [c[[ADDR]]]
 
-  %val = call i64 @llvm.aarch64.ldxr.p200i8(i8 addrspace(200)* %addr)
+  %val = call i64 @llvm.aarch64.ldxr.p200i8(i8 addrspace(200)* elementtype(i8) %addr)
   %shortval = trunc i64 %val to i8
   %extval = zext i8 %shortval to i64
   store i64 %extval, i64 addrspace(200)* @var, align 8
@@ -55,7 +55,7 @@ define void @test_load_i16(i16 addrspace(200)* %addr) {
 ; CHECK-NOT: and
 ; CHECK: str x[[LOADVAL]], [c[[ADDR]]]
 
-  %val = call i64 @llvm.aarch64.ldxr.p200i16(i16 addrspace(200)* %addr)
+  %val = call i64 @llvm.aarch64.ldxr.p200i16(i16 addrspace(200)* elementtype(i16) %addr)
   %shortval = trunc i64 %val to i16
   %extval = zext i16 %shortval to i64
   store i64 %extval, i64 addrspace(200)* @var, align 8
@@ -70,7 +70,7 @@ define void @test_load_i32(i32 addrspace(200)* %addr) {
 ; CHECK-NOT: and
 ; CHECK: str x[[LOADVAL]], [c[[ADDR]]]
 
-  %val = call i64 @llvm.aarch64.ldxr.p200i32(i32 addrspace(200)* %addr)
+  %val = call i64 @llvm.aarch64.ldxr.p200i32(i32 addrspace(200)* elementtype(i32) %addr)
   %shortval = trunc i64 %val to i32
   %extval = zext i32 %shortval to i64
   store i64 %extval, i64 addrspace(200)* @var, align 8
@@ -83,7 +83,7 @@ define void @test_load_i64(i64 addrspace(200)* %addr) {
 ; CHECK: ldxr x[[LOADVAL:[0-9]+]], [c0]
 ; CHECK: str x[[LOADVAL]], [c[[ADDR]]]
 
-  %val = call i64 @llvm.aarch64.ldxr.p200i64(i64 addrspace(200)* %addr)
+  %val = call i64 @llvm.aarch64.ldxr.p200i64(i64 addrspace(200)* elementtype(i64) %addr)
   store i64 %val, i64 addrspace(200)* @var, align 8
   ret void
 }
@@ -100,7 +100,7 @@ define i32 @test_store_i8(i32, i8 %val, i8 addrspace(200)* %addr) {
 ; CHECK-NOT: and
 ; CHECK: stxrb w0, w1, [c2]
   %extval = zext i8 %val to i64
-  %res = call i32 @llvm.aarch64.stxr.p200i8(i64 %extval, i8 addrspace(200)* %addr)
+  %res = call i32 @llvm.aarch64.stxr.p200i8(i64 %extval, i8 addrspace(200)* elementtype(i8) %addr)
   ret i32 %res
 }
 
@@ -110,7 +110,7 @@ define i32 @test_store_i16(i32, i16 %val, i16 addrspace(200)* %addr) {
 ; CHECK-NOT: and
 ; CHECK: stxrh w0, w1, [c2]
   %extval = zext i16 %val to i64
-  %res = call i32 @llvm.aarch64.stxr.p200i16(i64 %extval, i16 addrspace(200)* %addr)
+  %res = call i32 @llvm.aarch64.stxr.p200i16(i64 %extval, i16 addrspace(200)* elementtype(i16) %addr)
   ret i32 %res
 }
 
@@ -120,14 +120,14 @@ define i32 @test_store_i32(i32, i32 %val, i32 addrspace(200)* %addr) {
 ; CHECK-NOT: and
 ; CHECK: stxr w0, w1, [c2]
   %extval = zext i32 %val to i64
-  %res = call i32 @llvm.aarch64.stxr.p200i32(i64 %extval, i32 addrspace(200)* %addr)
+  %res = call i32 @llvm.aarch64.stxr.p200i32(i64 %extval, i32 addrspace(200)* elementtype(i32) %addr)
   ret i32 %res
 }
 
 define i32 @test_store_i64(i32, i64 %val, i64 addrspace(200)* %addr) {
 ; CHECK-LABEL: test_store_i64:
 ; CHECK: stxr w0, x1, [c2]
-  %res = call i32 @llvm.aarch64.stxr.p200i64(i64 %val, i64 addrspace(200)* %addr)
+  %res = call i32 @llvm.aarch64.stxr.p200i64(i64 %val, i64 addrspace(200)* elementtype(i64) %addr)
   ret i32 %res
 }
 
@@ -181,7 +181,7 @@ define void @test_load_acquire_i8(i8 addrspace(200)* %addr) {
 ; CHECK-NOT: and
 ; CHECK: str x[[LOADVAL]], [c[[ADDR]]]
 
-  %val = call i64 @llvm.aarch64.ldaxr.p200i8(i8 addrspace(200)* %addr)
+  %val = call i64 @llvm.aarch64.ldaxr.p200i8(i8 addrspace(200)* elementtype(i8) %addr)
   %shortval = trunc i64 %val to i8
   %extval = zext i8 %shortval to i64
   store i64 %extval, i64 addrspace(200)* @var, align 8
@@ -196,7 +196,7 @@ define void @test_load_acquire_i16(i16 addrspace(200)* %addr) {
 ; CHECK-NOT: and
 ; CHECK: str x[[LOADVAL]], [c[[ADDR]]]
 
-  %val = call i64 @llvm.aarch64.ldaxr.p200i16(i16 addrspace(200)* %addr)
+  %val = call i64 @llvm.aarch64.ldaxr.p200i16(i16 addrspace(200)* elementtype(i16) %addr)
   %shortval = trunc i64 %val to i16
   %extval = zext i16 %shortval to i64
   store i64 %extval, i64 addrspace(200)* @var, align 8
@@ -211,7 +211,7 @@ define void @test_load_acquire_i32(i32 addrspace(200)* %addr) {
 ; CHECK-NOT: and
 ; CHECK: str x[[LOADVAL]], [c[[ADDR]]]
 
-  %val = call i64 @llvm.aarch64.ldaxr.p200i32(i32 addrspace(200)* %addr)
+  %val = call i64 @llvm.aarch64.ldaxr.p200i32(i32 addrspace(200)* elementtype(i32) %addr)
   %shortval = trunc i64 %val to i32
   %extval = zext i32 %shortval to i64
   store i64 %extval, i64 addrspace(200)* @var, align 8
@@ -224,7 +224,7 @@ define void @test_load_acquire_i64(i64 addrspace(200)* %addr) {
 ; CHECK: ldaxr x[[LOADVAL:[0-9]+]], [c0]
 ; CHECK: str x[[LOADVAL]], [c[[ADDR]]]
 
-  %val = call i64 @llvm.aarch64.ldaxr.p200i64(i64 addrspace(200)* %addr)
+  %val = call i64 @llvm.aarch64.ldaxr.p200i64(i64 addrspace(200)* elementtype(i64) %addr)
   store i64 %val, i64 addrspace(200)* @var, align 8
   ret void
 }
@@ -241,7 +241,7 @@ define i32 @test_store_release_i8(i32, i8 %val, i8 addrspace(200)* %addr) {
 ; CHECK-NOT: and
 ; CHECK: stlxrb w0, w1, [c2]
   %extval = zext i8 %val to i64
-  %res = call i32 @llvm.aarch64.stlxr.p200i8(i64 %extval, i8 addrspace(200)* %addr)
+  %res = call i32 @llvm.aarch64.stlxr.p200i8(i64 %extval, i8 addrspace(200)* elementtype(i8) %addr)
   ret i32 %res
 }
 
@@ -251,7 +251,7 @@ define i32 @test_store_release_i16(i32, i16 %val, i16 addrspace(200)* %addr) {
 ; CHECK-NOT: and
 ; CHECK: stlxrh w0, w1, [c2]
   %extval = zext i16 %val to i64
-  %res = call i32 @llvm.aarch64.stlxr.p200i16(i64 %extval, i16 addrspace(200)* %addr)
+  %res = call i32 @llvm.aarch64.stlxr.p200i16(i64 %extval, i16 addrspace(200)* elementtype(i16) %addr)
   ret i32 %res
 }
 
@@ -261,7 +261,7 @@ define i32 @test_store_release_i32(i32, i32 %val, i32 addrspace(200)* %addr) {
 ; CHECK-NOT: and
 ; CHECK: stlxr w0, w1, [c2]
   %extval = zext i32 %val to i64
-  %res = call i32 @llvm.aarch64.stlxr.p200i32(i64 %extval, i32 addrspace(200)* %addr)
+  %res = call i32 @llvm.aarch64.stlxr.p200i32(i64 %extval, i32 addrspace(200)* elementtype(i32) %addr)
   ret i32 %res
 }
 
@@ -269,7 +269,7 @@ define i32 @test_store_release_i32(i32, i32 %val, i32 addrspace(200)* %addr) {
 define i32 @test_store_release_i64(i32, i64 %val, i64 addrspace(200)* %addr) {
 ; CHECK-LABEL: test_store_release_i64:
 ; CHECK: stlxr w0, x1, [c2]
-  %res = call i32 @llvm.aarch64.stlxr.p200i64(i64 %val, i64 addrspace(200)* %addr)
+  %res = call i32 @llvm.aarch64.stlxr.p200i64(i64 %val, i64 addrspace(200)* elementtype(i64) %addr)
   ret i32 %res
 }
 
@@ -278,37 +278,37 @@ declare i32 @llvm.aarch64.stlxr.p200i16(i64, i16 addrspace(200)*) nounwind
 declare i32 @llvm.aarch64.stlxr.p200i32(i64, i32 addrspace(200)*) nounwind
 declare i32 @llvm.aarch64.stlxr.p200i64(i64, i64 addrspace(200)*) nounwind
 
-define i8 addrspace(200)* @test_load_acquire_fatptr(i32, i8 addrspace(200)* %addr) {
+define i8 addrspace(200)* @test_load_acquire_fatptr(i32, i8 addrspace(200)* addrspace(200)* %addr) {
 ; CHECK-LABEL: test_load_acquire_fatptr:
 ; CHECK: ldaxr c0, [c1]
 
-  %val = call i8 addrspace(200)* @llvm.aarch64.cldaxr.p200i8(i8 addrspace(200)* %addr)
+  %val = call i8 addrspace(200)* @llvm.aarch64.cldaxr.p200p200i8(i8 addrspace(200)* addrspace(200)* elementtype(i8 addrspace(200)*) %addr)
   ret i8 addrspace(200)* %val
 }
 
-define i8 addrspace(200)* @test_load_fatptr(i32, i8 addrspace(200)* %addr) {
+define i8 addrspace(200)* @test_load_fatptr(i32, i8 addrspace(200)* addrspace(200)* %addr) {
 ; CHECK-LABEL: test_load_fatptr:
 ; CHECK: ldxr c0, [c1]
 
-  %val = call i8 addrspace(200)* @llvm.aarch64.cldxr.p200i8(i8 addrspace(200)* %addr)
+  %val = call i8 addrspace(200)* @llvm.aarch64.cldxr.p200p200i8(i8 addrspace(200)* addrspace(200)* elementtype(i8 addrspace(200)*) %addr)
   ret i8 addrspace(200)* %val
 }
 
-define i32 @test_store_release_fatptr(i32, i8 addrspace(200)* %val, i8 addrspace(200)* %addr) {
+define i32 @test_store_release_fatptr(i32, i8 addrspace(200)* %val, i8 addrspace(200)* addrspace(200)* %addr) {
 ; CHECK-LABEL: test_store_release_fatptr:
 ; CHECK: stlxr w0, c1, [c2]
-  %res = call i32 @llvm.aarch64.cstlxr.p200i8(i8 addrspace(200)* %val, i8 addrspace(200)* %addr)
+  %res = call i32 @llvm.aarch64.cstlxr.p200p200i8(i8 addrspace(200)* %val, i8 addrspace(200)* addrspace(200)* elementtype(i8 addrspace(200)*) %addr)
   ret i32 %res
 }
 
-define i32 @test_store_fatptr(i32, i8 addrspace(200)* %val, i8 addrspace(200)* %addr) {
+define i32 @test_store_fatptr(i32, i8 addrspace(200)* %val, i8 addrspace(200)* addrspace(200)* %addr) {
 ; CHECK-LABEL: test_store_fatptr:
 ; CHECK: stxr w0, c1, [c2]
-  %res = call i32 @llvm.aarch64.cstxr.p200i8(i8 addrspace(200)* %val, i8 addrspace(200)* %addr)
+  %res = call i32 @llvm.aarch64.cstxr.p200p200i8(i8 addrspace(200)* %val, i8 addrspace(200)* addrspace(200)* elementtype(i8 addrspace(200)*) %addr)
   ret i32 %res
 }
 
-declare i32 @llvm.aarch64.cstlxr.p200i8(i8 addrspace(200)*, i8 addrspace(200)*) nounwind
-declare i32 @llvm.aarch64.cstxr.p200i8(i8 addrspace(200)*, i8 addrspace(200)*) nounwind
-declare i8 addrspace(200)* @llvm.aarch64.cldaxr.p200i8(i8 addrspace(200)*) nounwind
-declare i8 addrspace(200)* @llvm.aarch64.cldxr.p200i8(i8 addrspace(200)*) nounwind
+declare i32 @llvm.aarch64.cstlxr.p200p200i8(i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)*) nounwind
+declare i32 @llvm.aarch64.cstxr.p200p200i8(i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)*) nounwind
+declare i8 addrspace(200)* @llvm.aarch64.cldaxr.p200p200i8(i8 addrspace(200)* addrspace(200)*) nounwind
+declare i8 addrspace(200)* @llvm.aarch64.cldxr.p200p200i8(i8 addrspace(200)* addrspace(200)*) nounwind

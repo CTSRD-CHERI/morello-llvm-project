@@ -10121,7 +10121,8 @@ Value *CodeGenFunction::EmitAArch64BuiltinExpr(unsigned BuiltinID,
     llvm::Type *RealResTy = ConvertType(Ty);
     llvm::Type *IntTy =
         llvm::IntegerType::get(getLLVMContext(), getContext().getTypeSize(Ty));
-    llvm::Type *PtrTy = IntTy->getPointerTo(DefaultAS);
+    llvm::Type *PtrTy =
+        (IsCap ? Int8CheriCapTy : IntTy)->getPointerTo(DefaultAS);
     LoadAddr = Builder.CreateBitCast(LoadAddr, PtrTy);
     unsigned Op = (BuiltinID == AArch64::BI__builtin_arm_ldaex
                                        ? Intrinsic::aarch64_ldaxr
@@ -10133,8 +10134,9 @@ Value *CodeGenFunction::EmitAArch64BuiltinExpr(unsigned BuiltinID,
     Function *F = CGM.getIntrinsic(Op,
                                    PtrTy);
     CallInst *Val = Builder.CreateCall(F, LoadAddr, "ldxr");
-    Val->addParamAttr(
-        0, Attribute::get(getLLVMContext(), Attribute::ElementType, IntTy));
+    Val->addParamAttr(0,
+                      Attribute::get(getLLVMContext(), Attribute::ElementType,
+                                     IsCap ? Int8CheriCapTy : IntTy));
 
     if (IsCap)
       return Builder.CreateBitCast(Val, RealResTy);
@@ -10178,9 +10180,10 @@ Value *CodeGenFunction::EmitAArch64BuiltinExpr(unsigned BuiltinID,
     bool IsCap = E->getArg(0)->getType()->isCHERICapabilityType(getContext(), true);
 
     QualType Ty = E->getArg(0)->getType();
-    llvm::Type *StoreTy = llvm::IntegerType::get(getLLVMContext(),
-                                                 getContext().getTypeSize(Ty));
-    llvm::Type *StoreAddrTy = IsCap ? Int8PtrTy : StoreTy->getPointerTo(DefaultAS);
+    llvm::Type *IntTy =
+        llvm::IntegerType::get(getLLVMContext(), getContext().getTypeSize(Ty));
+    llvm::Type *StoreTy = IsCap ? Int8CheriCapTy : IntTy;
+    llvm::Type *StoreAddrTy = StoreTy->getPointerTo(DefaultAS);
     StoreAddr = Builder.CreateBitCast(StoreAddr, StoreAddrTy);
 
     if (IsCap)
