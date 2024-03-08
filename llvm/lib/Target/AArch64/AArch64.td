@@ -78,14 +78,14 @@ def FeatureMorelloNewVarArg : SubtargetFeature<"legacy-morello-vararg",
   "Use legacy PCS for morello varargs">;
 
 def FeatureMorelloBoundedMemArgsCaller : SubtargetFeature<"bounded-morello-memargs-caller",
-  "HasMorelloBoundedMemArgsCaller", "true",
+  "Internal_HasMorelloBoundedMemArgsCaller", "true",
   "Set c9 to point to memory arguments">;
 
 def FeatureMorelloBoundedMemArgsCallee : SubtargetFeature<"bounded-morello-memargs-callee",
-  "HasMorelloBoundedMemArgsCallee", "true",
+  "Internal_HasMorelloBoundedMemArgsCallee", "true",
   "Use c9 to access memory arguments", [FeatureMorelloBoundedMemArgsCaller]>;
 
-def FeatureC64 : SubtargetFeature<"c64", "HasC64", "true",
+def FeatureC64 : SubtargetFeature<"c64", "Internal_HasC64", "true",
   "Enable C64 mode", [FeatureMorello]>;
 
 def FeaturePAN : SubtargetFeature<
@@ -204,7 +204,7 @@ foreach i = {8-23} in
                                              "Reserve C"#i#", making it unavailable "
                                              "as a capability reg">;
 
-def FeatureUse16CapRegs : SubtargetFeature<"use-16-cap-regs", "Use16CapRegs", "true",
+def FeatureUse16CapRegs : SubtargetFeature<"use-16-cap-regs", "Internal_Use16CapRegs", "true",
                                            "Reserve the capability regs in range C8-C23",
                                            [FeatureReserveC8,
                                             FeatureReserveC9,

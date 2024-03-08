@@ -89,13 +89,7 @@ protected:
   ARMProcFamilyEnum ARMProcFamily = Others;
 
   // Morello extensions
-  bool Use16CapRegs = false;
-  bool HasMorello = false;
-  bool HasMorelloLegacyVarArg = false;
-  bool HasMorelloBoundedMemArgsCaller = false;
-  bool HasMorelloBoundedMemArgsCallee = false;
   bool HasPureCap = false;
-  bool HasC64 = false;
   bool HasPurecapBenchmarkABI = false;
 
   // Enable 64-bit vectorization in SLP.
@@ -257,18 +251,17 @@ public:
   /// translation) and OS enables it.
   bool supportsAddressTopByteIgnored() const;
 
-  bool use16CapRegs() const { return  HasMorello && Use16CapRegs; }
+  bool use16CapRegs() const { return HasMorello && Internal_Use16CapRegs; }
   bool hasCapGOT() const { return HasMorello && HasPureCap; }
   bool hasPureCap() const { return HasMorello && HasPureCap; }
-  bool hasMorello() const { return HasMorello; }
   bool hasMorelloNewVarArg() const { return !HasMorelloLegacyVarArg; }
   bool hasMorelloBoundedMemArgsCaller() const {
-    return hasPureCap() && HasMorelloBoundedMemArgsCaller;
+    return hasPureCap() && Internal_HasMorelloBoundedMemArgsCaller;
   }
   bool hasMorelloBoundedMemArgsCallee() const {
-    return hasPureCap() && HasMorelloBoundedMemArgsCallee;
+    return hasPureCap() && Internal_HasMorelloBoundedMemArgsCallee;
   }
-  bool hasC64() const { return HasMorello && HasC64; }
+  bool hasC64() const { return HasMorello && Internal_HasC64; }
   bool hasPurecapBenchmarkABI() const {
     return HasMorello && HasPurecapBenchmarkABI;
   }
