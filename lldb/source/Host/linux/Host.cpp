@@ -128,8 +128,8 @@ static bool IsDirNumeric(const char *dname) {
 
 template <typename ElfT, typename BufferT>
 static bool IsMorelloAArch64Purecap(BufferT buffer_sp) {
-  auto elf = llvm::object::ELFFile<ElfT>::create(
-      {buffer_sp->GetChars(), size_t(buffer_sp->GetByteSize())});
+  auto elf =
+      llvm::object::ELFFile<ElfT>::create(toStringRef(buffer_sp->GetData()));
 
   if (!elf)
     return false;
