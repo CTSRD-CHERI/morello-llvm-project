@@ -892,7 +892,6 @@ void AsmPrinter::emitGlobalVariable(const GlobalVariable *GV) {
         EmittedInitSym,
         MCConstantExpr::create(Size + static_cast<unsigned>(TailPadding),
                                OutContext));
-  }
 
   OutStreamer->AddBlankLine();
 }

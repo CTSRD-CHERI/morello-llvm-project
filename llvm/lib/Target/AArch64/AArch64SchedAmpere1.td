@@ -22,7 +22,7 @@ def Ampere1Model : SchedMachineModel {
   let LoadLatency           =   4;  // Optimistic load latency
   let MispredictPenalty     =  10;  // Branch mispredict penalty
   let LoopMicroOpBufferSize =  32;  // Instruction queue size
-  let CompleteModel = 1;
+  let CompleteModel = 0;
 
   list<Predicate> UnsupportedFeatures = !listconcat(SVEUnsupported.F,
                                                     SMEUnsupported.F);
