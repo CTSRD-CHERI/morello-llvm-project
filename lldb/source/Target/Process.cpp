@@ -1930,6 +1930,9 @@ size_t Process::DoReadTaggedMemory(lldb::addr_t vm_addr, void *buf, size_t size,
 
 size_t Process::ReadMemory(addr_t addr, void *buf, size_t size, Status &error,
                            MemoryContentType type) {
+  if (ABISP abi_sp = GetABI())
+    addr = abi_sp->FixAnyAddress(addr);
+
   error.Clear();
 
   // Special memory reads are performed directly, without caching.
@@ -2047,6 +2050,9 @@ size_t Process::ReadMemoryFromInferior(addr_t addr, void *buf, size_t size,
                                        Status &error,
                                        lldb::MemoryContentType type) {
   LLDB_SCOPED_TIMER();
+
+  if (ABISP abi_sp = GetABI())
+    addr = abi_sp->FixAnyAddress(addr);
 
   if (buf == nullptr || size == 0)
     return 0;
@@ -2204,6 +2210,9 @@ size_t Process::WriteMemoryPrivate(addr_t addr, const void *buf, size_t size,
 
 size_t Process::WriteMemory(addr_t addr, const void *buf, size_t size,
                             Status &error) {
+  if (ABISP abi_sp = GetABI())
+    addr = abi_sp->FixAnyAddress(addr);
+
 #if defined(ENABLE_MEMORY_CACHING)
   m_memory_cache.Flush(addr, size);
 #endif
