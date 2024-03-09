@@ -1319,7 +1319,7 @@ protected:
             data, &result.GetOutputStream(), 0, lldb::eFormatBytesWithASCII, 1,
             dumpbuffer.GetByteSize(), 16,
             found_location + m_memory_options.m_offset.GetCurrentValue(), 0, 0,
-            m_exe_ctx.GetBestExecutionContextScope(),
+            0, 0, m_exe_ctx.GetBestExecutionContextScope(),
             m_memory_tag_options.GetShowTags().GetCurrentValue());
         result.GetOutputStream().EOL();
       }

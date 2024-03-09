@@ -2208,7 +2208,7 @@ static DecodeStatus DecodeCAdrInstruction(MCInst &Inst, uint32_t insn,
     imm |= ~((1LL << 20) - 1);
 
   DecodeCapRegisterClass(Inst, Cd, Addr, Decoder);
-  if (!Dis->tryAddingSymbolicOperand(Inst, imm, Addr, Fail, 0, 4))
+  if (!Dis->tryAddingSymbolicOperand(Inst, imm, Addr, Fail, 0, 0, 4))
     Inst.addOperand(MCOperand::createImm(imm));
 
   return Success;

@@ -1102,7 +1102,7 @@ TEST_F(TestArm64InstEmulation, TestCFAResetToSP) {
   // Confirm CFA before epilogue instructions is in terms of $fp
   row_sp = unwind_plan.GetRowForFunctionOffset(12);
   EXPECT_EQ(12ull, row_sp->GetOffset());
-  EXPECT_TRUE(row_sp->GetCFAValue().GetRegisterNumber() == gpr_fp_arm64);
+  EXPECT_TRUE(row_sp->GetCFAValue().GetRegisterNumber() == gpr_x29_arm64);
   EXPECT_TRUE(row_sp->GetCFAValue().IsRegisterPlusOffset() == true);
 
   // Confirm that after restoring $fp to caller's value, CFA is now in
