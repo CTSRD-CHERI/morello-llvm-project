@@ -449,7 +449,7 @@ public:
         TotalSize = Req.first;
 
         // Determine the required aligment.
-        Alignment = max(Alignment, MaybeAlign(AI->getAlignment()));
+        Alignment = std::max(Alignment, AI->getAlign());
         // Try to keep the element type if we don't need any padding.
         if (TotalSize != 0 && TotalSize % ElementSize == 0) {
           uint64_t NewElements = TotalSize / ElementSize;
