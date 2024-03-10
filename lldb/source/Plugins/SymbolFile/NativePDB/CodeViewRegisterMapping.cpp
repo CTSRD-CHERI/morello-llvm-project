@@ -82,7 +82,7 @@ static const uint32_t g_code_view_to_lldb_registers_arm64[] = {
     gpr_x26_arm64, // ARM64_X26, 76)
     gpr_x27_arm64, // ARM64_X27, 77)
     gpr_x28_arm64, // ARM64_X28, 78)
-    gpr_fp_arm64,  // ARM64_FP, 79)
+    gpr_x29_arm64,  // ARM64_FP, 79)
     gpr_lr_arm64,  // ARM64_LR, 80)
     gpr_sp_arm64,  // ARM64_SP, 81)
     LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM, LLDB_INVALID_REGNUM,

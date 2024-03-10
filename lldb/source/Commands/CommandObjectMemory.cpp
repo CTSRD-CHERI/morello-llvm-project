@@ -46,13 +46,6 @@
 using namespace lldb;
 using namespace lldb_private;
 
-static constexpr OptionEnumValueElement g_tagged_memory_values[] = {
-    {eMemoryContentCap128, "cap128", "tagged 128-bit capability data"}};
-
-static constexpr OptionEnumValues TaggedMemoryValues() {
-  return OptionEnumValues(g_tagged_memory_values);
-}
-
 #define LLDB_OPTIONS_memory_read
 #include "CommandOptions.inc"
 

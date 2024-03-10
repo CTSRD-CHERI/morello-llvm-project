@@ -5049,6 +5049,9 @@ MachineInstr *AArch64InstrInfo::foldMemoryOperandImpl(
         return nullptr;
       }
     }
+    // Nothing can folded with copy from/to NZCV.
+    if (SrcReg == AArch64::NZCV || DstReg == AArch64::NZCV)
+      return nullptr;
   }
 
   // Add Morello support for spilling properly the null capability.
@@ -5075,9 +5078,6 @@ MachineInstr *AArch64InstrInfo::foldMemoryOperandImpl(
                           &TRI);
       return &*--InsertPt;
     }
-    // Nothing can folded with copy from/to NZCV.
-    if (SrcReg == AArch64::NZCV || DstReg == AArch64::NZCV)
-      return nullptr;
   }
 
   // Handle the case where a copy is being spilled or filled but the source

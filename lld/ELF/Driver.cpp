@@ -2519,7 +2519,7 @@ template <class ELFT> static void readCheriVariants() {
   if (!config->isCheriAbi && !config->morelloC64Plt)
     return;
 
-  for (InputFile *f : objectFiles) {
+  for (InputFile *f : ctx->objectFiles) {
     auto variantMap = cast<ObjFile<ELFT>>(f)->cheriVariants;
 
     auto applyDefault = [&](unsigned type, unsigned variant) {

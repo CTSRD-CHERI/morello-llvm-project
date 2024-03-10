@@ -210,6 +210,9 @@ static constexpr OptionEnumValueElement g_running_mode[] = {
      "Run only this thread while stepping"},
 };
 
+static constexpr OptionEnumValueElement g_tagged_memory_values[] = {
+    {lldb::eMemoryContentCap128, "cap128", "tagged 128-bit capability data"}};
+
 llvm::StringRef RegisterNameHelpTextCallback();
 llvm::StringRef BreakpointIDHelpTextCallback();
 llvm::StringRef BreakpointIDRangeHelpTextCallback();
@@ -293,7 +296,7 @@ static constexpr CommandObject::ArgumentTableEntry g_argument_table[] = {
     { lldb::eArgTypeStartAddress, "start-address", CommandCompletions::eNoCompletion, {}, { nullptr, false }, "Help text goes here." },
     { lldb::eArgTypeSummaryString, "summary-string", CommandCompletions::eNoCompletion, {}, { SummaryStringHelpTextCallback, true }, nullptr },
     { lldb::eArgTypeSymbol, "symbol", CommandCompletions::eSymbolCompletion, {}, { nullptr, false }, "Any symbol name (function name, variable, argument, etc.)" },
-    { lldb::eArgTypeTaggedMemory, "tagged-memory-type", CommandCompletions::eNoCompletion, {}, { nullptr, false }, "A tagged memory type." },
+    { lldb::eArgTypeTaggedMemory, "tagged-memory-type", CommandCompletions::eNoCompletion, g_tagged_memory_values, { nullptr, false }, "A tagged memory type." },
     { lldb::eArgTypeThreadID, "thread-id", CommandCompletions::eNoCompletion, {}, { nullptr, false }, "Thread ID number." },
     { lldb::eArgTypeThreadIndex, "thread-index", CommandCompletions::eNoCompletion, {}, { nullptr, false }, "Index into the process' list of threads." },
     { lldb::eArgTypeThreadName, "thread-name", CommandCompletions::eNoCompletion, {}, { nullptr, false }, "The thread's name." },

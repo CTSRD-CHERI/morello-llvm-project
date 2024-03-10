@@ -16,7 +16,7 @@ def NeoverseN2Model : SchedMachineModel {
   let LoadLatency           =   4; // Optimistic load latency.
   let MispredictPenalty     =  10; // Extra cycles for mispredicted branch.
   let LoopMicroOpBufferSize =  16; // NOTE: Copied from Cortex-A57.
-  let CompleteModel         =   1;
+  let CompleteModel         =   0;
 
   list<Predicate> UnsupportedFeatures = SMEUnsupported.F;
 }

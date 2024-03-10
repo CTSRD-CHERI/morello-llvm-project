@@ -181,7 +181,7 @@ Symbol *SymbolTable::find(StringRef name) {
 // shared libraries can find them.
 // Except this, we ignore undefined symbols in DSOs.
 void SymbolTable::scanShlibUndefined() {
-  for (InputFile *F : sharedFiles) {
+  for (InputFile *F : ctx->sharedFiles) {
     for (StringRef U : F->getUndefinedSymbols()) {
       Symbol *Sym = find(U);
       if (!Sym || !Sym->isDefined())

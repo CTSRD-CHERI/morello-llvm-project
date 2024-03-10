@@ -504,7 +504,7 @@ let Command = "memory read" in {
   def memory_read_force : Option<"force", "r">, Groups<[1,2,3,4,5]>,
     Desc<"Necessary if reading over target.max-memory-read-size bytes.">;
   def memory_read_tagged : Option<"tagged", "C">, Group<5>,
-    OptionalEnumArg<"TaggedMemory", "TaggedMemoryValues()">,
+    OptionalEnumArg<"TaggedMemory">,
     Desc<"Read tagged memory (default is the base tagged memory type for the "
     "target architecture).">;
 }

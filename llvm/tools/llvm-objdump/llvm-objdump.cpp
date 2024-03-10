@@ -2044,7 +2044,7 @@ static void disassembleObject(ObjectFile *Obj, bool InlineRelocs) {
     SecondaryDisAsm.reset(TheTarget->createMCDisassembler(*SecondarySTI, Ctx));
   }
   bool HasCapabilities = STI->checkFeatures("+morello");
-  if (isAArch64Elf(Obj) && HasCapabilities) {
+  if (isAArch64Elf(*Obj) && HasCapabilities) {
     if (STI->checkFeatures("+c64")) {
       Features.AddFeature("-c64");
     } else {

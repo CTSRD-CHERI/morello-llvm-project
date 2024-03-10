@@ -208,7 +208,7 @@ static bool shouldDefineSym(SymbolAssignment *cmd) {
   if (b && !b->isDefined() && !b->isCommon())
     return true;
   // It might also be referenced by a DSO.
-  for (InputFile *F : sharedFiles)
+  for (InputFile *F : ctx->sharedFiles)
     if (F->getUndefinedSymbols().count(cmd->name))
       return true;
   return false;

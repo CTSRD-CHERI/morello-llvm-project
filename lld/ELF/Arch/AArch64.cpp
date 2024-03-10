@@ -89,8 +89,8 @@ AArch64::AArch64() {
 bool AArch64::calcIsCheriAbi() const {
   bool isCheriAbi = config->eflags & EF_AARCH64_CHERI_PURECAP;
 
-  if (config->isCheriAbi && !objectFiles.empty() && !isCheriAbi)
-    error(toString(objectFiles.front()) +
+  if (config->isCheriAbi && !ctx->objectFiles.empty() && !isCheriAbi)
+    error(toString(ctx->objectFiles.front()) +
           ": object file is non-CheriABI but emulation forces it");
 
   return isCheriAbi;
@@ -101,12 +101,12 @@ static uint32_t getEFlags(InputFile *f) {
 }
 
 uint32_t AArch64::calcEFlags() const {
-  if (objectFiles.empty())
+  if (ctx->objectFiles.empty())
     return 0;
 
-  uint32_t target = getEFlags(objectFiles.front());
+  uint32_t target = getEFlags(ctx->objectFiles.front());
 
-  for (InputFile *f : objectFiles) {
+  for (InputFile *f : ctx->objectFiles) {
     uint32_t eflags = getEFlags(f);
 
     if ((eflags & EF_AARCH64_CHERI_PURECAP) !=
