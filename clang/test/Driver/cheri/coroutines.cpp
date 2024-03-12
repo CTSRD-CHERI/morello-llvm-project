@@ -5,3 +5,5 @@
 // RUN: %riscv64_cheri_purecap_clang %s -### -std=c++17 -fcoroutines-ts 2>&1 | FileCheck %s --check-prefix=PURECAP-ERR
 // RUN: %riscv64_cheri_purecap_clang %s -### -std=c++20 -fcoroutines-ts 2>&1 | FileCheck %s --check-prefix=PURECAP-ERR
 // PURECAP-ERR: error: unsupported option '-fcoroutines-ts' for target 'purecap riscv64-unknown-freebsd'
+// RUN: %clang --target=aarch64-none-elf -march=morello -mabi=purecap %s -### -std=c++20 -fcoroutines-ts 2>&1 | FileCheck %s --check-prefix=MORELLO-ERR
+// MORELLO-ERR: error: unsupported option '-fcoroutines-ts' for target 'purecap aarch64-none-unknown-elf'
