@@ -47,6 +47,30 @@ void *baz(void*, void*);
 // CHECK-NEXT:    [[CALL1_ASCAST:%.*]] = addrspacecast ptr addrspace(200) [[CALL1]] to ptr
 // CHECK-NEXT:    ret ptr [[CALL1_ASCAST]]
 //
+// AARCH64-LABEL: define {{[^@]+}}@bar
+// AARCH64-SAME: (ptr noundef [[A:%.*]], ptr noundef [[B:%.*]]) #[[ATTR0:[0-9]+]] {
+// AARCH64-NEXT:  entry:
+// AARCH64-NEXT:    [[A_ADDR:%.*]] = alloca ptr, align 8
+// AARCH64-NEXT:    [[B_ADDR:%.*]] = alloca ptr, align 8
+// AARCH64-NEXT:    store ptr [[A]], ptr [[A_ADDR]], align 8
+// AARCH64-NEXT:    store ptr [[B]], ptr [[B_ADDR]], align 8
+// AARCH64-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[A_ADDR]], align 8
+// AARCH64-NEXT:    [[TMP1:%.*]] = load ptr, ptr [[B_ADDR]], align 8
+// AARCH64-NEXT:    [[TMP2:%.*]] = load i64, ptr @__cheri_method.def.baz, align 8, !invariant.load !2
+// AARCH64-NEXT:    [[TMP3:%.*]] = load ptr addrspace(200), ptr @def, align 16
+// AARCH64-NEXT:    [[TMP4:%.*]] = load ptr addrspace(200), ptr getelementptr inbounds ([[STRUCT_CHERI_CLASS:%.*]], ptr @def, i32 0, i32 1), align 16
+// AARCH64-NEXT:    [[CALL:%.*]] = call chericcallcc ptr @cheri_invoke(ptr addrspace(200) noundef [[TMP3]], ptr addrspace(200) noundef [[TMP4]], i64 noundef [[TMP2]], ptr noundef [[TMP0]], ptr noundef [[TMP1]])
+// AARCH64-NEXT:    [[TMP5:%.*]] = load ptr, ptr [[A_ADDR]], align 8
+// AARCH64-NEXT:    [[TMP6:%.*]] = addrspacecast ptr [[TMP5]] to ptr addrspace(200)
+// AARCH64-NEXT:    [[TMP7:%.*]] = load ptr, ptr [[B_ADDR]], align 8
+// AARCH64-NEXT:    [[TMP8:%.*]] = addrspacecast ptr [[TMP7]] to ptr addrspace(200)
+// AARCH64-NEXT:    [[TMP9:%.*]] = load i64, ptr @__cheri_method.def.foo, align 8, !invariant.load !2
+// AARCH64-NEXT:    [[TMP10:%.*]] = load ptr addrspace(200), ptr @def, align 16
+// AARCH64-NEXT:    [[TMP11:%.*]] = load ptr addrspace(200), ptr getelementptr inbounds ([[STRUCT_CHERI_CLASS]], ptr @def, i32 0, i32 1), align 16
+// AARCH64-NEXT:    [[CALL1:%.*]] = call chericcallcc ptr addrspace(200) @cheri_invoke(ptr addrspace(200) noundef [[TMP10]], ptr addrspace(200) noundef [[TMP11]], i64 noundef [[TMP9]], ptr addrspace(200) noundef [[TMP6]], ptr addrspace(200) noundef [[TMP8]])
+// AARCH64-NEXT:    [[CALL1_ASCAST:%.*]] = addrspacecast ptr addrspace(200) [[CALL1]] to ptr
+// AARCH64-NEXT:    ret ptr [[CALL1_ASCAST]]
+//
 void *bar(void *a, void *b)
 {
 	baz(a, b);

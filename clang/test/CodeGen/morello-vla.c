@@ -4,9 +4,9 @@
 // CHECK-LABEL: testStackSaveRestore
 void testStackSaveRestore(unsigned long n) {
   int tab[n];
-// CHECK:  %[[Slot:.*]] = alloca i8 addrspace(200)*, align 16
-// CHECK:  %[[SP:.*]] = call i8 addrspace(200)* @llvm.stacksave.p200i8()
-// CHECK:  store i8 addrspace(200)* %[[SP]], i8 addrspace(200)* addrspace(200)* %[[Slot]], align 16
-// CHECK:  %[[SPs:.*]] = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %[[Slot]], align 16
-// CHECK:  call void @llvm.stackrestore.p200i8(i8 addrspace(200)* %[[SPs]])
+// CHECK:  %[[Slot:.*]] = alloca ptr addrspace(200), align 16
+// CHECK:  %[[SP:.*]] = call ptr addrspace(200) @llvm.stacksave.p200()
+// CHECK:  store ptr addrspace(200) %[[SP]], ptr addrspace(200) %[[Slot]], align 16
+// CHECK:  %[[SPs:.*]] = load ptr addrspace(200), ptr addrspace(200) %[[Slot]], align 16
+// CHECK:  call void @llvm.stackrestore.p200(ptr addrspace(200) %[[SPs]])
 }

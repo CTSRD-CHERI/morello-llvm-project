@@ -39,7 +39,7 @@ void bar(int a, int b)
 	// AARCH64: call chericcallcc void @cheri_invoke({ ptr addrspace(200), ptr addrspace(200) } %{{.*}}, i64 noundef %{{.*}}, i32 noundef %{{.*}}, i32 noundef %{{.*}})
 	foo_cap(other, a, b);
 	// CHERI: call chericcallcc void @cheri_invoke(ptr addrspace(200) noundef %{{.*}}, ptr addrspace(200) noundef %{{.*}}, i64 noundef zeroext %{{.*}}, i32 noundef signext %{{.*}}, i32 noundef signext %{{.*}})
-	// AARCH64: call chericcallcc void bitcast (void ({ ptr addrspace(200), ptr addrspace(200) }, i64, i32, i32)* @cheri_invoke to void (i8 addrspace(200)*, i8 addrspace(200)*, i64, i32, i32)*)(i8 addrspace(200)* noundef %{{.*}}, i8 addrspace(200)* noundef %{{.*}}, i64 noundef %{{.*}}, i32 noundef %{{.*}}, i32 noundef %{{.*}})
+	// AARCH64: call chericcallcc void @cheri_invoke(ptr addrspace(200) noundef %{{.*}}, ptr addrspace(200) noundef %{{.*}}, i64 noundef %{{.*}}, i32 noundef %{{.*}}, i32 noundef %{{.*}})
 	foo(a,b);
 }
 

@@ -8,6 +8,6 @@ void foo(struct S v, struct S v1);
 
 // CHECK-LABEL: bar
 void bar(struct S v) {
-// CHECK: call void @foo(i8 addrspace(200)* %{{.*}}, i8 addrspace(200)* %{{.*}})
+// CHECK: call void @foo(ptr addrspace(200) %{{.*}}, ptr addrspace(200) %{{.*}})
   foo(v, v);
 }

@@ -9,23 +9,19 @@ void bar(struct S1 arg);
 
 // CHECK-LABEL: @foo(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[LIST:%.*]] = alloca i8 addrspace(200)*, align 16, addrspace(200)
-// CHECK-NEXT:    [[LIST1:%.*]] = bitcast i8 addrspace(200)* addrspace(200)* [[LIST]] to i8 addrspace(200)*
-// CHECK-NEXT:    call void @llvm.va_start.p200i8(i8 addrspace(200)* [[LIST1]])
-// CHECK-NEXT:    [[STACK:%.*]] = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* [[LIST]], align 16
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i8 addrspace(200)* [[STACK]] to [[STRUCT_S1:%.*]] addrspace(200)* addrspace(200)*
-// CHECK-NEXT:    [[NEW_STACK:%.*]] = getelementptr inbounds i8, i8 addrspace(200)* [[STACK]], i64 16
-// CHECK-NEXT:    store i8 addrspace(200)* [[NEW_STACK]], i8 addrspace(200)* addrspace(200)* [[LIST]], align 16
-// CHECK-NEXT:    [[VAARG_ADDR:%.*]] = load [[STRUCT_S1]] addrspace(200)*, [[STRUCT_S1]] addrspace(200)* addrspace(200)* [[TMP0]], align 16
-// CHECK-NEXT:    [[ARG_SROA_0_0__SROA_IDX:%.*]] = getelementptr inbounds [[STRUCT_S1]], [[STRUCT_S1]] addrspace(200)* [[VAARG_ADDR]], i64 0, i32 0
-// CHECK-NEXT:    [[ARG_SROA_0_0_COPYLOAD:%.*]] = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* [[ARG_SROA_0_0__SROA_IDX]], align 16
-// CHECK-NEXT:    [[ARG_SROA_2_0__SROA_IDX1:%.*]] = getelementptr inbounds [[STRUCT_S1]], [[STRUCT_S1]] addrspace(200)* [[VAARG_ADDR]], i64 0, i32 1
-// CHECK-NEXT:    [[ARG_SROA_2_0_COPYLOAD:%.*]] = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* [[ARG_SROA_2_0__SROA_IDX1]], align 16
-// CHECK-NEXT:    [[DOTFCA_0_INSERT:%.*]] = insertvalue { i8 addrspace(200)*, i8 addrspace(200)* } poison, i8 addrspace(200)* [[ARG_SROA_0_0_COPYLOAD]], 0
-// CHECK-NEXT:    [[DOTFCA_1_INSERT:%.*]] = insertvalue { i8 addrspace(200)*, i8 addrspace(200)* } [[DOTFCA_0_INSERT]], i8 addrspace(200)* [[ARG_SROA_2_0_COPYLOAD]], 1
-// CHECK-NEXT:    call void @bar({ i8 addrspace(200)*, i8 addrspace(200)* } [[DOTFCA_1_INSERT]])
-// CHECK-NEXT:    [[LIST2:%.*]] = bitcast i8 addrspace(200)* addrspace(200)* [[LIST]] to i8 addrspace(200)*
-// CHECK-NEXT:    call void @llvm.va_end.p200i8(i8 addrspace(200)* [[LIST2]])
+// CHECK-NEXT:    [[LIST:%.*]] = alloca ptr addrspace(200), align 16, addrspace(200)
+// CHECK-NEXT:    call void @llvm.va_start.p200(ptr addrspace(200) [[LIST]])
+// CHECK-NEXT:    [[STACK:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[LIST]], align 16
+// CHECK-NEXT:    [[NEW_STACK:%.*]] = getelementptr inbounds i8, ptr addrspace(200) [[STACK]], i64 16
+// CHECK-NEXT:    store ptr addrspace(200) [[NEW_STACK]], ptr addrspace(200) [[LIST]], align 16
+// CHECK-NEXT:    [[VAARG_ADDR:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[STACK]], align 16
+// CHECK-NEXT:    [[ARG_SROA_0_0_COPYLOAD:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[VAARG_ADDR]], align 16
+// CHECK-NEXT:    [[ARG_SROA_2_0_VAARG_ADDR_SROA_IDX:%.*]] = getelementptr inbounds i8, ptr addrspace(200) [[VAARG_ADDR]], i64 16
+// CHECK-NEXT:    [[ARG_SROA_2_0_COPYLOAD:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[ARG_SROA_2_0_VAARG_ADDR_SROA_IDX]], align 16
+// CHECK-NEXT:    [[DOTFCA_0_INSERT:%.*]] = insertvalue { ptr addrspace(200), ptr addrspace(200) } poison, ptr addrspace(200) [[ARG_SROA_0_0_COPYLOAD]], 0
+// CHECK-NEXT:    [[DOTFCA_1_INSERT:%.*]] = insertvalue { ptr addrspace(200), ptr addrspace(200) } [[DOTFCA_0_INSERT]], ptr addrspace(200) [[ARG_SROA_2_0_COPYLOAD]], 1
+// CHECK-NEXT:    call void @bar({ ptr addrspace(200), ptr addrspace(200) } [[DOTFCA_1_INSERT]])
+// CHECK-NEXT:    call void @llvm.va_end.p200(ptr addrspace(200) [[LIST]])
 // CHECK-NEXT:    ret void
 //
 void foo(int i, ...) {
@@ -47,25 +43,18 @@ void bat(struct S2 arg);
 
 // CHECK-LABEL: @baz(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[LIST:%.*]] = alloca i8 addrspace(200)*, align 16, addrspace(200)
+// CHECK-NEXT:    [[LIST:%.*]] = alloca ptr addrspace(200), align 16, addrspace(200)
 // CHECK-NEXT:    [[ARG:%.*]] = alloca [[STRUCT_S2:%.*]], align 8, addrspace(200)
 // CHECK-NEXT:    [[BYVAL_TEMP:%.*]] = alloca [[STRUCT_S2]], align 8, addrspace(200)
-// CHECK-NEXT:    [[LIST1:%.*]] = bitcast i8 addrspace(200)* addrspace(200)* [[LIST]] to i8 addrspace(200)*
-// CHECK-NEXT:    call void @llvm.va_start.p200i8(i8 addrspace(200)* [[LIST1]])
-// CHECK-NEXT:    [[STACK:%.*]] = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* [[LIST]], align 16
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i8 addrspace(200)* [[STACK]] to [[STRUCT_S2]] addrspace(200)* addrspace(200)*
-// CHECK-NEXT:    [[NEW_STACK:%.*]] = getelementptr inbounds i8, i8 addrspace(200)* [[STACK]], i64 16
-// CHECK-NEXT:    store i8 addrspace(200)* [[NEW_STACK]], i8 addrspace(200)* addrspace(200)* [[LIST]], align 16
-// CHECK-NEXT:    [[VAARG_ADDR:%.*]] = load [[STRUCT_S2]] addrspace(200)*, [[STRUCT_S2]] addrspace(200)* addrspace(200)* [[TMP0]], align 16
-// CHECK-NEXT:    [[TMP1:%.*]] = bitcast [[STRUCT_S2]] addrspace(200)* [[ARG]] to i8 addrspace(200)*
-// CHECK-NEXT:    [[TMP2:%.*]] = bitcast [[STRUCT_S2]] addrspace(200)* [[VAARG_ADDR]] to i8 addrspace(200)*
-// CHECK-NEXT:    call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* align 8 [[TMP1]], i8 addrspace(200)* align 8 [[TMP2]], i64 32, i1 false)
-// CHECK-NEXT:    [[TMP3:%.*]] = bitcast [[STRUCT_S2]] addrspace(200)* [[BYVAL_TEMP]] to i8 addrspace(200)*
-// CHECK-NEXT:    [[TMP4:%.*]] = bitcast [[STRUCT_S2]] addrspace(200)* [[ARG]] to i8 addrspace(200)*
-// CHECK-NEXT:    call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* align 8 [[TMP3]], i8 addrspace(200)* align 8 [[TMP4]], i64 32, i1 false)
-// CHECK-NEXT:    call void @bat([[STRUCT_S2]] addrspace(200)* noundef [[BYVAL_TEMP]])
-// CHECK-NEXT:    [[LIST2:%.*]] = bitcast i8 addrspace(200)* addrspace(200)* [[LIST]] to i8 addrspace(200)*
-// CHECK-NEXT:    call void @llvm.va_end.p200i8(i8 addrspace(200)* [[LIST2]])
+// CHECK-NEXT:    call void @llvm.va_start.p200(ptr addrspace(200) [[LIST]])
+// CHECK-NEXT:    [[STACK:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[LIST]], align 16
+// CHECK-NEXT:    [[NEW_STACK:%.*]] = getelementptr inbounds i8, ptr addrspace(200) [[STACK]], i64 16
+// CHECK-NEXT:    store ptr addrspace(200) [[NEW_STACK]], ptr addrspace(200) [[LIST]], align 16
+// CHECK-NEXT:    [[VAARG_ADDR:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[STACK]], align 16
+// CHECK-NEXT:    call void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) align 8 [[ARG]], ptr addrspace(200) align 8 [[VAARG_ADDR]], i64 32, i1 false)
+// CHECK-NEXT:    call void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) align 8 [[BYVAL_TEMP]], ptr addrspace(200) align 8 [[ARG]], i64 32, i1 false)
+// CHECK-NEXT:    call void @bat(ptr addrspace(200) noundef [[BYVAL_TEMP]])
+// CHECK-NEXT:    call void @llvm.va_end.p200(ptr addrspace(200) [[LIST]])
 // CHECK-NEXT:    ret void
 //
 void baz(int i, ...) {

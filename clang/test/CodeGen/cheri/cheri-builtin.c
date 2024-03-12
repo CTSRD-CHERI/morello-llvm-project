@@ -95,9 +95,9 @@ long long test(void* __capability foo)
 
 // FIXME: convert this to an IR test.
 void buildcap(void * __capability auth, __intcap_t bits) {
-  // CHECK: call i8 addrspace(200)* @llvm.cheri.cap.build
-  // CHECK: call i8 addrspace(200)* @llvm.cheri.cap.type.copy
-  // CHECK: call i8 addrspace(200)* @llvm.cheri.cap.conditional.seal
+  // CHECK: call ptr addrspace(200) @llvm.cheri.cap.build
+  // CHECK: call ptr addrspace(200) @llvm.cheri.cap.type.copy
+  // CHECK: call ptr addrspace(200) @llvm.cheri.cap.conditional.seal
   // ASM-LABEL: buildcap:
   void * __capability tagged = __builtin_cheri_cap_build(auth, bits);
   // ASM: cbuildcap $c{{[0-9]+}}, $c{{[0-9]+}}, $c{{[0-9]+}}

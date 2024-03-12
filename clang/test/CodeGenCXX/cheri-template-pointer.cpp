@@ -5,11 +5,11 @@ template <typename T> static inline T loadFromCap(T*  __capability address) {
 }
 
 // CHECK-LABEL: _Z3funU12__capabilityPi
-// CHECK: call noundef signext i32 @{{.*}}loadFromCap{{.*}}(i32 addrspace(200)*
+// CHECK: call noundef signext i32 @{{.*}}loadFromCap{{.*}}(ptr addrspace(200)
 int fun(int * __capability t) {
   return loadFromCap<int>(t);
 }
 
 // CHECK: loadFromCap
-// CHECK: load i32, i32 addrspace(200)* %0
+// CHECK: load i32, ptr addrspace(200) %0
 // CHECK: ret i32

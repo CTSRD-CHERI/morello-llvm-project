@@ -9,37 +9,33 @@
 // CHECK-LABEL: @foo(
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[ARGS:%.*]] = alloca [[STRUCT___VA_LIST:%.*]], align 8
-// CHECK-NEXT:    [[ARGS1:%.*]] = bitcast %struct.__va_list* [[ARGS]] to i8*
-// CHECK-NEXT:    call void @llvm.va_start.p0i8(i8* [[ARGS1]])
-// CHECK-NEXT:    [[GR_OFFS_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], %struct.__va_list* [[ARGS]], i32 0, i32 3
-// CHECK-NEXT:    [[GR_OFFS:%.*]] = load i32, i32* [[GR_OFFS_P]], align 8
+// CHECK-NEXT:    call void @llvm.va_start.p0(ptr [[ARGS]])
+// CHECK-NEXT:    [[GR_OFFS_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], ptr [[ARGS]], i32 0, i32 3
+// CHECK-NEXT:    [[GR_OFFS:%.*]] = load i32, ptr [[GR_OFFS_P]], align 8
 // CHECK-NEXT:    [[TMP0:%.*]] = icmp sge i32 [[GR_OFFS]], 0
 // CHECK-NEXT:    br i1 [[TMP0]], label [[VAARG_ON_STACK:%.*]], label [[VAARG_MAYBE_REG:%.*]]
 // CHECK:       vaarg.maybe_reg:
 // CHECK-NEXT:    [[NEW_REG_OFFS:%.*]] = add i32 [[GR_OFFS]], 8
-// CHECK-NEXT:    store i32 [[NEW_REG_OFFS]], i32* [[GR_OFFS_P]], align 8
+// CHECK-NEXT:    store i32 [[NEW_REG_OFFS]], ptr [[GR_OFFS_P]], align 8
 // CHECK-NEXT:    [[INREG:%.*]] = icmp sle i32 [[NEW_REG_OFFS]], 0
 // CHECK-NEXT:    br i1 [[INREG]], label [[VAARG_IN_REG:%.*]], label [[VAARG_ON_STACK]]
 // CHECK:       vaarg.in_reg:
-// CHECK-NEXT:    [[REG_TOP_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], %struct.__va_list* [[ARGS]], i32 0, i32 1
-// CHECK-NEXT:    [[REG_TOP:%.*]] = load i8*, i8** [[REG_TOP_P]], align 8
-// CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i8, i8* [[REG_TOP]], i32 [[GR_OFFS]]
-// CHECK-NEXT:    [[TMP2:%.*]] = bitcast i8* [[TMP1]] to i8 addrspace(200)***
+// CHECK-NEXT:    [[REG_TOP_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], ptr [[ARGS]], i32 0, i32 1
+// CHECK-NEXT:    [[REG_TOP:%.*]] = load ptr, ptr [[REG_TOP_P]], align 8
+// CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i8, ptr [[REG_TOP]], i32 [[GR_OFFS]]
 // CHECK-NEXT:    br label [[VAARG_END:%.*]]
 // CHECK:       vaarg.on_stack:
-// CHECK-NEXT:    [[STACK_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], %struct.__va_list* [[ARGS]], i32 0, i32 0
-// CHECK-NEXT:    [[STACK:%.*]] = load i8*, i8** [[STACK_P]], align 8
-// CHECK-NEXT:    [[NEW_STACK:%.*]] = getelementptr inbounds i8, i8* [[STACK]], i64 8
-// CHECK-NEXT:    store i8* [[NEW_STACK]], i8** [[STACK_P]], align 8
-// CHECK-NEXT:    [[TMP3:%.*]] = bitcast i8* [[STACK]] to i8 addrspace(200)***
+// CHECK-NEXT:    [[STACK_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], ptr [[ARGS]], i32 0, i32 0
+// CHECK-NEXT:    [[STACK:%.*]] = load ptr, ptr [[STACK_P]], align 8
+// CHECK-NEXT:    [[NEW_STACK:%.*]] = getelementptr inbounds i8, ptr [[STACK]], i64 8
+// CHECK-NEXT:    store ptr [[NEW_STACK]], ptr [[STACK_P]], align 8
 // CHECK-NEXT:    br label [[VAARG_END]]
 // CHECK:       vaarg.end:
-// CHECK-NEXT:    [[VAARGS_ADDR:%.*]] = phi i8 addrspace(200)*** [ [[TMP2]], [[VAARG_IN_REG]] ], [ [[TMP3]], [[VAARG_ON_STACK]] ]
-// CHECK-NEXT:    [[VAARG_ADDR:%.*]] = load i8 addrspace(200)**, i8 addrspace(200)*** [[VAARGS_ADDR]], align 8
-// CHECK-NEXT:    [[TMP4:%.*]] = load i8 addrspace(200)*, i8 addrspace(200)** [[VAARG_ADDR]], align 16
-// CHECK-NEXT:    [[ARGS2:%.*]] = bitcast %struct.__va_list* [[ARGS]] to i8*
-// CHECK-NEXT:    call void @llvm.va_end.p0i8(i8* [[ARGS2]])
-// CHECK-NEXT:    ret i8 addrspace(200)* [[TMP4]]
+// CHECK-NEXT:    [[VAARGS_ADDR:%.*]] = phi ptr [ [[TMP1]], [[VAARG_IN_REG]] ], [ [[STACK]], [[VAARG_ON_STACK]] ]
+// CHECK-NEXT:    [[VAARG_ADDR:%.*]] = load ptr, ptr [[VAARGS_ADDR]], align 8
+// CHECK-NEXT:    [[TMP2:%.*]] = load ptr addrspace(200), ptr [[VAARG_ADDR]], align 16
+// CHECK-NEXT:    call void @llvm.va_end.p0(ptr [[ARGS]])
+// CHECK-NEXT:    ret ptr addrspace(200) [[TMP2]]
 //
 __intcap_t foo(int count, ...) {
     va_list args;
@@ -51,9 +47,9 @@ __intcap_t foo(int count, ...) {
 
 // CHECK-LABEL: @bar(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[INDIRECT_ARG_TEMP:%.*]] = alloca i8 addrspace(200)*, align 16
-// CHECK-NEXT:    store i8 addrspace(200)* null, i8 addrspace(200)** [[INDIRECT_ARG_TEMP]], align 16
-// CHECK-NEXT:    [[CALL:%.*]] = call i8 addrspace(200)* (i32, ...) @foo(i32 noundef 4, i8 addrspace(200)** noundef [[INDIRECT_ARG_TEMP]])
+// CHECK-NEXT:    [[INDIRECT_ARG_TEMP:%.*]] = alloca ptr addrspace(200), align 16
+// CHECK-NEXT:    store ptr addrspace(200) null, ptr [[INDIRECT_ARG_TEMP]], align 16
+// CHECK-NEXT:    [[CALL:%.*]] = call ptr addrspace(200) (i32, ...) @foo(i32 noundef 4, ptr noundef [[INDIRECT_ARG_TEMP]])
 // CHECK-NEXT:    ret void
 //
 void bar(void) {
@@ -64,37 +60,33 @@ void bar(void) {
 // CHECK-LABEL: @baz(
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[ARGS:%.*]] = alloca [[STRUCT___VA_LIST:%.*]], align 8
-// CHECK-NEXT:    [[ARGS1:%.*]] = bitcast %struct.__va_list* [[ARGS]] to i8*
-// CHECK-NEXT:    call void @llvm.va_start.p0i8(i8* [[ARGS1]])
-// CHECK-NEXT:    [[GR_OFFS_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], %struct.__va_list* [[ARGS]], i32 0, i32 3
-// CHECK-NEXT:    [[GR_OFFS:%.*]] = load i32, i32* [[GR_OFFS_P]], align 8
+// CHECK-NEXT:    call void @llvm.va_start.p0(ptr [[ARGS]])
+// CHECK-NEXT:    [[GR_OFFS_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], ptr [[ARGS]], i32 0, i32 3
+// CHECK-NEXT:    [[GR_OFFS:%.*]] = load i32, ptr [[GR_OFFS_P]], align 8
 // CHECK-NEXT:    [[TMP0:%.*]] = icmp sge i32 [[GR_OFFS]], 0
 // CHECK-NEXT:    br i1 [[TMP0]], label [[VAARG_ON_STACK:%.*]], label [[VAARG_MAYBE_REG:%.*]]
 // CHECK:       vaarg.maybe_reg:
 // CHECK-NEXT:    [[NEW_REG_OFFS:%.*]] = add i32 [[GR_OFFS]], 8
-// CHECK-NEXT:    store i32 [[NEW_REG_OFFS]], i32* [[GR_OFFS_P]], align 8
+// CHECK-NEXT:    store i32 [[NEW_REG_OFFS]], ptr [[GR_OFFS_P]], align 8
 // CHECK-NEXT:    [[INREG:%.*]] = icmp sle i32 [[NEW_REG_OFFS]], 0
 // CHECK-NEXT:    br i1 [[INREG]], label [[VAARG_IN_REG:%.*]], label [[VAARG_ON_STACK]]
 // CHECK:       vaarg.in_reg:
-// CHECK-NEXT:    [[REG_TOP_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], %struct.__va_list* [[ARGS]], i32 0, i32 1
-// CHECK-NEXT:    [[REG_TOP:%.*]] = load i8*, i8** [[REG_TOP_P]], align 8
-// CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i8, i8* [[REG_TOP]], i32 [[GR_OFFS]]
-// CHECK-NEXT:    [[TMP2:%.*]] = bitcast i8* [[TMP1]] to i8 addrspace(200)***
+// CHECK-NEXT:    [[REG_TOP_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], ptr [[ARGS]], i32 0, i32 1
+// CHECK-NEXT:    [[REG_TOP:%.*]] = load ptr, ptr [[REG_TOP_P]], align 8
+// CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i8, ptr [[REG_TOP]], i32 [[GR_OFFS]]
 // CHECK-NEXT:    br label [[VAARG_END:%.*]]
 // CHECK:       vaarg.on_stack:
-// CHECK-NEXT:    [[STACK_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], %struct.__va_list* [[ARGS]], i32 0, i32 0
-// CHECK-NEXT:    [[STACK:%.*]] = load i8*, i8** [[STACK_P]], align 8
-// CHECK-NEXT:    [[NEW_STACK:%.*]] = getelementptr inbounds i8, i8* [[STACK]], i64 8
-// CHECK-NEXT:    store i8* [[NEW_STACK]], i8** [[STACK_P]], align 8
-// CHECK-NEXT:    [[TMP3:%.*]] = bitcast i8* [[STACK]] to i8 addrspace(200)***
+// CHECK-NEXT:    [[STACK_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], ptr [[ARGS]], i32 0, i32 0
+// CHECK-NEXT:    [[STACK:%.*]] = load ptr, ptr [[STACK_P]], align 8
+// CHECK-NEXT:    [[NEW_STACK:%.*]] = getelementptr inbounds i8, ptr [[STACK]], i64 8
+// CHECK-NEXT:    store ptr [[NEW_STACK]], ptr [[STACK_P]], align 8
 // CHECK-NEXT:    br label [[VAARG_END]]
 // CHECK:       vaarg.end:
-// CHECK-NEXT:    [[VAARGS_ADDR:%.*]] = phi i8 addrspace(200)*** [ [[TMP2]], [[VAARG_IN_REG]] ], [ [[TMP3]], [[VAARG_ON_STACK]] ]
-// CHECK-NEXT:    [[VAARG_ADDR:%.*]] = load i8 addrspace(200)**, i8 addrspace(200)*** [[VAARGS_ADDR]], align 8
-// CHECK-NEXT:    [[TMP4:%.*]] = load i8 addrspace(200)*, i8 addrspace(200)** [[VAARG_ADDR]], align 16
-// CHECK-NEXT:    [[ARGS2:%.*]] = bitcast %struct.__va_list* [[ARGS]] to i8*
-// CHECK-NEXT:    call void @llvm.va_end.p0i8(i8* [[ARGS2]])
-// CHECK-NEXT:    ret i8 addrspace(200)* [[TMP4]]
+// CHECK-NEXT:    [[VAARGS_ADDR:%.*]] = phi ptr [ [[TMP1]], [[VAARG_IN_REG]] ], [ [[STACK]], [[VAARG_ON_STACK]] ]
+// CHECK-NEXT:    [[VAARG_ADDR:%.*]] = load ptr, ptr [[VAARGS_ADDR]], align 8
+// CHECK-NEXT:    [[TMP2:%.*]] = load ptr addrspace(200), ptr [[VAARG_ADDR]], align 16
+// CHECK-NEXT:    call void @llvm.va_end.p0(ptr [[ARGS]])
+// CHECK-NEXT:    ret ptr addrspace(200) [[TMP2]]
 //
 void *__capability baz(int count, ...) {
     va_list args;
@@ -108,9 +100,9 @@ int x;
 
 // CHECK-LABEL: @bif(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[INDIRECT_ARG_TEMP:%.*]] = alloca i8 addrspace(200)*, align 16
-// CHECK-NEXT:    store i8 addrspace(200)* addrspacecast (i8* bitcast (i32* @x to i8*) to i8 addrspace(200)*), i8 addrspace(200)** [[INDIRECT_ARG_TEMP]], align 16
-// CHECK-NEXT:    [[CALL:%.*]] = call i8 addrspace(200)* (i32, ...) @baz(i32 noundef 4, i8 addrspace(200)** noundef [[INDIRECT_ARG_TEMP]])
+// CHECK-NEXT:    [[INDIRECT_ARG_TEMP:%.*]] = alloca ptr addrspace(200), align 16
+// CHECK-NEXT:    store ptr addrspace(200) addrspacecast (ptr @x to ptr addrspace(200)), ptr [[INDIRECT_ARG_TEMP]], align 16
+// CHECK-NEXT:    [[CALL:%.*]] = call ptr addrspace(200) (i32, ...) @baz(i32 noundef 4, ptr noundef [[INDIRECT_ARG_TEMP]])
 // CHECK-NEXT:    ret void
 //
 void bif(void) {
@@ -127,41 +119,34 @@ struct str {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[RETVAL:%.*]] = alloca [[STRUCT_STR:%.*]], align 16
 // CHECK-NEXT:    [[ARGS:%.*]] = alloca [[STRUCT___VA_LIST:%.*]], align 8
-// CHECK-NEXT:    [[ARGS1:%.*]] = bitcast %struct.__va_list* [[ARGS]] to i8*
-// CHECK-NEXT:    call void @llvm.va_start.p0i8(i8* [[ARGS1]])
-// CHECK-NEXT:    [[GR_OFFS_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], %struct.__va_list* [[ARGS]], i32 0, i32 3
-// CHECK-NEXT:    [[GR_OFFS:%.*]] = load i32, i32* [[GR_OFFS_P]], align 8
+// CHECK-NEXT:    call void @llvm.va_start.p0(ptr [[ARGS]])
+// CHECK-NEXT:    [[GR_OFFS_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], ptr [[ARGS]], i32 0, i32 3
+// CHECK-NEXT:    [[GR_OFFS:%.*]] = load i32, ptr [[GR_OFFS_P]], align 8
 // CHECK-NEXT:    [[TMP0:%.*]] = icmp sge i32 [[GR_OFFS]], 0
 // CHECK-NEXT:    br i1 [[TMP0]], label [[VAARG_ON_STACK:%.*]], label [[VAARG_MAYBE_REG:%.*]]
 // CHECK:       vaarg.maybe_reg:
 // CHECK-NEXT:    [[NEW_REG_OFFS:%.*]] = add i32 [[GR_OFFS]], 8
-// CHECK-NEXT:    store i32 [[NEW_REG_OFFS]], i32* [[GR_OFFS_P]], align 8
+// CHECK-NEXT:    store i32 [[NEW_REG_OFFS]], ptr [[GR_OFFS_P]], align 8
 // CHECK-NEXT:    [[INREG:%.*]] = icmp sle i32 [[NEW_REG_OFFS]], 0
 // CHECK-NEXT:    br i1 [[INREG]], label [[VAARG_IN_REG:%.*]], label [[VAARG_ON_STACK]]
 // CHECK:       vaarg.in_reg:
-// CHECK-NEXT:    [[REG_TOP_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], %struct.__va_list* [[ARGS]], i32 0, i32 1
-// CHECK-NEXT:    [[REG_TOP:%.*]] = load i8*, i8** [[REG_TOP_P]], align 8
-// CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i8, i8* [[REG_TOP]], i32 [[GR_OFFS]]
-// CHECK-NEXT:    [[TMP2:%.*]] = bitcast i8* [[TMP1]] to %struct.str**
+// CHECK-NEXT:    [[REG_TOP_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], ptr [[ARGS]], i32 0, i32 1
+// CHECK-NEXT:    [[REG_TOP:%.*]] = load ptr, ptr [[REG_TOP_P]], align 8
+// CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i8, ptr [[REG_TOP]], i32 [[GR_OFFS]]
 // CHECK-NEXT:    br label [[VAARG_END:%.*]]
 // CHECK:       vaarg.on_stack:
-// CHECK-NEXT:    [[STACK_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], %struct.__va_list* [[ARGS]], i32 0, i32 0
-// CHECK-NEXT:    [[STACK:%.*]] = load i8*, i8** [[STACK_P]], align 8
-// CHECK-NEXT:    [[NEW_STACK:%.*]] = getelementptr inbounds i8, i8* [[STACK]], i64 8
-// CHECK-NEXT:    store i8* [[NEW_STACK]], i8** [[STACK_P]], align 8
-// CHECK-NEXT:    [[TMP3:%.*]] = bitcast i8* [[STACK]] to %struct.str**
+// CHECK-NEXT:    [[STACK_P:%.*]] = getelementptr inbounds [[STRUCT___VA_LIST]], ptr [[ARGS]], i32 0, i32 0
+// CHECK-NEXT:    [[STACK:%.*]] = load ptr, ptr [[STACK_P]], align 8
+// CHECK-NEXT:    [[NEW_STACK:%.*]] = getelementptr inbounds i8, ptr [[STACK]], i64 8
+// CHECK-NEXT:    store ptr [[NEW_STACK]], ptr [[STACK_P]], align 8
 // CHECK-NEXT:    br label [[VAARG_END]]
 // CHECK:       vaarg.end:
-// CHECK-NEXT:    [[VAARGS_ADDR:%.*]] = phi %struct.str** [ [[TMP2]], [[VAARG_IN_REG]] ], [ [[TMP3]], [[VAARG_ON_STACK]] ]
-// CHECK-NEXT:    [[VAARG_ADDR:%.*]] = load %struct.str*, %struct.str** [[VAARGS_ADDR]], align 8
-// CHECK-NEXT:    [[TMP4:%.*]] = bitcast %struct.str* [[RETVAL]] to i8*
-// CHECK-NEXT:    [[TMP5:%.*]] = bitcast %struct.str* [[VAARG_ADDR]] to i8*
-// CHECK-NEXT:    call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 16 [[TMP4]], i8* align 16 [[TMP5]], i64 32, i1 false)
-// CHECK-NEXT:    [[ARGS2:%.*]] = bitcast %struct.__va_list* [[ARGS]] to i8*
-// CHECK-NEXT:    call void @llvm.va_end.p0i8(i8* [[ARGS2]])
-// CHECK-NEXT:    [[TMP6:%.*]] = bitcast %struct.str* [[RETVAL]] to { i8 addrspace(200)*, i64 }*
-// CHECK-NEXT:    [[TMP7:%.*]] = load { i8 addrspace(200)*, i64 }, { i8 addrspace(200)*, i64 }* [[TMP6]], align 16
-// CHECK-NEXT:    ret { i8 addrspace(200)*, i64 } [[TMP7]]
+// CHECK-NEXT:    [[VAARGS_ADDR:%.*]] = phi ptr [ [[TMP1]], [[VAARG_IN_REG]] ], [ [[STACK]], [[VAARG_ON_STACK]] ]
+// CHECK-NEXT:    [[VAARG_ADDR:%.*]] = load ptr, ptr [[VAARGS_ADDR]], align 8
+// CHECK-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr align 16 [[RETVAL]], ptr align 16 [[VAARG_ADDR]], i64 32, i1 false)
+// CHECK-NEXT:    call void @llvm.va_end.p0(ptr [[ARGS]])
+// CHECK-NEXT:    [[TMP2:%.*]] = load { ptr addrspace(200), i64 }, ptr [[RETVAL]], align 16
+// CHECK-NEXT:    ret { ptr addrspace(200), i64 } [[TMP2]]
 //
 struct str bat(int count, ...) {
     va_list args;
@@ -176,21 +161,18 @@ struct str bat(int count, ...) {
 // CHECK-NEXT:    [[CAP_STRUCT:%.*]] = alloca [[STRUCT_STR:%.*]], align 16
 // CHECK-NEXT:    [[BYVAL_TEMP:%.*]] = alloca [[STRUCT_STR]], align 16
 // CHECK-NEXT:    [[COERCE:%.*]] = alloca [[STRUCT_STR]], align 16
-// CHECK-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_STR]], %struct.str* [[CAP_STRUCT]], i32 0, i32 0
-// CHECK-NEXT:    store i32 addrspace(200)* addrspacecast (i32* @x to i32 addrspace(200)*), i32 addrspace(200)** [[X]], align 16
-// CHECK-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_STR]], %struct.str* [[CAP_STRUCT]], i32 0, i32 1
-// CHECK-NEXT:    store i32 0, i32* [[Y]], align 16
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast %struct.str* [[BYVAL_TEMP]] to i8*
-// CHECK-NEXT:    [[TMP1:%.*]] = bitcast %struct.str* [[CAP_STRUCT]] to i8*
-// CHECK-NEXT:    call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 16 [[TMP0]], i8* align 16 [[TMP1]], i64 32, i1 false)
-// CHECK-NEXT:    [[CALL:%.*]] = call { i8 addrspace(200)*, i64 } (i32, ...) @bat(i32 noundef 4, %struct.str* noundef [[BYVAL_TEMP]])
-// CHECK-NEXT:    [[TMP2:%.*]] = bitcast %struct.str* [[COERCE]] to { i8 addrspace(200)*, i64 }*
-// CHECK-NEXT:    [[TMP3:%.*]] = getelementptr inbounds { i8 addrspace(200)*, i64 }, { i8 addrspace(200)*, i64 }* [[TMP2]], i32 0, i32 0
-// CHECK-NEXT:    [[TMP4:%.*]] = extractvalue { i8 addrspace(200)*, i64 } [[CALL]], 0
-// CHECK-NEXT:    store i8 addrspace(200)* [[TMP4]], i8 addrspace(200)** [[TMP3]], align 16
-// CHECK-NEXT:    [[TMP5:%.*]] = getelementptr inbounds { i8 addrspace(200)*, i64 }, { i8 addrspace(200)*, i64 }* [[TMP2]], i32 0, i32 1
-// CHECK-NEXT:    [[TMP6:%.*]] = extractvalue { i8 addrspace(200)*, i64 } [[CALL]], 1
-// CHECK-NEXT:    store i64 [[TMP6]], i64* [[TMP5]], align 16
+// CHECK-NEXT:    [[X:%.*]] = getelementptr inbounds [[STRUCT_STR]], ptr [[CAP_STRUCT]], i32 0, i32 0
+// CHECK-NEXT:    store ptr addrspace(200) addrspacecast (ptr @x to ptr addrspace(200)), ptr [[X]], align 16
+// CHECK-NEXT:    [[Y:%.*]] = getelementptr inbounds [[STRUCT_STR]], ptr [[CAP_STRUCT]], i32 0, i32 1
+// CHECK-NEXT:    store i32 0, ptr [[Y]], align 16
+// CHECK-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr align 16 [[BYVAL_TEMP]], ptr align 16 [[CAP_STRUCT]], i64 32, i1 false)
+// CHECK-NEXT:    [[CALL:%.*]] = call { ptr addrspace(200), i64 } (i32, ...) @bat(i32 noundef 4, ptr noundef [[BYVAL_TEMP]])
+// CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds { ptr addrspace(200), i64 }, ptr [[COERCE]], i32 0, i32 0
+// CHECK-NEXT:    [[TMP1:%.*]] = extractvalue { ptr addrspace(200), i64 } [[CALL]], 0
+// CHECK-NEXT:    store ptr addrspace(200) [[TMP1]], ptr [[TMP0]], align 16
+// CHECK-NEXT:    [[TMP2:%.*]] = getelementptr inbounds { ptr addrspace(200), i64 }, ptr [[COERCE]], i32 0, i32 1
+// CHECK-NEXT:    [[TMP3:%.*]] = extractvalue { ptr addrspace(200), i64 } [[CALL]], 1
+// CHECK-NEXT:    store i64 [[TMP3]], ptr [[TMP2]], align 16
 // CHECK-NEXT:    ret void
 //
 void fiz(void) {

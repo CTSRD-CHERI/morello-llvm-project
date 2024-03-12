@@ -23,22 +23,18 @@ void call1(double, float);
 
 // CHECK-LABEL: @callee_test_scalars(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[ARGS:%.*]] = alloca i8 addrspace(200)*, align 16, addrspace(200)
-// CHECK-NEXT:    [[ARGS1:%.*]] = bitcast i8 addrspace(200)* addrspace(200)* [[ARGS]] to i8 addrspace(200)*
-// CHECK-NEXT:    call void @llvm.va_start.p200i8(i8 addrspace(200)* [[ARGS1]])
-// CHECK-NEXT:    [[STACK:%.*]] = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* [[ARGS]], align 16
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i8 addrspace(200)* [[STACK]] to double addrspace(200)*
-// CHECK-NEXT:    [[NEW_STACK:%.*]] = getelementptr inbounds i8, i8 addrspace(200)* [[STACK]], i64 16
-// CHECK-NEXT:    store i8 addrspace(200)* [[NEW_STACK]], i8 addrspace(200)* addrspace(200)* [[ARGS]], align 16
-// CHECK-NEXT:    [[TMP1:%.*]] = load double, double addrspace(200)* [[TMP0]], align 16
-// CHECK-NEXT:    [[STACK2:%.*]] = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* [[ARGS]], align 16
-// CHECK-NEXT:    [[TMP2:%.*]] = bitcast i8 addrspace(200)* [[STACK2]] to float addrspace(200)*
-// CHECK-NEXT:    [[NEW_STACK3:%.*]] = getelementptr inbounds i8, i8 addrspace(200)* [[STACK2]], i64 16
-// CHECK-NEXT:    store i8 addrspace(200)* [[NEW_STACK3]], i8 addrspace(200)* addrspace(200)* [[ARGS]], align 16
-// CHECK-NEXT:    [[TMP3:%.*]] = load float, float addrspace(200)* [[TMP2]], align 16
-// CHECK-NEXT:    [[ARGS4:%.*]] = bitcast i8 addrspace(200)* addrspace(200)* [[ARGS]] to i8 addrspace(200)*
-// CHECK-NEXT:    call void @llvm.va_end.p200i8(i8 addrspace(200)* [[ARGS4]])
-// CHECK-NEXT:    call void @call1(double noundef [[TMP1]], float noundef [[TMP3]])
+// CHECK-NEXT:    [[ARGS:%.*]] = alloca ptr addrspace(200), align 16, addrspace(200)
+// CHECK-NEXT:    call void @llvm.va_start.p200(ptr addrspace(200) [[ARGS]])
+// CHECK-NEXT:    [[STACK:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[ARGS]], align 16
+// CHECK-NEXT:    [[NEW_STACK:%.*]] = getelementptr inbounds i8, ptr addrspace(200) [[STACK]], i64 16
+// CHECK-NEXT:    store ptr addrspace(200) [[NEW_STACK]], ptr addrspace(200) [[ARGS]], align 16
+// CHECK-NEXT:    [[TMP0:%.*]] = load double, ptr addrspace(200) [[STACK]], align 16
+// CHECK-NEXT:    [[STACK1:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[ARGS]], align 16
+// CHECK-NEXT:    [[NEW_STACK2:%.*]] = getelementptr inbounds i8, ptr addrspace(200) [[STACK1]], i64 16
+// CHECK-NEXT:    store ptr addrspace(200) [[NEW_STACK2]], ptr addrspace(200) [[ARGS]], align 16
+// CHECK-NEXT:    [[TMP1:%.*]] = load float, ptr addrspace(200) [[STACK1]], align 16
+// CHECK-NEXT:    call void @llvm.va_end.p200(ptr addrspace(200) [[ARGS]])
+// CHECK-NEXT:    call void @call1(double noundef [[TMP0]], float noundef [[TMP1]])
 // CHECK-NEXT:    ret void
 //
 void callee_test_scalars(int count, ...) {
@@ -54,33 +50,23 @@ void call2(struct hfa, struct comp);
 
 // CHECK-LABEL: @callee_test_aggregate(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[ARGS:%.*]] = alloca i8 addrspace(200)*, align 16, addrspace(200)
+// CHECK-NEXT:    [[ARGS:%.*]] = alloca ptr addrspace(200), align 16, addrspace(200)
 // CHECK-NEXT:    [[NUM0:%.*]] = alloca [[STRUCT_HFA:%.*]], align 4, addrspace(200)
 // CHECK-NEXT:    [[NUM1:%.*]] = alloca [[STRUCT_COMP:%.*]], align 16, addrspace(200)
-// CHECK-NEXT:    [[ARGS1:%.*]] = bitcast i8 addrspace(200)* addrspace(200)* [[ARGS]] to i8 addrspace(200)*
-// CHECK-NEXT:    call void @llvm.va_start.p200i8(i8 addrspace(200)* [[ARGS1]])
-// CHECK-NEXT:    [[STACK:%.*]] = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* [[ARGS]], align 16
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i8 addrspace(200)* [[STACK]] to [[STRUCT_HFA]] addrspace(200)*
-// CHECK-NEXT:    [[NEW_STACK:%.*]] = getelementptr inbounds i8, i8 addrspace(200)* [[STACK]], i64 16
-// CHECK-NEXT:    store i8 addrspace(200)* [[NEW_STACK]], i8 addrspace(200)* addrspace(200)* [[ARGS]], align 16
-// CHECK-NEXT:    [[TMP1:%.*]] = bitcast [[STRUCT_HFA]] addrspace(200)* [[NUM0]] to i8 addrspace(200)*
-// CHECK-NEXT:    [[TMP2:%.*]] = bitcast [[STRUCT_HFA]] addrspace(200)* [[TMP0]] to i8 addrspace(200)*
-// CHECK-NEXT:    call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* align 4 [[TMP1]], i8 addrspace(200)* align 16 [[TMP2]], i64 12, i1 false)
-// CHECK-NEXT:    [[STACK2:%.*]] = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* [[ARGS]], align 16
-// CHECK-NEXT:    [[TMP3:%.*]] = bitcast i8 addrspace(200)* [[STACK2]] to [[STRUCT_COMP]] addrspace(200)* addrspace(200)*
-// CHECK-NEXT:    [[NEW_STACK3:%.*]] = getelementptr inbounds i8, i8 addrspace(200)* [[STACK2]], i64 16
-// CHECK-NEXT:    store i8 addrspace(200)* [[NEW_STACK3]], i8 addrspace(200)* addrspace(200)* [[ARGS]], align 16
-// CHECK-NEXT:    [[VAARG_ADDR:%.*]] = load [[STRUCT_COMP]] addrspace(200)*, [[STRUCT_COMP]] addrspace(200)* addrspace(200)* [[TMP3]], align 16
-// CHECK-NEXT:    [[TMP4:%.*]] = bitcast [[STRUCT_COMP]] addrspace(200)* [[NUM1]] to i8 addrspace(200)*
-// CHECK-NEXT:    [[TMP5:%.*]] = bitcast [[STRUCT_COMP]] addrspace(200)* [[VAARG_ADDR]] to i8 addrspace(200)*
-// CHECK-NEXT:    call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* align 16 [[TMP4]], i8 addrspace(200)* align 16 [[TMP5]], i64 32, i1 false)
-// CHECK-NEXT:    [[ARGS4:%.*]] = bitcast i8 addrspace(200)* addrspace(200)* [[ARGS]] to i8 addrspace(200)*
-// CHECK-NEXT:    call void @llvm.va_end.p200i8(i8 addrspace(200)* [[ARGS4]])
-// CHECK-NEXT:    [[TMP6:%.*]] = bitcast [[STRUCT_HFA]] addrspace(200)* [[NUM0]] to [3 x float] addrspace(200)*
-// CHECK-NEXT:    [[TMP7:%.*]] = load [3 x float], [3 x float] addrspace(200)* [[TMP6]], align 4
-// CHECK-NEXT:    [[TMP8:%.*]] = bitcast [[STRUCT_COMP]] addrspace(200)* [[NUM1]] to { i8 addrspace(200)*, i64 } addrspace(200)*
-// CHECK-NEXT:    [[TMP9:%.*]] = load { i8 addrspace(200)*, i64 }, { i8 addrspace(200)*, i64 } addrspace(200)* [[TMP8]], align 16
-// CHECK-NEXT:    call void @call2([3 x float] [[TMP7]], { i8 addrspace(200)*, i64 } [[TMP9]])
+// CHECK-NEXT:    call void @llvm.va_start.p200(ptr addrspace(200) [[ARGS]])
+// CHECK-NEXT:    [[STACK:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[ARGS]], align 16
+// CHECK-NEXT:    [[NEW_STACK:%.*]] = getelementptr inbounds i8, ptr addrspace(200) [[STACK]], i64 16
+// CHECK-NEXT:    store ptr addrspace(200) [[NEW_STACK]], ptr addrspace(200) [[ARGS]], align 16
+// CHECK-NEXT:    call void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) align 4 [[NUM0]], ptr addrspace(200) align 16 [[STACK]], i64 12, i1 false)
+// CHECK-NEXT:    [[STACK1:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[ARGS]], align 16
+// CHECK-NEXT:    [[NEW_STACK2:%.*]] = getelementptr inbounds i8, ptr addrspace(200) [[STACK1]], i64 16
+// CHECK-NEXT:    store ptr addrspace(200) [[NEW_STACK2]], ptr addrspace(200) [[ARGS]], align 16
+// CHECK-NEXT:    [[VAARG_ADDR:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[STACK1]], align 16
+// CHECK-NEXT:    call void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) align 16 [[NUM1]], ptr addrspace(200) align 16 [[VAARG_ADDR]], i64 32, i1 false)
+// CHECK-NEXT:    call void @llvm.va_end.p200(ptr addrspace(200) [[ARGS]])
+// CHECK-NEXT:    [[TMP0:%.*]] = load [3 x float], ptr addrspace(200) [[NUM0]], align 4
+// CHECK-NEXT:    [[TMP1:%.*]] = load { ptr addrspace(200), i64 }, ptr addrspace(200) [[NUM1]], align 16
+// CHECK-NEXT:    call void @call2([3 x float] [[TMP0]], { ptr addrspace(200), i64 } [[TMP1]])
 // CHECK-NEXT:    ret void
 //
 void callee_test_aggregate(int count, ...) {
@@ -94,15 +80,12 @@ void callee_test_aggregate(int count, ...) {
 
 // CHECK-LABEL: @test_vacopy(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[ARGS:%.*]] = alloca i8 addrspace(200)*, align 16, addrspace(200)
-// CHECK-NEXT:    [[ARGS1:%.*]] = alloca i8 addrspace(200)*, align 16, addrspace(200)
-// CHECK-NEXT:    [[ARGS2:%.*]] = bitcast i8 addrspace(200)* addrspace(200)* [[ARGS]] to i8 addrspace(200)*
-// CHECK-NEXT:    call void @llvm.va_start.p200i8(i8 addrspace(200)* [[ARGS2]])
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i8 addrspace(200)* addrspace(200)* [[ARGS1]] to i8 addrspace(200)*
-// CHECK-NEXT:    [[TMP1:%.*]] = bitcast i8 addrspace(200)* addrspace(200)* [[ARGS]] to i8 addrspace(200)*
-// CHECK-NEXT:    call void @llvm.va_copy.p200i8.p200i8(i8 addrspace(200)* [[TMP0]], i8 addrspace(200)* [[TMP1]])
-// CHECK-NEXT:    [[TMP2:%.*]] = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* [[ARGS1]], align 16
-// CHECK-NEXT:    ret i8 addrspace(200)* [[TMP2]]
+// CHECK-NEXT:    [[ARGS:%.*]] = alloca ptr addrspace(200), align 16, addrspace(200)
+// CHECK-NEXT:    [[ARGS1:%.*]] = alloca ptr addrspace(200), align 16, addrspace(200)
+// CHECK-NEXT:    call void @llvm.va_start.p200(ptr addrspace(200) [[ARGS]])
+// CHECK-NEXT:    call void @llvm.va_copy.p200.p200(ptr addrspace(200) [[ARGS1]], ptr addrspace(200) [[ARGS]])
+// CHECK-NEXT:    [[TMP0:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[ARGS1]], align 16
+// CHECK-NEXT:    ret ptr addrspace(200) [[TMP0]]
 //
 va_list test_vacopy(int count, ...) {
   va_list args;
@@ -116,17 +99,14 @@ struct empty {};
 
 // CHECK-LABEL: @foo(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[AP:%.*]] = alloca i8 addrspace(200)*, align 16, addrspace(200)
-// CHECK-NEXT:    [[AP1:%.*]] = bitcast i8 addrspace(200)* addrspace(200)* [[AP]] to i8 addrspace(200)*
-// CHECK-NEXT:    call void @llvm.va_start.p200i8(i8 addrspace(200)* [[AP1]])
-// CHECK-NEXT:    [[STACK:%.*]] = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* [[AP]], align 16
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i8 addrspace(200)* [[STACK]] to [[STRUCT_EMPTY:%.*]] addrspace(200)*
-// CHECK-NEXT:    [[STACK2:%.*]] = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* [[AP]], align 16
-// CHECK-NEXT:    [[TMP1:%.*]] = bitcast i8 addrspace(200)* [[STACK2]] to i32 addrspace(200)*
-// CHECK-NEXT:    [[NEW_STACK:%.*]] = getelementptr inbounds i8, i8 addrspace(200)* [[STACK2]], i64 16
-// CHECK-NEXT:    store i8 addrspace(200)* [[NEW_STACK]], i8 addrspace(200)* addrspace(200)* [[AP]], align 16
-// CHECK-NEXT:    [[TMP2:%.*]] = load i32, i32 addrspace(200)* [[TMP1]], align 16
-// CHECK-NEXT:    ret i32 [[TMP2]]
+// CHECK-NEXT:    [[AP:%.*]] = alloca ptr addrspace(200), align 16, addrspace(200)
+// CHECK-NEXT:    call void @llvm.va_start.p200(ptr addrspace(200) [[AP]])
+// CHECK-NEXT:    [[STACK:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[AP]], align 16
+// CHECK-NEXT:    [[STACK1:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[AP]], align 16
+// CHECK-NEXT:    [[NEW_STACK:%.*]] = getelementptr inbounds i8, ptr addrspace(200) [[STACK1]], i64 16
+// CHECK-NEXT:    store ptr addrspace(200) [[NEW_STACK]], ptr addrspace(200) [[AP]], align 16
+// CHECK-NEXT:    [[TMP0:%.*]] = load i32, ptr addrspace(200) [[STACK1]], align 16
+// CHECK-NEXT:    ret i32 [[TMP0]]
 //
 int foo(int count, ...) {
   int ret;

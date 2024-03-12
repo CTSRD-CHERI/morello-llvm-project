@@ -35,7 +35,7 @@ void test_isb(void) {
 /* 8.4 Hints */
 // CHECK-LABEL: @test_yield(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    call void @llvm.aarch64.hint(i32 1) #[[ATTR4:[0-9]+]]
+// CHECK-NEXT:    call void @llvm.aarch64.hint(i32 1)
 // CHECK-NEXT:    ret void
 //
 void test_yield(void) {
@@ -44,7 +44,7 @@ void test_yield(void) {
 
 // CHECK-LABEL: @test_wfe(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    call void @llvm.aarch64.hint(i32 2) #[[ATTR4]]
+// CHECK-NEXT:    call void @llvm.aarch64.hint(i32 2)
 // CHECK-NEXT:    ret void
 //
 void test_wfe(void) {
@@ -53,7 +53,7 @@ void test_wfe(void) {
 
 // CHECK-LABEL: @test_wfi(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    call void @llvm.aarch64.hint(i32 3) #[[ATTR4]]
+// CHECK-NEXT:    call void @llvm.aarch64.hint(i32 3)
 // CHECK-NEXT:    ret void
 //
 void test_wfi(void) {
@@ -62,7 +62,7 @@ void test_wfi(void) {
 
 // CHECK-LABEL: @test_sev(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    call void @llvm.aarch64.hint(i32 4) #[[ATTR4]]
+// CHECK-NEXT:    call void @llvm.aarch64.hint(i32 4)
 // CHECK-NEXT:    ret void
 //
 void test_sev(void) {
@@ -71,7 +71,7 @@ void test_sev(void) {
 
 // CHECK-LABEL: @test_sevl(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    call void @llvm.aarch64.hint(i32 5) #[[ATTR4]]
+// CHECK-NEXT:    call void @llvm.aarch64.hint(i32 5)
 // CHECK-NEXT:    ret void
 //
 void test_sevl(void) {
@@ -81,15 +81,14 @@ void test_sevl(void) {
 /* 8.5 Swap */
 // CHECK-LABEL: @test_swp(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i8 addrspace(200)* [[P:%.*]] to i32 addrspace(200)*
 // CHECK-NEXT:    br label [[DO_BODY_I:%.*]]
 // CHECK:       do.body.i:
-// CHECK-NEXT:    [[LDXR_I:%.*]] = call i64 @llvm.aarch64.ldxr.p200i32(i32 addrspace(200)* [[TMP0]]) #[[ATTR4]]
-// CHECK-NEXT:    [[TMP1:%.*]] = trunc i64 [[LDXR_I]] to i32
-// CHECK-NEXT:    [[TMP2:%.*]] = zext i32 [[X:%.*]] to i64
-// CHECK-NEXT:    [[STXR_I:%.*]] = call i32 @llvm.aarch64.stxr.p200i32(i64 [[TMP2]], i32 addrspace(200)* [[TMP0]]) #[[ATTR4]]
+// CHECK-NEXT:    [[LDXR_I:%.*]] = call i64 @llvm.aarch64.ldxr.p200(ptr addrspace(200) elementtype(i32) [[P:%.*]])
+// CHECK-NEXT:    [[TMP0:%.*]] = trunc i64 [[LDXR_I]] to i32
+// CHECK-NEXT:    [[TMP1:%.*]] = zext i32 [[X:%.*]] to i64
+// CHECK-NEXT:    [[STXR_I:%.*]] = call i32 @llvm.aarch64.stxr.p200(i64 [[TMP1]], ptr addrspace(200) elementtype(i32) [[P]])
 // CHECK-NEXT:    [[TOBOOL_I:%.*]] = icmp ne i32 [[STXR_I]], 0
-// CHECK-NEXT:    br i1 [[TOBOOL_I]], label [[DO_BODY_I]], label [[__SWP_EXIT:%.*]], !llvm.loop [[LOOP6:![0-9]+]]
+// CHECK-NEXT:    br i1 [[TOBOOL_I]], label [[DO_BODY_I]], label [[__SWP_EXIT:%.*]], !llvm.loop [[LOOP2:![0-9]+]]
 // CHECK:       __swp.exit:
 // CHECK-NEXT:    ret void
 //
@@ -101,7 +100,7 @@ void test_swp(uint32_t x, volatile void *p) {
 /* 8.6.1 Data prefetch */
 // CHECK-LABEL: @test_pld(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    call void @llvm.prefetch.p200i8(i8 addrspace(200)* null, i32 0, i32 3, i32 1)
+// CHECK-NEXT:    call void @llvm.prefetch.p200(ptr addrspace(200) null, i32 0, i32 3, i32 1)
 // CHECK-NEXT:    ret void
 //
 void test_pld() {
@@ -110,7 +109,7 @@ void test_pld() {
 
 // CHECK-LABEL: @test_pldx(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    call void @llvm.prefetch.p200i8(i8 addrspace(200)* null, i32 1, i32 1, i32 1)
+// CHECK-NEXT:    call void @llvm.prefetch.p200(ptr addrspace(200) null, i32 1, i32 1, i32 1)
 // CHECK-NEXT:    ret void
 //
 void test_pldx() {
@@ -120,7 +119,7 @@ void test_pldx() {
 /* 8.6.2 Instruction prefetch */
 // CHECK-LABEL: @test_pli(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    call void @llvm.prefetch.p200i8(i8 addrspace(200)* null, i32 0, i32 3, i32 0)
+// CHECK-NEXT:    call void @llvm.prefetch.p200(ptr addrspace(200) null, i32 0, i32 3, i32 0)
 // CHECK-NEXT:    ret void
 //
 void test_pli() {
@@ -129,7 +128,7 @@ void test_pli() {
 
 // CHECK-LABEL: @test_plix(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    call void @llvm.prefetch.p200i8(i8 addrspace(200)* null, i32 0, i32 1, i32 0)
+// CHECK-NEXT:    call void @llvm.prefetch.p200(ptr addrspace(200) null, i32 0, i32 1, i32 0)
 // CHECK-NEXT:    ret void
 //
 void test_plix() {
@@ -139,7 +138,7 @@ void test_plix() {
 /* 8.7 NOP */
 // CHECK-LABEL: @test_nop(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    call void @llvm.aarch64.hint(i32 0) #[[ATTR4]]
+// CHECK-NEXT:    call void @llvm.aarch64.hint(i32 0)
 // CHECK-NEXT:    ret void
 //
 void test_nop(void) {
@@ -218,7 +217,7 @@ uint64_t test_rorll(uint64_t x, uint32_t y) {
 
 // CHECK-LABEL: @test_clz(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.ctlz.i32(i32 [[T:%.*]], i1 false) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.ctlz.i32(i32 [[T:%.*]], i1 false)
 // CHECK-NEXT:    ret i32 [[TMP0]]
 //
 uint32_t test_clz(uint32_t t) {
@@ -228,7 +227,7 @@ uint32_t test_clz(uint32_t t) {
 // AArch32: call i32 @llvm.ctlz.i32(i32 %t, i1 false)
 // CHECK-LABEL: @test_clzl(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = call i64 @llvm.ctlz.i64(i64 [[T:%.*]], i1 false) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP0:%.*]] = call i64 @llvm.ctlz.i64(i64 [[T:%.*]], i1 false)
 // CHECK-NEXT:    [[CAST_I:%.*]] = trunc i64 [[TMP0]] to i32
 // CHECK-NEXT:    [[CONV_I:%.*]] = sext i32 [[CAST_I]] to i64
 // CHECK-NEXT:    ret i64 [[CONV_I]]
@@ -239,7 +238,7 @@ long test_clzl(long t) {
 
 // CHECK-LABEL: @test_clzll(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = call i64 @llvm.ctlz.i64(i64 [[T:%.*]], i1 false) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP0:%.*]] = call i64 @llvm.ctlz.i64(i64 [[T:%.*]], i1 false)
 // CHECK-NEXT:    [[CAST_I:%.*]] = trunc i64 [[TMP0]] to i32
 // CHECK-NEXT:    [[CONV_I:%.*]] = sext i32 [[CAST_I]] to i64
 // CHECK-NEXT:    ret i64 [[CONV_I]]
@@ -250,7 +249,7 @@ uint64_t test_clzll(uint64_t t) {
 
 // CHECK-LABEL: @test_rev(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.bswap.i32(i32 [[T:%.*]]) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.bswap.i32(i32 [[T:%.*]])
 // CHECK-NEXT:    ret i32 [[TMP0]]
 //
 uint32_t test_rev(uint32_t t) {
@@ -260,7 +259,7 @@ uint32_t test_rev(uint32_t t) {
 // AArch32: call i32 @llvm.bswap.i32(i32 %t)
 // CHECK-LABEL: @test_revl(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = call i64 @llvm.bswap.i64(i64 [[T:%.*]]) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP0:%.*]] = call i64 @llvm.bswap.i64(i64 [[T:%.*]])
 // CHECK-NEXT:    ret i64 [[TMP0]]
 //
 long test_revl(long t) {
@@ -269,7 +268,7 @@ long test_revl(long t) {
 
 // CHECK-LABEL: @test_revll(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = call i64 @llvm.bswap.i64(i64 [[T:%.*]]) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP0:%.*]] = call i64 @llvm.bswap.i64(i64 [[T:%.*]])
 // CHECK-NEXT:    ret i64 [[TMP0]]
 //
 uint64_t test_revll(uint64_t t) {
@@ -278,7 +277,7 @@ uint64_t test_revll(uint64_t t) {
 
 // CHECK-LABEL: @test_rev16(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.bswap.i32(i32 [[T:%.*]]) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.bswap.i32(i32 [[T:%.*]])
 // CHECK-NEXT:    [[REM_I_I:%.*]] = urem i32 16, 32
 // CHECK-NEXT:    [[CMP_I_I:%.*]] = icmp eq i32 [[REM_I_I]], 0
 // CHECK-NEXT:    br i1 [[CMP_I_I]], label [[IF_THEN_I_I:%.*]], label [[IF_END_I_I:%.*]]
@@ -302,7 +301,7 @@ uint32_t test_rev16(uint32_t t) {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[SHR_I:%.*]] = lshr i64 [[T:%.*]], 32
 // CHECK-NEXT:    [[CONV_I:%.*]] = trunc i64 [[SHR_I]] to i32
-// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.bswap.i32(i32 [[CONV_I]]) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.bswap.i32(i32 [[CONV_I]])
 // CHECK-NEXT:    [[REM_I_I10_I:%.*]] = urem i32 16, 32
 // CHECK-NEXT:    [[CMP_I_I11_I:%.*]] = icmp eq i32 [[REM_I_I10_I]], 0
 // CHECK-NEXT:    br i1 [[CMP_I_I11_I]], label [[IF_THEN_I_I12_I:%.*]], label [[IF_END_I_I17_I:%.*]]
@@ -319,7 +318,7 @@ uint32_t test_rev16(uint32_t t) {
 // CHECK-NEXT:    [[CONV1_I:%.*]] = zext i32 [[RETVAL_I_I6_I_0]] to i64
 // CHECK-NEXT:    [[SHL_I:%.*]] = shl i64 [[CONV1_I]], 32
 // CHECK-NEXT:    [[CONV2_I:%.*]] = trunc i64 [[T]] to i32
-// CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.bswap.i32(i32 [[CONV2_I]]) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.bswap.i32(i32 [[CONV2_I]])
 // CHECK-NEXT:    [[REM_I_I_I:%.*]] = urem i32 16, 32
 // CHECK-NEXT:    [[CMP_I_I_I:%.*]] = icmp eq i32 [[REM_I_I_I]], 0
 // CHECK-NEXT:    br i1 [[CMP_I_I_I]], label [[IF_THEN_I_I_I:%.*]], label [[IF_END_I_I_I:%.*]]
@@ -345,7 +344,7 @@ long test_rev16l(long t) {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[SHR_I:%.*]] = lshr i64 [[T:%.*]], 32
 // CHECK-NEXT:    [[CONV_I:%.*]] = trunc i64 [[SHR_I]] to i32
-// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.bswap.i32(i32 [[CONV_I]]) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.bswap.i32(i32 [[CONV_I]])
 // CHECK-NEXT:    [[REM_I_I10_I:%.*]] = urem i32 16, 32
 // CHECK-NEXT:    [[CMP_I_I11_I:%.*]] = icmp eq i32 [[REM_I_I10_I]], 0
 // CHECK-NEXT:    br i1 [[CMP_I_I11_I]], label [[IF_THEN_I_I12_I:%.*]], label [[IF_END_I_I17_I:%.*]]
@@ -362,7 +361,7 @@ long test_rev16l(long t) {
 // CHECK-NEXT:    [[CONV1_I:%.*]] = zext i32 [[RETVAL_I_I6_I_0]] to i64
 // CHECK-NEXT:    [[SHL_I:%.*]] = shl i64 [[CONV1_I]], 32
 // CHECK-NEXT:    [[CONV2_I:%.*]] = trunc i64 [[T]] to i32
-// CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.bswap.i32(i32 [[CONV2_I]]) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.bswap.i32(i32 [[CONV2_I]])
 // CHECK-NEXT:    [[REM_I_I_I:%.*]] = urem i32 16, 32
 // CHECK-NEXT:    [[CMP_I_I_I:%.*]] = icmp eq i32 [[REM_I_I_I]], 0
 // CHECK-NEXT:    br i1 [[CMP_I_I_I]], label [[IF_THEN_I_I_I:%.*]], label [[IF_END_I_I_I:%.*]]
@@ -386,7 +385,7 @@ uint64_t test_rev16ll(uint64_t t) {
 
 // CHECK-LABEL: @test_revsh(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = call i16 @llvm.bswap.i16(i16 [[T:%.*]]) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP0:%.*]] = call i16 @llvm.bswap.i16(i16 [[T:%.*]])
 // CHECK-NEXT:    ret i16 [[TMP0]]
 //
 int16_t test_revsh(int16_t t) {
@@ -395,7 +394,7 @@ int16_t test_revsh(int16_t t) {
 
 // CHECK-LABEL: @test_rbit(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[RBIT_I:%.*]] = call i32 @llvm.bitreverse.i32(i32 [[T:%.*]]) #[[ATTR4]]
+// CHECK-NEXT:    [[RBIT_I:%.*]] = call i32 @llvm.bitreverse.i32(i32 [[T:%.*]])
 // CHECK-NEXT:    ret i32 [[RBIT_I]]
 //
 uint32_t test_rbit(uint32_t t) {
@@ -404,7 +403,7 @@ uint32_t test_rbit(uint32_t t) {
 
 // CHECK-LABEL: @test_rbitl(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[RBIT_I:%.*]] = call i64 @llvm.bitreverse.i64(i64 [[T:%.*]]) #[[ATTR4]]
+// CHECK-NEXT:    [[RBIT_I:%.*]] = call i64 @llvm.bitreverse.i64(i64 [[T:%.*]])
 // CHECK-NEXT:    ret i64 [[RBIT_I]]
 //
 long test_rbitl(long t) {
@@ -413,7 +412,7 @@ long test_rbitl(long t) {
 
 // CHECK-LABEL: @test_rbitll(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[RBIT_I:%.*]] = call i64 @llvm.bitreverse.i64(i64 [[T:%.*]]) #[[ATTR4]]
+// CHECK-NEXT:    [[RBIT_I:%.*]] = call i64 @llvm.bitreverse.i64(i64 [[T:%.*]])
 // CHECK-NEXT:    ret i64 [[RBIT_I]]
 //
 uint64_t test_rbitll(uint64_t t) {
@@ -424,7 +423,7 @@ uint64_t test_rbitll(uint64_t t) {
 // CHECK-LABEL: @test_crc32b(
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[TMP0:%.*]] = zext i8 [[B:%.*]] to i32
-// CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.aarch64.crc32b(i32 [[A:%.*]], i32 [[TMP0]]) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.aarch64.crc32b(i32 [[A:%.*]], i32 [[TMP0]])
 // CHECK-NEXT:    ret i32 [[TMP1]]
 //
 uint32_t test_crc32b(uint32_t a, uint8_t b) {
@@ -434,7 +433,7 @@ uint32_t test_crc32b(uint32_t a, uint8_t b) {
 // CHECK-LABEL: @test_crc32h(
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[TMP0:%.*]] = zext i16 [[B:%.*]] to i32
-// CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.aarch64.crc32h(i32 [[A:%.*]], i32 [[TMP0]]) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.aarch64.crc32h(i32 [[A:%.*]], i32 [[TMP0]])
 // CHECK-NEXT:    ret i32 [[TMP1]]
 //
 uint32_t test_crc32h(uint32_t a, uint16_t b) {
@@ -443,7 +442,7 @@ uint32_t test_crc32h(uint32_t a, uint16_t b) {
 
 // CHECK-LABEL: @test_crc32w(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.aarch64.crc32w(i32 [[A:%.*]], i32 [[B:%.*]]) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.aarch64.crc32w(i32 [[A:%.*]], i32 [[B:%.*]])
 // CHECK-NEXT:    ret i32 [[TMP0]]
 //
 uint32_t test_crc32w(uint32_t a, uint32_t b) {
@@ -452,7 +451,7 @@ uint32_t test_crc32w(uint32_t a, uint32_t b) {
 
 // CHECK-LABEL: @test_crc32d(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.aarch64.crc32x(i32 [[A:%.*]], i64 [[B:%.*]]) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.aarch64.crc32x(i32 [[A:%.*]], i64 [[B:%.*]])
 // CHECK-NEXT:    ret i32 [[TMP0]]
 //
 uint32_t test_crc32d(uint32_t a, uint64_t b) {
@@ -462,7 +461,7 @@ uint32_t test_crc32d(uint32_t a, uint64_t b) {
 // CHECK-LABEL: @test_crc32cb(
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[TMP0:%.*]] = zext i8 [[B:%.*]] to i32
-// CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.aarch64.crc32cb(i32 [[A:%.*]], i32 [[TMP0]]) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.aarch64.crc32cb(i32 [[A:%.*]], i32 [[TMP0]])
 // CHECK-NEXT:    ret i32 [[TMP1]]
 //
 uint32_t test_crc32cb(uint32_t a, uint8_t b) {
@@ -472,7 +471,7 @@ uint32_t test_crc32cb(uint32_t a, uint8_t b) {
 // CHECK-LABEL: @test_crc32ch(
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[TMP0:%.*]] = zext i16 [[B:%.*]] to i32
-// CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.aarch64.crc32ch(i32 [[A:%.*]], i32 [[TMP0]]) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.aarch64.crc32ch(i32 [[A:%.*]], i32 [[TMP0]])
 // CHECK-NEXT:    ret i32 [[TMP1]]
 //
 uint32_t test_crc32ch(uint32_t a, uint16_t b) {
@@ -481,7 +480,7 @@ uint32_t test_crc32ch(uint32_t a, uint16_t b) {
 
 // CHECK-LABEL: @test_crc32cw(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.aarch64.crc32cw(i32 [[A:%.*]], i32 [[B:%.*]]) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.aarch64.crc32cw(i32 [[A:%.*]], i32 [[B:%.*]])
 // CHECK-NEXT:    ret i32 [[TMP0]]
 //
 uint32_t test_crc32cw(uint32_t a, uint32_t b) {
@@ -490,7 +489,7 @@ uint32_t test_crc32cw(uint32_t a, uint32_t b) {
 
 // CHECK-LABEL: @test_crc32cd(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.aarch64.crc32cx(i32 [[A:%.*]], i64 [[B:%.*]]) #[[ATTR4]]
+// CHECK-NEXT:    [[TMP0:%.*]] = call i32 @llvm.aarch64.crc32cx(i32 [[A:%.*]], i64 [[B:%.*]])
 // CHECK-NEXT:    ret i32 [[TMP0]]
 //
 uint32_t test_crc32cd(uint32_t a, uint64_t b) {
@@ -500,7 +499,7 @@ uint32_t test_crc32cd(uint32_t a, uint64_t b) {
 /* 10.1 Special register intrinsics */
 // CHECK-LABEL: @test_rsr(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = call i64 @llvm.read_volatile_register.i64(metadata [[META8:![0-9]+]])
+// CHECK-NEXT:    [[TMP0:%.*]] = call i64 @llvm.read_volatile_register.i64(metadata [[META4:![0-9]+]])
 // CHECK-NEXT:    [[TMP1:%.*]] = trunc i64 [[TMP0]] to i32
 // CHECK-NEXT:    ret i32 [[TMP1]]
 //
@@ -510,7 +509,7 @@ uint32_t test_rsr() {
 
 // CHECK-LABEL: @test_rsr64(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = call i64 @llvm.read_volatile_register.i64(metadata [[META8]])
+// CHECK-NEXT:    [[TMP0:%.*]] = call i64 @llvm.read_volatile_register.i64(metadata [[META4]])
 // CHECK-NEXT:    ret i64 [[TMP0]]
 //
 uint64_t test_rsr64() {
@@ -519,9 +518,9 @@ uint64_t test_rsr64() {
 
 // CHECK-LABEL: @test_rsrp(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = call i64 @llvm.read_volatile_register.i64(metadata [[META9:![0-9]+]])
-// CHECK-NEXT:    [[TMP1:%.*]] = inttoptr i64 [[TMP0]] to i8 addrspace(200)*
-// CHECK-NEXT:    ret i8 addrspace(200)* [[TMP1]]
+// CHECK-NEXT:    [[TMP0:%.*]] = call i64 @llvm.read_volatile_register.i64(metadata [[META5:![0-9]+]])
+// CHECK-NEXT:    [[TMP1:%.*]] = inttoptr i64 [[TMP0]] to ptr addrspace(200)
+// CHECK-NEXT:    ret ptr addrspace(200) [[TMP1]]
 //
 void *test_rsrp() {
   return __arm_rsrp("sysreg");
@@ -530,7 +529,7 @@ void *test_rsrp() {
 // CHECK-LABEL: @test_wsr(
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[TMP0:%.*]] = zext i32 [[V:%.*]] to i64
-// CHECK-NEXT:    call void @llvm.write_register.i64(metadata [[META8]], i64 [[TMP0]])
+// CHECK-NEXT:    call void @llvm.write_register.i64(metadata [[META4]], i64 [[TMP0]])
 // CHECK-NEXT:    ret void
 //
 void test_wsr(uint32_t v) {
@@ -539,7 +538,7 @@ void test_wsr(uint32_t v) {
 
 // CHECK-LABEL: @test_wsr64(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    call void @llvm.write_register.i64(metadata [[META8]], i64 [[V:%.*]])
+// CHECK-NEXT:    call void @llvm.write_register.i64(metadata [[META4]], i64 [[V:%.*]])
 // CHECK-NEXT:    ret void
 //
 void test_wsr64(uint64_t v) {
@@ -548,8 +547,8 @@ void test_wsr64(uint64_t v) {
 
 // CHECK-LABEL: @test_wsrp(
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = ptrtoint i8 addrspace(200)* [[V:%.*]] to i64
-// CHECK-NEXT:    call void @llvm.write_register.i64(metadata [[META9]], i64 [[TMP0]])
+// CHECK-NEXT:    [[TMP0:%.*]] = ptrtoint ptr addrspace(200) [[V:%.*]] to i64
+// CHECK-NEXT:    call void @llvm.write_register.i64(metadata [[META5]], i64 [[TMP0]])
 // CHECK-NEXT:    ret void
 //
 void test_wsrp(void *v) {

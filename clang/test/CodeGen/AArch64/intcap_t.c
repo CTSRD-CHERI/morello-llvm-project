@@ -10,7 +10,7 @@ int c1(__capability void* x, __capability void* y)
 {
   __intcap_t a = (__intcap_t)x;
   __intcap_t b = (__intcap_t)y;
-  // CHECK: icmp slt i8 addrspace(200)*
+  // CHECK: icmp slt ptr addrspace(200)
   return a < b;
 }
 // CHECK c2
@@ -18,7 +18,7 @@ int c2(__capability void* x, __capability void* y)
 {
   __intcap_t a = (__intcap_t)x;
   __intcap_t b = (__intcap_t)y;
-  // CHECK: icmp eq i8 addrspace(200)*
+  // CHECK: icmp eq ptr addrspace(200)
   return a == b;
 }
 // CHECK: c3
@@ -26,7 +26,7 @@ int c3(__capability void* x, __capability void* y)
 {
   __intcap_t a = (__intcap_t)x;
   __intcap_t b = (__intcap_t)y;
-  // CHECK: icmp sgt i8 addrspace(200)*
+  // CHECK: icmp sgt ptr addrspace(200)
   return a > b;
 }
 // CHECK: c4
@@ -34,7 +34,7 @@ int c4(__capability void* x, __capability void* y)
 {
   __intcap_t a = (__intcap_t)x;
   __intcap_t b = (__intcap_t)y;
-  // CHECK: icmp sge i8 addrspace(200)*
+  // CHECK: icmp sge ptr addrspace(200)
   return a >= b;
 }
 // CHECK: c5
@@ -42,18 +42,18 @@ int c5(__capability void* x, __capability void* y)
 {
   __intcap_t a = (__intcap_t)x;
   __intcap_t b = (__intcap_t)y;
-  // CHECK: icmp sle i8 addrspace(200)*
+  // CHECK: icmp sle ptr addrspace(200)
   return a <= b;
 }
 
 // CHECK: ca1
 int ca1(__capability void* x, __capability void* y)
 {
-  // offset: @llvm.cheri.cap.offset.get.i64(i8 addrspace(200)*
-  // addr: @llvm.cheri.cap.address.get.i64(i8 addrspace(200)*
+  // offset: @llvm.cheri.cap.offset.get.i64(ptr addrspace(200)
+  // addr: @llvm.cheri.cap.address.get.i64(ptr addrspace(200)
   __intcap_t a = (__intcap_t)x;
-  // offset: @llvm.cheri.cap.offset.get.i64(i8 addrspace(200)*
-  // addr: @llvm.cheri.cap.address.get.i64(i8 addrspace(200)*
+  // offset: @llvm.cheri.cap.offset.get.i64(ptr addrspace(200)
+  // addr: @llvm.cheri.cap.address.get.i64(ptr addrspace(200)
   __intcap_t b = (__intcap_t)y;
   // CHECK: sub
   return a - b;
@@ -62,11 +62,11 @@ int ca1(__capability void* x, __capability void* y)
 // CHECK: ca2
 int ca2(__capability void* x, __capability void* y)
 {
-  // offset: @llvm.cheri.cap.offset.get.i64(i8 addrspace(200)*
-  // addr: @llvm.cheri.cap.address.get.i64(i8 addrspace(200)*
+  // offset: @llvm.cheri.cap.offset.get.i64(ptr addrspace(200)
+  // addr: @llvm.cheri.cap.address.get.i64(ptr addrspace(200)
   __intcap_t a = (__intcap_t)x;
-  // offset: @llvm.cheri.cap.offset.get.i64(i8 addrspace(200)*
-  // addr: @llvm.cheri.cap.address.get.i64(i8 addrspace(200)*
+  // offset: @llvm.cheri.cap.offset.get.i64(ptr addrspace(200)
+  // addr: @llvm.cheri.cap.address.get.i64(ptr addrspace(200)
   __intcap_t b = (__intcap_t)y;
   // CHECK: add
   return a + b;
@@ -75,11 +75,11 @@ int ca2(__capability void* x, __capability void* y)
 // CHECK: ca3
 int ca3(__capability void* x, __capability void* y)
 {
-  // offset: @llvm.cheri.cap.offset.get.i64(i8 addrspace(200)*
-  // addr: @llvm.cheri.cap.address.get.i64(i8 addrspace(200)*
+  // offset: @llvm.cheri.cap.offset.get.i64(ptr addrspace(200)
+  // addr: @llvm.cheri.cap.address.get.i64(ptr addrspace(200)
   __intcap_t a = (__intcap_t)x;
-  // offset: @llvm.cheri.cap.offset.get.i64(i8 addrspace(200)*
-  // addr: @llvm.cheri.cap.address.get.i64(i8 addrspace(200)*
+  // offset: @llvm.cheri.cap.offset.get.i64(ptr addrspace(200)
+  // addr: @llvm.cheri.cap.address.get.i64(ptr addrspace(200)
   __intcap_t b = (__intcap_t)y;
   // CHECK: mul
   return a * b;
@@ -88,11 +88,11 @@ int ca3(__capability void* x, __capability void* y)
 // CHECK: ca4
 int ca4(__capability void* x, __capability void* y)
 {
-  // offset: @llvm.cheri.cap.offset.get.i64(i8 addrspace(200)*
-  // addr: @llvm.cheri.cap.address.get.i64(i8 addrspace(200)*
+  // offset: @llvm.cheri.cap.offset.get.i64(ptr addrspace(200)
+  // addr: @llvm.cheri.cap.address.get.i64(ptr addrspace(200)
   __intcap_t a = (__intcap_t)x;
-  // offset: @llvm.cheri.cap.offset.get.i64(i8 addrspace(200)*
-  // addr: @llvm.cheri.cap.address.get.i64(i8 addrspace(200)*
+  // offset: @llvm.cheri.cap.offset.get.i64(ptr addrspace(200)
+  // addr: @llvm.cheri.cap.address.get.i64(ptr addrspace(200)
   __intcap_t b = (__intcap_t)y;
   // CHECK: sdiv
   return a / b;
@@ -103,7 +103,7 @@ int p1(void* x, void* y)
 {
   __intcap_t a = (__intcap_t)x;
   __intcap_t b = (__intcap_t)y;
-  // CHECK: icmp slt i8 addrspace(200)*
+  // CHECK: icmp slt ptr addrspace(200)
   return a < b;
 }
 
@@ -141,9 +141,9 @@ __uintcap_t xor(__uintcap_t f)
 
 int capdiff(__capability int *a, __capability int *b)
 {
-  // CHECK-LABEL: @capdiff(i32 addrspace(200)* noundef %{{.*}}, i32 addrspace(200)* noundef %{{.*}}) #0 {
-  // addr: [[ADDR1:%[a-z_0-9]+]] = call i64 @llvm.cheri.cap.address.get.i64(i8 addrspace(200)* {{.*}})
-  // addr: [[ADDR2:%[a-z_0-9]+]] = call i64 @llvm.cheri.cap.address.get.i64(i8 addrspace(200)* {{.*}})
+  // CHECK-LABEL: @capdiff(ptr addrspace(200) noundef %{{.*}}, ptr addrspace(200) noundef %{{.*}}) #0 {
+  // addr: [[ADDR1:%[a-z_0-9]+]] = call i64 @llvm.cheri.cap.address.get.i64(ptr addrspace(200) {{.*}})
+  // addr: [[ADDR2:%[a-z_0-9]+]] = call i64 @llvm.cheri.cap.address.get.i64(ptr addrspace(200) {{.*}})
   // addr: sub i64 [[ADDR1]], [[ADDR2]]
   // offset: call i64 @llvm.cheri.cap.diff
   return a-b;
@@ -152,13 +152,13 @@ int capdiff(__capability int *a, __capability int *b)
 // CHECK: negativeint
 void negativeint()
 {
-  // CHECK: getelementptr (i8, i8 addrspace(200)* null, i64 -5)
+  // CHECK: getelementptr (i8, ptr addrspace(200) null, i64 -5)
   __intcap_t minus = -5;
 }
 
 // CHECK: largeint
 void largeint()
 {
-  // CHECK: getelementptr (i8, i8 addrspace(200)* null, i64 4294967295)
+  // CHECK: getelementptr (i8, ptr addrspace(200) null, i64 4294967295)
   __uintcap_t large = 4294967295; // 2^32 - 1
 }

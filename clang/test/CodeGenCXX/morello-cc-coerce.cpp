@@ -7,20 +7,17 @@ struct some_other_struct {
 
 struct some_struct {
 // CHECK-LABEL: define {{[^@]+}}@_ZN11some_struct6getterEv
-// CHECK-SAME: ([[STRUCT_SOME_STRUCT:%.*]] addrspace(200)* noundef nonnull align 16 dereferenceable(16) [[THIS:%.*]]) addrspace(200) #[[ATTR0:[0-9]+]] comdat align 2 {
+// CHECK-SAME: (ptr addrspace(200) noundef nonnull align 16 dereferenceable(16) [[THIS:%.*]]) addrspace(200) #[[ATTR0:[0-9]+]] comdat align 2 {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[RETVAL:%.*]] = alloca [[STRUCT_SOME_OTHER_STRUCT:%.*]], align 16, addrspace(200)
-// CHECK-NEXT:    [[THIS_ADDR:%.*]] = alloca [[STRUCT_SOME_STRUCT]] addrspace(200)*, align 16, addrspace(200)
-// CHECK-NEXT:    store [[STRUCT_SOME_STRUCT]] addrspace(200)* [[THIS]], [[STRUCT_SOME_STRUCT]] addrspace(200)* addrspace(200)* [[THIS_ADDR]], align 16
-// CHECK-NEXT:    [[THIS1:%.*]] = load [[STRUCT_SOME_STRUCT]] addrspace(200)*, [[STRUCT_SOME_STRUCT]] addrspace(200)* addrspace(200)* [[THIS_ADDR]], align 16
-// CHECK-NEXT:    [[FIELD_:%.*]] = getelementptr inbounds [[STRUCT_SOME_STRUCT]], [[STRUCT_SOME_STRUCT]] addrspace(200)* [[THIS1]], i32 0, i32 0
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast [[STRUCT_SOME_OTHER_STRUCT]] addrspace(200)* [[RETVAL]] to i8 addrspace(200)*
-// CHECK-NEXT:    [[TMP1:%.*]] = bitcast [[STRUCT_SOME_OTHER_STRUCT]] addrspace(200)* [[FIELD_]] to i8 addrspace(200)*
-// CHECK-NEXT:    call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* align 16 [[TMP0]], i8 addrspace(200)* align 16 [[TMP1]], i64 16, i1 false)
-// CHECK-NEXT:    [[COERCE_DIVE:%.*]] = getelementptr inbounds [[STRUCT_SOME_OTHER_STRUCT]], [[STRUCT_SOME_OTHER_STRUCT]] addrspace(200)* [[RETVAL]], i32 0, i32 0
-// CHECK-NEXT:    [[TMP2:%.*]] = bitcast [1 x i8 addrspace(200)*] addrspace(200)* [[COERCE_DIVE]] to i8 addrspace(200)* addrspace(200)*
-// CHECK-NEXT:    [[TMP3:%.*]] = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* [[TMP2]], align 16
-// CHECK-NEXT:    ret i8 addrspace(200)* [[TMP3]]
+// CHECK-NEXT:    [[THIS_ADDR:%.*]] = alloca ptr addrspace(200), align 16, addrspace(200)
+// CHECK-NEXT:    store ptr addrspace(200) [[THIS]], ptr addrspace(200) [[THIS_ADDR]], align 16
+// CHECK-NEXT:    [[THIS1:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[THIS_ADDR]], align 16
+// CHECK-NEXT:    [[FIELD_:%.*]] = getelementptr inbounds [[STRUCT_SOME_STRUCT:%.*]], ptr addrspace(200) [[THIS1]], i32 0, i32 0
+// CHECK-NEXT:    call void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) align 16 [[RETVAL]], ptr addrspace(200) align 16 [[FIELD_]], i64 16, i1 false)
+// CHECK-NEXT:    [[COERCE_DIVE:%.*]] = getelementptr inbounds [[STRUCT_SOME_OTHER_STRUCT]], ptr addrspace(200) [[RETVAL]], i32 0, i32 0
+// CHECK-NEXT:    [[TMP0:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[COERCE_DIVE]], align 16
+// CHECK-NEXT:    ret ptr addrspace(200) [[TMP0]]
 //
   inline some_other_struct getter() { return field_; }
   some_other_struct field_;

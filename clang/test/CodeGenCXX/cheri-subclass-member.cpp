@@ -9,7 +9,7 @@ struct s2 : public s1 {
 
 const s2* __capability c_s2;
 // CHECK-LABEL: _Z4funcv
-// CHECK: load %struct.s2 addrspace(200)*, %struct.s2 addrspace(200)** @c_s2, align 16
+// CHECK: load ptr addrspace(200), ptr @c_s2, align 16
 const long & __capability func()
 {
     return c_s2->size;

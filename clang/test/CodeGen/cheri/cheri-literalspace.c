@@ -13,6 +13,15 @@
 // CHECK-NEXT:    [[TMP1:%.*]] = load i8, ptr addrspace(200) [[ARRAYIDX]], align 1
 // CHECK-NEXT:    ret i8 [[TMP1]]
 //
+// AARCH64-LABEL: @takes_string_ptr(
+// AARCH64-NEXT:  entry:
+// AARCH64-NEXT:    [[A_ADDR:%.*]] = alloca ptr addrspace(200), align 16, addrspace(200)
+// AARCH64-NEXT:    store ptr addrspace(200) [[A:%.*]], ptr addrspace(200) [[A_ADDR]], align 16
+// AARCH64-NEXT:    [[TMP0:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[A_ADDR]], align 16
+// AARCH64-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr addrspace(200) [[TMP0]], i64 0
+// AARCH64-NEXT:    [[TMP1:%.*]] = load i8, ptr addrspace(200) [[ARRAYIDX]], align 1
+// AARCH64-NEXT:    ret i8 [[TMP1]]
+//
 char takes_string_ptr(const char *a) {
     return a[0];
 }
@@ -24,6 +33,14 @@ char takes_string_ptr(const char *a) {
 // CHECK-NEXT:    [[CALL:%.*]] = call signext i8 @takes_string_ptr(ptr addrspace(200) noundef @.str)
 // CHECK-NEXT:    [[CONV:%.*]] = sext i8 [[CALL]] to i32
 // CHECK-NEXT:    ret i32 [[CONV]]
+//
+// AARCH64-LABEL: @main(
+// AARCH64-NEXT:  entry:
+// AARCH64-NEXT:    [[RETVAL:%.*]] = alloca i32, align 4, addrspace(200)
+// AARCH64-NEXT:    store i32 0, ptr addrspace(200) [[RETVAL]], align 4
+// AARCH64-NEXT:    [[CALL:%.*]] = call i8 @takes_string_ptr(ptr addrspace(200) noundef @.str)
+// AARCH64-NEXT:    [[CONV:%.*]] = zext i8 [[CALL]] to i32
+// AARCH64-NEXT:    ret i32 [[CONV]]
 //
 int main(void) {
   return takes_string_ptr("hi");
