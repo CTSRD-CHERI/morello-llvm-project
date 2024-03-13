@@ -22305,9 +22305,11 @@ Value *AArch64TargetLowering::emitStoreConditional(IRBuilderBase &Builder,
     Intrinsic::ID Int =
         IsRelease ? Intrinsic::aarch64_cstlxr : Intrinsic::aarch64_cstxr;
     auto CapAS = Val->getType()->getPointerAddressSpace();
-    Type* I8Cap = Builder.getInt8PtrTy(CapAS);
-    Addr = Builder.CreateBitCast(Addr, I8Cap->getPointerTo(CapAS));
-    Type *Tys[] = {Addr->getType()};
+    Type *I8Cap = Builder.getInt8PtrTy(CapAS);
+    Type *AddrTy =
+        I8Cap->getPointerTo(Addr->getType()->getPointerAddressSpace());
+    Addr = Builder.CreateBitCast(Addr, AddrTy);
+    Type *Tys[] = {AddrTy};
     Function *Stxr = Intrinsic::getDeclaration(M, Int, Tys);
     Val = Builder.CreateBitCast(Val, Stxr->getFunctionType()->getParamType(0));
     CallInst *CI = Builder.CreateCall(Stxr, {Val, Addr});
