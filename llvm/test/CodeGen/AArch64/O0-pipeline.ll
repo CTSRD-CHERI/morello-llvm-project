@@ -16,6 +16,8 @@
 ; CHECK-NEXT:     Pre-ISel Intrinsic Lowering
 ; CHECK-NEXT:     FunctionPass Manager
 ; CHECK-NEXT:       Expand Atomic instructions
+; CHECK-NEXT:     CHERI bound stack allocations
+; CHECK-NEXT:     FunctionPass Manager
 ; CHECK-NEXT:       Module Verifier
 ; CHECK-NEXT:       Lower Garbage Collection Instructions
 ; CHECK-NEXT:       Shadow Stack GC Lowering
@@ -25,8 +27,6 @@
 ; CHECK-NEXT:       Scalarize Masked Memory Intrinsics
 ; CHECK-NEXT:       Expand reduction intrinsics
 ; CHECK-NEXT:       AArch64 Stack Tagging
-; CHECK-NEXT:     CHERI bound stack allocations
-; CHECK-NEXT:     FunctionPass Manager
 ; CHECK-NEXT:       Exception handling preparation
 ; CHECK-NEXT:       AArch64 sandbox memory operation lowering
 ; CHECK-NEXT:       Safe Stack instrumentation pass

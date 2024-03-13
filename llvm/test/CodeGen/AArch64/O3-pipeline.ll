@@ -1,6 +1,4 @@
 ; RUN: llc --debugify-and-strip-all-safe=0 -mtriple=arm64-- -O3 -debug-pass=Structure < %s -o /dev/null 2>&1 | \
-; RUN:     grep -v "Verify generated machine code"
-; RUN: llc --debugify-and-strip-all-safe=0 -mtriple=arm64-- -O3 -debug-pass=Structure < %s -o /dev/null 2>&1 | \
 ; RUN:     grep -v "Verify generated machine code" | FileCheck %s
 
 ; REQUIRES: asserts
@@ -48,7 +46,14 @@
 ; CHECK-NEXT:       Lazy Block Frequency Analysis
 ; CHECK-NEXT:       Loop Pass Manager
 ; CHECK-NEXT:         Loop Invariant Code Motion
+; CHECK-NEXT:     CHERI bound stack allocations
+; CHECK-NEXT:     FunctionPass Manager
 ; CHECK-NEXT:       Module Verifier
+; CHECK-NEXT:       Dominator Tree Construction
+; CHECK-NEXT:       Basic Alias Analysis (stateless AA impl)
+; CHECK-NEXT:       Natural Loop Information
+; CHECK-NEXT:       Canonicalize natural loops
+; CHECK-NEXT:       Scalar Evolution Analysis
 ; CHECK-NEXT:       Loop Pass Manager
 ; CHECK-NEXT:         Canonicalize Freeze Instructions in Loops
 ; CHECK-NEXT:         Induction Variable Users
@@ -92,10 +97,7 @@
 ; CHECK-NEXT:       Interleaved Load Combine Pass
 ; CHECK-NEXT:       Dominator Tree Construction
 ; CHECK-NEXT:       Interleaved Access Pass
-; CHECK-NEXT:     CHERI bound stack allocations
-; CHECK-NEXT:     FunctionPass Manager
 ; CHECK-NEXT:       Type Promotion
-; CHECK-NEXT:       Dominator Tree Construction
 ; CHECK-NEXT:       Natural Loop Information
 ; CHECK-NEXT:       CodeGen Prepare
 ; CHECK-NEXT:       Dominator Tree Construction
