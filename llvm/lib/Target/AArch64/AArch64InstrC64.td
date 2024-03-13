@@ -1455,6 +1455,7 @@ def : Pat<(and (ldaxr_4 Capsp:$addr), 0xffffffff),
 
 let Predicates = [HasC64] in {
 // 8-bit loads
+def : Pat<(seq_cst_load<atomic_cload_8>  Capsp:$ptr), (ALDARB Capsp:$ptr)>;
 def : Pat<(acquiring_load<atomic_cload_8>  Capsp:$ptr), (ALDARB Capsp:$ptr)>;
 def : Pat<(relaxed_load<atomic_cload_8> (cro_Windexed8 Capsp:$Rn, GPR32:$Rm,
                                                      ro_Wextend8:$offset)),
@@ -1470,6 +1471,7 @@ def : Pat<(relaxed_load<atomic_cload_8>
           (ALDURBBi Capsp:$Rn, simm9:$offset)>;
 
 // 16-bit loads
+def : Pat<(seq_cst_load<atomic_cload_16> Capsp:$ptr), (ALDARH Capsp:$ptr)>;
 def : Pat<(acquiring_load<atomic_cload_16> Capsp:$ptr), (ALDARH Capsp:$ptr)>;
 def : Pat<(relaxed_load<atomic_cload_16> (cro_Windexed16 Capsp:$Rn, GPR32:$Rm,
                                                        ro_Wextend16:$extend)),
@@ -1485,6 +1487,7 @@ def : Pat<(relaxed_load<atomic_cload_16>
           (ALDURHHi Capsp:$Rn, simm9:$offset)>;
 
 // 32-bit loads
+def : Pat<(seq_cst_load<atomic_cload_32> Capsp:$ptr), (ALDARW Capsp:$ptr)>;
 def : Pat<(acquiring_load<atomic_cload_32> Capsp:$ptr), (ALDARW Capsp:$ptr)>;
 def : Pat<(relaxed_load<atomic_cload_32> (cro_Windexed32 Capsp:$Rn, GPR32:$Rm,
                                                        ro_Wextend32:$extend)),
@@ -1500,6 +1503,7 @@ def : Pat<(relaxed_load<atomic_cload_32>
           (ALDURWi Capsp:$Rn, simm9:$offset)>;
 
 // 64-bit loads
+def : Pat<(seq_cst_load<atomic_cload_64> Capsp:$ptr), (ALDARX Capsp:$ptr)>;
 def : Pat<(acquiring_load<atomic_cload_64> Capsp:$ptr), (ALDARX Capsp:$ptr)>;
 def : Pat<(relaxed_load<atomic_cload_64> (cro_Windexed64 Capsp:$Rn, GPR32:$Rm,
                                                        ro_Wextend64:$extend)),

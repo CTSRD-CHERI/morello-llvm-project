@@ -759,6 +759,8 @@ def : Pat<(relaxed_load<atomic_cload_cap> (cro_Xindexed128 Capsp:$Rn, GPR64:$Rm,
 def : Pat<(relaxed_load<atomic_cload_cap>
                (am_pcunscaled128 Capsp:$Rn, simm9:$offset)),
           (PCapLoadUnscaledImm Capsp:$Rn, simm9:$offset)>;
+def : Pat<(seq_cst_load<atomic_cload_cap>  Capsp:$ptr),
+          (PCapLoadAcq Capsp:$ptr)>;
 def : Pat<(acquiring_load<atomic_cload_cap>  Capsp:$ptr),
           (PCapLoadAcq Capsp:$ptr)>;
 }

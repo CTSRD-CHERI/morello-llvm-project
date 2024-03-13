@@ -1237,10 +1237,14 @@ def : Pat<(relaxed_load<atomic_load_cap>
           (CapLoadImmPre GPR64sp:$Rn, uimm12s16:$offset)>;
 def : Pat<(ldxr_fatptr GPR64sp:$addr), (CapLoadEx GPR64sp:$addr)>;
 def : Pat<(ldaxr_fatptr GPR64sp:$addr), (CapLoadExAcq GPR64sp:$addr)>;
+def : Pat<(seq_cst_load<atomic_load_cap>  GPR64sp:$ptr),
+          (CapLoadAcq GPR64sp:$ptr)>;
 def : Pat<(acquiring_load<atomic_load_cap>  GPR64sp:$ptr),
           (CapLoadAcq GPR64sp:$ptr)>;
 
 // Alternate base patterns.
+def : Pat<(seq_cst_load<atomic_cload_8>  Capsp:$ptr),
+          (AltLoadByteAcq Capsp:$ptr)>;
 def : Pat<(acquiring_load<atomic_cload_8>  Capsp:$ptr),
           (AltLoadByteAcq Capsp:$ptr)>;
 def : Pat<(relaxed_load<atomic_cload_8>
@@ -1251,6 +1255,8 @@ def : Pat<(relaxed_load<atomic_cload_16>
                (am_cunscaled Capsp:$Cn, simm9:$offset)),
           (AltLoadHalfImmUnscaled Capsp:$Cn, simm9:$offset)>;
 
+def : Pat<(seq_cst_load<atomic_cload_32> Capsp:$ptr),
+          (AltLoadWordAcq Capsp:$ptr)>;
 def : Pat<(acquiring_load<atomic_cload_32> Capsp:$ptr),
           (AltLoadWordAcq Capsp:$ptr)>;
 def : Pat<(relaxed_load<atomic_cload_32>
@@ -1261,6 +1267,7 @@ def : Pat<(relaxed_load<atomic_cload_64>
                (am_cunscaled Capsp:$Cn, simm9:$offset)),
           (AltLoadDWordImmUnscaled Capsp:$Cn, simm9:$offset)>;
 
+def : Pat<(seq_cst_load<atomic_cload_cap> Capsp:$ptr), (AltCapLoadAcq Capsp:$ptr)>;
 def : Pat<(acquiring_load<atomic_cload_cap> Capsp:$ptr), (AltCapLoadAcq Capsp:$ptr)>;
 def : Pat<(relaxed_load<atomic_cload_cap>
                (am_cunscaled128_8 Capsp:$Cn, simm9:$offset)),
