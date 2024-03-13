@@ -2,7 +2,7 @@
 
 class a {
 public:
-  typedef *a::*b; // expected-error{{C++ requires a type specifier for all declarations}}
+  typedef *a::*b; // expected-error{{a type specifier is required for all declarations}}
   class foo {
     bool operator==(const foo& other){
       return other.c == c;
