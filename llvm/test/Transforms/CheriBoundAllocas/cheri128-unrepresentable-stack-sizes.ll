@@ -1,3 +1,4 @@
+; REQUIRES: riscv-registered-target
 ; RUN: %riscv64_cheri_purecap_opt -opaque-pointers=0 -cheri-bound-allocas %s -o - -S | FileCheck %s
 ; RUN: %riscv64_cheri_purecap_opt -opaque-pointers=1 -instsimplify -cheri-bound-allocas %s -o - -S | FileCheck %s
 target datalayout = "E-m:m-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-n32:64-S128-A200-P200-G200"
