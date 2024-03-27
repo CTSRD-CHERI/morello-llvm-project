@@ -93,12 +93,9 @@ define i32 @test_noargs() local_unnamed_addr addrspace(200) #0 {
 ; CHECK-LABEL: test_noargs:
 ; CHECK:       .Lfunc_begin3:
 ; CHECK-NEXT:  // %bb.0: // %entry
-; CHECK-NEXT:    str c30, [csp, #-16]! // 16-byte Folded Spill
 ; CHECK-NEXT:    mov w0, #100
 ; CHECK-NEXT:    mov x9, xzr
-; CHECK-NEXT:    bl callee
-; CHECK-NEXT:    ldr c30, [csp], #16 // 16-byte Folded Reload
-; CHECK-NEXT:    ret c30
+; CHECK-NEXT:    b callee
 entry:
   %call = tail call i32 (i32, ...) @callee(i32 100) #0
   ret i32 %call

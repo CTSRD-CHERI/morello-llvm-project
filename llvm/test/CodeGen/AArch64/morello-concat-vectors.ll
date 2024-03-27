@@ -11,30 +11,24 @@ define void @foo() local_unnamed_addr addrspace(200) align 2 {
 ; CHECK:       .Lfunc_begin0:
 ; CHECK-NEXT:    .cfi_startproc purecap
 ; CHECK-NEXT:  // %bb.0: // %entry
-; CHECK-NEXT:    sub csp, csp, #16
-; CHECK-NEXT:    .cfi_def_cfa_offset 16
 ; CHECK-NEXT:    cmp xzr, x8
 ; CHECK-NEXT:    cset w8, hi
 ; CHECK-NEXT:    sbfx x8, x8, #0, #1
 ; CHECK-NEXT:    dup v0.2d, x8
+; CHECK-NEXT:    dup v0.4h, v0.h[0]
+; CHECK-NEXT:    umaxv h0, v0.4h
 ; CHECK-NEXT:    fmov w8, s0
-; CHECK-NEXT:    and w9, w8, #0x1
-; CHECK-NEXT:    lsl w10, w9, #1
-; CHECK-NEXT:    sub w8, w10, w8
-; CHECK-NEXT:    orr w8, w8, w9, lsl #2
-; CHECK-NEXT:    orr w8, w8, w9, lsl #3
-; CHECK-NEXT:    and w8, w8, #0xf
-; CHECK-NEXT:    cmp w8, #0
-; CHECK-NEXT:    ccmp wzr, #0, #0, eq
-; CHECK-NEXT:    ccmp wzr, #0, #0, eq
-; CHECK-NEXT:    b.eq .LBB0_2
-; CHECK-NEXT:  // %bb.1: // %for.body21.preheader180
-; CHECK-NEXT:    add csp, csp, #16
-; CHECK-NEXT:    ret c30
+; CHECK-NEXT:    tbnz w8, #0, .LBB0_4
+; CHECK-NEXT:  // %bb.1: // %entry
+; CHECK-NEXT:    cbnz wzr, .LBB0_4
+; CHECK-NEXT:  // %bb.2: // %entry
+; CHECK-NEXT:    cbnz wzr, .LBB0_4
 ; CHECK-NEXT:    .p2align 5, 0x0, 16
-; CHECK-NEXT:  .LBB0_2: // %vector.body
+; CHECK-NEXT:  .LBB0_3: // %vector.body
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
-; CHECK-NEXT:    b .LBB0_2
+; CHECK-NEXT:    b .LBB0_3
+; CHECK-NEXT:  .LBB0_4: // %for.body21.preheader180
+; CHECK-NEXT:    ret c30
 entry:
   %0 = icmp ugt <4 x i8 addrspace(200)*> zeroinitializer, undef
   %1 = insertelement <2 x i8 addrspace(200)*> poison, i8 addrspace(200)* null, i32 0
