@@ -25,7 +25,7 @@ bar:
 
 // RELS: Relocations [
 // RELS-NEXT: .rela.dyn {
-// RELS-NEXT:    0x203B0 R_MORELLO_RELATIVE bar 0x100EC
+// RELS-NEXT:    0x203B0 R_MORELLO_RELATIVE - 0x100EC
 
 // SYMS: Name: bar
 // SYMS-NEXT: Value: 0x102EC

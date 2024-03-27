@@ -211,10 +211,10 @@ appdata: .xword 8
 // RELS-NEXT:   Section {{.*}} .rela.dyn {
 /// .capinit appdata
 // RELS-NEXT:     0x220530 R_MORELLO_RELATIVE - 0x0
-//// .capinit from_app (strictly speaking don't need symbol here)
-// RELS-NEXT:     0x220540 R_MORELLO_RELATIVE from_app 0x10299
-/// .got from_app (strictly speaking don't need symbol here)
-// RELS-NEXT:     0x220670 R_MORELLO_RELATIVE from_app 0x10299
+//// .capinit from_app
+// RELS-NEXT:     0x220540 R_MORELLO_RELATIVE - 0x10299
+/// .got from_app
+// RELS-NEXT:     0x220670 R_MORELLO_RELATIVE - 0x10299
 /// _start
 // RELS-NEXT:     0x2206B0 R_MORELLO_RELATIVE - 0x10261
 // .got appdata
@@ -239,10 +239,10 @@ appdata: .xword 8
 // RELS-PIE-NEXT:   Section {{.*}} .rela.dyn {
 /// .capinit appdata
 // RELS-PIE-NEXT:     0x20530 R_MORELLO_RELATIVE - 0x0
-/// .capinit from_app (strictly speaking don't need symbol here)
-// RELS-PIE-NEXT:     0x20540 R_MORELLO_RELATIVE from_app 0x10299
-/// .got from_app (strictly speaking don't need symbol here)
-// RELS-PIE-NEXT:     0x20680 R_MORELLO_RELATIVE from_app 0x10299
+/// .capinit from_app
+// RELS-PIE-NEXT:     0x20540 R_MORELLO_RELATIVE - 0x10299
+/// .got from_app
+// RELS-PIE-NEXT:     0x20680 R_MORELLO_RELATIVE - 0x10299
 /// _start
 // RELS-PIE-NEXT:     0x206C0 R_MORELLO_RELATIVE - 0x10261
 /// .got appdata
