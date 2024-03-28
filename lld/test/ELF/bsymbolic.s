@@ -1,5 +1,3 @@
-# This is failing upstream as well and requires more investigation.
-# XFAIL: *
 # REQUIRES: x86
 # RUN: rm -rf %t && split-file %s %t
 # RUN: llvm-mc -filetype=obj -triple=x86_64 %t/a.s -o %t/a.o
