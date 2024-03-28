@@ -14,6 +14,5 @@ thread siginfo
 # CHECK-DAG: si_signo = [[SIGNO]]
 # CHECK-DAG: si_errno = 0
 # CHECK-DAG: si_code = [[CODE]]
-# CHECK-DAG: si_pid = [[PID]]
-# CHECK-DAG: si_uid = [[UID]]
-# CHECK-DAG: si_status = 14
+## XXX: Morello LLDB has its own different siginfo printer to upstream
+# CHECK-DAG: sigchld = (pid = [[PID]], uid = [[UID]], status = 14
