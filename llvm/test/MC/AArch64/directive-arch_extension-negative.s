@@ -49,7 +49,8 @@ fminnm d0, d0, d1
 // CHECK-NEXT: fminnm d0, d0, d1
 
 addp v0.4s, v0.4s, v0.4s
-// CHECK-NOT: [[@LINE-1]]:1: error: instruction requires: neon
+// XXX: Morello LLVM makes nofp imply nosimd, but not upstream
+// CHECK: [[@LINE-2]]:1: error: instruction requires: neon
 .arch_extension nosimd
 addp v0.4s, v0.4s, v0.4s
 // CHECK: [[@LINE-1]]:1: error: instruction requires: neon
