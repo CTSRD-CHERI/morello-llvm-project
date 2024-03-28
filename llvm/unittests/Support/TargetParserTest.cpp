@@ -1279,7 +1279,7 @@ INSTANTIATE_TEST_SUITE_P(
                              AArch64::AEK_LSE | AArch64::AEK_RDM,
                          "8.2-A")));
 
-static constexpr unsigned NumAArch64CPUArchs = 54;
+static constexpr unsigned NumAArch64CPUArchs = 55;
 
 TEST(TargetParserTest, testAArch64CPUArchList) {
   SmallVector<StringRef, NumAArch64CPUArchs> List;
@@ -1553,7 +1553,7 @@ TEST(TargetParserTest, AArch64ExtensionFeatures) {
   // result. (note that AEK_NONE doesn't have a name so it won't be in the
   // result despite its bit being set)
   std::vector<StringRef> AllFeatures;
-  EXPECT_TRUE(AArch64::getExtensionFeatures(-1, AllFeatures));
+  EXPECT_TRUE(AArch64::getExtensionFeatures(~(AArch64::AEK_A64C | AArch64::AEK_C64), AllFeatures));
   EXPECT_THAT(Features, ::testing::ContainerEq(AllFeatures));
 }
 
