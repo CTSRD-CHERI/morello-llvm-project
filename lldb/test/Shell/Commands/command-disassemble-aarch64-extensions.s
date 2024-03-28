@@ -1,3 +1,6 @@
+## Morello LLDB changes the default feature string to include and be compatible
+## with Morello
+# XFAIL: *
 # REQUIRES: aarch64
 
 # This checks that lldb's disassembler enables every extension that an AArch64
