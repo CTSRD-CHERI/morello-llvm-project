@@ -7,6 +7,7 @@
 // RUN: ld.lld %t/prog.o %t/lib.so -o %t/prog
 // RUN: llvm-objdump --no-show-raw-insn -d %t/prog | FileCheck --check-prefix=DISAS %s
 // RUN: llvm-objdump -s -j .got.plt %t/prog | FileCheck --check-prefix=GOTPLT %s
+// RUN: llvm-readobj --relocs %t/prog | FileCheck --check-prefix=RELOCS %s
 
 // DISAS:      <_start>:
 // DISAS-NEXT:         bl   0x210320
@@ -30,7 +31,9 @@
 // GOTPLT-NEXT: 230410 00000000 00000000 00000000 00000000
 // GOTPLT-NEXT: 230420 00000000 00000000 00000000 00000000
 /// &plt[0] with LSB 0 despite being C64
-// GOTPLT-NEXT: 230430 00032100 00000000 00000000 00000000
+// GOTPLT-NEXT: 230430 40022000 00000000 00020300 00000004
+
+// RELOCS: 0x230430 R_MORELLO_JUMP_SLOT foo 0x100C0
 
 //--- lib.s
 	.global	foo

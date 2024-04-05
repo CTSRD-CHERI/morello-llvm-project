@@ -125,7 +125,7 @@ appdata: .xword 8
 // CHECK-NEXT:  230700 00000000 00000000 00000000 00000000
 
 /// .got.plt[3] should be initialized to point to the PLT Header (002104e1)
-// CHECK-NEXT:  230710 e1042100 00000000 00000000 00000000
+// CHECK-NEXT:  230710 41022000 00000000 00050300 00000004
 
 // CHECK-PIE: Contents of section .got.plt:
 // CHECK-PIE-NEXT: 306f0 00000000 00000000 00000000 00000000
@@ -133,7 +133,7 @@ appdata: .xword 8
 // CHECK-PIE-NEXT: 30710 00000000 00000000 00000000 00000000
 
 /// .got.plt[3] should be initialized to point to the PLT Header (000104e1)
-// CHECK-PIE-NEXT: 30720 e1040100 00000000 00000000 00000000
+// CHECK-PIE-NEXT: 30720 41020000 00000000 00050300 00000004
 
 // CHECK-LABEL: <_start>:
 // CHECK-NEXT: 2104a0: bl   0x210500
@@ -233,7 +233,7 @@ appdata: .xword 8
 // RELS-NEXT:     0x2206A0 R_MORELLO_GLOB_DAT data 0x0
 // RELS-NEXT:   }
 // RELS-NEXT:   Section {{.*}} .rela.plt {
-// RELS-NEXT:     0x230710 R_MORELLO_JUMP_SLOT func 0x0
+// RELS-NEXT:     0x230710 R_MORELLO_JUMP_SLOT func 0x102A0
 
 // RELS-PIE: Relocations [
 // RELS-PIE-NEXT:   Section {{.*}} .rela.dyn {
@@ -261,4 +261,4 @@ appdata: .xword 8
 // RELS-PIE-NEXT:     0x206B0 R_MORELLO_GLOB_DAT data 0x0
 // RELS-PIE-NEXT:   }
 // RELS-PIE-NEXT:   Section {{.*}} .rela.plt {
-// RELS-PIE-NEXT:     0x30720 R_MORELLO_JUMP_SLOT func 0x0
+// RELS-PIE-NEXT:     0x30720 R_MORELLO_JUMP_SLOT func 0x102A0

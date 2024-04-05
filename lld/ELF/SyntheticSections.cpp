@@ -1936,7 +1936,9 @@ template <class ELFT> void RelocationSection<ELFT>::writeTo(uint8_t *buf) {
     auto *p = reinterpret_cast<Elf_Rela *>(buf);
     p->r_offset = rel.r_offset;
     p->setSymbolAndType(rel.r_sym, rel.type, config->isMips64EL);
-    if (config->isRela)
+    if (rel.type == R_MORELLO_JUMP_SLOT)
+      p->r_addend = in.plt->getVA() - config->morelloPCCBase;
+    else if (config->isRela)
       p->r_addend = rel.addend;
     buf += config->isRela ? sizeof(Elf_Rela) : sizeof(Elf_Rel);
   }

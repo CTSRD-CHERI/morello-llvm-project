@@ -1155,10 +1155,13 @@ void AArch64C64::writePlt(uint8_t *buf, const Symbol &sym,
 void AArch64C64::writeGotPlt(uint8_t *buf, const Symbol &) const {
   // The PLT header is C64 and we transfer control to it via an indirect jump
   // so we must set the bottom bit.
-  uint64_t va = in.plt->getVA();
+  uint64_t va = config->morelloPCCBase;
   if (!config->morelloPurecapBenchmarkABI)
     va |= 1;
   writeFragmentAddress(buf, va);
+  const uint64_t size = config->morelloPCCLimit - config->morelloPCCBase;
+  const uint64_t perm = 0x4; // EXEC
+  writeFragmentSizeAndPermissions(buf + 8, perm | (size << 8));
 }
 
 void AArch64C64::relaxTlsGdToLe(uint8_t *loc, const Relocation &rel,

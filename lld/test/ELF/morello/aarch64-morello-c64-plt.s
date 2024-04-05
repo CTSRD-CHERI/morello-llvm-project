@@ -74,7 +74,7 @@ hidden:  .xword 3
 // GOTPLT-NEXT:  305d0 00000000 00000000 00000000 00000000
 /// Initial contents should be address of .plt[0], as plt[0] is C64 the bottom
 /// bit should be set.
-// GOTPLT-NEXT:  305e0 31040100 00000000 00000000 00000000
+// GOTPLT-NEXT:  305e0 41020000 00000000 c0030300 00000004
 
 // CHECK:     Name: .got
 // CHECK-NEXT:     Type: SHT_PROGBITS (0x1)
@@ -106,7 +106,7 @@ hidden:  .xword 3
 // CHECK-NEXT: 0x20550 R_MORELLO_GLOB_DAT foo 0x0
 // CHECK-NEXT: 0x20560 R_MORELLO_GLOB_DAT bar 0x0
 // CHECK-NEXT: 0x20580 R_MORELLO_GLOB_DAT preemptible 0x0
-// CHECK:      0x305E0 R_MORELLO_JUMP_SLOT imported 0x0
+// CHECK:      0x305E0 R_MORELLO_JUMP_SLOT imported 0x101F0
 
 // GOT: Contents of section .got:
 // GOT-NEXT: 20550 00000000 00000000 00000000 00000002
