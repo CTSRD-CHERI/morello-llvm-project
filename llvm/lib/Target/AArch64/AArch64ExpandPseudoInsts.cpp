@@ -874,7 +874,12 @@ bool AArch64ExpandPseudo::expandCALL_BTI(MachineBasicBlock &MBB,
   MachineOperand &CallTarget = MI.getOperand(0);
   assert((CallTarget.isGlobal() || CallTarget.isReg()) &&
          "invalid operand for regular call");
-  unsigned Opc = CallTarget.isGlobal() ? AArch64::BL : AArch64::BLR;
+  auto &STI = MBB.getParent()->getSubtarget<AArch64Subtarget>();
+  unsigned Opc = CallTarget.isGlobal() ? AArch64::BL
+                 : STI.hasPureCap()    ? (STI.hasPurecapBenchmarkABI()
+                                              ? AArch64::FakeCapBranchLink
+                                              : AArch64::CapBranchLink)
+                                       : AArch64::BLR;
   MachineInstr *Call =
       BuildMI(MBB, MBBI, MI.getDebugLoc(), TII->get(Opc)).getInstr();
   Call->addOperand(CallTarget);

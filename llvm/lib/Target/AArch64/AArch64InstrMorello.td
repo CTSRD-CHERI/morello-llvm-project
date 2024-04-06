@@ -690,6 +690,9 @@ def : Pat<(ptrtoint Capsp:$Cn), (CapGetValue Capsp:$Cn)>;
 def : Pat<(i32 (ptrtoint Capsp:$Cn)),
            (EXTRACT_SUBREG (CapGetValue Capsp:$Cn), sub_32)>;
 def : Pat<(cbrind Cap:$Cn), (CapBranch Cap:$Cn)>;
+def : Pat<(AArch64call_bti Cap:$Rn),
+          (BLR_BTI Cap:$Rn)>,
+      Requires<[NoSLSBLRMitigation]>;
 
 def : Pat<(AArch64chkequals Capsp:$Cn, Capsp:$Cm),
           (CapCheckEquals Capsp:$Cn, Capsp:$Cm)>;
