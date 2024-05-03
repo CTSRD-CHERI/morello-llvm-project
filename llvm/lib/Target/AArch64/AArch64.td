@@ -85,6 +85,10 @@ def FeatureMorelloBoundedMemArgsCallee : SubtargetFeature<"bounded-morello-memar
   "HasMorelloBoundedMemArgsCallee", "true",
   "Use c9 to access memory arguments", [FeatureMorelloBoundedMemArgsCaller]>;
 
+def FeatureMorelloAbsoluteFuncPtr : SubtargetFeature<"absolute-morello-funcptr",
+  "HasMorelloAbsoluteFuncPtr", "true",
+  "Use PCC-absolute function pointers in purecap calls">;
+
 def FeatureC64 : SubtargetFeature<"c64", "HasC64", "true",
   "Enable C64 mode", [FeatureMorello]>;
 

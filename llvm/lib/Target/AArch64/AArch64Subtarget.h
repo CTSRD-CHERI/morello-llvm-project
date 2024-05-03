@@ -170,6 +170,7 @@ protected:
   bool HasMorelloLegacyVarArg = false;
   bool HasMorelloBoundedMemArgsCaller = false;
   bool HasMorelloBoundedMemArgsCallee = false;
+  bool HasMorelloAbsoluteFuncPtr = false;
   bool HasPureCap = false;
   bool HasC64 = false;
   bool HasPurecapBenchmarkABI = false;
@@ -516,6 +517,9 @@ public:
   }
   bool hasMorelloBoundedMemArgsCallee() const {
     return hasPureCap() && HasMorelloBoundedMemArgsCallee;
+  }
+  bool hasMorelloAbsoluteFuncPtr() const {
+    return hasPureCap() && HasMorelloAbsoluteFuncPtr;
   }
   bool hasC64() const { return HasMorello && HasC64; }
   bool hasPurecapBenchmarkABI() const {

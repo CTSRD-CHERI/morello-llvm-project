@@ -7664,12 +7664,14 @@ SDValue AArch64TargetLowering::LowerGlobalAddress(SDValue Op,
     }
   }
 
-  // Dervive function addresses from PCC
+  // Dervive function addresses from PCC, unless absolute function addresses
+  // were requested to allow a dynamic linker relocate them, e.g. to construct
+  // trampolines for compartmentalization.
   bool IsDescABI =
      (MCTargetOptions::cheriCapabilityTableABI() ==
       CheriCapabilityTableABI::FunctionDescriptor);
   if (Op.getSimpleValueType() == MVT::iFATPTR128 && dyn_cast<Function>(GV) &&
-      !IsDescABI)
+      !IsDescABI && !Subtarget->hasMorelloAbsoluteFuncPtr())
     return DAG.getNode(AArch64ISD::CapSealImm, DL, MVT::iFATPTR128,
                        getFatAddr(GN, DAG, OpFlags),
                        DAG.getConstant(1, DL, MVT::i32));
