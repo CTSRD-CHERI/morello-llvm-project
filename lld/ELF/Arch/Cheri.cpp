@@ -947,6 +947,11 @@ static void addCapDynamicRelocation(RelType dynType, Symbol *sym,
       (sym->isFunc() || sym->isGnuIFunc()) &&
       (dynType == R_MORELLO_RELATIVE || dynType == target->iRelativeRel);
 
+  if (isExecRel && sec->name != ".gcc_except_table" &&
+      sec->getPartition().sigTab) {
+    sec->getPartition().sigTab->addAnonSym(sym);
+  }
+
   RelType realDynType = dynType;
 
   if (dynType == R_MORELLO_RELATIVE && config->isCheriFnDesc) {

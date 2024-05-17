@@ -680,8 +680,13 @@ public:
   using Ent = uint8_t;
   SignatureSection();
   size_t getSize() const override;
+  void finalizeContents() override;
   void writeTo(uint8_t *buf) override;
   bool isNeeded() const override;
+  void addAnonSym(Symbol *sym) { anonSyms.push_back(sym); }
+
+private:
+  SmallVector<Symbol *, 0> anonSyms;
 };
 
 // Outputs GNU Hash section. For detailed explanation see:

@@ -1748,6 +1748,8 @@ uint32_t DynamicReloc::getSymIndex(SymbolTableBaseSection *symTab) const {
     }
     return symTab->getSymbolIndex(sym);
   }
+  if (sym && sym->anonSymNum != 0)
+    return sym->anonSymNum;
   if (sym && !sym->isTls())
     return symTab->getSymbolIndex(sym);
   return 0;
@@ -4091,7 +4093,15 @@ SignatureSection::SignatureSection()
 }
 
 size_t SignatureSection::getSize() const {
-  return getPartition().dynSymTab->getNumSymbols() * sizeof(Ent);
+  auto n = getPartition().dynSymTab->getNumSymbols() + anonSyms.size();
+  return n * sizeof(Ent);
+}
+
+void SignatureSection::finalizeContents() {
+  auto n = getPartition().dynSymTab->getNumSymbols();
+  for (Symbol *sym : anonSyms) {
+    sym->anonSymNum = n++;
+  }
 }
 
 void SignatureSection::writeTo(uint8_t *buf) {
@@ -4099,6 +4109,8 @@ void SignatureSection::writeTo(uint8_t *buf) {
   for (const SymbolTableEntry &s : getPartition().dynSymTab->getSymbols()) {
     *buf++ = s.sym->signature.toInt();
   }
+  for (const Symbol *sym : anonSyms)
+    *buf++ = sym->signature.toInt();
 }
 
 bool SignatureSection::isNeeded() const {
