@@ -447,6 +447,8 @@ private:
   friend struct ilist_traits<MachineInstr>;
 
 public:
+  SymbolSignature Signature{};
+
   using VariableDbgInfoMapTy = SmallVector<VariableDbgInfo, 4>;
   VariableDbgInfoMapTy VariableDbgInfos;
 

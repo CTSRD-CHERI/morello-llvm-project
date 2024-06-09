@@ -896,6 +896,9 @@ void AArch64AsmPrinter::emitFunctionEntryLabel() {
     TS->emitDirectiveVariantPCS(CurrentFnSym);
   }
 
+  if (STI->hasMorelloFuncSignature())
+    OutStreamer->emitC18NSignature(CurrentFnSym, MF->Signature, true);
+
   return AsmPrinter::emitFunctionEntryLabel();
 }
 
@@ -1280,6 +1283,48 @@ void AArch64AsmPrinter::emitInstruction(const MachineInstr *MI) {
 
   AArch64TargetStreamer *TS =
     static_cast<AArch64TargetStreamer *>(OutStreamer->getTargetStreamer());
+
+  if (STI->hasMorelloFuncSignature() &&
+      MI->isCall() &&
+      !MI->hasUnmodeledSideEffects()) {
+    auto &Target = MI->getOperand(0);
+    MCSymbol *TargetSym = nullptr;
+    if (Target.isGlobal()) {
+      auto G = Target.getGlobal();
+      if (!G->hasLocalLinkage())
+        TargetSym = OutContext.getOrCreateSymbol(G->getName());
+    }
+    if (TargetSym) {
+      SymbolSignature Sig{};
+      Sig.valid = 1;
+      Sig.ret_args = 0b10;
+      static constexpr MCPhysReg Regs[] = {
+        AArch64::C0, AArch64::C1, AArch64::C2, AArch64::C3,
+        AArch64::C4, AArch64::C5, AArch64::C6, AArch64::C7
+      };
+      auto &MRI = MF->getRegInfo();
+      auto *TRI = MRI.getTargetRegisterInfo();
+      for (auto &MO : MI->implicit_operands()) {
+        if (!MO.isReg())
+          continue;
+        auto Reg = MO.getReg();
+        if (MO.isKill()) {
+          if (AArch64::C8 == Reg)
+            Sig.ret_args = 0b11;
+          else if (AArch64::C9 == Reg)
+            Sig.mem_args = 0b1;
+          else for (unsigned char i = 1; i <= 8; ++i) {
+            if (TRI->isSubRegisterEq(Regs[i - 1], Reg)) {
+              Sig.reg_args = std::max(Sig.reg_args, i);
+              break;
+            }
+          }
+        }
+      }
+      OutStreamer->emitC18NSignature(TargetSym, Sig, false);
+    }
+  }
+
   // Do any manual lowerings.
   switch (MI->getOpcode()) {
   default:

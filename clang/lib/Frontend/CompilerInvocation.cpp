@@ -4473,6 +4473,10 @@ static bool ParseTargetArgs(TargetOptions &Opts, ArgList &Args,
       Opts.FeaturesAsWritten.push_back("+cheri-exact-equals");
   }
 
+  if (Args.hasFlag(options::OPT_cheri_c18n_func_signature,
+                   options::OPT_cheri_c18n_no_func_signature, false))
+      Opts.FeaturesAsWritten.push_back("+cheri-c18n-func-signature");
+
   if (T.isAArch64()) {
     if (Args.hasFlag(options::OPT_morello_bounded_memargs,
                      options::OPT_morello_no_bounded_memargs, false))

@@ -925,6 +925,13 @@ void MCObjectStreamer::emitAddrsigSym(const MCSymbol *Sym) {
   getAssembler().getWriter().addAddrsigSymbol(Sym);
 }
 
+void MCObjectStreamer::emitC18NSignature(MCSymbol *Sym,
+                                         SymbolSignature Sig,
+                                         bool Callee) {
+  MCStreamer::emitC18NSignature(Sym, Sig, Callee);
+  getAssembler().getWriter().emitC18NSignatureSection();
+}
+
 void MCObjectStreamer::finishImpl() {
   getContext().RemapDebugPaths();
 

@@ -6155,6 +6155,28 @@ SDValue AArch64TargetLowering::LowerFormalArguments(
   }
   assert((ArgLocs.size() + ExtraArgLocs) == Ins.size());
 
+  if (Subtarget->hasMorelloFuncSignature()) {
+    SymbolSignature &Sig = MF.Signature;
+    Sig.valid = 1;
+    Sig.ret_args = 0b10;
+    static constexpr MCPhysReg Regs[] = {
+      AArch64::C0, AArch64::C1, AArch64::C2, AArch64::C3,
+      AArch64::C4, AArch64::C5, AArch64::C6, AArch64::C7
+    };
+    auto &MRI = MF.getRegInfo();
+    auto *TRI = MRI.getTargetRegisterInfo();
+    for (auto &Reg : MRI.liveins())
+      if (Reg.first == AArch64::C9)
+        Sig.mem_args = 0b1;
+      else if (Reg.first == AArch64::C8)
+        Sig.ret_args = 0b11;
+      else for (unsigned char i = 1; i <= 8; ++i)
+        if (TRI->isSubRegisterEq(Regs[i - 1], Reg.first)) {
+          Sig.reg_args = std::max(Sig.reg_args, i);
+          break;
+        }
+  }
+
   // varargs
   AArch64FunctionInfo *FuncInfo = MF.getInfo<AArch64FunctionInfo>();
   if (isVarArg) {
@@ -7296,6 +7318,20 @@ AArch64TargetLowering::LowerCall(CallLoweringInfo &CLI,
   // If we're doing a tall call, use a TC_RETURN here rather than an
   // actual call instruction.
   if (IsTailCall) {
+    if (Subtarget->hasMorelloFuncSignature()) {
+      SmallVector<CCValAssign, 16> RVLocs;
+      CCState CCInfo(CallConv, IsVarArg, MF, RVLocs, *DAG.getContext());
+      CCInfo.AnalyzeCallResult(Ins, CCAssignFnForReturn(CallConv));
+      SymbolSignature &Sig = MF.Signature;
+      // unsigned char N = 2 - CCInfo.getFirstUnallocated({
+      //   AArch64::X0, AArch64::X1
+      // });
+      // XXX: The return-value signature of tail-called functions cannot be
+      // computed reliably. Do not clear any return value registers for now.
+      if (Sig.ret_args != 0b11)
+        Sig.ret_args = 0;
+    }
+
     MF.getFrameInfo().setHasTailCall();
     unsigned Opcode;
     if (IsCapabilityCall)
@@ -7393,6 +7429,15 @@ AArch64TargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv,
   SmallVector<CCValAssign, 16> RVLocs;
   CCState CCInfo(CallConv, isVarArg, MF, RVLocs, *DAG.getContext());
   CCInfo.AnalyzeReturn(Outs, RetCC);
+
+  if (Subtarget->hasMorelloFuncSignature()) {
+    SymbolSignature &Sig = MF.Signature;
+    unsigned char N = 2 - CCInfo.getFirstUnallocated({
+      AArch64::X0, AArch64::X1
+    });
+    if (Sig.ret_args != 0b11)
+      Sig.ret_args = std::min(Sig.ret_args, N);
+  }
 
   // Copy the result values into the output registers.
   SDValue Flag;
