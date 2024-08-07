@@ -1487,7 +1487,7 @@ bool UnwindCursor<A, R>::getInfoFromEHABISection(
   if (begin == end)
     return false;
 
-  EHABISectionIterator<A> itNextPC = EHABISectionUpperBound(begin, end, pc.address());
+  EHABISectionIterator<A> itNextPC = EHABISectionUpperBound(begin, end, pc);
   if (itNextPC == begin)
     return false;
   EHABISectionIterator<A> itThisPC = itNextPC - 1;
