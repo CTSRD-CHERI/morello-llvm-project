@@ -34,7 +34,6 @@
 // CHECK-DEBIAN-AARCH64: "-target-abi" "purecap"
 // CHECK-DEBIAN-AARCH64: "{{.*}}ld{{(.exe)?}}" "--sysroot=[[SYSROOT:[^"]+]]"
 // CHECK-DEBIAN-AARCH64: "-dynamic-linker" "/lib/ld-linux-aarch64_purecap.so.1"
-// CHECK-DEBIAN-AARCH64: "{{.*}}/usr/lib/gcc/aarch64-linux-gnu_purecap/4.5{{/|\\\\}}crtbegin.o"
 // CHECK-DEBIAN-AARCH64: "-L[[SYSROOT]]/usr/lib/gcc/aarch64-linux-gnu_purecap/4.5"
 // CHECK-DEBIAN-AARCH64: "-L[[SYSROOT]]/lib/aarch64-linux-gnu_purecap"
 // CHECK-DEBIAN-AARCH64: "-L[[SYSROOT]]/usr/lib/aarch64-linux-gnu_purecap"

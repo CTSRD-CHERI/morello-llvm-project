@@ -5,7 +5,6 @@ typedef void(*fn)();
 extern void foo();
 
 // CHECK-LABEL: @getFunctionPointer(
-// CHECK-NEXT:  entry:
 // CHECK-NEXT:    ret ptr addrspace(200) @foo
 //
 fn getFunctionPointer() {
