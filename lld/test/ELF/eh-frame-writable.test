@@ -1,3 +1,4 @@
+# REQUIRES: mips
 # Linking an .eh_frame section that uses absolute R_MIPS_64 relocations into a
 # shared library output used to crash ld.lld.
 # After the LLVM 15 merge it reports an incorrect addend written error instead.
