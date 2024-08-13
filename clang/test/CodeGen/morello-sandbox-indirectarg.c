@@ -10,7 +10,6 @@ struct S a;
 extern void fn2(struct S);
 
 // CHECK-LABEL: @fn1(
-// CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[BYVAL_TEMP:%.*]] = alloca [[STRUCT_S:%.*]], align 4, addrspace(200)
 // CHECK-NEXT:    call void @llvm.lifetime.start.p200(i64 20, ptr addrspace(200) nonnull [[BYVAL_TEMP]]) #[[ATTR4:[0-9]+]]
 // CHECK-NEXT:    call void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) noundef nonnull align 4 dereferenceable(20) [[BYVAL_TEMP]], ptr addrspace(200) noundef nonnull align 4 dereferenceable(20) @a, i64 20, i1 false), !tbaa.struct !4

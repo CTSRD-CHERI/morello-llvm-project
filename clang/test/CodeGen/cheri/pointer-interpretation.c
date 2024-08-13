@@ -32,7 +32,6 @@ _Pragma("pointer_interpretation default")
 //
 // MORELLO-LABEL: define {{[^@]+}}@x
 // MORELLO-SAME: () local_unnamed_addr #[[ATTR0:[0-9]+]] {
-// MORELLO-NEXT:  entry:
 // MORELLO-NEXT:    [[TMP0:%.*]] = load ptr addrspace(200), ptr @t, align 16, !tbaa [[TBAA4:![0-9]+]]
 // MORELLO-NEXT:    [[TMP1:%.*]] = load i32, ptr addrspace(200) [[TMP0]], align 4, !tbaa [[TBAA9:![0-9]+]]
 // MORELLO-NEXT:    ret i32 [[TMP1]]
@@ -51,7 +50,6 @@ int x(void)
 //
 // MORELLO-LABEL: define {{[^@]+}}@y
 // MORELLO-SAME: () local_unnamed_addr #[[ATTR0]] {
-// MORELLO-NEXT:  entry:
 // MORELLO-NEXT:    [[TMP0:%.*]] = load ptr, ptr @t2, align 8, !tbaa [[TBAA11:![0-9]+]]
 // MORELLO-NEXT:    [[TMP1:%.*]] = load i32, ptr [[TMP0]], align 4, !tbaa [[TBAA9]]
 // MORELLO-NEXT:    ret i32 [[TMP1]]
@@ -69,7 +67,6 @@ int y(void)
 //
 // MORELLO-LABEL: define {{[^@]+}}@z
 // MORELLO-SAME: () local_unnamed_addr #[[ATTR0]] {
-// MORELLO-NEXT:  entry:
 // MORELLO-NEXT:    [[TMP0:%.*]] = load ptr, ptr @t3, align 8, !tbaa [[TBAA13:![0-9]+]]
 // MORELLO-NEXT:    [[TMP1:%.*]] = load i32, ptr [[TMP0]], align 4, !tbaa [[TBAA9]]
 // MORELLO-NEXT:    ret i32 [[TMP1]]
