@@ -91,9 +91,9 @@ std::string lld::verboseToString(const Symbol *b, uint64_t symOffset) {
   else
     msg += "<unknown kind> ";
 
-  if (b->isInGot())
+  if (b->isInAnyGot())
     msg += "(in GOT) ";
-  if (b->isInPlt())
+  if (b->isInAnyPlt())
     msg += "(in PLT) ";
 
   const elf::Defined* dr = dyn_cast<elf::Defined>(b);
@@ -146,6 +146,8 @@ Defined *ElfSym::relaTgotStart;
 Defined *ElfSym::relaTgotEnd;
 Defined *ElfSym::tlsModuleBase;
 SmallVector<SymbolAux, 0> elf::symAux;
+SymbolCompartAux elf::defaultSymbolCompartAux;
+std::mutex elf::compartMutex;
 
 Defined *ElfSym::newLibBss1;
 Defined *ElfSym::newLibBss2;
@@ -206,7 +208,7 @@ static uint64_t getSymVA(const Symbol &sym, int64_t addend) {
     // field etc) do the same trick as compiler uses to mark microMIPS
     // for CPU - set the less-significant bit.
     if (config->emachine == EM_MIPS && isMicroMips() &&
-        ((sym.stOther & STO_MIPS_MICROMIPS) || sym.hasFlag(NEEDS_COPY)))
+        ((sym.stOther & STO_MIPS_MICROMIPS) || sym.needsCopyAny))
       va |= 1;
 
     if (d.isTls() && !config->relocatable) {
@@ -235,6 +237,20 @@ static uint64_t getSymVA(const Symbol &sym, int64_t addend) {
   llvm_unreachable("invalid symbol kind");
 }
 
+bool Symbol::isInAnyGot() const {
+  for (Compartment &c : compartments)
+    if (isInGot(c))
+      return true;
+  return false;
+}
+
+bool Symbol::isInAnyPlt() const {
+  for (Compartment &c : compartments)
+    if (isInPlt(c))
+      return true;
+  return false;
+}
+
 uint64_t Symbol::getVA(int64_t addend) const {
   return getSymVA(*this, addend) + addend;
 }
@@ -246,33 +262,37 @@ uint64_t Symbol::getAArch64FuncVA(int64_t addend) const {
   return (outVA + addend) | fixup;
 }
 
-uint64_t Symbol::getGotVA() const {
-  if (gotInIgot)
-    return in.igotPlt->getVA() + getGotPltOffset();
-  return in.got->getVA() + getGotOffset();
+uint64_t Symbol::getGotVA(const Compartment &c) const {
+  const SymbolCompartAux &aux = compartAux(c);
+  if (aux.gotInIgot)
+    return c.igotPlt->getVA() + getGotPltOffset(c);
+  return c.got->getVA() + getGotOffset(c);
 }
 
-uint64_t Symbol::getGotOffset() const {
-  return getGotIdx() * target->gotEntrySize;
+uint64_t Symbol::getGotOffset(const Compartment &c) const {
+  return getGotIdx(c) * target->gotEntrySize;
 }
 
-uint64_t Symbol::getGotPltVA() const {
-  if (isInIplt)
-    return in.igotPlt->getVA() + getGotPltOffset();
-  return in.gotPlt->getVA() + getGotPltOffset();
+uint64_t Symbol::getGotPltVA(const Compartment &c) const {
+  const SymbolCompartAux &aux = compartAux(c);
+  if (aux.isInIplt)
+    return c.igotPlt->getVA() + getGotPltOffset(c);
+  return c.gotPlt->getVA() + getGotPltOffset(c);
 }
 
-uint64_t Symbol::getGotPltOffset() const {
-  if (isInIplt)
-    return getPltIdx() * target->gotEntrySize;
-  return (getPltIdx() + target->gotPltHeaderEntriesNum) * target->gotEntrySize;
+uint64_t Symbol::getGotPltOffset(const Compartment &c) const {
+  const SymbolCompartAux &aux = compartAux(c);
+  if (aux.isInIplt)
+    return getPltIdx(c) * target->gotEntrySize;
+  return (getPltIdx(c) + target->gotPltHeaderEntriesNum) * target->gotEntrySize;
 }
 
-uint64_t Symbol::getPltVA() const {
-  uint64_t outVA = isInIplt
-                       ? in.iplt->getVA() + getPltIdx() * target->ipltEntrySize
-                       : in.plt->getVA() + in.plt->headerSize +
-                             getPltIdx() * target->pltEntrySize;
+uint64_t Symbol::getPltVA(const Compartment &c) const {
+  const SymbolCompartAux &aux = compartAux(c);
+  uint64_t outVA = aux.isInIplt
+                       ? c.iplt->getVA() + getPltIdx(c) * target->ipltEntrySize
+                       : c.plt->getVA() + c.plt->headerSize +
+                             getPltIdx(c) * target->pltEntrySize;
 
   // While linking microMIPS code PLT code are always microMIPS
   // code. Set the less-significant bit to track that fact.
@@ -287,13 +307,13 @@ uint64_t Symbol::getPltVA() const {
   return outVA;
 }
 
-uint64_t Symbol::getTgotVA() const {
+uint64_t Symbol::getTgotVA(const Compartment &c) const {
   // Like TLS symbols, the TGOT VA is the offset within the TGOT address space.
-  return in.tgot->getVA() + getTgotOffset() - Out::tgotPhdr->firstSec->addr;
+  return c.tgot->getVA() + getTgotOffset(c) - Out::tgotPhdr->firstSec->addr;
 }
 
-uint64_t Symbol::getTgotOffset() const {
-  return getTgotIdx() * target->gotEntrySize;
+uint64_t Symbol::getTgotOffset(const Compartment &c) const {
+  return getTgotIdx(c) * target->gotEntrySize;
 }
 
 uint64_t Symbol::getMipsCheriCapTableVA(const InputSectionBase *isec,
@@ -337,6 +357,13 @@ OutputSection *Symbol::getOutputSection() const {
       return sec->getOutputSection();
     return nullptr;
   }
+  return nullptr;
+}
+
+Compartment *Symbol::containingCompartment() const {
+  if (auto *s = dyn_cast<Defined>(this))
+    if (auto *sec = s->section)
+      return &sec->getCompartment();
   return nullptr;
 }
 

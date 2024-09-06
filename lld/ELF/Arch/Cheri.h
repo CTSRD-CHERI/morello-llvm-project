@@ -330,8 +330,8 @@ uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
 uint64_t getMorelloBaseAddress(int64_t a, const Symbol &sym,
                                const InputSectionBase *isec, uint64_t offset);
 
-uint64_t getMorelloExecBaseAddress();
-uint64_t getMorelloExecSizeAndPermissions();
+uint64_t getMorelloExecBaseAddress(const Compartment &c);
+uint64_t getMorelloExecSizeAndPermissions(const Compartment &c);
 
 bool needsCheriPccSegment();
 

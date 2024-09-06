@@ -159,6 +159,9 @@ public:
   // R_PPC64_TLSLD. Disable TLS relaxation to avoid bad code generation.
   bool ppc64DisableTLSRelax = false;
 
+  // Compartment containing this file.
+  uint8_t compartment = 0;
+
 protected:
   InputFile(Kind k, MemoryBufferRef m);
   llvm::DenseSet<StringRef> Undefs;

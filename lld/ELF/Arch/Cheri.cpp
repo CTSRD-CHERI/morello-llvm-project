@@ -576,10 +576,19 @@ void CheriCapRelocsSection::writeToImpl(uint8_t *buf) {
     uint64_t permissions = CapRelocPermission<ELFT>::encodeType(targetType);
 
     // Use PCC bounds from the PT_CHERI_PCC segment.
-    if (PhdrEntry *ph = in.cheriBounds; ph && isCapRelocTypeExec(targetType)) {
-      targetOffset += targetVA - ph->p_vaddr;
-      targetVA = ph->p_vaddr;
-      targetSize = ph->p_memsz;
+    if (isCapRelocTypeExec(targetType)) {
+      Compartment *c;
+      if (Symbol *s = dyn_cast<Symbol *>(realTarget.symOrSec))
+        c = s->containingCompartment();
+      else {
+        InputSectionBase *isec = cast<InputSectionBase *>(realTarget.symOrSec);
+        c = &isec->getCompartment();
+      }
+      if (PhdrEntry *ph = c->cheriBounds) {
+        targetOffset += targetVA - ph->p_vaddr;
+        targetVA = ph->p_vaddr;
+        targetSize = ph->p_memsz;
+      }
     }
 
     // Ensure that the base and limit of the capabilities are representable
@@ -655,7 +664,7 @@ uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
                                       const InputSectionBase *isec,
                                       uint64_t offset) {
   if ((sym.isFunc() || sym.isGnuIFunc()) && config->isCheriAbi)
-    return getMorelloExecSizeAndPermissions();
+    return getMorelloExecSizeAndPermissions(*sym.containingCompartment());
 
   CheriCapRelocLocation location{const_cast<InputSectionBase *>(isec),
                                  offset - config->wordsize};
@@ -669,20 +678,20 @@ uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
 uint64_t getMorelloBaseAddress(int64_t a, const Symbol &sym,
                                const InputSectionBase *isec, uint64_t offset) {
   if ((sym.isFunc() || sym.isGnuIFunc()) && config->isCheriAbi)
-    return getMorelloExecBaseAddress();
+    return getMorelloExecBaseAddress(*sym.containingCompartment());
 
   // NB: Addend is omitted; part of the offset, not the base
   return sym.getVA();
 }
 
-uint64_t getMorelloExecBaseAddress() {
+uint64_t getMorelloExecBaseAddress(const Compartment &c) {
   assert(config->isCheriAbi);
-  return in.cheriBounds->p_vaddr;
+  return c.cheriBounds->p_vaddr;
 }
 
-uint64_t getMorelloExecSizeAndPermissions() {
+uint64_t getMorelloExecSizeAndPermissions(const Compartment &c) {
   assert(config->isCheriAbi);
-  uint64_t size = in.cheriBounds->p_memsz;
+  uint64_t size = c.cheriBounds->p_memsz;
   uint64_t perm = getMorelloFragmentPermissions(CapRelocType::FUNC);
   return (perm << 56) | size;
 }
@@ -996,8 +1005,9 @@ uint64_t MipsCheriCapTableSection::assignIndices(uint64_t startIndex,
     // All capability call relocations should end up in the pltrel section
     // rather than the normal relocation section to make processing of PLT
     // relocations in RTLD more efficient.
-    RelocationBaseSection &dynRelSec =
-        it.second.usedInCallExpr ? *in.relaPlt : *mainPart->relaDyn;
+    RelocationBaseSection &dynRelSec = it.second.usedInCallExpr
+                                           ? *getCompartment().relaPlt
+                                           : *mainPart->relaDyn;
     if (targetSym->isPreemptible)
       dynRelSec.addSymbolReloc(elfCapabilityReloc, *this, off, *targetSym);
     else if (targetSym->isUndefWeak())
@@ -1130,7 +1140,7 @@ void MipsCheriCapTableMappingSection::writeTo(uint8_t *buf) {
   // Write the mapping from function vaddr -> captable subset for RTLD
   std::vector<CaptableMappingEntry> entries;
   // Note: Symtab->getSymbols() only returns the symbols in .dynsym. We need
-  // to use In.sym()tab instead since we also want to add all local functions!
+  // to use in.symTab instead since we also want to add all local functions!
   for (const SymbolTableEntry &ste : in.symTab->getSymbols()) {
     Symbol* sym = ste.sym;
     if (!sym->isDefined() || !sym->isFunc())
@@ -1226,8 +1236,9 @@ static bool alignPCCBounds(PhdrEntry *p, CheriPccPaddingSection &psec) {
 bool cheriCapabilityBoundsAlign() {
   // Align the PT_CHERI_PCC segment.
   bool changed = false;
-  if (in.cheriBounds)
-    changed |= alignPCCBounds(in.cheriBounds, *in.pccPadding);
+  for (Compartment &compart : compartments)
+    if (compart.cheriBounds)
+      changed |= alignPCCBounds(compart.cheriBounds, *compart.pccPadding);
   return changed;
 }
 

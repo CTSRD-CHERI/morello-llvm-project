@@ -43,13 +43,14 @@ public:
     return getMorelloRequiredAlignment(len);
   }
   int64_t getImplicitAddend(const uint8_t *buf, RelType type) const override;
-  void writeGotPlt(uint8_t *buf, const Symbol &s) const override;
+  void writeGotPlt(Compartment &c, uint8_t *buf,
+                   const Symbol &s) const override;
   void writeIgotPlt(uint8_t *buf, const Symbol &s) const override;
-  void writePltHeader(uint8_t *buf) const override;
-  void writePlt(uint8_t *buf, const Symbol &sym,
+  void writePltHeader(Compartment &c, uint8_t *buf) const override;
+  void writePlt(Compartment &c, uint8_t *buf, const Symbol &sym,
                 uint64_t pltEntryAddr) const override;
   bool needsThunk(RelExpr expr, RelType type, const InputFile *file,
-                  uint64_t branchAddr, const Symbol &s,
+                  const Compartment &c, uint64_t branchAddr, const Symbol &s,
                   int64_t a) const override;
   uint32_t getThunkSectionSpacing() const override;
   bool inBranchRange(RelType type, uint64_t src, uint64_t dst) const override;
@@ -322,8 +323,8 @@ int64_t AArch64::getImplicitAddend(const uint8_t *buf, RelType type) const {
   }
 }
 
-void AArch64::writeGotPlt(uint8_t *buf, const Symbol &) const {
-  write64(buf, in.plt->getVA());
+void AArch64::writeGotPlt(Compartment &c, uint8_t *buf, const Symbol &) const {
+  write64(buf, c.plt->getVA());
 }
 
 void AArch64::writeIgotPlt(uint8_t *buf, const Symbol &s) const {
@@ -331,7 +332,7 @@ void AArch64::writeIgotPlt(uint8_t *buf, const Symbol &s) const {
     write64(buf, s.getVA());
 }
 
-void AArch64::writePltHeader(uint8_t *buf) const {
+void AArch64::writePltHeader(Compartment &c, uint8_t *buf) const {
   const uint8_t pltData[] = {
       0xf0, 0x7b, 0xbf, 0xa9, // stp    x16, x30, [sp,#-16]!
       0x10, 0x00, 0x00, 0x90, // adrp   x16, Page(&(.got.plt[2]))
@@ -344,15 +345,15 @@ void AArch64::writePltHeader(uint8_t *buf) const {
   };
   memcpy(buf, pltData, sizeof(pltData));
 
-  uint64_t got = in.gotPlt->getVA();
-  uint64_t plt = in.plt->getVA();
+  uint64_t got = c.gotPlt->getVA();
+  uint64_t plt = c.plt->getVA();
   relocateNoSym(buf + 4, R_AARCH64_ADR_PREL_PG_HI21,
                 getAArch64Page(got + 16) - getAArch64Page(plt + 4));
   relocateNoSym(buf + 8, R_AARCH64_LDST64_ABS_LO12_NC, got + 16);
   relocateNoSym(buf + 12, R_AARCH64_ADD_ABS_LO12_NC, got + 16);
 }
 
-void AArch64::writePlt(uint8_t *buf, const Symbol &sym,
+void AArch64::writePlt(Compartment &c, uint8_t *buf, const Symbol &sym,
                        uint64_t pltEntryAddr) const {
   const uint8_t inst[] = {
       0x10, 0x00, 0x00, 0x90, // adrp x16, Page(&(.got.plt[n]))
@@ -362,7 +363,7 @@ void AArch64::writePlt(uint8_t *buf, const Symbol &sym,
   };
   memcpy(buf, inst, sizeof(inst));
 
-  uint64_t gotPltEntryAddr = sym.getGotPltVA();
+  uint64_t gotPltEntryAddr = sym.getGotPltVA(c);
   relocateNoSym(buf, R_AARCH64_ADR_PREL_PG_HI21,
                 getAArch64Page(gotPltEntryAddr) - getAArch64Page(pltEntryAddr));
   relocateNoSym(buf + 4, R_AARCH64_LDST64_ABS_LO12_NC, gotPltEntryAddr);
@@ -370,13 +371,13 @@ void AArch64::writePlt(uint8_t *buf, const Symbol &sym,
 }
 
 bool AArch64::needsThunk(RelExpr expr, RelType type, const InputFile *file,
-                         uint64_t branchAddr, const Symbol &s,
-                         int64_t a) const {
+                         const Compartment &c, uint64_t branchAddr,
+                         const Symbol &s, int64_t a) const {
   // If s is an undefined weak symbol and does not have a PLT entry then it will
   // be resolved as a branch to the next instruction. If it is hidden, its
   // binding has been converted to local, so we just check isUndefined() here. A
   // undefined non-weak symbol will have been errored.
-  if (s.isUndefined() && !s.isInPlt())
+  if (s.isUndefined() && !s.isInPlt(c))
     return false;
   // ELF for the ARM 64-bit architecture, section Call and Jump relocations
   // only permits range extension thunks for R_AARCH64_CALL26 and
@@ -385,7 +386,7 @@ bool AArch64::needsThunk(RelExpr expr, RelType type, const InputFile *file,
       type != R_AARCH64_PLT32 &&
       type != R_MORELLO_CALL26 && type != R_MORELLO_JUMP26)
     return false;
-  uint64_t dst = (expr == R_PLT_PC) ? s.getPltVA() : s.getVA(a);
+  uint64_t dst = (expr == R_PLT_PC) ? s.getPltVA(c) : s.getVA(a);
 
   switch (type) {
   case R_AARCH64_CALL26:
@@ -1020,8 +1021,8 @@ namespace {
 class AArch64BtiPac final : public AArch64 {
 public:
   AArch64BtiPac();
-  void writePltHeader(uint8_t *buf) const override;
-  void writePlt(uint8_t *buf, const Symbol &sym,
+  void writePltHeader(Compartment &c, uint8_t *buf) const override;
+  void writePlt(Compartment &c, uint8_t *buf, const Symbol &sym,
                 uint64_t pltEntryAddr) const override;
 
 private:
@@ -1049,7 +1050,7 @@ AArch64BtiPac::AArch64BtiPac() {
   }
 }
 
-void AArch64BtiPac::writePltHeader(uint8_t *buf) const {
+void AArch64BtiPac::writePltHeader(Compartment &c, uint8_t *buf) const {
   const uint8_t btiData[] = { 0x5f, 0x24, 0x03, 0xd5 }; // bti c
   const uint8_t pltData[] = {
       0xf0, 0x7b, 0xbf, 0xa9, // stp    x16, x30, [sp,#-16]!
@@ -1062,8 +1063,8 @@ void AArch64BtiPac::writePltHeader(uint8_t *buf) const {
   };
   const uint8_t nopData[] = { 0x1f, 0x20, 0x03, 0xd5 }; // nop
 
-  uint64_t got = in.gotPlt->getVA();
-  uint64_t plt = in.plt->getVA();
+  uint64_t got = c.gotPlt->getVA();
+  uint64_t plt = c.plt->getVA();
 
   if (btiHeader) {
     // PltHeader is called indirectly by plt[N]. Prefix pltData with a BTI C
@@ -1083,7 +1084,7 @@ void AArch64BtiPac::writePltHeader(uint8_t *buf) const {
     memcpy(buf + sizeof(pltData), nopData, sizeof(nopData));
 }
 
-void AArch64BtiPac::writePlt(uint8_t *buf, const Symbol &sym,
+void AArch64BtiPac::writePlt(Compartment &c, uint8_t *buf, const Symbol &sym,
                              uint64_t pltEntryAddr) const {
   // The PLT entry is of the form:
   // [btiData] addrInst (pacBr | stdBr) [nopData]
@@ -1108,15 +1109,16 @@ void AArch64BtiPac::writePlt(uint8_t *buf, const Symbol &sym,
   // address may escape if referenced by a direct relocation. If relative
   // vtables are used then if the vtable is in a shared object the offsets will
   // be to the PLT entry. The condition is conservative.
+  const SymbolCompartAux &aux = sym.compartAux(c);
   bool hasBti = btiHeader &&
-                (sym.hasFlag(NEEDS_COPY) || sym.isInIplt || sym.thunkAccessed);
+                (aux.hasFlag(NEEDS_COPY) || aux.isInIplt || sym.thunkAccessed);
   if (hasBti) {
     memcpy(buf, btiData, sizeof(btiData));
     buf += sizeof(btiData);
     pltEntryAddr += sizeof(btiData);
   }
 
-  uint64_t gotPltEntryAddr = sym.getGotPltVA();
+  uint64_t gotPltEntryAddr = sym.getGotPltVA(c);
   memcpy(buf, addrInst, sizeof(addrInst));
   relocateNoSym(buf, R_AARCH64_ADR_PREL_PG_HI21,
                 getAArch64Page(gotPltEntryAddr) - getAArch64Page(pltEntryAddr));
@@ -1136,10 +1138,11 @@ namespace {
 class AArch64C64 final : public AArch64 {
 public:
   AArch64C64();
-  void writePltHeader(uint8_t *buf) const override;
-  void writePlt(uint8_t *buf, const Symbol &sym,
+  void writePltHeader(Compartment &c, uint8_t *buf) const override;
+  void writePlt(Compartment &c, uint8_t *buf, const Symbol &sym,
                 uint64_t pltEntryAddr) const override;
-  void writeGotPlt(uint8_t *buf, const Symbol &s) const override;
+  void writeGotPlt(Compartment &c, uint8_t *buf,
+                   const Symbol &s) const override;
   void writeIgotPlt(uint8_t *buf, const Symbol &s) const override;
 private:
   void relaxTlsGdToLe(uint8_t *loc, const Relocation &rel,
@@ -1182,7 +1185,7 @@ const uint8_t *AArch64C64::getPltBranchR17() const {
     return brC17;
 }
 
-void AArch64C64::writePltHeader(uint8_t *buf) const {
+void AArch64C64::writePltHeader(Compartment &c, uint8_t *buf) const {
   const uint8_t *b = getPltBranchR17();
   const uint8_t pltData[] = {
       0xf0, 0x7b, 0xbf, 0x62, // stp  c16, c30, [csp, #-32]!
@@ -1196,15 +1199,15 @@ void AArch64C64::writePltHeader(uint8_t *buf) const {
   };
   memcpy(buf, pltData, sizeof(pltData));
 
-  uint64_t got = in.gotPlt->getVA();
-  uint64_t plt = in.plt->getVA();
+  uint64_t got = c.gotPlt->getVA();
+  uint64_t plt = c.plt->getVA();
   relocateNoSym(buf + 4, R_MORELLO_ADR_PREL_PG_HI20,
                 getAArch64Page(got + 32) - getAArch64Page(plt + 4));
   relocateNoSym(buf + 8, R_AARCH64_LDST128_ABS_LO12_NC, got + 32);
   relocateNoSym(buf + 12, R_AARCH64_ADD_ABS_LO12_NC, got + 32);
 }
 
-void AArch64C64::writePlt(uint8_t *buf, const Symbol &sym,
+void AArch64C64::writePlt(Compartment &c, uint8_t *buf, const Symbol &sym,
                           uint64_t pltEntryAddr) const {
   const uint8_t *b = getPltBranchR17();
   const uint8_t pltData[] = {
@@ -1215,20 +1218,22 @@ void AArch64C64::writePlt(uint8_t *buf, const Symbol &sym,
   };
   memcpy(buf, pltData, sizeof(pltData));
 
-  uint64_t gotPltEntryAddr = sym.getGotPltVA();
+  uint64_t gotPltEntryAddr = sym.getGotPltVA(c);
   relocateNoSym(buf + 0, R_MORELLO_ADR_PREL_PG_HI20,
                 getAArch64Page(gotPltEntryAddr) - getAArch64Page(pltEntryAddr));
   relocateNoSym(buf + 4, R_AARCH64_ADD_ABS_LO12_NC, gotPltEntryAddr);
 }
 
-void AArch64C64::writeGotPlt(uint8_t *buf, const Symbol &) const {
-  write64(buf, getMorelloExecBaseAddress());
-  write64(buf + 8, getMorelloExecSizeAndPermissions());
+void AArch64C64::writeGotPlt(Compartment &c, uint8_t *buf,
+                             const Symbol &) const {
+  write64(buf, getMorelloExecBaseAddress(c));
+  write64(buf + 8, getMorelloExecSizeAndPermissions(c));
 }
 
 void AArch64C64::writeIgotPlt(uint8_t *buf, const Symbol &sym) const {
-  write64(buf, getMorelloExecBaseAddress());
-  write64(buf + 8, getMorelloExecSizeAndPermissions());
+  Compartment &c = *sym.containingCompartment();
+  write64(buf, getMorelloExecBaseAddress(c));
+  write64(buf + 8, getMorelloExecSizeAndPermissions(c));
 }
 
 void AArch64C64::relaxTlsGdToLe(uint8_t *loc, const Relocation &rel,
