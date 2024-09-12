@@ -10050,6 +10050,19 @@ Value *CodeGenFunction::EmitAArch64BuiltinExpr(unsigned BuiltinID,
                                 Constant::getNullValue(Val0->getType()));
   }
 
+  if (BuiltinID ==
+          AArch64::BI__builtin_morello_round_representable_length_inexact ||
+      BuiltinID ==
+          AArch64::BI__builtin_morello_representable_alignment_mask_inexact) {
+    Intrinsic::ID IID =
+      BuiltinID ==
+          AArch64::BI__builtin_morello_round_representable_length_inexact
+              ? llvm::Intrinsic::morello_round_representable_length_inexact
+              : llvm::Intrinsic::morello_representable_alignment_mask_inexact;
+    Value *Arg0 = EmitScalarExpr(E->getArg(0));
+    return Builder.CreateIntrinsic(IID, {SizeTy}, {Arg0});
+  }
+
   if ((BuiltinID == AArch64::BI__builtin_arm_ldrex ||
       BuiltinID == AArch64::BI__builtin_arm_ldaex) &&
       getContext().getTypeSize(E->getType()) == 128 &&
