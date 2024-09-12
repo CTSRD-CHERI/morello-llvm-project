@@ -40,12 +40,12 @@ public:
   RelType getDynRel(RelType type) const override;
   int getCapabilitySize() const override { return 16; }
   int64_t getImplicitAddend(const uint8_t *buf, RelType type) const override;
-  void writeGotPlt(uint8_t *buf, const Symbol &s) const override;
-  void writePltHeader(uint8_t *buf) const override;
+  void writeGotPlt(Compartment *c, uint8_t *buf, const Symbol &s) const override;
+  void writePltHeader(Compartment *c, uint8_t *buf) const override;
   void writeFragmentAddress(uint8_t *buf, uint64_t val) const override;
   void writeFragmentSizeAndPermissions(uint8_t *buf,
                                        uint64_t val) const override;
-  void writePlt(uint8_t *buf, const Symbol &sym,
+  void writePlt(Compartment *c, uint8_t *buf, const Symbol &sym,
                 uint64_t pltEntryAddr) const override;
   bool needsThunk(RelExpr expr, RelType type, const InputFile *file,
                   uint64_t branchAddr, const Symbol &s,
@@ -311,11 +311,11 @@ int64_t AArch64::getImplicitAddend(const uint8_t *buf, RelType type) const {
   }
 }
 
-void AArch64::writeGotPlt(uint8_t *buf, const Symbol &) const {
-  write64(buf, in.plt->getVA());
+void AArch64::writeGotPlt(Compartment *c, uint8_t *buf, const Symbol &) const {
+  write64(buf, plt(c)->getVA());
 }
 
-void AArch64::writePltHeader(uint8_t *buf) const {
+void AArch64::writePltHeader(Compartment *c, uint8_t *buf) const {
   const uint8_t pltData[] = {
       0xf0, 0x7b, 0xbf, 0xa9, // stp    x16, x30, [sp,#-16]!
       0x10, 0x00, 0x00, 0x90, // adrp   x16, Page(&(.plt.got[2]))
@@ -328,15 +328,15 @@ void AArch64::writePltHeader(uint8_t *buf) const {
   };
   memcpy(buf, pltData, sizeof(pltData));
 
-  uint64_t got = in.gotPlt->getVA();
-  uint64_t plt = in.plt->getVA();
+  uint64_t got = gotPlt(c)->getVA();
+  uint64_t plt = lld::elf::plt(c)->getVA();
   relocateNoSym(buf + 4, R_AARCH64_ADR_PREL_PG_HI21,
                 getAArch64Page(got + 16) - getAArch64Page(plt + 4));
   relocateNoSym(buf + 8, R_AARCH64_LDST64_ABS_LO12_NC, got + 16);
   relocateNoSym(buf + 12, R_AARCH64_ADD_ABS_LO12_NC, got + 16);
 }
 
-void AArch64::writePlt(uint8_t *buf, const Symbol &sym,
+void AArch64::writePlt(Compartment *c, uint8_t *buf, const Symbol &sym,
                        uint64_t pltEntryAddr) const {
   const uint8_t inst[] = {
       0x10, 0x00, 0x00, 0x90, // adrp x16, Page(&(.plt.got[n]))
@@ -967,8 +967,8 @@ namespace {
 class AArch64BtiPac final : public AArch64 {
 public:
   AArch64BtiPac();
-  void writePltHeader(uint8_t *buf) const override;
-  void writePlt(uint8_t *buf, const Symbol &sym,
+  void writePltHeader(Compartment *c, uint8_t *buf) const override;
+  void writePlt(Compartment *c, uint8_t *buf, const Symbol &sym,
                 uint64_t pltEntryAddr) const override;
 
 private:
@@ -996,7 +996,7 @@ AArch64BtiPac::AArch64BtiPac() {
   }
 }
 
-void AArch64BtiPac::writePltHeader(uint8_t *buf) const {
+void AArch64BtiPac::writePltHeader(Compartment *c, uint8_t *buf) const {
   const uint8_t btiData[] = { 0x5f, 0x24, 0x03, 0xd5 }; // bti c
   const uint8_t pltData[] = {
       0xf0, 0x7b, 0xbf, 0xa9, // stp    x16, x30, [sp,#-16]!
@@ -1009,8 +1009,8 @@ void AArch64BtiPac::writePltHeader(uint8_t *buf) const {
   };
   const uint8_t nopData[] = { 0x1f, 0x20, 0x03, 0xd5 }; // nop
 
-  uint64_t got = in.gotPlt->getVA();
-  uint64_t plt = in.plt->getVA();
+  uint64_t got = gotPlt(c)->getVA();
+  uint64_t plt = lld::elf::plt(c)->getVA();
 
   if (btiHeader) {
     // PltHeader is called indirectly by plt[N]. Prefix pltData with a BTI C
@@ -1030,7 +1030,7 @@ void AArch64BtiPac::writePltHeader(uint8_t *buf) const {
     memcpy(buf + sizeof(pltData), nopData, sizeof(nopData));
 }
 
-void AArch64BtiPac::writePlt(uint8_t *buf, const Symbol &sym,
+void AArch64BtiPac::writePlt(Compartment *c, uint8_t *buf, const Symbol &sym,
                              uint64_t pltEntryAddr) const {
   // The PLT entry is of the form:
   // [btiData] addrInst (pacBr | stdBr) [nopData]
@@ -1081,10 +1081,11 @@ namespace {
 class AArch64C64 : public AArch64 {
 public:
   AArch64C64();
-  void writePltHeader(uint8_t *buf) const override;
-  void writePlt(uint8_t *buf, const Symbol &sym,
+  void writePltHeader(Compartment *c, uint8_t *buf) const override;
+  void writePlt(Compartment *c, uint8_t *buf, const Symbol &sym,
                 uint64_t pltEntryAddr) const override;
-  void writeGotPlt(uint8_t *buf, const Symbol &s) const override;
+  void writeGotPlt(Compartment *c, uint8_t *buf,
+                   const Symbol &s) const override;
   void relaxTlsGdToLe(uint8_t *loc, const Relocation &rel,
                       uint64_t val) const override;
   void relaxTlsGdToIe(uint8_t *loc, const Relocation &rel,
@@ -1098,8 +1099,8 @@ private:
 class AArch64C64DescABI final : public AArch64C64 {
 public:
   AArch64C64DescABI();
-  void writePltHeader(uint8_t *buf) const override;
-  void writePlt(uint8_t *buf, const Symbol &sym,
+  void writePltHeader(Compartment *c, uint8_t *buf) const override;
+  void writePlt(Compartment *c, uint8_t *buf, const Symbol &sym,
                 uint64_t pltEntryAddr) const override;
 };
 } // namespace
@@ -1131,7 +1132,7 @@ const uint8_t *AArch64C64::getPltBranchR17() const {
     return brC17;
 }
 
-void AArch64C64::writePltHeader(uint8_t *buf) const {
+void AArch64C64::writePltHeader(Compartment *c, uint8_t *buf) const {
   const uint8_t *b = getPltBranchR17();
   const uint8_t pltData[] = {
       0xf0, 0x7b, 0xbf, 0x62, // stp  c16, c30, [csp, #-32]!
@@ -1145,15 +1146,15 @@ void AArch64C64::writePltHeader(uint8_t *buf) const {
   };
   memcpy(buf, pltData, sizeof(pltData));
 
-  uint64_t got = in.gotPlt->getVA();
-  uint64_t plt = in.plt->getVA();
+  uint64_t got = gotPlt(c)->getVA();
+  uint64_t plt = lld::elf::plt(c)->getVA();
   relocateNoSym(buf + 4, R_MORELLO_ADR_PREL_PG_HI20,
                 getAArch64Page(got + 32) - getAArch64Page(plt + 4));
   relocateNoSym(buf + 8, R_AARCH64_LDST128_ABS_LO12_NC, got + 32);
   relocateNoSym(buf + 12, R_AARCH64_ADD_ABS_LO12_NC, got + 32);
 }
 
-void AArch64C64::writePlt(uint8_t *buf, const Symbol &sym,
+void AArch64C64::writePlt(Compartment *c, uint8_t *buf, const Symbol &sym,
                           uint64_t pltEntryAddr) const {
   const uint8_t *b = getPltBranchR17();
   const uint8_t pltData[] = {
@@ -1170,10 +1171,11 @@ void AArch64C64::writePlt(uint8_t *buf, const Symbol &sym,
   relocateNoSym(buf + 4, R_AARCH64_ADD_ABS_LO12_NC, gotPltEntryAddr);
 }
 
-void AArch64C64::writeGotPlt(uint8_t *buf, const Symbol &) const {
+void AArch64C64::writeGotPlt(Compartment *c, uint8_t *buf,
+                             const Symbol &) const {
   // The PLT header is C64 and we transfer control to it via an indirect jump
   // so we must set the bottom bit.
-  uint64_t va = in.plt->getVA();
+  uint64_t va = plt(c)->getVA();
   if (!config->morelloPurecapBenchmarkABI)
     va |= 1;
   writeFragmentAddress(buf, va);
@@ -1278,7 +1280,7 @@ AArch64C64DescABI::AArch64C64DescABI() {
   iRelativeRel = R_MORELLO_DESC_IRELATIVE;
 }
 
-void AArch64C64DescABI::writePltHeader(uint8_t *buf) const {
+void AArch64C64DescABI::writePltHeader(Compartment *c, uint8_t *buf) const {
   const uint8_t pltData[] = {
       0xf0, 0x7b, 0xbf, 0x62, // stp  c16, c30, [csp, #-32]!
       0x10, 0x00, 0x80, 0x90, // adrp c16, Page(&(.plt.got[2]))
@@ -1292,14 +1294,15 @@ void AArch64C64DescABI::writePltHeader(uint8_t *buf) const {
 
   memcpy(buf, pltData, sizeof(pltData));
 
-  uint64_t got = in.gotPlt->getVA();
+  uint64_t got = gotPlt(c)->getVA();
   relocateNoSym(buf + 4, R_MORELLO_DESC_ADR_PREL_PG_HI20,
                 getAArch64Page(got + 32) - Out::descPhdr->firstSec->addr);
   relocateNoSym(buf + 8, R_AARCH64_LDST128_ABS_LO12_NC, got + 32);
   relocateNoSym(buf + 12, R_AARCH64_ADD_ABS_LO12_NC, got + 32);
 }
 
-void AArch64C64DescABI::writePlt(uint8_t *buf, const Symbol &sym,
+void AArch64C64DescABI::writePlt(Compartment *c, uint8_t *buf,
+                                 const Symbol &sym,
                                  uint64_t pltEntryAddr) const {
   const uint8_t pltData[] = {
       0x10, 0x00, 0x00, 0x90, // adrdp  c16, :got:foo
