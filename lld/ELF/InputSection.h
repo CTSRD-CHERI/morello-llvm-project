@@ -25,6 +25,7 @@ class InputFile;
 class Symbol;
 class DynamicReloc;
 
+struct Compartment;
 class Defined;
 struct Partition;
 class SyntheticSection;
@@ -75,6 +76,8 @@ public:
   uint32_t type;
   uint32_t link;
   uint32_t info;
+
+  Compartment *compartment = nullptr;
 
   OutputSection *getOutputSection();
   const OutputSection *getOutputSection() const {
