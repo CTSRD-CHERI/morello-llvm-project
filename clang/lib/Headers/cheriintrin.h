@@ -55,8 +55,9 @@ typedef long cheri_otype_t;
 #define cheri_is_sealed(x) __builtin_cheri_sealed_get(x)
 #define cheri_is_sentry(x) (__builtin_cheri_type_get(x) == CHERI_OTYPE_SENTRY)
 #define cheri_is_unsealed(x) (!__builtin_cheri_sealed_get(x))
-/* TODO: builtins for indirect sentries */
 #define cheri_sentry_create(x) __builtin_cheri_seal_entry(x)
+#define cheri_indirect_sentry_create(x) __builtin_cheri_seal_indirect_entry(x)
+#define cheri_indirect_pair_sentry_create(x) __builtin_cheri_seal_indirect_pair(x)
 #define cheri_seal(x, y) __builtin_cheri_seal((x), (y))
 #define cheri_unseal(x, y) __builtin_cheri_unseal((x), (y))
 

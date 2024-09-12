@@ -5665,6 +5665,12 @@ Value *llvm::getBasePtrIgnoringCapabilityManipulation(Value *V,
   } else if (match(V, m_Intrinsic<Intrinsic::cheri_cap_seal_entry>(
                           m_Value(Op0)))) {
     return getBasePtrIgnoringCapabilityManipulation(Op0, DL);
+  } else if (match(V, m_Intrinsic<Intrinsic::cheri_cap_seal_indirect_entry>(
+                          m_Value(Op0)))) {
+    return getBasePtrIgnoringCapabilityManipulation(Op0, DL);
+  } else if (match(V, m_Intrinsic<Intrinsic::cheri_cap_seal_indirect_pair>(
+                          m_Value(Op0)))) {
+    return getBasePtrIgnoringCapabilityManipulation(Op0, DL);
   } else if (match(V,
                    m_Intrinsic<Intrinsic::cheri_cap_tag_clear>(m_Value(Op0)))) {
     return getBasePtrIgnoringCapabilityManipulation(Op0, DL);
