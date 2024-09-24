@@ -675,6 +675,20 @@ public:
   void finalizeContents() override;
 };
 
+class SignatureSection : public SyntheticSection {
+public:
+  using Ent = uint8_t;
+  SignatureSection();
+  size_t getSize() const override;
+  void finalizeContents() override;
+  void writeTo(uint8_t *buf) override;
+  bool isNeeded() const override;
+  void addAnonSym(Symbol *sym) { anonSyms.push_back(sym); }
+
+private:
+  SmallVector<Symbol *, 0> anonSyms;
+};
+
 // Outputs GNU Hash section. For detailed explanation see:
 // https://blogs.oracle.com/ali/entry/gnu_hash_elf_sections
 class GnuHashTableSection final : public SyntheticSection {
@@ -1233,6 +1247,7 @@ struct Partition {
   std::unique_ptr<SyntheticSection> dynamic;
   std::unique_ptr<StringTableSection> dynStrTab;
   std::unique_ptr<SymbolTableBaseSection> dynSymTab;
+  std::unique_ptr<SignatureSection> sigTab;
   std::unique_ptr<EhFrameHeader> ehFrameHdr;
   std::unique_ptr<EhFrameSection> ehFrame;
   std::unique_ptr<GnuHashTableSection> gnuHashTab;

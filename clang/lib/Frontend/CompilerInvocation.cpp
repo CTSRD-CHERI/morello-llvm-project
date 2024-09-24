@@ -3819,6 +3819,10 @@ bool CompilerInvocation::ParseLangArgs(LangOptions &Opts, ArgList &Args,
   else if (Args.hasArg(OPT_fwrapv))
     Opts.setSignedOverflowBehavior(LangOptions::SOB_Defined);
 
+  Opts.MorelloAbsoluteFuncPtr =
+      Args.hasFlag(OPT_morello_funcptr_absolute, OPT_morello_funcptr_relative,
+                   Opts.MorelloAbsoluteFuncPtr);
+
   Opts.MSCompatibilityVersion = 0;
   if (const Arg *A = Args.getLastArg(OPT_fms_compatibility_version)) {
     VersionTuple VT;
@@ -4469,6 +4473,10 @@ static bool ParseTargetArgs(TargetOptions &Opts, ArgList &Args,
       Opts.FeaturesAsWritten.push_back("+cheri-exact-equals");
   }
 
+  if (Args.hasFlag(options::OPT_cheri_c18n_func_signature,
+                   options::OPT_cheri_c18n_no_func_signature, false))
+      Opts.FeaturesAsWritten.push_back("+cheri-c18n-func-signature");
+
   if (T.isAArch64()) {
     if (Args.hasFlag(options::OPT_morello_bounded_memargs,
                      options::OPT_morello_no_bounded_memargs, false))
@@ -4477,6 +4485,10 @@ static bool ParseTargetArgs(TargetOptions &Opts, ArgList &Args,
     if (Args.hasFlag(options::OPT_morello_bounded_memargs_caller_only,
                      options::OPT_morello_no_bounded_memargs, false))
       Opts.FeaturesAsWritten.push_back("+bounded-morello-memargs-caller");
+
+    if (Args.hasFlag(options::OPT_morello_funcptr_absolute,
+                     options::OPT_morello_funcptr_relative, false))
+        Opts.FeaturesAsWritten.push_back("+absolute-morello-funcptr");
   }
 
   if (Arg *A = Args.getLastArg(options::OPT_target_sdk_version_EQ)) {

@@ -545,6 +545,8 @@ void Symbol::resolve(const Symbol &other) {
     return;
   }
 
+  Symbol old = *this;
+
   switch (other.kind()) {
   case Symbol::UndefinedKind:
     resolveUndefined(cast<Undefined>(other));
@@ -566,6 +568,35 @@ void Symbol::resolve(const Symbol &other) {
     break;
   case Symbol::PlaceholderKind:
     llvm_unreachable("bad symbol kind");
+  }
+
+  if (isUndefined()) {
+    if (other.isUndefined() && !signature.meet(other.signature))
+      fatal("Incompatible signatures for " + getName() + ": " +
+          Twine::utohexstr(signature.toInt()) + " in " + file->getName() +
+          " and " +
+          Twine::utohexstr(other.signature.toInt()) + " in " +
+          other.file->getName());
+  } else if (isCommon() || isDefined() || isShared()) {
+    // If the other symbol is undefined, then require that the signature is safe
+    // relative to the other symbol.
+    // If the other symbol is defined, then require that the signature is safe
+    // relative to the old signature.
+    if (other.isUndefined())
+      old = other;
+    // When the signature is invalid,
+    // - If the other symbol is undefined, use the other symbol's signature;
+    // - If ther other symbol is defined, use the old symbol's signature.
+    if (!signature.valid)
+      signature = old.signature;
+    if (!signature.leq(old.signature))
+      fatal("Incompatible signatures for defined symbol " + getName() + ": " +
+          Twine::utohexstr(signature.toInt()) + " in " + file->getName() +
+          " and " +
+          Twine::utohexstr(old.signature.toInt()) + " in " +
+          old.file->getName() +
+          " and other " +
+          Twine::utohexstr(other.signature.toInt()) + " in " + other.file->getName());
   }
 }
 

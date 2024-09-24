@@ -1475,3 +1475,26 @@ void MCStreamer::emitVersionForTarget(
                  LinkedTargetVersion.getMinor().getValueOr(0),
                  LinkedTargetVersion.getSubminor().getValueOr(0), SDKVersion);
 }
+
+void MCStreamer::emitC18NSignature(MCSymbol *Sym,
+                                   SymbolSignature Sig,
+                                   bool Callee) {
+  if (Sym->SignatureIsForCallee)
+    return;
+
+  SymbolSignature &SigOrig = Sym->Signature;
+  if (Callee) {
+    SigOrig = Sig;
+    Sym->SignatureIsForCallee = true;
+    return;
+  }
+
+  if (!SigOrig.meet(Sig))
+    getContext().reportError(getStartTokLoc(),
+        "Incompatible signatures for " + Sym->getName() + ": " +
+        Twine::utohexstr(SigOrig.toInt()) +
+        (Sym->SignatureIsForCallee ? " (callee)" : " (caller)") +
+        " and " +
+        Twine::utohexstr(Sig.toInt()) +
+        (Callee ? " (callee)" : " (caller)"));
+}

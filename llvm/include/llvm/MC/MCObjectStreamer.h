@@ -205,6 +205,8 @@ public:
   void emitAddrsig() override;
   void emitAddrsigSym(const MCSymbol *Sym) override;
 
+  void emitC18NSignature(MCSymbol *, SymbolSignature, bool) override;
+
   void finishImpl() override;
 
   /// Emit the absolute difference between two symbols if possible.

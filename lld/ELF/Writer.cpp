@@ -434,6 +434,11 @@ template <class ELFT> void elf::createSyntheticSections() {
     if (config->hasDynSymTab) {
       add(*part.dynSymTab);
 
+      if (config->hasSigTab) {
+        part.sigTab = std::make_unique<SignatureSection>();
+        add(*part.sigTab);
+      }
+
       part.verSym = std::make_unique<VersionTableSection>();
       add(*part.verSym);
 
@@ -2320,6 +2325,7 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
       }
 
       finalizeSynthetic(part.dynSymTab.get());
+      finalizeSynthetic(part.sigTab.get());
       finalizeSynthetic(part.gnuHashTab.get());
       finalizeSynthetic(part.hashTab.get());
       finalizeSynthetic(part.verDef.get());

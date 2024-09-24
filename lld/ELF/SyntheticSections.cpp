@@ -1554,6 +1554,8 @@ DynamicSection<ELFT>::computeContents() {
 
   addInSec(DT_SYMTAB, *part.dynSymTab);
   addInt(DT_SYMENT, sizeof(Elf_Sym));
+  if (config->hasSigTab)
+    addInSec(DT_CHERI_C18N_SIG, *part.sigTab);
   addInSec(DT_STRTAB, *part.dynStrTab);
   addInt(DT_STRSZ, part.dynStrTab->getSize());
   if (!config->zText)
@@ -1746,6 +1748,8 @@ uint32_t DynamicReloc::getSymIndex(SymbolTableBaseSection *symTab) const {
     }
     return symTab->getSymbolIndex(sym);
   }
+  if (sym && sym->anonSymNum != 0)
+    return sym->anonSymNum;
   if (sym && !sym->isTls())
     return symTab->getSymbolIndex(sym);
   return 0;
@@ -4080,6 +4084,37 @@ void InStruct::reset() {
   symTab.reset();
   symTabShndx.reset();
   relaDyn.reset();
+}
+
+SignatureSection::SignatureSection()
+    : SyntheticSection(SHF_ALLOC, SHT_CHERI_C18N_SIG, alignof(Ent),
+                       ".c18n.signature") {
+  this->entsize = sizeof(Ent);
+}
+
+size_t SignatureSection::getSize() const {
+  auto n = getPartition().dynSymTab->getNumSymbols() + anonSyms.size();
+  return n * sizeof(Ent);
+}
+
+void SignatureSection::finalizeContents() {
+  auto n = getPartition().dynSymTab->getNumSymbols();
+  for (Symbol *sym : anonSyms) {
+    sym->anonSymNum = n++;
+  }
+}
+
+void SignatureSection::writeTo(uint8_t *buf) {
+  *buf++ = 0; // The first entry of the symbol table is a null entry
+  for (const SymbolTableEntry &s : getPartition().dynSymTab->getSymbols()) {
+    *buf++ = s.sym->signature.toInt();
+  }
+  for (const Symbol *sym : anonSyms)
+    *buf++ = sym->signature.toInt();
+}
+
+bool SignatureSection::isNeeded() const {
+  return true;
 }
 
 InStruct elf::in;

@@ -20,6 +20,7 @@
 #include "llvm/MC/MCFragment.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
+#include "llvm/Support/SymbolSignature.h"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -193,6 +194,9 @@ private:
 public:
   MCSymbol(const MCSymbol &) = delete;
   MCSymbol &operator=(const MCSymbol &) = delete;
+
+  SymbolSignature Signature{};
+  bool SignatureIsForCallee{};
 
   /// getName - Get the symbol name.
   StringRef getName() const {

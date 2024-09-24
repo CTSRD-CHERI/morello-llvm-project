@@ -606,6 +606,18 @@ def morello_bounded_memargs_caller_only : Flag<["-"], "morello-bounded-memargs=c
 def morello_no_bounded_memargs : Flag<["-"], "no-morello-bounded-memargs">, Flags<[CC1Option]>, Group<cheri_Group>,
   HelpText<"Use CSP for passing arguments in memory (default)">;
 
+def morello_funcptr_absolute : Flag<["-"], "morello-funcptr=absolute">, Flags<[CC1Option]>, Group<cheri_Group>,
+  HelpText<"Use PCC-absolute function pointers in purecap calls">;
+def morello_funcptr_relative : Flag<["-"], "morello-funcptr=relative">, Flags<[CC1Option]>, Group<cheri_Group>,
+  HelpText<"Use PCC-relative function pointers in purecap calls">;
+
+def cheri_c18n_func_signature : Flag<["-"], "cheri-c18n-func-signature">, Flags<[CC1Option]>,
+Group<cheri_Group>,
+  HelpText<"Emit function signature information in dedicated ELF section">;
+def cheri_c18n_no_func_signature : Flag<["-"], "no-cheri-c18n-func-signature">, Flags<[CC1Option]>,
+Group<cheri_Group>,
+  HelpText<"Do not emit function signature information">;
+
 class InternalDriverOpt : Group<internal_driver_Group>,
   Flags<[NoXarchOption, HelpHidden]>;
 def driver_mode : Joined<["--"], "driver-mode=">, Group<internal_driver_Group>,

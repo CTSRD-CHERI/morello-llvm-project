@@ -20,6 +20,7 @@
 #include "llvm/Object/Archive.h"
 #include "llvm/Object/ELF.h"
 #include "llvm/Object/IRObjectFile.h"
+#include "llvm/Support/SymbolSignature.h"
 #include "llvm/Support/Threading.h"
 #include <map>
 
@@ -215,6 +216,7 @@ protected:
   StringRef stringTable;
   const void *elfShdrs = nullptr;
   const void *elfSyms = nullptr;
+  const llvm::SymbolSignature *elfSigs = nullptr;
   uint32_t numELFShdrs = 0;
   uint32_t numELFSyms = 0;
   uint32_t firstGlobal = 0;

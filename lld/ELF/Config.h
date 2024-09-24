@@ -193,6 +193,7 @@ struct Configuration {
   bool gnuHash = false;
   bool gnuUnique;
   bool hasDynSymTab;
+  bool hasSigTab = false;
   bool ignoreDataAddressEquality;
   bool ignoreFunctionAddressEquality;
   bool ltoCSProfileGenerate;

@@ -98,6 +98,9 @@ DYNAMIC_TAG(ANDROID_RELSZ, 0x60000010)
 DYNAMIC_TAG(ANDROID_RELA, 0x60000011)
 DYNAMIC_TAG(ANDROID_RELASZ, 0x60000012)
 
+// Function signature table for CHERI library-based compartmentalisation
+DYNAMIC_TAG(CHERI_C18N_SIG, 0x60000100)
+
 // Android's experimental support for SHT_RELR sections.
 // https://android.googlesource.com/platform/bionic/+/b7feec74547f84559a1467aca02708ff61346d2a/libc/include/elf.h#253
 DYNAMIC_TAG(ANDROID_RELR, 0x6FFFE000)      // Address of relocation table (Relr entries).
