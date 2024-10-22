@@ -370,7 +370,7 @@ static uint64_t getTargetSize(const CheriCapRelocLocation &location,
     if (isAbsoluteSym)
       return targetSize;
 
-    if (config->emachine == EM_AARCH64 && !targetSym->isInGot()) {
+    if (config->emachine == EM_AARCH64 && !targetSym->isInGot(nullptr)) {
       // For caprelocs, the Morello linker obtains the symbol size from the
       // lower 8-bytes of a 16-byte frag reserved by .capinit (buf+8).
 

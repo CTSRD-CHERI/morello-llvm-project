@@ -22,6 +22,7 @@
 
 #include "Config.h"
 #include "InputSection.h"
+#include "Symbols.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/MapVector.h"
 #include "llvm/MC/StringTableBuilder.h"
@@ -1311,6 +1312,8 @@ struct Compartment {
   StringRef name;
 
   std::string suffix;
+
+  SymCompartMap symCompartMap;
 
   // Synthetic sections
   std::unique_ptr<GotSection> got;
