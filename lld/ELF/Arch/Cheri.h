@@ -337,12 +337,6 @@ void addRelativeCapabilityRelocation(
     llvm::PointerUnion<Symbol *, InputSectionBase *> symOrSec, int64_t addend,
     RelExpr expr, RelType type);
 
-// Calculate the size of linker defined capabilities such as the PCC
-// capability. These lengths may result in increased alignment requirements
-// for some OutputSections so that CHERI concentrate requirements are met.
-// Return true if we have to modify the alignment of any OutputSection.
-bool morelloLinkerDefinedCapabilityAlign();
-
 // Resolve the R_MORELLO_CAPFRAG_SIZE_AND_PERM internal relocation to write
 // | 56-bits length | 8-bits permission |
 uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
@@ -354,6 +348,14 @@ uint64_t getMorelloBaseAddress(int64_t a, const Symbol &sym,
 
 uint64_t getMorelloExecBaseAddress();
 uint64_t getMorelloExecSizeAndPermissions();
+
+bool needsCheriPccSegment();
+
+// Align OutputSections as needed to ensure the bounds of capabilities
+// such as PCC do not permit undesired access to portions of other
+// OutputSections.  Return true if the alignment of any OutputSection
+// was modified.
+bool cheriCapabilityBoundsAlign();
 } // namespace elf
 } // namespace lld
 

@@ -10,33 +10,33 @@
 // RUN: llvm-readobj -r %t/prog | FileCheck %s --check-prefix=RELOC
 
 // DISAS:      <_start>:
-// DISAS-NEXT:         bl   0x210340
+// DISAS-NEXT:         bl   0x210370
 
 // DISAS:      <.plt>:
-// DISAS-NEXT: 210320: stp  c16, c30, [csp, #-0x20]!
+// DISAS-NEXT: 210350: stp  c16, c30, [csp, #-0x20]!
 // DISAS-NEXT:         adrp c16, 0x230000
-// DISAS-NEXT:         ldr  c17, [c16, #0x440]
-// DISAS-NEXT:         add  c16, c16, #0x440
+// DISAS-NEXT:         ldr  c17, [c16, #0x470]
+// DISAS-NEXT:         add  c16, c16, #0x470
 // DISAS-NEXT:         br   x17
 // DISAS-NEXT:         nop
 // DISAS-NEXT:         nop
 // DISAS-NEXT:         nop
 
 // DISAS:      <foo@plt>:
-// DISAS-NEXT: 210340: adrp c16, 0x230000
-// DISAS-NEXT:         add  c16, c16, #0x450
+// DISAS-NEXT: 210370: adrp c16, 0x230000
+// DISAS-NEXT:         add  c16, c16, #0x480
 // DISAS-NEXT:         ldr  c17, [c16, #0x0]
 // DISAS-NEXT:         br   x17
 
 // GOTPLT: Contents of section .got.plt:
-// GOTPLT-NEXT: 230420 00000000 00000000 00000000 00000000
-// GOTPLT-NEXT: 230430 00000000 00000000 00000000 00000000
-// GOTPLT-NEXT: 230440 00000000 00000000 00000000 00000000
-// GOTPLT-NEXT: 230450 40022000 00000000 40020300 00000004
+// GOTPLT-NEXT: 230450 00000000 00000000 00000000 00000000
+// GOTPLT-NEXT: 230460 00000000 00000000 00000000 00000000
+// GOTPLT-NEXT: 230470 00000000 00000000 00000000 00000000
+// GOTPLT-NEXT: 230480 40032100 00000000 80010200 00000004
 
 // RELOC:      .rela.plt {
 /// LSB 0 despite being C64
-// RELOC-NEXT:   0x230450 R_MORELLO_JUMP_SLOT foo 0x100E0
+// RELOC-NEXT:   0x230480 R_MORELLO_JUMP_SLOT foo 0x10
 // RELOC-NEXT: }
 
 //--- lib.s

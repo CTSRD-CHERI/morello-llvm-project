@@ -31,49 +31,49 @@ _start:
  add x2, x2, :lo12:__rela_iplt_end
 
 // Contents of section .got.plt:
-// CHECK:      2202a0 c0012000 00000000 40010200 00000004
-// CHECK-NEXT: 2202b0 c0012000 00000000 40010200 00000004
-// CHECK-NEXT: 2202c0 c0012000 00000000 40010200 00000004
+// CHECK:      2202b0 60022100 00000000 80000100 00000004
+// CHECK-NEXT: 2202c0 60022100 00000000 80000100 00000004
+// CHECK-NEXT: 2202d0 60022100 00000000 80000100 00000004
 
 // CHECK-LABEL: <foo>:
-// CHECK-NEXT:   210251:        <unknown>
+// CHECK-NEXT:   210261:        <unknown>
 
 // CHECK-LABEL: <bar>:
-// CHECK-NEXT:   210255:        <unknown>
+// CHECK-NEXT:   210265:        <unknown>
 
 /// No label; baz is redirected to the .iplt entry
-// CHECK-NEXT:   210259:        <unknown>
+// CHECK-NEXT:   210269:        <unknown>
 
 // CHECK-LABEL: <_start>:
-// CHECK-NEXT:   21025c:  bl      0x210270
-// CHECK-NEXT:            bl      0x210280
-// CHECK-NEXT:            adr     c0, 0x210291
-// CHECK-NEXT:            add     x2, x2, #0x208
-// CHECK-NEXT:            add     x2, x2, #0x250
+// CHECK-NEXT:   21026c:  bl      0x210280
+// CHECK-NEXT:            bl      0x210290
+// CHECK-NEXT:            adr     c0, 0x2102a1
+// CHECK-NEXT:            add     x2, x2, #0x210
+// CHECK-NEXT:            add     x2, x2, #0x258
 
 // CHECK-LABEL: <.iplt>:
-// CHECK-NEXT:   210270:  adrp c16, 0x220000
-// CHECK-NEXT:            add  c16, c16, #0x2a0
-// CHECK-NEXT:            ldr  c17, [c16, #0x0]
-// CHECK-NEXT:            br   c17
-// CHECK-NEXT:            adrp c16, 0x220000
+// CHECK-NEXT:   210280:  adrp c16, 0x220000
 // CHECK-NEXT:            add  c16, c16, #0x2b0
 // CHECK-NEXT:            ldr  c17, [c16, #0x0]
 // CHECK-NEXT:            br   c17
-// CHECK-LABEL: <baz>:
-// CHECK-NEXT:   210290:  adrp c16, 0x220000
+// CHECK-NEXT:            adrp c16, 0x220000
 // CHECK-NEXT:            add  c16, c16, #0x2c0
+// CHECK-NEXT:            ldr  c17, [c16, #0x0]
+// CHECK-NEXT:            br   c17
+// CHECK-LABEL: <baz>:
+// CHECK-NEXT:   2102a0:  adrp c16, 0x220000
+// CHECK-NEXT:            add  c16, c16, #0x2d0
 // CHECK-NEXT:            ldr  c17, [c16, #0x0]
 // CHECK-NEXT:            br   c17
 
 // RELANDSYM: Relocations [
 // RELANDSYM-NEXT:   Section {{.*}} .rela.dyn {
-// RELANDSYM-NEXT:     0x2202A0 R_MORELLO_IRELATIVE - 0x10091
-// RELANDSYM-NEXT:     0x2202B0 R_MORELLO_IRELATIVE - 0x10095
-// RELANDSYM-NEXT:     0x2202C0 R_MORELLO_IRELATIVE - 0x10099
+// RELANDSYM-NEXT:     0x2202B0 R_MORELLO_IRELATIVE - 0x1
+// RELANDSYM-NEXT:     0x2202C0 R_MORELLO_IRELATIVE - 0x5
+// RELANDSYM-NEXT:     0x2202D0 R_MORELLO_IRELATIVE - 0x9
 
 // RELANDSYM:          Name: __rela_iplt_start
-// RELANDSYM-NEXT:     Value: 0x200208
+// RELANDSYM-NEXT:     Value: 0x200210
 // RELANDSYM-NEXT:     Size: 72
 // RELANDSYM-NEXT:     Binding: Local (0x0)
 // RELANDSYM-NEXT:     Type: None (0x0)
@@ -84,7 +84,7 @@ _start:
 // RELANDSYM-NEXT:   }
 // RELANDSYM-NEXT:   Symbol {
 // RELANDSYM-NEXT:     Name: __rela_iplt_end
-// RELANDSYM-NEXT:     Value: 0x200250
+// RELANDSYM-NEXT:     Value: 0x200258
 // RELANDSYM-NEXT:     Size: 0
 // RELANDSYM-NEXT:     Binding: Local (0x0)
 // RELANDSYM-NEXT:     Type: None (0x0)

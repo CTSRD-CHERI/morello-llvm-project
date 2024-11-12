@@ -4141,6 +4141,7 @@ void InStruct::reset() {
   symTab.reset();
   symTabShndx.reset();
   relaDyn.reset();
+  cheriBounds = nullptr;
 }
 
 constexpr char kMemtagAndroidNoteName[] = "Android";

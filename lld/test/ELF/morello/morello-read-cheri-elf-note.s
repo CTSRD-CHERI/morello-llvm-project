@@ -17,13 +17,15 @@
 // RUN: ld.lld app.o lib.o -o app 2>&1 | FileCheck %s --check-prefix=NOERROR --allow-empty
 // RUN: llvm-readelf --section-headers app
 // RUN: llvm-readelf --section-headers app | FileCheck %s --check-prefix=EXE-NOTE-ALIGN
-/// ld.lld overaligns the .note.cheri section in morelloLinkerDefinedCapabilityAlign()
-/// to ensure that the entire X/RO region can be represented precisely. Since
-/// .note.cheri happens to be the first section in this region we end up
+/// ld.lld used to overalign the .note.cheri section in morelloLinkerDefinedCapabilityAlign()
+/// to ensure that the entire X/RO region could be represented precisely. Since
+/// .note.cheri happens to be the first section in this region we ended up
 /// aligning it to 32 bytes. But we should not be adjusting the sh_addralign member
-/// since that is used for parsing the notes section.
+/// since that is used for parsing the notes section. This test is a bit
+/// redundant since it's no longer part of the PCC segment and thus we don't
+/// align it, but it's kept here in case this somehow breaks again.
 // EXE-NOTE-ALIGN: [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
-// EXE-NOTE-ALIGN: [ 1] .note.cheri       NOTE            [[#]]            000160 000048 00   A  0   0 4{{$}}
+// EXE-NOTE-ALIGN: [ 1] .note.cheri       NOTE            [[#]]            000190 000048 00   A  0   0 4{{$}}
 // EXE-NOTE-ALIGN: [ 2] .text
 // RUN: llvm-readobj -h --notes app | FileCheck %s --check-prefix=NT-PCREL
 // RUN: ld.lld app1.o lib1.o -o app1 2>&1 | FileCheck %s --check-prefix=NOERROR --allow-empty

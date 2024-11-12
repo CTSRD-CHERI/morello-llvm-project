@@ -84,7 +84,7 @@ _start: ret
 // CHECK-NEXT:    ]
 // CHECK-NEXT:    Address: 0x210400
 // CHECK-NEXT:    Offset:
-// CHECK-NEXT:    Size: 32
+// CHECK-NEXT:    Size: 8
 
 // CHECK:    Name: .preinit_array
 // CHECK-NEXT:    Type: SHT_PREINIT_ARRAY (0x10)
@@ -233,7 +233,7 @@ _start: ret
 
 // CHECK:     Name: __start_mysection
 // CHECK-NEXT:     Value: 0x210400
-// CHECK-NEXT:     Size: 32
+// CHECK-NEXT:     Size: 8
 // CHECK-NEXT:     Binding: Local
 // CHECK-NEXT:     Type: None
 // CHECK-NEXT:    Other [
@@ -268,7 +268,7 @@ _start: ret
 /// __fini_array_end: address: 0x211008, size = 0, perms = RO(0x1)
 // CHECK-NEXT: 0x00211060 08102100 00000000 00000000 00000001
 
-/// __start_mysection: address: 0x210400, size = 32, perms = RO(0x1)
-// CHECK-NEXT: 0x00211070 00042100 00000000 20000000 00000001
+/// __start_mysection: address: 0x210400, size = 8, perms = RO(0x1)
+// CHECK-NEXT: 0x00211070 00042100 00000000 08000000 00000001
 /// __stop_mysection: address: 0x210408, size = 0, perms = RO(0x1)
 // CHECK-NEXT: 0x00211080 08042100 00000000 00000000 00000001

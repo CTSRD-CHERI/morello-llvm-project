@@ -8,19 +8,19 @@
 # RUN: llvm-readobj -S -r %t3 | FileCheck -check-prefix=DSOREL %s
 
 # CHECK-LABEL: <_foo>:
-# CHECK-NEXT:  2101a8: nop
+# CHECK-NEXT:  2101d8: nop
 # CHECK-NEXT:          nop
 # CHECK-NEXT:          nop
 # CHECK-NEXT:          nop
 # CHECK-LABEL: <_bar>:
-# CHECK-NEXT:  2101b8: nop
+# CHECK-NEXT:  2101e8: nop
 # CHECK-NEXT:          nop
 # CHECK-NEXT:          nop
 # CHECK:      <_start>:
-# CHECK-NEXT:  2101c4: tbnz w3, #0xf, 0x2101a8 <_foo>
-# CHECK-NEXT:          tbnz w3, #0xf, 0x2101b8 <_bar>
-# CHECK-NEXT:          tbz x6, #0x2d, 0x2101a8 <_foo>
-# CHECK-NEXT:          tbz x6, #0x2d, 0x2101b8 <_bar>
+# CHECK-NEXT:  2101f4: tbnz w3, #0xf, 0x2101d8 <_foo>
+# CHECK-NEXT:          tbnz w3, #0xf, 0x2101e8 <_bar>
+# CHECK-NEXT:          tbz x6, #0x2d, 0x2101d8 <_foo>
+# CHECK-NEXT:          tbz x6, #0x2d, 0x2101e8 <_bar>
 
 #DSOREL:      Section {
 #DSOREL:        Index:
@@ -30,7 +30,7 @@
 #DSOREL-NEXT:     SHF_ALLOC
 #DSOREL-NEXT:     SHF_WRITE
 #DSOREL-NEXT:   ]
-#DSOREL-NEXT:   Address: 0x304A0
+#DSOREL-NEXT:   Address: 0x304E0
 #DSOREL-NEXT:   Offset:
 #DSOREL-NEXT:   Size:
 #DSOREL-NEXT:   Link: 0
@@ -40,47 +40,47 @@
 #DSOREL-NEXT:  }
 #DSOREL:      Relocations [
 #DSOREL-NEXT:  Section ({{.*}}) .rela.plt {
-#DSOREL-NEXT:    0x304D0 R_MORELLO_JUMP_SLOT _foo 0x10171
-#DSOREL-NEXT:    0x304E0 R_MORELLO_JUMP_SLOT _bar 0x10171
+#DSOREL-NEXT:    0x30510 R_MORELLO_JUMP_SLOT _foo 0x31
+#DSOREL-NEXT:    0x30520 R_MORELLO_JUMP_SLOT _bar 0x31
 #DSOREL-NEXT:  }
 #DSOREL-NEXT:]
 
 #DSO:      Disassembly of section .text:
 #DSO-EMPTY:
 #DSO-LABEL: <_foo>:
-#DSO-NEXT:  10380: nop
+#DSO-NEXT:  103c0: nop
 #DSO-NEXT:         nop
 #DSO-NEXT:         nop
 #DSO-NEXT:         nop
 #DSO-LABEL: <_bar>:
-#DSO-NEXT:  10390: nop
+#DSO-NEXT:  103d0: nop
 #DSO-NEXT:         nop
 #DSO-NEXT:         nop
 #DSO-LABEL: <_start>:
-#DSO-NEXT:  1039c: tbnz w3, #0xf, 0x103d0
-#DSO-NEXT:         tbnz w3, #0xf, 0x103e0
-#DSO-NEXT:         tbz x6, #0x2d, 0x103d0
-#DSO-NEXT:         tbz x6, #0x2d, 0x103e0
+#DSO-NEXT:  103dc: tbnz w3, #0xf, 0x10410
+#DSO-NEXT:         tbnz w3, #0xf, 0x10420
+#DSO-NEXT:         tbz x6, #0x2d, 0x10410
+#DSO-NEXT:         tbz x6, #0x2d, 0x10420
 #DSO-EMPTY:
 #DSO-NEXT: Disassembly of section .plt:
 #DSO-EMPTY:
 #DSO-LABEL: <.plt>:
-#DSO-NEXT:  103b0: stp  c16, c30, [csp, #-0x20]!
+#DSO-NEXT:  103f0: stp  c16, c30, [csp, #-0x20]!
 #DSO-NEXT:         adrp c16, 0x30000
-#DSO-NEXT:         ldr  c17, [c16, #0x4c0]
-#DSO-NEXT:         add  c16, c16, #0x4c0
+#DSO-NEXT:         ldr  c17, [c16, #0x500]
+#DSO-NEXT:         add  c16, c16, #0x500
 #DSO-NEXT:         br   c17
 #DSO-NEXT:         nop
 #DSO-NEXT:         nop
 #DSO-NEXT:         nop
 #DSO-LABEL: <_foo@plt>:
-#DSO-NEXT:  103d0: adrp c16, 0x30000
-#DSO-NEXT:         add  c16, c16, #0x4d0
+#DSO-NEXT:  10410: adrp c16, 0x30000
+#DSO-NEXT:         add  c16, c16, #0x510
 #DSO-NEXT:         ldr  c17, [c16, #0x0]
 #DSO-NEXT:         br   c17
 #DSO-LABEL: <_bar@plt>:
-#DSO-NEXT:  103e0: adrp c16, 0x30000
-#DSO-NEXT:         add  c16, c16, #0x4e0
+#DSO-NEXT:  10420: adrp c16, 0x30000
+#DSO-NEXT:         add  c16, c16, #0x520
 #DSO-NEXT:         ldr  c17, [c16, #0x0]
 #DSO-NEXT:         br   c17
 

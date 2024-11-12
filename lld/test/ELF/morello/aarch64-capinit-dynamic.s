@@ -61,27 +61,21 @@ foo:
 /// Check that we write the size, permissions and address if relevant to the
 /// Fragment.
 // DATA: Contents of section .data:
-// DATA:       30450 90040300 00000000 0c000000 00000002
-// DATA-NEXT:  30460 90040300 00000000 0c000000 00000002
-// DATA-NEXT:  30470 00000000 00000000 00000000 00000000
-// DATA-NEXT:  30480 9c040300 00000000 14000000 00000002
-// DATA-NEXT:  30490 48656c6c 6f20576f 726c6400 42796520 Hello World.Bye
-// DATA-NEXT:  304a0 576f726c 64000000 00000000 00000000 World
+// DATA:       30470 b0040300 00000000 0c000000 00000002
+// DATA-NEXT:  30480 b0040300 00000000 0c000000 00000002
+// DATA-NEXT:  30490 00000000 00000000 00000000 00000000
+// DATA-NEXT:  304a0 bc040300 00000000 14000000 00000002
+// DATA-NEXT:  304b0 48656c6c 6f20576f 726c6400 42796520 Hello World.Bye
+// DATA-NEXT:  304c0 576f726c 64000000 00000000 00000000 World
 
 /// Dynamic relocations
 // CHECK: Relocations [
 // CHECK-NEXT:   Section {{.*}} .rela.dyn {
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x30450
+// CHECK-NEXT:       Offset: 0x30470
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x8
-// CHECK-NEXT:     }
-// CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x30460
-// CHECK-NEXT:       Type: R_MORELLO_RELATIVE
-// CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
 // CHECK-NEXT:       Offset: 0x30480
@@ -90,7 +84,13 @@ foo:
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x30470
+// CHECK-NEXT:       Offset: 0x304A0
+// CHECK-NEXT:       Type: R_MORELLO_RELATIVE
+// CHECK-NEXT:       Symbol: - (0)
+// CHECK-NEXT:       Addend: 0x0
+// CHECK-NEXT:     }
+// CHECK-NEXT:     Relocation {
+// CHECK-NEXT:       Offset: 0x30490
 // CHECK-NEXT:       Type: R_MORELLO_CAPINIT
 // CHECK-NEXT:       Symbol: foo (2)
 // CHECK-NEXT:       Addend: 0x10
@@ -101,7 +101,7 @@ foo:
 /// Symbols
 // CHECK:   Symbol {
 // CHECK:     Name: str
-// CHECK-NEXT:     Value: 0x30490
+// CHECK-NEXT:     Value: 0x304B0
 // CHECK-NEXT:     Size: 12
 // CHECK-NEXT:     Binding: Local
 // CHECK-NEXT:     Type: Object
@@ -110,7 +110,7 @@ foo:
 // CHECK-NEXT:   }
 
 // CHECK:     Name: unsized_str
-// CHECK-NEXT:     Value: 0x3049C
+// CHECK-NEXT:     Value: 0x304BC
 // CHECK-NEXT:     Size: 0
 // CHECK-NEXT:     Binding: Local
 // CHECK-NEXT:     Type: Object
@@ -119,7 +119,7 @@ foo:
 // CHECK-NEXT:   }
 
 // CHECK:     Name: foo
-// CHECK-NEXT:     Value: 0x304A6
+// CHECK-NEXT:     Value: 0x304C6
 // CHECK-NEXT:     Size: 8
 // CHECK-NEXT:     Binding: Global
 // CHECK-NEXT:     Type: Object

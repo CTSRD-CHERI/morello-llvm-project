@@ -55,8 +55,9 @@ rw:
 bss:
  .space 4
 
-/// Executable capability ranges from the rodata up to the end of .text
-/// range is [0x210000, 0x230200) including alignment to CHERI concentrate
+/// Executable capability ranges from .rodata up to the end of .data.rel.ro
+/// (and the ensuing .pad.cheri.pcc).
+/// Range is [0x210000, 0x240080) including alignment to CHERI concentrate
 /// boundary.
 
 // CHECK:    Name: .rela.dyn
@@ -64,8 +65,8 @@ bss:
 // CHECK-NEXT:     Flags [
 // CHECK-NEXT:       SHF_ALLOC
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x200248
-// CHECK-NEXT:     Offset: 0x248
+// CHECK-NEXT:     Address: 0x200280
+// CHECK-NEXT:     Offset: 0x280
 // CHECK-NEXT:     Size: 144
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
@@ -97,7 +98,7 @@ bss:
 // CHECK-NEXT:     ]
 // CHECK-NEXT:     Address: 0x230000
 // CHECK-NEXT:     Offset: 0x20000
-// CHECK-NEXT:     Size: 64
+// CHECK-NEXT:     Size: 8
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
 // CHECK-NEXT:     AddressAlignment: 65536
@@ -111,8 +112,8 @@ bss:
 // CHECK-NEXT:       SHF_ALLOC
 // CHECK-NEXT:       SHF_WRITE
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x240040
-// CHECK-NEXT:     Offset: 0x20040
+// CHECK-NEXT:     Address: 0x240010
+// CHECK-NEXT:     Offset: 0x20010
 // CHECK-NEXT:     Size: 96
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
@@ -121,6 +122,22 @@ bss:
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
 // CHECK-NEXT:     Index: 6
+// CHECK-NEXT:     Name: .pad.cheri.pcc
+// CHECK-NEXT:     Type: SHT_PROGBITS
+// CHECK-NEXT:     Flags [
+// CHECK-NEXT:       SHF_ALLOC
+// CHECK-NEXT:       SHF_WRITE
+// CHECK-NEXT:     ]
+// CHECK-NEXT:     Address: 0x240070
+// CHECK-NEXT:     Offset: 0x20070
+// CHECK-NEXT:     Size: 16
+// CHECK-NEXT:     Link: 0
+// CHECK-NEXT:     Info: 0
+// CHECK-NEXT:     AddressAlignment: 1
+// CHECK-NEXT:     EntrySize: 0
+// CHECK-NEXT:   }
+// CHECK-NEXT:   Section {
+// CHECK-NEXT:     Index: 7
 // CHECK-NEXT:     Name: .data
 // CHECK-NEXT:     Type: SHT_PROGBITS
 // CHECK-NEXT:     Flags [
@@ -136,7 +153,7 @@ bss:
 // CHECK-NEXT:     EntrySize: 0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
-// CHECK-NEXT:     Index: 7
+// CHECK-NEXT:     Index: 8
 // CHECK-NEXT:     Name: .bss
 // CHECK-NEXT:     Type: SHT_NOBITS
 // CHECK-NEXT:     Flags [
@@ -160,10 +177,28 @@ bss:
 // CHECK: Relocations [
 // CHECK-NEXT:   .rela.dyn {
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x240040
+// CHECK-NEXT:       Offset: 0x240010
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
+// CHECK-NEXT:     }
+// CHECK-NEXT:     Relocation {
+// CHECK-NEXT:       Offset: 0x240020
+// CHECK-NEXT:       Type: R_MORELLO_RELATIVE
+// CHECK-NEXT:       Symbol: - (0)
+// CHECK-NEXT:       Addend: 0x0
+// CHECK-NEXT:     }
+// CHECK-NEXT:     Relocation {
+// CHECK-NEXT:       Offset: 0x240030
+// CHECK-NEXT:       Type: R_MORELLO_RELATIVE
+// CHECK-NEXT:       Symbol: - (0)
+// CHECK-NEXT:       Addend: 0x20001
+// CHECK-NEXT:     }
+// CHECK-NEXT:     Relocation {
+// CHECK-NEXT:       Offset: 0x240040
+// CHECK-NEXT:       Type: R_MORELLO_RELATIVE
+// CHECK-NEXT:       Symbol: - (0)
+// CHECK-NEXT:       Addend: 0x20005
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
 // CHECK-NEXT:       Offset: 0x240050
@@ -173,24 +208,6 @@ bss:
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
 // CHECK-NEXT:       Offset: 0x240060
-// CHECK-NEXT:       Type: R_MORELLO_RELATIVE
-// CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x2FE01
-// CHECK-NEXT:     }
-// CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x240070
-// CHECK-NEXT:       Type: R_MORELLO_RELATIVE
-// CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x2FE05
-// CHECK-NEXT:     }
-// CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x240080
-// CHECK-NEXT:       Type: R_MORELLO_RELATIVE
-// CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x0
-// CHECK-NEXT:     }
-// CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x240090
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
@@ -259,22 +276,22 @@ bss:
 
 // CHECK: Hex dump of section '.data.rel.ro':
 /// ro: address: 0x210000, size = 4, perms = RO(0x1)
-// CHECK-NEXT: 0x00240040 00002100 00000000 04000000 00000001
+// CHECK-NEXT: 0x00240010 00002100 00000000 04000000 00000001
 
 /// ro2: address: 0x210004, size = 4, perms = RO(0x1)
-// CHECK-NEXT: 0x00240050 04002100 00000000 04000000 00000001
+// CHECK-NEXT: 0x00240020 04002100 00000000 04000000 00000001
 
 /// _start: address: 0x230001, size = 4, perms = EXEC(0x4)
-// CHECK-NEXT: 0x00240060 00022000 00000000 40fe0200 00000004
+// CHECK-NEXT: 0x00240030 00002100 00000000 80000300 00000004
 
 /// func: address: 0x230005, size = 4, perms = EXEC(0x4)
-// CHECK-NEXT: 0x00240070 00022000 00000000 40fe0200 00000004
+// CHECK-NEXT: 0x00240040 00002100 00000000 80000300 00000004
 
 /// rw: address: 0x260000, size = 4, perms = RW(0x2)
-// CHECK-NEXT: 0x00240080 00002600 00000000 04000000 00000002
+// CHECK-NEXT: 0x00240050 00002600 00000000 04000000 00000002
 
 /// bss: address: 0x260004, size = 4, perms = RW(0x2)
-// CHECK-NEXT: 0x00240090 04002600 00000000 04000000 00000002
+// CHECK-NEXT: 0x00240060 04002600 00000000 04000000 00000002
 
 /// Rerun the test with .rodata after the .text, we would still expect to
 /// see the same bounds for the capability.
@@ -325,7 +342,7 @@ bss:
 // CHECK-SCRIPT-NEXT:     ]
 // CHECK-SCRIPT-NEXT:     Address: 0x220000
 // CHECK-SCRIPT-NEXT:     Offset: 0x30000
-// CHECK-SCRIPT-NEXT:     Size: 1024
+// CHECK-SCRIPT-NEXT:     Size: 8
 // CHECK-SCRIPT-NEXT:     Link: 0
 // CHECK-SCRIPT-NEXT:     Info: 0
 // CHECK-SCRIPT-NEXT:     AddressAlignment: 65536
@@ -339,12 +356,28 @@ bss:
 // CHECK-SCRIPT-NEXT:       SHF_ALLOC
 // CHECK-SCRIPT-NEXT:       SHF_WRITE
 // CHECK-SCRIPT-NEXT:     ]
-// CHECK-SCRIPT-NEXT:     Address: 0x220400
-// CHECK-SCRIPT-NEXT:     Offset: 0x30400
+// CHECK-SCRIPT-NEXT:     Address: 0x220010
+// CHECK-SCRIPT-NEXT:     Offset: 0x30010
 // CHECK-SCRIPT-NEXT:     Size: 96
 // CHECK-SCRIPT-NEXT:     Link: 0
 // CHECK-SCRIPT-NEXT:     Info: 0
 // CHECK-SCRIPT-NEXT:     AddressAlignment: 16
+// CHECK-SCRIPT-NEXT:     EntrySize: 0
+// CHECK-SCRIPT-NEXT:   }
+// CHECK-SCRIPT-NEXT:   Section {
+// CHECK-SCRIPT-NEXT:     Index:
+// CHECK-SCRIPT-NEXT:     Name: .pad.cheri.pcc
+// CHECK-SCRIPT-NEXT:     Type: SHT_PROGBITS
+// CHECK-SCRIPT-NEXT:     Flags [
+// CHECK-SCRIPT-NEXT:       SHF_ALLOC
+// CHECK-SCRIPT-NEXT:       SHF_WRITE
+// CHECK-SCRIPT-NEXT:     ]
+// CHECK-SCRIPT-NEXT:     Address: 0x220070
+// CHECK-SCRIPT-NEXT:     Offset: 0x30070
+// CHECK-SCRIPT-NEXT:     Size: 16
+// CHECK-SCRIPT-NEXT:     Link: 0
+// CHECK-SCRIPT-NEXT:     Info: 0
+// CHECK-SCRIPT-NEXT:     AddressAlignment: 1
 // CHECK-SCRIPT-NEXT:     EntrySize: 0
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Section {
@@ -383,37 +416,37 @@ bss:
 // CHECK-SCRIPT: Relocations [
 // CHECK-SCRIPT-NEXT:   .rela.dyn {
 // CHECK-SCRIPT-NEXT:     Relocation {
-// CHECK-SCRIPT-NEXT:       Offset: 0x220400
+// CHECK-SCRIPT-NEXT:       Offset: 0x220010
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
 // CHECK-SCRIPT-NEXT:       Addend: 0x0
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:     Relocation {
-// CHECK-SCRIPT-NEXT:       Offset: 0x220410
+// CHECK-SCRIPT-NEXT:       Offset: 0x220020
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
 // CHECK-SCRIPT-NEXT:       Addend: 0x0
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:     Relocation {
-// CHECK-SCRIPT-NEXT:       Offset: 0x220420
+// CHECK-SCRIPT-NEXT:       Offset: 0x220030
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
-// CHECK-SCRIPT-NEXT:       Addend: 0x210001
+// CHECK-SCRIPT-NEXT:       Addend: 0x1
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:     Relocation {
-// CHECK-SCRIPT-NEXT:       Offset: 0x220430
+// CHECK-SCRIPT-NEXT:       Offset: 0x220040
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
-// CHECK-SCRIPT-NEXT:       Addend: 0x210005
+// CHECK-SCRIPT-NEXT:       Addend: 0x5
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:     Relocation {
-// CHECK-SCRIPT-NEXT:       Offset: 0x220440
+// CHECK-SCRIPT-NEXT:       Offset: 0x220050
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
 // CHECK-SCRIPT-NEXT:       Addend: 0x0
 // CHECK-SCRIPT-NEXT:     }
 // CHECK-SCRIPT-NEXT:     Relocation {
-// CHECK-SCRIPT-NEXT:       Offset: 0x220450
+// CHECK-SCRIPT-NEXT:       Offset: 0x220060
 // CHECK-SCRIPT-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-SCRIPT-NEXT:       Symbol: - (0)
 // CHECK-SCRIPT-NEXT:       Addend: 0x0
@@ -487,19 +520,19 @@ bss:
 // CHECK-SCRIPT:      Hex dump of section '.data.rel.ro':
 
 /// ro: address: 0x220000, size = 4, perms = RO(0x1)
-// CHECK-SCRIPT-NEXT: 0x00220400 00002200 00000000 04000000 00000001
+// CHECK-SCRIPT-NEXT: 0x00220010 00002200 00000000 04000000 00000001
 
 /// ro2: address: 0x220004, size = 4, perms = RO(0x1)
-// CHECK-SCRIPT-NEXT: 0x00220410 04002200 00000000 04000000 00000001
+// CHECK-SCRIPT-NEXT: 0x00220020 04002200 00000000 04000000 00000001
 
 /// _start: address: 0x210001, size = 4, perms = EXEC(0x4)
-// CHECK-SCRIPT-NEXT: 0x00220420 00000000 00000000 00042200 00000004
+// CHECK-SCRIPT-NEXT: 0x00220030 00002100 00000000 80000100 00000004
 
 /// func: address: 0x210005, size = 4, perms = EXEC(0x4)
-// CHECK-SCRIPT-NEXT: 0x00220430 00000000 00000000 00042200 00000004
+// CHECK-SCRIPT-NEXT: 0x00220040 00002100 00000000 80000100 00000004
 
 /// rw: address: 0x230000, size = 4, perms = RW(0x2)
-// CHECK-SCRIPT-NEXT: 0x00220440 00002300 00000000 04000000 00000002
+// CHECK-SCRIPT-NEXT: 0x00220050 00002300 00000000 04000000 00000002
 
 /// bss: address: 0x230004, size = 4, perms = RW(0x2)
-// CHECK-SCRIPT-NEXT: 0x00220450 04002300 00000000 04000000 00000002
+// CHECK-SCRIPT-NEXT: 0x00220060 04002300 00000000 04000000 00000002

@@ -506,12 +506,11 @@ void CheriCapRelocsSection::writeToImpl(uint8_t *buf) {
             location.toString());
     uint64_t permissions = CapRelocPermission<ELFT>::encodeType(targetType);
 
-    // Increase bounds of executable capabilities.
-    if (config->emachine == EM_AARCH64 && config->isCheriAbi &&
-        isCapRelocTypeExec(targetType)) {
-      targetOffset += targetVA - config->morelloPCCBase;
-      targetVA = config->morelloPCCBase;
-      targetSize = config->morelloPCCLimit - config->morelloPCCBase;
+    // Use PCC bounds from the PT_CHERI_PCC segment.
+    if (PhdrEntry *ph = in.cheriBounds; ph && isCapRelocTypeExec(targetType)) {
+      targetOffset += targetVA - ph->p_vaddr;
+      targetVA = ph->p_vaddr;
+      targetSize = ph->p_memsz;
     }
 
     // Ensure that the base and limit of the capabilities are representable
@@ -609,12 +608,12 @@ uint64_t getMorelloBaseAddress(int64_t a, const Symbol &sym,
 
 uint64_t getMorelloExecBaseAddress() {
   assert(config->isCheriAbi);
-  return config->morelloPCCBase;
+  return in.cheriBounds->p_vaddr;
 }
 
 uint64_t getMorelloExecSizeAndPermissions() {
   assert(config->isCheriAbi);
-  uint64_t size = config->morelloPCCLimit - config->morelloPCCBase;
+  uint64_t size = in.cheriBounds->p_memsz;
   uint64_t perm = getMorelloFragmentPermissions(CapRelocType::FUNC);
   return (perm << 56) | size;
 }
@@ -641,78 +640,6 @@ static bool alignToRequired(OutputSection *first, OutputSection *last,
         ".", [=] { return alignTo(script->getDot(), reqdAlign); },
         last->location));
     changed = true;
-  }
-  return changed;
-}
-
-// Morello capabilities use the CHERI Concentrate compression scheme. The
-// alignment requirements of the base and limit of the capability increase
-// with the length of the capability. When the base and limit of
-// capabilities are not sufficiently aligned we can align the base down and
-// the limit up, but this could allow the ranges to overlap. For linker
-// defined capabilities we must make sure that the base and limit are
-// sufficiently aligned. There are two types of capability that we need to
-// handle: The PCC capability that is used for executable capabilities and
-// capabilities where the size is the size of an OutputSection. In each case
-// we make sure the first OutputSection in the range has at least the
-// required alignment and the OutputSection following the last OutputSection
-// in the range has its size rounded up by adding . =
-// ALIGN(RequiredAlignment) to the end of its commands.
-// We return true if we have modified the content in a way that would affect
-// address allocation as this will trigger another round of address allocation.
-bool morelloLinkerDefinedCapabilityAlign() {
-  // PCC capability is generic to both static and dynamic cases.
-  // Handle the PCC capability
-  // Find the [First, Last) OutputSections in the PCC range and the
-  // OutputSection Next after Last.
-  uint64_t morelloPCCBase = -1;
-  uint64_t morelloPCCLimit = 0;
-  OutputSection *first = nullptr;
-  OutputSection *last = nullptr;
-  for (OutputSection *os : outputSections) {
-    if (!(os->flags & SHF_ALLOC))
-      continue;
-    if (!(os->flags & SHF_WRITE) ||
-        (config->isCheriAbi && in.gotPlt && os == in.gotPlt->getParent()) ||
-        (config->isCheriAbi && in.igotPlt &&
-         os == in.igotPlt->getParent()) ||
-        (config->isCheriAbi && in.got && os == in.got->getParent())) {
-      if (os->getVA() < morelloPCCBase) {
-        morelloPCCBase = os->getVA();
-        first = os;
-      }
-      if (os->getVA() + os->size > morelloPCCLimit) {
-        morelloPCCLimit = os->getVA() + os->size;
-        last = os;
-      }
-    }
-  }
-  // Store the PCC capability calculation result so that it is available when
-  // we write out the __cap_relocs section.
-  config->morelloPCCBase = morelloPCCBase;
-  config->morelloPCCLimit = morelloPCCLimit;
-
-  bool changed = false;
-  if (first && last)
-    changed = alignToRequired(
-        first, last, getMorelloRequiredAlignment(morelloPCCLimit - morelloPCCBase));
-
-  // Linker generated Section Base capabilities. When dynamic linking we need
-  // to find these via searching the dynamic relocs, when static linking we
-  // need to search the entries in the __cap_relocs section.
-  // Deal with capabilities referring to section start symbols, only the
-  // linker knows what the section size of these will be.
-  if (config->hasDynSymTab) {
-    for (const DynamicReloc &reloc : mainPart->relaDyn->relocs) {
-      if (reloc.sym && reloc.sym->getSize() == 0 && !reloc.sym->isPreemptible &&
-          isSectionStartSymbol(reloc.sym->getName())) {
-        OutputSection *os = reloc.sym->getOutputSection();
-        assert(os);
-        changed |= alignToRequired(os, os, getMorelloRequiredAlignment(os->size));
-      }
-    }
-  } else if (in.capRelocs->isNeeded()) {
-    changed |= in.capRelocs->linkerDefinedCapabilityAlign();
   }
   return changed;
 }
@@ -1226,22 +1153,8 @@ static void getMipsCheriAbiVariant(std::optional<unsigned> &abi,
   abi = static_cast<MipsAbiFlagsSection<ELFT> &>(sec).getCheriAbiVariant();
 }
 
-static bool needsCheriMipsTrampoline(RelType type, const Symbol &sym) {
-  // In the PLT ABI (and fndesc?) we have to use an elf relocation for function
-  // pointers to ensure that the runtime linker adds the required trampolines
-  // that sets $cgp:
-
+static bool isCheriMipsTrampolineAbi() {
   if (config->emachine != EM_MIPS)
-    return false;
-
-  if (!sym.isFunc() || type == *target->symbolicCapCallRel)
-    return false;
-
-  // In static binaries we do not need PLT stubs for function pointers since
-  // all functions share the same $cgp
-  // TODO: this is no longer true if we were to support dlopen() in static
-  // binaries
-  if (!hasDynamicLinker())
     return false;
 
   if (!in.mipsAbiFlags)
@@ -1253,6 +1166,27 @@ static bool needsCheriMipsTrampoline(RelType type, const Symbol &sym) {
     return false;
 
   if (*abi != DF_MIPS_CHERI_ABI_PLT && *abi != DF_MIPS_CHERI_ABI_FNDESC)
+    return false;
+
+  return true;
+}
+
+static bool needsCheriMipsTrampoline(RelType type, const Symbol &sym) {
+  // In the PLT ABI (and fndesc?) we have to use an elf relocation for function
+  // pointers to ensure that the runtime linker adds the required trampolines
+  // that sets $cgp:
+
+  if (!isCheriMipsTrampolineAbi())
+    return false;
+
+  if (!sym.isFunc() || type == *target->symbolicCapCallRel)
+    return false;
+
+  // In static binaries we do not need PLT stubs for function pointers since
+  // all functions share the same $cgp
+  // TODO: this is no longer true if we were to support dlopen() in static
+  // binaries
+  if (!hasDynamicLinker())
     return false;
 
   return true;
@@ -1305,6 +1239,54 @@ void addRelativeCapabilityRelocation(
   } else
     in.capRelocs->addCapReloc(isCode, {&isec, offsetInSec}, {symOrSec, 0u},
                               addend);
+}
+
+// CHERI-MIPS using the PLT and fndesc ABIs uses a different mechanism for
+// determining the bounds of PCC.
+bool needsCheriPccSegment() { return !isCheriMipsTrampolineAbi(); }
+
+// Determine the required alignment for a single PT_CHERI_PCC segment.  Apply
+// the alignment to the first OutputSection and adjust the length of the padding
+// section to align the end of the segment.  Returns true if the alignment of
+// the first OutputSection changed or the size of the padding section changed.
+static bool alignPCCBounds(PhdrEntry *p, CheriPccPaddingSection &psec) {
+  OutputSection *first = p->firstSec;
+  OutputSection *last = p->lastSec;
+
+  if (!first)
+    return false;
+
+  assert(psec.getParent() == last && "padding section is not last");
+  assert(psec.isNeeded() && "padding section is not enabled");
+
+  // Ignore existing padding.
+  uint64_t size = last->getVA() - first->getVA();
+  uint64_t align = target->getCheriRequiredAlignment(size);
+  if (align == 0)
+    align = 1;
+  bool changed = false;
+  if (first->addralign < align) {
+    first->addralign = align;
+    if (first->ptLoad)
+      first->ptLoad->p_align =
+          std::max(first->ptLoad->p_align, first->addralign);
+    p->p_align = std::max(p->p_align, first->addralign);
+    changed = true;
+  }
+  uint64_t padSize = alignTo(size, align) - size;
+  if (psec.getSize() != padSize) {
+    psec.setSize(padSize);
+    changed = true;
+  }
+  return changed;
+}
+
+bool cheriCapabilityBoundsAlign() {
+  // Align the PT_CHERI_PCC segment.
+  bool changed = false;
+  if (in.cheriBounds)
+    changed |= alignPCCBounds(in.cheriBounds, *in.pccPadding);
+  return changed;
 }
 
 } // namespace elf

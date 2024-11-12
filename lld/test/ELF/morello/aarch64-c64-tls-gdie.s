@@ -21,17 +21,17 @@ _start:
 // SEC-NEXT:   SHF_ALLOC
 // SEC-NEXT:   SHF_WRITE
 // SEC-NEXT: ]
-// SEC-NEXT: Address: 0x220380
+// SEC-NEXT: Address: 0x2203D0
 
 // REL:      Relocations [
 // REL-NEXT:   .rela.dyn {
-// REL-NEXT:     0x220380 R_MORELLO_TLS_TPREL128 foo 0x0
+// REL-NEXT:     0x2203D0 R_MORELLO_TLS_TPREL128 foo 0x0
 // REL-NEXT:   }
 // REL-NEXT: ]
 
 // CHECK-LABEL:      <_start>:
-// CHECK-NEXT:   2102b8: adrp c0, 0x220000
-// CHECK-NEXT:   2102bc: add  c0, c0, #0x380
-// CHECK-NEXT:   2102c0: ldp  x0, x1, [c0]
-// CHECK-NEXT:   2102c4: add  c0, c2, x0, uxtx
-// CHECK-NEXT:   2102c8: scbnds c0, c0, x1
+// CHECK-NEXT:   210300: adrp c0, 0x220000
+// CHECK-NEXT:   210304: add  c0, c0, #0x3d0
+// CHECK-NEXT:   210308: ldp  x0, x1, [c0]
+// CHECK-NEXT:   21030c: add  c0, c2, x0, uxtx
+// CHECK-NEXT:   210310: scbnds c0, c0, x1

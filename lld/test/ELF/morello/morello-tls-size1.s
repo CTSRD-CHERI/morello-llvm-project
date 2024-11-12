@@ -9,12 +9,11 @@
 # symbol table).
 
 # CHECK: Contents of section .got:
-# CHECK-NEXT: 203e0 00000000 00000000 04000000 00000000  ................
-# CHECK-NEXT: 203f0 00000000 00000000 00000000 00000000  ................
+# CHECK-NEXT: 20410 00000000 00000000 04000000 00000000  ................
 
 # RELOC: Relocations [
 # RELOC-NEXT:  Section ({{.*}}) .rela.dyn {
-# RELOC-NEXT:    0x203E0 R_MORELLO_TLS_TPREL128 - 0x0
+# RELOC-NEXT:    0x20410 R_MORELLO_TLS_TPREL128 - 0x0
 # RELOC-NEXT:  }
 # RELOC-NEXT: ]
 

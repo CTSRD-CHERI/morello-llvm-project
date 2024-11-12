@@ -17,11 +17,11 @@ _start:
 no_size:
   ret
 
-// CHECK:      0x220240 R_MORELLO_IRELATIVE - 0x10069
+// CHECK:      0x220260 R_MORELLO_IRELATIVE - 0x9
 
 // CHECK:      Name: no_size
-// CHECK-NEXT: Value: 0x210229
+// CHECK-NEXT: Value: 0x210249
 
-/// Fragment address (0x2001c0) + addend (0x10069) == no_size (0x210229)
+/// Fragment address (0x210240) + addend (0x9) == no_size (0x210249)
 // CHECK:      Hex dump of section '.got.plt':
-// CHECK-NEXT: 0x00220240 c0012000 00000000 c0000200 00000004
+// CHECK-NEXT: 0x00220260 40022100 00000000 40000100 00000004

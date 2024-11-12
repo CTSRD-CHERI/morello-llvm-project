@@ -43,7 +43,7 @@ _start:
 // CHECK-NEXT:     Offset: 0x220290
 // CHECK-NEXT:     Type: R_MORELLO_IRELATIVE
 // CHECK-NEXT:     Symbol: -
-// CHECK-NEXT:     Addend: 0x10079
+// CHECK-NEXT:     Addend: 0x1
 // CHECK-NEXT:   }
 // CHECK-NEXT: }
 
@@ -70,7 +70,7 @@ _start:
 
 // CHECK:      Symbol {
 // CHECK:        Name: __rela_iplt_start
-// CHECK-NEXT:   Value: 0x200220
+// CHECK-NEXT:   Value: 0x200228
 // CHECK-NEXT:   Size: 48
 // CHECK-NEXT:   Binding: Local
 // CHECK-NEXT:   Type: None
@@ -82,7 +82,7 @@ _start:
 
 // CHECK:      Symbol {
 // CHECK:        Name: __rela_iplt_end
-// CHECK-NEXT:   Value: 0x200238
+// CHECK-NEXT:   Value: 0x200240
 // CHECK-NEXT:   Size: 0
 // CHECK-NEXT:   Binding: Local
 // CHECK-NEXT:   Type: None
@@ -94,7 +94,7 @@ _start:
 
 // CHECK:      Symbol {
 // CHECK:        Name: __rela_dyn_start
-// CHECK-NEXT:   Value: 0x200208
+// CHECK-NEXT:   Value: 0x200210
 // CHECK-NEXT:   Size: 48
 // CHECK-NEXT:   Binding: Local
 // CHECK-NEXT:   Type: None
@@ -106,7 +106,7 @@ _start:
 
 // CHECK:      Symbol {
 // CHECK:        Name: __rela_dyn_end
-// CHECK-NEXT:   Value: 0x200220
+// CHECK-NEXT:   Value: 0x200228
 // CHECK-NEXT:   Size: 0
 // CHECK-NEXT:   Binding: Local
 // CHECK-NEXT:   Type: None
@@ -118,7 +118,7 @@ _start:
 
 // CHECK:      Symbol {
 // CHECK:        Name: ifunc
-// CHECK-NEXT:   Value: 0x210239
+// CHECK-NEXT:   Value: 0x210241
 // CHECK-NEXT:   Size: 3
 // CHECK-NEXT:   Binding: Global
 // CHECK-NEXT:   Type: GNU_IFunc
@@ -128,7 +128,7 @@ _start:
 
 // CHECK:      Symbol {
 // CHECK:        Name: _start
-// CHECK-NEXT:   Value: 0x21023C
+// CHECK-NEXT:   Value: 0x210244
 // CHECK-NEXT:   Size: 0
 // CHECK-NEXT:   Binding: Global
 // CHECK-NEXT:   Type: None
@@ -141,18 +141,18 @@ _start:
 // CHECK-NEXT: 0x00220280 70022200 00000000 0c000000 00000002
 
 // CHECK:      Hex dump of section '.got.plt':
-// CHECK-NEXT: 0x00220290 c0012000 00000000 00010200 00000004
+// CHECK-NEXT: 0x00220290 40022100 00000000 60000100 00000004
 
 
-// DIS: 210239 <ifunc>:
+// DIS: 210241 <ifunc>:
 
-// DIS:      21023c <_start>
-// DIS-NEXT: 21023c:  bl  0x210260
-// DIS-NEXT: 210240:  add c2, c2, #0x27c
-// DIS-NEXT: 210244:  add c2, c2, #0x220
-// DIS-NEXT: 210248:  add c2, c2, #0x238
-// DIS-NEXT: 21024c:  add c2, c2, #0x208
-// DIS-NEXT: 210250:  add c2, c2, #0x220
+// DIS:      210244 <_start>
+// DIS-NEXT: 210244:  bl  0x210260
+// DIS-NEXT: 210248:  add c2, c2, #0x27c
+// DIS-NEXT: 21024c:  add c2, c2, #0x228
+// DIS-NEXT: 210250:  add c2, c2, #0x240
+// DIS-NEXT: 210254:  add c2, c2, #0x210
+// DIS-NEXT: 210258:  add c2, c2, #0x228
 
 // DIS:      210260 <.iplt>:
 // DIS-NEXT: 210260:  adrp c16, 0x220000

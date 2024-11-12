@@ -63,8 +63,9 @@ rw:
 bss:
  .space 4
 
-/// Executable capability ranges from the rodata up to the end of .text
-/// range is [0x210000, 0x230200) including alignment to CHERI concentrate
+/// Executable capability ranges from __cap_relocs up to the end of
+/// .data.rel.ro (and the ensuing .pad.cheri.pcc).
+/// Range is [0x200280, 0x240080) including alignment to CHERI concentrate
 /// boundary.
 
 // CHECK:          Name: __cap_relocs
@@ -72,12 +73,12 @@ bss:
 // CHECK-NEXT:     Flags [
 // CHECK-NEXT:       SHF_ALLOC
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x200248
-// CHECK-NEXT:     Offset: 0x248
+// CHECK-NEXT:     Address: 0x200280
+// CHECK-NEXT:     Offset: 0x280
 // CHECK-NEXT:     Size: 240
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
-// CHECK-NEXT:     AddressAlignment: 8
+// CHECK-NEXT:     AddressAlignment: 64
 // CHECK-NEXT:     EntrySize: 40
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
@@ -105,7 +106,7 @@ bss:
 // CHECK-NEXT:     ]
 // CHECK-NEXT:     Address: 0x230000
 // CHECK-NEXT:     Offset: 0x20000
-// CHECK-NEXT:     Size: 64
+// CHECK-NEXT:     Size: 8
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
 // CHECK-NEXT:     AddressAlignment: 65536
@@ -119,12 +120,28 @@ bss:
 // CHECK-NEXT:       SHF_ALLOC
 // CHECK-NEXT:       SHF_WRITE
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x240040
-// CHECK-NEXT:     Offset: 0x20040
+// CHECK-NEXT:     Address: 0x240010
+// CHECK-NEXT:     Offset: 0x20010
 // CHECK-NEXT:     Size: 96
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
 // CHECK-NEXT:     AddressAlignment: 16
+// CHECK-NEXT:     EntrySize: 0
+// CHECK-NEXT:   }
+// CHECK-NEXT:   Section {
+// CHECK-NEXT:     Index:
+// CHECK-NEXT:     Name: .pad.cheri.pcc
+// CHECK-NEXT:     Type: SHT_PROGBITS
+// CHECK-NEXT:     Flags [
+// CHECK-NEXT:       SHF_ALLOC
+// CHECK-NEXT:       SHF_WRITE
+// CHECK-NEXT:     ]
+// CHECK-NEXT:     Address: 0x240070
+// CHECK-NEXT:     Offset: 0x20070
+// CHECK-NEXT:     Size: 16
+// CHECK-NEXT:     Link: 0
+// CHECK-NEXT:     Info: 0
+// CHECK-NEXT:     AddressAlignment: 1
 // CHECK-NEXT:     EntrySize: 0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
@@ -163,42 +180,42 @@ bss:
 
 // CHECK: __cap_relocs {
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x240040
+// CHECK-NEXT:     Offset: 0x240010
 // CHECK-NEXT:     Type: RODATA (0x1BFBE)
 // CHECK-NEXT:     Address: 0x210000
 // CHECK-NEXT:     Base: 0x210000
 // CHECK-NEXT:     Length: 4
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x240050
+// CHECK-NEXT:     Offset: 0x240020
 // CHECK-NEXT:     Type: RODATA (0x1BFBE)
 // CHECK-NEXT:     Address: 0x210004
 // CHECK-NEXT:     Base: 0x210004
 // CHECK-NEXT:     Length: 4
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x240060
+// CHECK-NEXT:     Offset: 0x240030
 // CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
 // CHECK-NEXT:     Address: 0x230001
-// CHECK-NEXT:     Base: 0x200200
-// CHECK-NEXT:     Length: 196160
+// CHECK-NEXT:     Base: 0x200280
+// CHECK-NEXT:     Length: 261632
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x240070
+// CHECK-NEXT:     Offset: 0x240040
 // CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
 // CHECK-NEXT:     Address: 0x230005
-// CHECK-NEXT:     Base: 0x200200
-// CHECK-NEXT:     Length: 196160
+// CHECK-NEXT:     Base: 0x200280
+// CHECK-NEXT:     Length: 261632
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x240080
+// CHECK-NEXT:     Offset: 0x240050
 // CHECK-NEXT:     Type: DATA (0x8FBE)
 // CHECK-NEXT:     Address: 0x260000
 // CHECK-NEXT:     Base: 0x260000
 // CHECK-NEXT:     Length: 4
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x240090
+// CHECK-NEXT:     Offset: 0x240060
 // CHECK-NEXT:     Type: DATA (0x8FBE)
 // CHECK-NEXT:     Address: 0x260004
 // CHECK-NEXT:     Base: 0x260004
@@ -218,42 +235,42 @@ bss:
 
 // CHECK-SCRIPT: __cap_relocs {
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Offset: 0x220400
+// CHECK-SCRIPT-NEXT:     Offset: 0x220010
 // CHECK-SCRIPT-NEXT:     Type: RODATA (0x1BFBE)
 // CHECK-SCRIPT-NEXT:     Address: 0x220000
 // CHECK-SCRIPT-NEXT:     Base: 0x220000
 // CHECK-SCRIPT-NEXT:     Length: 4
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Offset: 0x220410
+// CHECK-SCRIPT-NEXT:     Offset: 0x220020
 // CHECK-SCRIPT-NEXT:     Type: RODATA (0x1BFBE)
 // CHECK-SCRIPT-NEXT:     Address: 0x220004
 // CHECK-SCRIPT-NEXT:     Base: 0x220004
 // CHECK-SCRIPT-NEXT:     Length: 4
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Offset: 0x220420
+// CHECK-SCRIPT-NEXT:     Offset: 0x220030
 // CHECK-SCRIPT-NEXT:     Type: FUNC (0x8000000000013DBC)
 // CHECK-SCRIPT-NEXT:     Address: 0x210001
-// CHECK-SCRIPT-NEXT:     Base: 0x0
-// CHECK-SCRIPT-NEXT:     Length: 2229248
+// CHECK-SCRIPT-NEXT:     Base: 0x400
+// CHECK-SCRIPT-NEXT:     Length: 2228224
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Offset: 0x220430
+// CHECK-SCRIPT-NEXT:     Offset: 0x220040
 // CHECK-SCRIPT-NEXT:     Type: FUNC (0x8000000000013DBC)
 // CHECK-SCRIPT-NEXT:     Address: 0x210005
-// CHECK-SCRIPT-NEXT:     Base: 0x0
-// CHECK-SCRIPT-NEXT:     Length: 2229248
+// CHECK-SCRIPT-NEXT:     Base: 0x400
+// CHECK-SCRIPT-NEXT:     Length: 2228224
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Offset: 0x220440
+// CHECK-SCRIPT-NEXT:     Offset: 0x220050
 // CHECK-SCRIPT-NEXT:     Type: DATA (0x8FBE)
 // CHECK-SCRIPT-NEXT:     Address: 0x230000
 // CHECK-SCRIPT-NEXT:     Base: 0x230000
 // CHECK-SCRIPT-NEXT:     Length: 4
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Offset: 0x220450
+// CHECK-SCRIPT-NEXT:     Offset: 0x220060
 // CHECK-SCRIPT-NEXT:     Type: DATA (0x8FBE)
 // CHECK-SCRIPT-NEXT:     Address: 0x230004
 // CHECK-SCRIPT-NEXT:     Base: 0x230004

@@ -39,7 +39,7 @@ foo:
 // CHECK-NEXT:       SHF_ALLOC (0x2)
 // CHECK-NEXT:       SHF_EXECINSTR (0x4)
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x210298
+// CHECK-NEXT:     Address: 0x2102D0
 
 // CHECK:    Name: .data.rel.ro
 // CHECK-NEXT:     Type: SHT_PROGBITS (0x1)
@@ -47,17 +47,17 @@ foo:
 // CHECK-NEXT:       SHF_ALLOC (0x2)
 // CHECK-NEXT:       SHF_WRITE (0x1)
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x2202B0
+// CHECK-NEXT:     Address: 0x2202F0
 
 // CHECK: Relocations [
 // CHECK-NEXT:   Section {{.*}} .rela.text {
-// CHECK-NEXT:     0x210298 R_MORELLO_CALL26 target 0x0
-// CHECK-NEXT:     0x21029C R_MORELLO_JUMP26 target 0x0
-// CHECK-NEXT:     0x2102A0 R_MORELLO_ADR_GOT_PAGE foo 0x0
-// CHECK-NEXT:     0x2102A4 R_MORELLO_LD128_GOT_LO12_NC foo 0x0
+// CHECK-NEXT:     0x2102D0 R_MORELLO_CALL26 target 0x0
+// CHECK-NEXT:     0x2102D4 R_MORELLO_JUMP26 target 0x0
+// CHECK-NEXT:     0x2102D8 R_MORELLO_ADR_GOT_PAGE foo 0x0
+// CHECK-NEXT:     0x2102DC R_MORELLO_LD128_GOT_LO12_NC foo 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {{.*}} .rela.data.rel.ro {
-// CHECK-NEXT:     0x2202B0 R_MORELLO_CAPINIT foo 0x0
+// CHECK-NEXT:     0x2202F0 R_MORELLO_CAPINIT foo 0x0
 
 // SHARED:     Name: .text
 // SHARED-NEXT:     Type: SHT_PROGBITS
@@ -65,7 +65,7 @@ foo:
 // SHARED-NEXT:       SHF_ALLOC
 // SHARED-NEXT:       SHF_EXECINSTR
 // SHARED-NEXT:     ]
-// SHARED-NEXT:     Address: 0x10398
+// SHARED-NEXT:     Address: 0x10400
 
 // SHARED:     Name: .data.rel.ro
 // SHARED-NEXT:     Type: SHT_PROGBITS
@@ -73,7 +73,7 @@ foo:
 // SHARED-NEXT:       SHF_ALLOC
 // SHARED-NEXT:       SHF_WRITE
 // SHARED-NEXT:     ]
-// SHARED-NEXT:     Address: 0x203E0
+// SHARED-NEXT:     Address: 0x20450
 
 // SHARED:     Name: .got
 // SHARED-NEXT:     Type: SHT_PROGBITS
@@ -81,7 +81,7 @@ foo:
 // SHARED-NEXT:       SHF_ALLOC
 // SHARED-NEXT:       SHF_WRITE
 // SHARED-NEXT:     ]
-// SHARED-NEXT:     Address: 0x204D0
+// SHARED-NEXT:     Address: 0x20540
 
 // SHARED:     Name: .got.plt
 // SHARED-NEXT:     Type: SHT_PROGBITS
@@ -89,21 +89,21 @@ foo:
 // SHARED-NEXT:       SHF_ALLOC
 // SHARED-NEXT:       SHF_WRITE
 // SHARED-NEXT:     ]
-// SHARED-NEXT:     Address: 0x304F0
+// SHARED-NEXT:     Address: 0x30560
 
 // SHARED: Relocations [
 // SHARED-NEXT:   Section {{.*}} .rela.dyn {
-// SHARED-NEXT:     0x203E0 R_MORELLO_CAPINIT foo 0x0
-// SHARED-NEXT:     0x204D0 R_MORELLO_GLOB_DAT foo 0x0
+// SHARED-NEXT:     0x20450 R_MORELLO_CAPINIT foo 0x0
+// SHARED-NEXT:     0x20540 R_MORELLO_GLOB_DAT foo 0x0
 // SHARED-NEXT:   }
 // SHARED-NEXT:   Section {{.*}} .rela.plt {
-// SHARED-NEXT:     0x30520 R_MORELLO_JUMP_SLOT target 0x10171
+// SHARED-NEXT:     0x30590 R_MORELLO_JUMP_SLOT target 0x21
 // SHARED-NEXT:   }
 // SHARED-NEXT:   Section {{.*}} .rela.text {
-// SHARED-NEXT:     0x10398 R_MORELLO_CALL26 target 0x0
-// SHARED-NEXT:     0x1039C R_MORELLO_JUMP26 target 0x0
-// SHARED-NEXT:     0x103A0 R_MORELLO_ADR_GOT_PAGE foo 0x0
-// SHARED-NEXT:     0x103A4 R_MORELLO_LD128_GOT_LO12_NC foo 0x0
+// SHARED-NEXT:     0x10400 R_MORELLO_CALL26 target 0x0
+// SHARED-NEXT:     0x10404 R_MORELLO_JUMP26 target 0x0
+// SHARED-NEXT:     0x10408 R_MORELLO_ADR_GOT_PAGE foo 0x0
+// SHARED-NEXT:     0x1040C R_MORELLO_LD128_GOT_LO12_NC foo 0x0
 // SHARED-NEXT:   }
 // SHARED-NEXT:   Section {{.*}} .rela.data.rel.ro {
-// SHARED-NEXT:     0x203E0 R_MORELLO_CAPINIT foo 0x0
+// SHARED-NEXT:     0x20450 R_MORELLO_CAPINIT foo 0x0
