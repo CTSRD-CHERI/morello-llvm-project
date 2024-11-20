@@ -1705,19 +1705,17 @@ template <class ELFT> void DynamicSection<ELFT>::writeTo(uint8_t *buf) {
   }
 }
 
-static uint64_t calcAddend(int64_t va, const Symbol &sym) {
-  if (config->emachine != EM_AARCH64)
-    return va;
-
+static uint64_t calcAddend(const Compartment *c, int64_t va,
+                           const Symbol &sym) {
   if (!config->isCheriAbi)
     return va;
 
   if (sym.isTls())
     return va;
 
-  // Change addend of Morello executable capabilities to account for the
+  // Change addend of CHERI executable capabilities to account for the
   // aligned base.
-  return va - config->morelloPCCBase;
+  return va - pccBase(c);
 }
 
 uint64_t DynamicReloc::getOffset() const {
@@ -1742,7 +1740,7 @@ int64_t DynamicReloc::computeAddend() const {
     assert(sym == nullptr);
     return getMipsPageAddr(outputSec->addr) + addend;
   case AArch64ExecRel:
-    return calcAddend(sym->getVA(addend), *sym);
+    return calcAddend(inputSec->compartment, sym->getVA(addend), *sym);
   }
   llvm_unreachable("Unknown DynamicReloc::Kind enum");
 }
@@ -4140,6 +4138,19 @@ size_t MemtagAndroidNote::getSize() const {
   return sizeof(llvm::ELF::Elf64_Nhdr) +
          /*namesz=*/sizeof(kMemtagAndroidNoteName) +
          /*descsz=*/sizeof(uint32_t);
+}
+
+uint64_t elf::pccBase(const Compartment *c) {
+  return cheriBoundsPhdr(c)->firstSec->addr;
+}
+
+uint64_t elf::pccSize(const Compartment *c) {
+  PhdrEntry *phdr = cheriBoundsPhdr(c);
+  OutputSection *first = phdr->firstSec;
+  OutputSection *last = phdr->lastSec;
+  uint64_t size = last->getVA() + last->size - first->getVA();
+  uint64_t align = target->getCheriRequiredAlignment(size);
+  return alignToPowerOf2(size, align);
 }
 
 InStruct elf::in;

@@ -401,6 +401,12 @@ void addCapabilityRelocation(Symbol *sym, RelType type, InputSectionBase *sec,
                              llvm::function_ref<std::string()> referencedBy,
                              RelocationBaseSection *dynRelSec = nullptr);
 
+// Align OutputSections as needed to ensure the bounds of capabilities
+// such as PCC do not permit undesired access to portions of other
+// OutputSections.  Return true if the alignment of any OutputSection
+// was modified.
+bool cheriCapabilityBoundsAlign();
+
 // Emit either a dynamic relocation or __cap_reloc entry to initialize a
 // GOT slot.
 void addMorelloC64GotRelocation(RelType dynType, Symbol *sym,
@@ -408,12 +414,6 @@ void addMorelloC64GotRelocation(RelType dynType, Symbol *sym,
                                 int64_t addend);
 void addMorelloCapabilityFragment(InputSectionBase *sec, Symbol *sym,
                                   uint64_t offset, bool isExecRel);
-
-// Calculate the size of linker defined capabilities such as the PCC
-// capability. These lengths may result in increased alignment requirements
-// for some OutputSections so that CHERI concentrate requirements are met.
-// Return true if we have to modify the alignment of any OutputSection.
-bool morelloLinkerDefinedCapabilityAlign();
 
 // Resolve the R_MORELLO_CAPFRAG_AND_BASE internal relocation to write
 // | 56-bits length | 8-bits permission |

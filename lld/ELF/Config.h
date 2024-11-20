@@ -397,12 +397,6 @@ struct Configuration {
   // True if we are using the function descriptor ABI.
   bool isCheriFnDesc = false;
 
-  // We need to calculate the PCC to decide how to align the OutputSections
-  // on the boundary of the PCC range. Cache the calculation here so that we
-  // don't need to recalculate later.
-  uint64_t morelloPCCBase;
-  uint64_t morelloPCCLimit;
-
   // Mode of MTE to write to the ELF note. Should be one of NT_MEMTAG_ASYNC (for
   // async), NT_MEMTAG_SYNC (for sync), or NT_MEMTAG_LEVEL_NONE (for none). If
   // async or sync is enabled, write the ELF note specifying the default MTE

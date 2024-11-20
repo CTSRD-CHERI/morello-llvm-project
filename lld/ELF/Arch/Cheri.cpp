@@ -370,7 +370,8 @@ static uint64_t getTargetSize(const CheriCapRelocLocation &location,
     if (isAbsoluteSym)
       return targetSize;
 
-    if (config->emachine == EM_AARCH64 && !targetSym->isInGot(nullptr)) {
+    const Compartment *c = location.section->compartment;
+    if (config->emachine == EM_AARCH64 && !targetSym->isInGot(c)) {
       // For caprelocs, the Morello linker obtains the symbol size from the
       // lower 8-bytes of a 16-byte frag reserved by .capinit (buf+8).
 
@@ -692,9 +693,10 @@ void MorelloCapRelocsSection::writeTo(uint8_t *buf) {
 
     // Increase bounds of executable capabilities.
     if (permissions == Permissions::func(Permissions::Type::STATIC)) {
-      targetOffset += targetVA - config->morelloPCCBase;
-      targetVA = config->morelloPCCBase;
-      targetSize = config->morelloPCCLimit - config->morelloPCCBase;
+      const Compartment *c = location.section->compartment;
+      targetOffset += targetVA - pccBase(c);
+      targetVA = pccBase(c);
+      targetSize = pccSize(c);
     }
     // Ensure that the base and limit of the capabilities are representable
     // in the CHERI Concentrate Encoding.
@@ -747,7 +749,7 @@ uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
                                SymbolAndOffset(const_cast<Symbol *>(&sym), 0));
     // Increase bounds of executable capabilities.
     if (isExecRel)
-      size = config->morelloPCCLimit - config->morelloPCCBase;
+      size = pccSize(isec->compartment);
 
     return sizeAndPerm | (size << 8);
   }
@@ -760,7 +762,7 @@ uint64_t getMorelloBaseAddress(int64_t a, const Symbol &sym,
   uint64_t targetVA = sym.getVA(a);
   // Increase bounds of executable capabilities.
   if (isExecRel)
-    targetVA = config->morelloPCCBase;
+    targetVA = pccBase(isec->compartment);
   return targetVA;
 }
 
@@ -800,48 +802,13 @@ static bool alignToRequired(OutputSection *first, OutputSection *last,
 // ALIGN(RequiredAlignment) to the end of its commands.
 // We return true if we have modified the content in a way that would affect
 // address allocation as this will trigger another round of address allocation.
-bool morelloLinkerDefinedCapabilityAlign() {
-  // PCC capability is generic to both static and dynamic cases.
-  // Handle the PCC capability
-  // Find the [First, Last) OutputSections in the PCC range and the
-  // OutputSection Next after Last.
-  uint64_t morelloPCCBase = -1;
-  uint64_t morelloPCCLimit = 0;
-  OutputSection *first = nullptr;
-  OutputSection *last = nullptr;
-  for (OutputSection *os : outputSections) {
-    if (!(os->flags & SHF_ALLOC))
-      continue;
-    if (!(os->flags & SHF_WRITE) ||
-        (config->morelloC64Plt && in.gotPlt && os == in.gotPlt->getParent()) ||
-        (config->morelloC64Plt && in.igotPlt &&
-         os == in.igotPlt->getParent()) ||
-        (config->morelloC64Plt && in.got && os == in.got->getParent())) {
-      if (os->getVA() < morelloPCCBase) {
-        morelloPCCBase = os->getVA();
-        first = os;
-      }
-      if (os->getVA() + os->size > morelloPCCLimit) {
-        morelloPCCLimit = os->getVA() + os->size;
-        last = os;
-      }
-    }
-  }
-  // Store the PCC capability calculation result so that it is available when
-  // we write out the __cap_relocs section.
-  config->morelloPCCBase = morelloPCCBase;
-  config->morelloPCCLimit = morelloPCCLimit;
-
-  bool changed = false;
-  if (first && last)
-    changed = alignToRequired(
-        first, last, getMorelloRequiredAlignment(morelloPCCLimit - morelloPCCBase));
-
+static bool morelloLinkerDefinedCapabilityAlign() {
   // Linker generated Section Base capabilities. When dynamic linking we need
   // to find these via searching the dynamic relocs, when static linking we
   // need to search the entries in the __cap_relocs section.
   // Deal with capabilities referring to section start symbols, only the
   // linker knows what the section size of these will be.
+  bool changed = false;
   if (config->hasDynSymTab) {
     for (const DynamicReloc &reloc : mainPart->relaDyn->relocs) {
       if (reloc.sym && reloc.sym->getSize() == 0 && !reloc.sym->isPreemptible &&
@@ -1624,6 +1591,57 @@ void addCapabilityRelocation(Symbol *sym, RelType type, InputSectionBase *sec,
     assert(config->localCapRelocsMode == CapRelocsMode::CBuildCap);
     error("CBuildCap method not implemented yet!");
   }
+}
+
+static OutputSection *nextOutputSection(OutputSection *sec) {
+  bool isNext = false;
+  for (OutputSection *os : outputSections) {
+    if (isNext) {
+      if (!(os->flags & SHF_ALLOC))
+        continue;
+      return os;
+    }
+    if (os == sec)
+      isNext = true;
+  }
+  return nullptr;
+}
+
+// Determine the required alignment for a single PT_CHERI_PCC segment and apply
+// it to the first OutputSection and the following OutputSection after the last
+// OutputSection.  Returns true if the alignment of any OutputSections were
+// modified.
+static bool alignPCCBounds(PhdrEntry *p) {
+  OutputSection *first = p->firstSec;
+  OutputSection *last = p->lastSec;
+
+  if (!first)
+    return false;
+
+  uint64_t size = last->getVA() + last->size - first->getVA();
+  uint64_t align = target->getCheriRequiredAlignment(size);
+  bool changed = false;
+  if (first->alignment < align) {
+    first->alignment = align;
+    changed = true;
+  }
+  OutputSection *next = nextOutputSection(last);
+  if (next != nullptr && next->alignment < align) {
+    next->alignment = align;
+    changed = true;
+  }
+  return changed;
+}
+
+bool cheriCapabilityBoundsAlign() {
+  // Align each PT_CHERI_PCC segment.
+  bool changed = false;
+  changed |= alignPCCBounds(in.cheriBounds);
+  for (Compartment &compart : compartments)
+    changed |= alignPCCBounds(compart.cheriBounds);
+  if (config->morelloC64Plt)
+    changed |= morelloLinkerDefinedCapabilityAlign();
+  return changed;
 }
 
 } // namespace elf
