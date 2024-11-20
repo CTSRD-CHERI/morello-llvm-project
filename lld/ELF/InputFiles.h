@@ -232,6 +232,7 @@ public:
 
   ObjFile(MemoryBufferRef m, StringRef archiveName) : ELFFileBase(ObjKind, m) {
     this->archiveName = archiveName;
+    compartment = config->compartment;
   }
 
   void parse(bool ignoreComdats = false);
@@ -281,6 +282,9 @@ public:
   // True if the file defines functions compiled with -fsplit-stack,
   // but had one or more functions with the no_split_stack attribute.
   bool someNoSplitStack = false;
+
+  // Compartment containing this object file or nullptr.
+  Compartment *compartment = nullptr;
 
   // Get cached DWARF information.
   DWARFCache *getDwarf();
