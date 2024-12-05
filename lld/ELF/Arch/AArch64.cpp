@@ -14,6 +14,7 @@
 #include "lld/Common/ErrorHandler.h"
 #include "llvm/BinaryFormat/ELF.h"
 #include "llvm/Support/Endian.h"
+#include "llvm/Support/Morello.h"
 #include "Cheri.h"
 
 using namespace llvm;
@@ -39,6 +40,7 @@ public:
                      const uint8_t *loc) const override;
   RelType getDynRel(RelType type) const override;
   int getCapabilitySize() const override { return 16; }
+  uint64_t getCheriRequiredAlignment(uint64_t len) const override;
   int64_t getImplicitAddend(const uint8_t *buf, RelType type) const override;
   void writeGotPlt(Compartment *c, uint8_t *buf, const Symbol &s) const override;
   void writePltHeader(Compartment *c, uint8_t *buf) const override;
@@ -291,6 +293,10 @@ RelType AArch64::getDynRel(RelType type) const {
   if (type == R_AARCH64_ABS64)
     return type;
   return R_AARCH64_NONE;
+}
+
+uint64_t AArch64::getCheriRequiredAlignment(uint64_t len) const {
+  return getMorelloRequiredAlignment(len);
 }
 
 int64_t AArch64::getImplicitAddend(const uint8_t *buf, RelType type) const {
