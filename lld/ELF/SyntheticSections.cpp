@@ -1533,10 +1533,10 @@ DynamicSection<ELFT>::computeContents() {
       addInSec(DT_PLTGOT, *plt(c));
       break;
     case EM_AARCH64:
-      if (llvm::find_if(in.relaPlt->relocs, [](const DynamicReloc &r) {
+      if (llvm::find_if(relaPlt(c)->relocs, [](const DynamicReloc &r) {
            return r.type == target->pltRel &&
                   r.sym->stOther & STO_AARCH64_VARIANT_PCS;
-         }) != in.relaPlt->relocs.end())
+         }) != relaPlt(c)->relocs.end())
         aarch64_variant_pcs = true;
       LLVM_FALLTHROUGH;
     default:
@@ -1853,6 +1853,7 @@ void RelocationBaseSection::partitionRels() {
 
 void RelocationBaseSection::finalizeContents() {
   SymbolTableBaseSection *symTab = getPartition().dynSymTab.get();
+  Compartment *c = compartment;
 
   // When linking glibc statically, .rel{,a}.plt contains R_*_IRELATIVE
   // relocations due to IFUNC (e.g. strcpy). sh_link will be set to 0 in that
@@ -1862,37 +1863,37 @@ void RelocationBaseSection::finalizeContents() {
   else
     getParent()->link = 0;
 
-  if (in.relaPlt.get() == this && in.gotPlt->getParent()) {
+  if (relaPlt(c) == this && gotPlt(c)->getParent()) {
     getParent()->flags |= ELF::SHF_INFO_LINK;
     // For CheriABI we use the captable as the sh_info value
-    if (config->isCheriAbi && in.cheriCapTable && in.cheriCapTable->isNeeded()) {
-      assert(in.cheriCapTable->getParent()->sectionIndex != UINT32_MAX);
-      getParent()->info = in.cheriCapTable->getParent()->sectionIndex;
-      if (in.relaIplt.get() == this)
-        getParent()->info = in.cheriCapTable->getParent()->sectionIndex;
+    if (config->isCheriAbi && cheriCapTable(c) && cheriCapTable(c)->isNeeded()) {
+      assert(cheriCapTable(c)->getParent()->sectionIndex != UINT32_MAX);
+      getParent()->info = cheriCapTable(c)->getParent()->sectionIndex;
+      if (relaIplt(c) == this)
+        getParent()->info = cheriCapTable(c)->getParent()->sectionIndex;
       if (in.relaDyn.get() == this)
-        getParent()->info = in.cheriCapTable->getParent()->sectionIndex;
+        getParent()->info = cheriCapTable(c)->getParent()->sectionIndex;
     } else {
-      if (in.relaPlt.get() == this)
-        getParent()->info = in.gotPlt->getParent()->sectionIndex;
+      if (relaPlt(c) == this)
+        getParent()->info = gotPlt(c)->getParent()->sectionIndex;
     }
     if (in.relaDyn.get() == this) {
-      if (in.igotPlt && in.igotPlt->isNeeded())
-        getParent()->info = in.igotPlt->getParent()->sectionIndex;
+      if (igotPlt(c) && igotPlt(c)->isNeeded())
+        getParent()->info = igotPlt(c)->getParent()->sectionIndex;
       else if (!config->hasDynSymTab)
         // In Morello static linking, the relaDyn can be used without the GOT or
         // PLTGOT
         getParent()->info = 0;
     }
   }
-  if (in.relaIplt.get() == this && in.igotPlt->getParent()) {
+  if (relaIplt(c) == this && igotPlt(c)->getParent()) {
     getParent()->flags |= ELF::SHF_INFO_LINK;
     // For CheriABI we use the captable as the sh_info value
-    if (config->isCheriAbi && in.cheriCapTable && in.cheriCapTable->isNeeded()) {
-      assert(in.cheriCapTable->getParent()->sectionIndex != UINT32_MAX);
-      getParent()->info = in.cheriCapTable->getParent()->sectionIndex;
-    } else if (in.igotPlt && in.igotPlt->isNeeded())
-      getParent()->info = in.igotPlt->getParent()->sectionIndex;
+    if (config->isCheriAbi && cheriCapTable(c) && cheriCapTable(c)->isNeeded()) {
+      assert(cheriCapTable(c)->getParent()->sectionIndex != UINT32_MAX);
+      getParent()->info = cheriCapTable(c)->getParent()->sectionIndex;
+    } else if (igotPlt(c) && igotPlt(c)->isNeeded())
+      getParent()->info = igotPlt(c)->getParent()->sectionIndex;
     else if (!config->hasDynSymTab)
       // In Morello static linking, the relaDyn can be used without the GOT or
       // PLTGOT
