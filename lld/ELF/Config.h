@@ -421,6 +421,7 @@ struct Configuration {
 
   Compartment *compartment = nullptr;
   CompartmentPolicy compartmentPolicy;
+  bool verboseCompartmentalization = false;
 };
 
 // The only instance of Configuration struct.
