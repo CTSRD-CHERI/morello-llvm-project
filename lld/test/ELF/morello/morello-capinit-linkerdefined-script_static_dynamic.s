@@ -61,34 +61,18 @@ _start: ret
 
  .data.rel.ro
 
- .capinit __preinit_array_start
- .xword 0
- .xword 0
- .capinit __preinit_array_end
- .xword 0
- .xword 0
+ .chericap __preinit_array_start
+ .chericap __preinit_array_end
 
- .capinit __init_array_start
- .xword 0
- .xword 0
- .capinit __init_array_end
- .xword 0
- .xword 0
+ .chericap __init_array_start
+ .chericap __init_array_end
 
- .capinit __fini_array_start
- .xword 0
- .xword 0
- .capinit __fini_array_end
- .xword 0
- .xword 0
+ .chericap __fini_array_start
+ .chericap __fini_array_end
 
- .capinit __start_mysection
- .xword 0
- .xword 0
+ .chericap __start_mysection
 
- .capinit __stop_mysection
- .xword 0
- .xword 0
+ .chericap __stop_mysection
 
 /// TODO: Check the fragments
 
@@ -136,49 +120,49 @@ _start: ret
 // CHECK: Relocations [
 // CHECK-NEXT:   .rela.dyn {
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x211008
+// CHECK-NEXT:       Offset: 0x211010
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x211018
+// CHECK-NEXT:       Offset: 0x211020
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x211028
+// CHECK-NEXT:       Offset: 0x211030
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x211038
+// CHECK-NEXT:       Offset: 0x211040
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x211048
+// CHECK-NEXT:       Offset: 0x211050
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x211058
+// CHECK-NEXT:       Offset: 0x211060
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x211068
+// CHECK-NEXT:       Offset: 0x211070
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x211078
+// CHECK-NEXT:       Offset: 0x211080
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
@@ -270,21 +254,21 @@ _start: ret
 // CHECK:      Hex dump of section '.data.rel.ro':
 
 /// __preinit_array_start: address: 0x210800, size = 8, perms = RO(0x1)
-// CHECK-NEXT: 0x00211008 00082100 00000000 08000000 00000001
+// CHECK-NEXT: 0x00211010 00082100 00000000 08000000 00000001
 /// __preinit_array_end: address: 0x210808, size = 0, perms = RO(0x1)
-// CHECK-NEXT: 0x00211018 08082100 00000000 00000000 00000001
+// CHECK-NEXT: 0x00211020 08082100 00000000 00000000 00000001
 
 /// __init_array_start: address: 0x210800, size = 8, perms = RO(0x1)
-// CHECK-NEXT: 0x00211028 000c2100 00000000 08000000 00000001
+// CHECK-NEXT: 0x00211030 000c2100 00000000 08000000 00000001
 /// __init_array_end: address: 0x210C08, size = 0, perms = RO(0x1)
-// CHECK-NEXT: 0x00211038 080c2100 00000000 00000000 00000001
+// CHECK-NEXT: 0x00211040 080c2100 00000000 00000000 00000001
 
 /// __fini_array_start: address: 0x211000, size = 8, perms = RO(0x1)
-// CHECK-NEXT: 0x00211048 00102100 00000000 08000000 00000001
+// CHECK-NEXT: 0x00211050 00102100 00000000 08000000 00000001
 /// __fini_array_end: address: 0x211008, size = 0, perms = RO(0x1)
-// CHECK-NEXT: 0x00211058 08102100 00000000 00000000 00000001
+// CHECK-NEXT: 0x00211060 08102100 00000000 00000000 00000001
 
 /// __start_mysection: address: 0x210400, size = 32, perms = RO(0x1)
-// CHECK-NEXT: 0x00211068 00042100 00000000 20000000 00000001
+// CHECK-NEXT: 0x00211070 00042100 00000000 20000000 00000001
 /// __stop_mysection: address: 0x210408, size = 0, perms = RO(0x1)
-// CHECK-NEXT: 0x00211078 08042100 00000000 00000000 00000001
+// CHECK-NEXT: 0x00211080 08042100 00000000 00000000 00000001

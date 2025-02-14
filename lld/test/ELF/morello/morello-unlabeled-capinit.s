@@ -26,9 +26,5 @@ bar:
 
   .section .data.rel.ro..L__cap_merged_table,"aw",%progbits
   .p2align 4
-  .capinit foo
-  .xword  0
-  .xword  0
-  .capinit bar
-  .xword  0
-  .xword  0
+  .chericap foo
+  .chericap bar

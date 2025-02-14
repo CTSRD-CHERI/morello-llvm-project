@@ -18,16 +18,12 @@ hello:
  .type ptr1, %object
  .size ptr1, 16
 ptr1:
- .capinit hello + 8
- .8byte 0
- .8byte 0
+ .chericap hello + 8
 
  .type ptr2, %object
  .size ptr2, 16
 ptr2:
- .capinit bye
- .8byte 0
- .8byte 0
+ .chericap bye
 
 bye:
  .string "Bye World"
@@ -39,7 +35,7 @@ bye:
  .xword __cap_relocs_end
 
 // CHECK:          Name: __cap_relocs_start
-// CHECK-NEXT:     Value: 0x48
+// CHECK-NEXT:     Value: 0x50
 // CHECK-NEXT:     Size: 0
 // CHECK-NEXT:     Binding: Local (0x0)
 // CHECK-NEXT:     Type: None (0x0)
@@ -50,7 +46,7 @@ bye:
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Symbol {
 // CHECK-NEXT:     Name: __cap_relocs_end
-// CHECK-NEXT:     Value: 0x98
+// CHECK-NEXT:     Value: 0xA0
 // CHECK-NEXT:     Size: 0
 // CHECK-NEXT:     Binding: Local (0x0)
 // CHECK-NEXT:     Type: None (0x0)

@@ -24,9 +24,7 @@ target:
  ret
 
  .data.rel.ro
- .capinit foo
- .xword 0
- .xword 0
+ .chericap foo
 
  .data
  .global foo
@@ -49,7 +47,7 @@ foo:
 // CHECK-NEXT:       SHF_ALLOC
 // CHECK-NEXT:       SHF_WRITE
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x220274
+// CHECK-NEXT:     Address: 0x220280
 
 // CHECK:    Name: .got
 // CHECK-NEXT:    Type: SHT_PROGBITS
@@ -61,7 +59,7 @@ foo:
 
 // CHECK: Relocations [
 // CHECK-NEXT:   .rela.dyn {
-// CHECK-NEXT:     0x220274 R_MORELLO_RELATIVE - 0x0
+// CHECK-NEXT:     0x220280 R_MORELLO_RELATIVE - 0x0
 // CHECK-NEXT:     0x220290 R_MORELLO_RELATIVE - 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   .rela.text {
@@ -71,7 +69,7 @@ foo:
 // CHECK-NEXT:     0x21026C R_MORELLO_LD128_GOT_LO12_NC foo 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   .rela.data.rel.ro {
-// CHECK-NEXT:     0x220274 R_MORELLO_CAPINIT foo 0x0
+// CHECK-NEXT:     0x220280 R_MORELLO_CAPINIT foo 0x0
 
 // CHECK:         Name: foo
 // CHECK-NEXT:    Value: 0x2302C0
@@ -83,7 +81,7 @@ foo:
 
 // CHECK:      Hex dump of section '.data.rel.ro':
 /// foo: address: 0x2302C0, size = 4, perms = RW(0x2)
-// CHECK-NEXT: 0x00220274 c0022300 00000000 04000000 00000002
+// CHECK-NEXT: 0x00220280 c0022300 00000000 04000000 00000002
 
 // CHECK:      Hex dump of section '.got':
 /// foo: address: 0x2302C0, size = 4, perms = RW(0x2)

@@ -6,13 +6,9 @@
 /// Test that we do not produce a __cap_relocs section when doing a relocatable
 /// link
  .data.rel.ro
- .capinit sym1
- .xword 0
- .xword 0
+ .chericap sym1
 
- .capinit sym2
- .xword 0
- .xword 0
+ .chericap sym2
 
  .data
  .global sym1

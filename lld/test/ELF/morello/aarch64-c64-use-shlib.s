@@ -39,21 +39,11 @@ from_app:
  .global func2
 
  .data.rel.ro
- .capinit rodata
- .xword 0
- .xword 0
- .capinit data
- .xword 0
- .xword 0
- .capinit appdata
- .xword 0
- .xword 0
- .capinit from_app
- .xword 0
- .xword 0
- .capinit func2
- .xword 0
- .xword 0
+ .chericap rodata
+ .chericap data
+ .chericap appdata
+ .chericap from_app
+ .chericap func2
 
 // CHECK: Contents of section .data.rel.ro:
 /// rodata (shlib.so) rw (default) size 8
@@ -211,9 +201,9 @@ appdata: .xword 8
 
 // RELS: Relocations [
 // RELS-NEXT:   Section {{.*}} .rela.dyn {
-/// .capinit appdata
+/// .chericap appdata
 // RELS-NEXT:     0x220530 R_MORELLO_RELATIVE - 0x0
-//// .capinit from_app
+//// .chericap from_app
 // RELS-NEXT:     0x220540 R_MORELLO_RELATIVE - 0x10299
 /// .got from_app
 // RELS-NEXT:     0x220670 R_MORELLO_RELATIVE - 0x10299
@@ -221,15 +211,15 @@ appdata: .xword 8
 // RELS-NEXT:     0x2206B0 R_MORELLO_RELATIVE - 0x10261
 // .got appdata
 // RELS-NEXT:     0x2206C0 R_MORELLO_RELATIVE - 0x0
-/// .capinit func2
+/// .chericap func2
 // RELS-NEXT:     0x220550 R_MORELLO_CAPINIT func2 0x0
 /// .got func2
 // RELS-NEXT:     0x220680 R_MORELLO_GLOB_DAT func2 0x0
-/// .capinit rodata
+/// .chericap rodata
 // RELS-NEXT:     0x220510 R_MORELLO_CAPINIT rodata 0x0
 /// .got rodata
 // RELS-NEXT:     0x220690 R_MORELLO_GLOB_DAT rodata 0x0
-/// .capinit data
+/// .chericap data
 // RELS-NEXT:     0x220520 R_MORELLO_CAPINIT data 0x0
 /// .got data
 // RELS-NEXT:     0x2206A0 R_MORELLO_GLOB_DAT data 0x0
@@ -239,9 +229,9 @@ appdata: .xword 8
 
 // RELS-PIE: Relocations [
 // RELS-PIE-NEXT:   Section {{.*}} .rela.dyn {
-/// .capinit appdata
+/// .chericap appdata
 // RELS-PIE-NEXT:     0x20530 R_MORELLO_RELATIVE - 0x0
-/// .capinit from_app
+/// .chericap from_app
 // RELS-PIE-NEXT:     0x20540 R_MORELLO_RELATIVE - 0x10299
 /// .got from_app
 // RELS-PIE-NEXT:     0x20680 R_MORELLO_RELATIVE - 0x10299
@@ -249,15 +239,15 @@ appdata: .xword 8
 // RELS-PIE-NEXT:     0x206C0 R_MORELLO_RELATIVE - 0x10261
 /// .got appdata
 // RELS-PIE-NEXT:     0x206D0 R_MORELLO_RELATIVE - 0x0
-/// .capinit func2
+/// .chericap func2
 // RELS-PIE-NEXT:     0x20550 R_MORELLO_CAPINIT func2 0x0
 /// .got func2
 // RELS-PIE-NEXT:     0x20690 R_MORELLO_GLOB_DAT func2 0x0
-/// .capinit rodata
+/// .chericap rodata
 // RELS-PIE-NEXT:     0x20510 R_MORELLO_CAPINIT rodata 0x0
 /// .got rodata
 // RELS-PIE-NEXT:     0x206A0 R_MORELLO_GLOB_DAT rodata 0x0
-/// .capinit data
+/// .chericap data
 // RELS-PIE-NEXT:     0x20520 R_MORELLO_CAPINIT data 0x0
 /// .got data
 // RELS-PIE-NEXT:     0x206B0 R_MORELLO_GLOB_DAT data 0x0

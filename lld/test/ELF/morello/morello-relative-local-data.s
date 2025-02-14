@@ -5,9 +5,7 @@
 // RUN: llvm-objdump --no-show-raw-insn -d --triple=aarch64-none-elf --mattr=+morello -s %t.so | FileCheck %s
 
  .section .data.rel.ro
- .capinit local + 3
- .xword 0
- .xword 0
+ .chericap local + 3
 
  .section .data
  .local local

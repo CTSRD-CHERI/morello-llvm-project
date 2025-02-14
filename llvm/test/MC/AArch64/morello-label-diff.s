@@ -16,24 +16,16 @@ bar:
 	ret	c30
 .Lfunc_end0:
 foo.labels:
-	.capinit foo+((.Ltmp0+1)-foo)
-	.xword	0
-	.xword	0
-	.capinit foo+((.Ltmp1+1)-foo)
-	.xword	0
-	.xword	0
-        .capinit foo+(foo-(.Ltmp0+1))
-	.xword	0
-	.xword	0
-        .capinit foo+(bar-foo)
-	.xword	0
-	.xword	0
+	.chericap foo+((.Ltmp0+1)-foo)
+	.chericap foo+((.Ltmp1+1)-foo)
+	.chericap foo+(foo-(.Ltmp0+1))
+	.chericap foo+(bar-foo)
 
 // CHECK: Relocations [
 // CHECK-NEXT:  Section (3) .rela.text {
-// CHECK-NEXT:    0x14 R_MORELLO_CAPINIT foo 0x4
-// CHECK-NEXT:    0x24 R_MORELLO_CAPINIT foo 0xC
-// CHECK-NEXT:    0x34 R_MORELLO_CAPINIT foo 0xFFFFFFFFFFFFFFFC
-// CHECK-NEXT:    0x44 R_MORELLO_CAPINIT foo 0xC
+// CHECK-NEXT:    0x20 R_MORELLO_CAPINIT foo 0x4
+// CHECK-NEXT:    0x30 R_MORELLO_CAPINIT foo 0xC
+// CHECK-NEXT:    0x40 R_MORELLO_CAPINIT foo 0xFFFFFFFFFFFFFFFC
+// CHECK-NEXT:    0x50 R_MORELLO_CAPINIT foo 0xC
 // CHECK-NEXT:  }
 // CHECK-NEXT: ]

@@ -4,8 +4,8 @@
 // RUN: llvm-objdump -s %t | FileCheck %s --check-prefix=DATA
 // RUN: llvm-readobj --expand-relocs --relocations --symbols --cap-relocs %t | FileCheck %s
 
-/// Basics of the .capinit relocation using dynamic linking.
-/// We create two capabilites via .capinit. These will produce R_MORELLO_CAPINIT
+/// Basics of the capinit relocation using dynamic linking.
+/// We create two capabilites via .chericap. These will produce R_MORELLO_CAPINIT
 /// Relocations that the linker will use to create dynamic relocations for
 /// the dynamic loader to create the capabilities
 
@@ -21,32 +21,24 @@ _start:
  .type ptr1, %object
  .size ptr1, 16
 ptr1:
- .capinit str + 8
- .8byte 0
- .8byte 0
+ .chericap str + 8
 
  .type ptr2, %object
  .size ptr2, 16
 ptr2:
- .capinit str
- .8byte 0
- .8byte 0
+ .chericap str
 
  .type ptr3, %object
  .size ptr3, 16
 ptr3:
- .capinit foo + 0x10
- .8byte 0
- .8byte 0
+ .chericap foo + 0x10
 
 /// Check that the linker uses the remaining size of the output section (0x14)
 /// when the size is not provided in the symbol table.
  .type ptr4, %object
  .size ptr4, 16
 ptr4:
- .capinit unsized_str
- .8byte 0
- .8byte 0
+ .chericap unsized_str
 
  .local str
  .type str, %object

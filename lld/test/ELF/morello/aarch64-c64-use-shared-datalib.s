@@ -27,18 +27,10 @@ from_app:
  ret
 
  .data.rel.ro
- .capinit rodata
- .xword 0
- .xword 0
- .capinit data
- .xword 0
- .xword 0
- .capinit appdata
- .xword 0
- .xword 0
- .capinit from_app
- .xword 0
- .xword 0
+ .chericap rodata
+ .chericap data
+ .chericap appdata
+ .chericap from_app
 
 // CHECK: Contents of section .data.rel.ro:
 /// rodata (shlib.so) rw (default) size 8
@@ -90,13 +82,13 @@ appdata: .xword 8
 
 // RELS: Relocations [
 // RELS-NEXT:   Section {{.*}} .rela.dyn {
-/// .capinit appdata
+/// .chericap appdata
 // RELS-NEXT:     0x2203C0 R_MORELLO_RELATIVE - 0x0
-/// .capinit from_app
+/// .chericap from_app
 // RELS-NEXT:     0x2203D0 R_MORELLO_RELATIVE - 0x1015D
-/// .capinit rodata
+/// .chericap rodata
 // RELS-NEXT:     0x2203A0 R_MORELLO_CAPINIT rodata 0x0
-/// .capinit data
+/// .chericap data
 // RELS-NEXT:     0x2203B0 R_MORELLO_CAPINIT data 0x0
 // RELS-NEXT:   }
 
@@ -106,12 +98,12 @@ appdata: .xword 8
 
 // RELS-PIE: Relocations [
 // RELS-PIE-NEXT:   Section {{.*}} .rela.dyn {
-/// .capinit appdata
+/// .chericap appdata
 // RELS-PIE-NEXT:     0x203C0 R_MORELLO_RELATIVE - 0x0
-/// .capinit from_app
+/// .chericap from_app
 // RELS-PIE-NEXT:     0x203D0 R_MORELLO_RELATIVE - 0x1015D
-/// .capinit rodata
+/// .chericap rodata
 // RELS-PIE-NEXT:     0x203A0 R_MORELLO_CAPINIT rodata 0x0
-/// .capinit data
+/// .chericap data
 // RELS-PIE-NEXT:     0x203B0 R_MORELLO_CAPINIT data 0x0
 // RELS-PIE-NEXT:   }

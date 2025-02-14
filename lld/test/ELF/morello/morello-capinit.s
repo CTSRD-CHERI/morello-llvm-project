@@ -5,8 +5,8 @@
 // RUN: ld.lld --local-caprelocs=legacy %t.o -o %t1
 // RUN: llvm-readobj --cap-relocs --symbols %t1 | FileCheck %s
 
-/// Basics of the .capinit relocation using static linking.
-/// We create two capabilites via .capinit. These will produce R_MORELLO_CAPINIT
+/// Basics of the capinit relocation using static linking.
+/// We create two capabilites via .chericap. These will produce R_MORELLO_CAPINIT
 /// Relocations that the linker will use to create the __cap_relocs section.
 /// We also check that the linker creates the __cap_relocs_start and
 /// __cap_relocs_end symbols that a C-library can use to initialise the
@@ -17,16 +17,12 @@
  .type ptr1, %object
  .size ptr1, 16
 ptr1:
- .capinit str + 8
- .8byte 0
- .8byte 0
+ .chericap str + 8
 
  .type ptr2, %object
  .size ptr2, 16
 ptr2:
- .capinit str
- .8byte 0
- .8byte 0
+ .chericap str
 
 str:
  .string "Hello World"

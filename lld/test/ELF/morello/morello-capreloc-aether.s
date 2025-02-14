@@ -4,13 +4,9 @@
 // RUN: llvm-readobj --cap-relocs %t | FileCheck %s
 
 .data
-.capinit data_begin
-.8byte 0
-.8byte 0
+.chericap data_begin
 .balign 32
-.capinit data_end
-.8byte 0
-.8byte 0
+.chericap data_end
 
 // CHECK:      CHERI __cap_relocs [
 // CHECK-NEXT:   0x010060 ($d.0) Base: 0x10000 (data_begin+0) Length: 0 Perms: (RODATA)

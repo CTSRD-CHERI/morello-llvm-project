@@ -4,7 +4,7 @@
 // RUN: llvm-objdump --print-imm-hex --no-show-raw-insn -d --triple=aarch64-none-elf --mattr=+morello -s %t.so | FileCheck %s
 // RUN: llvm-readobj --symbols --relocations %t.so | FileCheck %s --check-prefix=RELS --check-prefix=SYMS
 /// code for a shared library, using global, hidden, local, imported, .got,
-/// .got.plt and .capinit
+/// .got.plt and .chericap
  .text
 
  .global globalfunc
@@ -70,70 +70,38 @@ caller:
  ldr  c17, [c17, :got_lo12: import]
 
  .data.rel.ro
- .capinit globalfunc
- .xword 0
- .xword 0
+ .chericap globalfunc
 // CHECK: Contents of section .data.rel.ro:
 // CHECK-NEXT:  206b0 e9050100 00000000 10000000 00000004
- .capinit hiddenfunc
- .xword 0
- .xword 0
+ .chericap hiddenfunc
 // CHECK-NEXT:  206c0 40020000 00000000 40070300 00000004
- .capinit localfunc
- .xword 0
- .xword 0
+ .chericap localfunc
 // CHECK-NEXT:  206d0 40020000 00000000 40070300 00000004
- .capinit importfunc
- .xword 0
- .xword 0
+ .chericap importfunc
 // CHECK-NEXT:  206e0 00000000 00000000 00000000 00000002
- .capinit global
- .xword 0
- .xword 0
+ .chericap global
 // CHECK-NEXT:  206f0 10090300 00000000 08000000 00000002
- .capinit hidden
- .xword 0
- .xword 0
+ .chericap hidden
 // CHECK-NEXT:  20700 18090300 00000000 08000000 00000002
- .capinit local
- .xword 0
- .xword 0
+ .chericap local
 // CHECK-NEXT:  20710 20090300 00000000 08000000 00000002
- .capinit import
- .xword 0
- .xword 0
+ .chericap import
 // CHECK-NEXT:  20720 00000000 00000000 00000000 00000002
- .capinit globalfunc + 4
- .xword 0
- .xword 0
+ .chericap globalfunc + 4
 // CHECK-NEXT:  20730 e9050100 00000000 10000000 00000004
- .capinit hiddenfunc + 8
- .xword 0
- .xword 0
+ .chericap hiddenfunc + 8
 // CHECK-NEXT:  20740 40020000 00000000 40070300 00000004
- .capinit localfunc + 12
- .xword 0
- .xword 0
+ .chericap localfunc + 12
 // CHECK-NEXT:  20750 40020000 00000000 40070300 00000004
- .capinit importfunc + 16
- .xword 0
- .xword 0
+ .chericap importfunc + 16
 // CHECK-NEXT:  20760 00000000 00000000 00000000 00000002
- .capinit global + 1
- .xword 0
- .xword 0
+ .chericap global + 1
 // CHECK-NEXT:  20770 10090300 00000000 08000000 00000002
- .capinit hidden + 2
- .xword 0
- .xword 0
+ .chericap hidden + 2
 // CHECK-NEXT:  20780 18090300 00000000 08000000 00000002
- .capinit local + 3
- .xword 0
- .xword 0
+ .chericap local + 3
 // CHECK-NEXT:  20790 20090300 00000000 08000000 00000002
- .capinit import +4
- .xword 0
- .xword 0
+ .chericap import +4
 // CHECK-NEXT:  207a0 00000000 00000000 00000000 00000002
 
 // CHECK: Contents of section .got:
@@ -228,21 +196,21 @@ caller:
 
 // RELS: Relocations [
 // RELS-NEXT:   Section {{.*}} .rela.dyn {
-/// .capinit hiddenfunc
+/// .chericap hiddenfunc
 // RELS-NEXT:     0x206C0 R_MORELLO_RELATIVE - 0x103B9
-/// .capinit localfunc
+/// .chericap localfunc
 // RELS-NEXT:     0x206D0 R_MORELLO_RELATIVE - 0x103C9
-/// .capinit hidden
+/// .chericap hidden
 // RELS-NEXT:     0x20700 R_MORELLO_RELATIVE - 0x0
-/// .capinit local
+/// .chericap local
 // RELS-NEXT:     0x20710 R_MORELLO_RELATIVE - 0x0
-/// .capinit hiddenfunc + 8
+/// .chericap hiddenfunc + 8
 // RELS-NEXT:     0x20740 R_MORELLO_RELATIVE - 0x103C1
-/// .capinit localfunc + 12
+/// .chericap localfunc + 12
 // RELS-NEXT:     0x20750 R_MORELLO_RELATIVE - 0x103D5
-/// .capinit hidden + 2
+/// .chericap hidden + 2
 // RELS-NEXT:     0x20780 R_MORELLO_RELATIVE - 0x2
-/// .capinit import + 4
+/// .chericap import + 4
 // RELS-NEXT:     0x20790 R_MORELLO_RELATIVE - 0x3
 /// .got hiddenfunc
 // RELS-NEXT:     0x208B0 R_MORELLO_RELATIVE - 0x103B9
