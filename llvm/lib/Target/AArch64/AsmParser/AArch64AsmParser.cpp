@@ -7056,6 +7056,8 @@ bool AArch64AsmParser::parseFeatures(StringRef ExtensionString,
 /// parseDirectiveCapInit
 ///   ::= .capinit Expr
 bool AArch64AsmParser::parseDirectiveCapInit(SMLoc L) {
+  Warning(L, ".capinit directive is deprecated; use .chericap and remove explicit allocation");
+
   SMLoc CapInitLoc = getLoc();
   bool HasCap = STI->getFeatureBits()[AArch64::FeatureMorello] != 0;
   if (!HasCap)
