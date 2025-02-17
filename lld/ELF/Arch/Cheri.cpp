@@ -748,8 +748,11 @@ uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
         getTargetSize<ELF64LE>({const_cast<InputSectionBase *>(isec), offset},
                                SymbolAndOffset(const_cast<Symbol *>(&sym), 0));
     // Increase bounds of executable capabilities.
-    if (isExecRel)
-      size = pccSize(isec->compartment);
+    if (isExecRel) {
+      auto c = sym.containingCompartment();
+      if (c)
+        size = pccSize(isec->compartment);
+    }
 
     return sizeAndPerm | (size << 8);
   }
@@ -761,8 +764,11 @@ uint64_t getMorelloBaseAddress(int64_t a, const Symbol &sym,
                                bool isExecRel) {
   uint64_t targetVA = sym.getVA(a);
   // Increase bounds of executable capabilities.
-  if (isExecRel)
-    targetVA = pccBase(isec->compartment);
+  if (isExecRel) {
+    auto c = sym.containingCompartment();
+    if (c)
+      targetVA = pccBase(*c);
+  }
   return targetVA;
 }
 

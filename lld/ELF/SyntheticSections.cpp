@@ -1709,17 +1709,20 @@ template <class ELFT> void DynamicSection<ELFT>::writeTo(uint8_t *buf) {
   }
 }
 
-static uint64_t calcAddend(const Compartment *c, int64_t va,
-                           const Symbol &sym) {
+static uint64_t calcAddend(int64_t va, const Symbol &sym) {
   if (!config->isCheriAbi)
     return va;
 
   if (sym.isTls())
     return va;
 
+  auto c = sym.containingCompartment();
+  if (!c)
+    return va;
+
   // Change addend of CHERI executable capabilities to account for the
   // aligned base.
-  return va - pccBase(c);
+  return va - pccBase(*c);
 }
 
 uint64_t DynamicReloc::getOffset() const {
@@ -1744,7 +1747,7 @@ int64_t DynamicReloc::computeAddend() const {
     assert(sym == nullptr);
     return getMipsPageAddr(outputSec->addr) + addend;
   case AArch64ExecRel:
-    return calcAddend(inputSec->compartment, sym->getVA(addend), *sym);
+    return calcAddend(sym->getVA(addend), *sym);
   }
   llvm_unreachable("Unknown DynamicReloc::Kind enum");
 }
