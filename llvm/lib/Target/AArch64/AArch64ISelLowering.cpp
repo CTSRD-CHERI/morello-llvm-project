@@ -8035,6 +8035,10 @@ SDValue AArch64TargetLowering::LowerGlobalAddress(SDValue Op,
                                    getGOT(GN, DAG, OpFlags);
   }
 
+  if (Op.getSimpleValueType() == MVT::iFATPTR128 && !IsLargeCM &&
+      Subtarget->hasC64())
+    return getFatGOT(GN, DAG, OpFlags);
+
   if (!IsLargeCM && Op.getSimpleValueType() == MVT::iFATPTR128) {
     MachineFunction &MF = DAG.getMachineFunction();
     AArch64FunctionInfo *FuncInfo = MF.getInfo<AArch64FunctionInfo>();
