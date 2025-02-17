@@ -52,6 +52,8 @@ bool AArch64ELFObjectWriter::needsRelocateWithSymbol(const MCSymbol &Sym,
   default:
     return false;
 
+  case ELF::R_MORELLO_ADR_GOT_PAGE:
+  case ELF::R_MORELLO_LD128_GOT_LO12_NC:
   case ELF::R_MORELLO_CAPINIT:
   case ELF::R_MORELLO_CODE_CAPINIT:
     return true;
