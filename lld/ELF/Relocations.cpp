@@ -1813,9 +1813,14 @@ static bool handleCrossCompartmentCall(Compartment *c, Symbol &sym) {
   aux->isInIplt = true;
 
   // Create an Iplt entry and the associated RELATIVE relocation.
+  RelType reltype;
+  if (config->cheriEmitCodePtrRelocs && target->relativeFuncRel.hasValue())
+    reltype = *target->relativeFuncRel;
+  else
+    reltype = target->relativeRel;
+
   sym.allocateAux(c);
-  addPltEntry(*iplt(c), *igotPlt(c), *in.relaIplt, target->relativeRel,
-              sym);
+  addPltEntry(*iplt(c), *igotPlt(c), *in.relaIplt, reltype, sym);
 
   if (aux->hasDirectReloc) {
     if (aux->needsGot)
