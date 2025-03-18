@@ -1801,7 +1801,9 @@ static bool handleCrossCompartmentCall(Compartment *c, Symbol &sym) {
     return false;
 
   auto symCompartment = sym.containingCompartment();
-  assert (symCompartment);
+  if (!symCompartment)
+    return false;
+
   if (*symCompartment == c)
     return false;
 
