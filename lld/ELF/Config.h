@@ -223,6 +223,7 @@ struct Configuration {
   bool mipsN32Abi = false;
   bool mmapOutputFile;
   bool nmagic;
+  bool noDefaultCompartment = false;
   bool noDynamicLinker = false;
   bool noinhibitExec;
   bool nostdlib;
