@@ -83,7 +83,7 @@ private:
   std::unique_ptr<FileOutputBuffer> &buffer;
 
   void addRelIpltSymbols();
-  void addCapDynRelocsSymbols();
+  void addRelDynSymbols();
   void addStartEndSymbols();
   void addStartStopSymbols(OutputSection &osec);
 
@@ -1132,7 +1132,7 @@ template <class ELFT> void Writer<ELFT>::addRelIpltSymbols() {
 // with __rela_dyn_{start,end} symbols if it is a statically linked
 // executable. The runtime needs these symbols in order to resolve
 // all RELATIVE relocs and create capabilities on startup.
-template <class ELFT> void Writer<ELFT>::addCapDynRelocsSymbols() {
+template <class ELFT> void Writer<ELFT>::addRelDynSymbols() {
   if (config->emachine != EM_AARCH64 || config->relocatable ||
       needsInterpSection())
     return;
@@ -1142,12 +1142,12 @@ template <class ELFT> void Writer<ELFT>::addCapDynRelocsSymbols() {
   // We'll override Out::elfHeader with in.relaDyn later when we are
   // sure that .rela.dyn exists in output.
   ElfSym::relaDynStart = addOptionalRegular(
-      config->isRela ? "__rela_dyn_start" : "__rel_dyn_start", Out::elfHeader,
-      0, STV_HIDDEN, STB_WEAK);
+      config->isRela ? "__rela_dyn_start" : "__rel_dyn_start",
+      Out::elfHeader, 0, STV_HIDDEN);
 
-  ElfSym::relaDynEnd =
-      addOptionalRegular(config->isRela ? "__rela_dyn_end" : "__rel_dyn_end",
-                         Out::elfHeader, 0, STV_HIDDEN, STB_WEAK);
+  ElfSym::relaDynEnd = addOptionalRegular(
+      config->isRela ? "__rela_dyn_end" : "__rel_dyn_end",
+      Out::elfHeader, 0, STV_HIDDEN);
 }
 
 // This function generates assignments for predefined symbols (e.g. _end or
@@ -2043,8 +2043,8 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
   // Define __rel[a]_iplt_{start,end} symbols if needed.
   addRelIpltSymbols();
 
-  // Define __rela_dyn_{start,end} symbols if needed.
-  addCapDynRelocsSymbols();
+  // Define __rel[a]_dyn_{start,end} symbols if needed.
+  addRelDynSymbols();
 
   // RISC-V's gp can address +/- 2 KiB, set it to .sdata + 0x800. This symbol
   // should only be defined in an executable. If .sdata does not exist, its
