@@ -273,8 +273,8 @@ static std::string computeDataLayout(const Triple &TT, StringRef FS,
   std::string Endian = LittleEndian ? "e" : "E";
   std::string Ptr32 = TT.getEnvironment() == Triple::GNUILP32 ? "-p:32:32" : "";
   std::string Cap = "";
-  if (FS.find("+c64") != StringRef::npos ||
-      FS.find("+morello") != StringRef::npos)
+  if (llvm::is_contained(llvm::split(FS, ','), "+c64") ||
+      llvm::is_contained(llvm::split(FS, ','), "+morello"))
     Cap = "-pf200:128:128:128:64";
   bool IsPurecap = Options.getABIName() == "purecap" ||
                    Options.getABIName() == "purecap-benchmark";
