@@ -1133,8 +1133,7 @@ template <class ELFT> void Writer<ELFT>::addRelIpltSymbols() {
 // executable. The runtime needs these symbols in order to resolve
 // all RELATIVE relocs and create capabilities on startup.
 template <class ELFT> void Writer<ELFT>::addRelDynSymbols() {
-  if (config->emachine != EM_AARCH64 || config->relocatable ||
-      needsInterpSection())
+  if (config->emachine != EM_AARCH64 || config->relocatable || config->isPic)
     return;
 
   // By default, __rela_dyn_{start,end} belong to a dummy section 0
