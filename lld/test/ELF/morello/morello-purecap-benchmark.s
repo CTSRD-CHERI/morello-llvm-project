@@ -9,30 +9,30 @@
 // RUN: llvm-objdump -s -j .got.plt %t/prog | FileCheck --check-prefix=GOTPLT %s
 
 // DISAS:      <_start>:
-// DISAS-NEXT:         bl   0x210320
+// DISAS-NEXT:         bl   0x210340
 
 // DISAS:      <.plt>:
-// DISAS-NEXT: 210300: stp  c16, c30, [csp, #-32]!
+// DISAS-NEXT: 210320: stp  c16, c30, [csp, #-32]!
 // DISAS-NEXT:         adrp c16, 0x230000
-// DISAS-NEXT:         ldr  c17, [c16, #1056]
-// DISAS-NEXT:         add  c16, c16, #1056
+// DISAS-NEXT:         ldr  c17, [c16, #1088]
+// DISAS-NEXT:         add  c16, c16, #1088
 // DISAS-NEXT:         br   x17
 // DISAS-NEXT:         nop
 // DISAS-NEXT:         nop
 // DISAS-NEXT:         nop
 
 // DISAS:      <foo@plt>:
-// DISAS-NEXT: 210320: adrp c16, 0x230000
-// DISAS-NEXT:         add  c16, c16, #1072
+// DISAS-NEXT: 210340: adrp c16, 0x230000
+// DISAS-NEXT:         add  c16, c16, #1104
 // DISAS-NEXT:         ldr  c17, [c16, #0]
 // DISAS-NEXT:         br   x17
 
 // GOTPLT: Contents of section .got.plt:
-// GOTPLT-NEXT: 230400 00000000 00000000 00000000 00000000
-// GOTPLT-NEXT: 230410 00000000 00000000 00000000 00000000
 // GOTPLT-NEXT: 230420 00000000 00000000 00000000 00000000
+// GOTPLT-NEXT: 230430 00000000 00000000 00000000 00000000
+// GOTPLT-NEXT: 230440 00000000 00000000 00000000 00000000
 /// &plt[0] with LSB 0 despite being C64
-// GOTPLT-NEXT: 230430 00032100 00000000 00000000 00000000
+// GOTPLT-NEXT: 230450 20032100 00000000 00000000 00000000
 
 //--- lib.s
 	.global	foo

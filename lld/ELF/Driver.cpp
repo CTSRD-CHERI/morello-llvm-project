@@ -2531,7 +2531,7 @@ template <class ELFT> static void readCheriVariants() {
 
     // TODO: warn/error if missing
     applyDefault(NT_CHERI_GLOBALS_ABI, CHERI_GLOBALS_ABI_PCREL);
-    // TODO: Set TLS default once LLVM emits it
+    applyDefault(NT_CHERI_TLS_ABI, CHERI_TLS_ABI_TRAD);
     switch (config->emachine) {
     case EM_AARCH64:
       applyDefault(NT_CHERI_MORELLO_PURECAP_BENCHMARK_ABI, 0);

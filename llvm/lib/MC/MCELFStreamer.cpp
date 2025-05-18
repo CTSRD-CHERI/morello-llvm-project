@@ -910,6 +910,9 @@ void MCELFStreamer::emitCHERINotes() {
     break;
   }
   emitCHERINote(Type, Variant);
+  Type = llvm::ELF::NT_CHERI_TLS_ABI;
+  Variant = llvm::ELF::CHERI_TLS_ABI_TRAD;
+  emitCHERINote(Type, Variant);
 }
 
 void MCELFStreamer::createCHERINotesSection() {

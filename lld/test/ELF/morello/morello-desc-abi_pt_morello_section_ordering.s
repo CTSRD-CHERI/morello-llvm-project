@@ -12,11 +12,11 @@
 // CHECK: Section Headers:
 // CHECK: Name              Type            Address          Off    Size
 // CHECK:                   NULL            0000000000000000 000000 000000
-// CHECK: .note.cheri       NOTE            0000000000200240 000240 000030
-// CHECK: .desc.data        PROGBITS        0000000000200270 000270 000020
-// CHECK: .other_ro         PROGBITS        0000000000200290 000290 000020
-// CHECK: .text             PROGBITS        00000000002102b0 0002b0 000000
-// CHECK: .data.rel.ro      PROGBITS        00000000002202b0 0002b0 000020
+// CHECK: .note.cheri       NOTE            0000000000200240 000240 000048
+// CHECK: .desc.data        PROGBITS        0000000000200288 000288 000020
+// CHECK: .other_ro         PROGBITS        00000000002002a8 0002a8 000020
+// CHECK: .text             PROGBITS        00000000002102c8 0002c8 000000
+// CHECK: .data.rel.ro      PROGBITS        00000000002202c8 0002c8 000020
 // CHECK: .desc.data.rel.ro PROGBITS        0000000000230000 010000 000020
 // CHECK: .preinit_array    PREINIT_ARRAY   0000000000230020 010020 000020
 // CHECK: .init_array       INIT_ARRAY      0000000000230040 010040 000020
@@ -29,7 +29,7 @@
 
 // CHECK: Program Headers:
 // CHECK:  Type           Offset   VirtAddr
-// CHECK:  GNU_RELRO      {{.*}}   0x00000000002202b0
+// CHECK:  GNU_RELRO      {{.*}}   0x00000000002202c8
 // CHECK:  MORELLO_DESC   {{.*}}   0x0000000000230000
 
 // CHECK: Section to Segment mapping:
@@ -59,7 +59,7 @@
 
 // GOTPLT_RELRO: Program Headers:
 // GOTPLT_RELRO:  Type           Offset   VirtAddr
-// GOTPLT_RELRO:  GNU_RELRO      {{.*}}   0x00000000002202b0
+// GOTPLT_RELRO:  GNU_RELRO      {{.*}}   0x00000000002202c8
 // GOTPLT_RELRO:  MORELLO_DESC   {{.*}}   0x0000000000230000
 
 // GOTPLT_RELRO: Section to Segment mapping:

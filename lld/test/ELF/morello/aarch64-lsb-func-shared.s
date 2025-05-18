@@ -21,14 +21,14 @@ bar:
 .size bar, . - bar
 
 // CHECK: Contents of section .got:
-// CHECK-NEXT: 203b0 00020000 00000000 c0010200 00000004
+// CHECK-NEXT: 203d0 00020000 00000000 00020200 00000004
 
 // RELS: Relocations [
 // RELS-NEXT: .rela.dyn {
-// RELS-NEXT:    0x203B0 R_MORELLO_RELATIVE - 0x100EC
+// RELS-NEXT:    0x203D0 R_MORELLO_RELATIVE - 0x10104
 
 // SYMS: Name: bar
-// SYMS-NEXT: Value: 0x102EC
+// SYMS-NEXT: Value: 0x10304
 // SYMS-NEXT: Size: 4
 // SYMS-NEXT: Binding: Global
 // SYMS-NEXT: Type: Function

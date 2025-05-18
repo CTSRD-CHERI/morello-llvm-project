@@ -24,35 +24,35 @@ _start:
 // SEC-NEXT:     SHF_ALLOC
 // SEC-NEXT:     SHF_INFO_LINK
 // SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x200230
+// SEC-NEXT:   Address: 0x200248
 // SEC:     Name: .text
 // SEC-NEXT:     Type: SHT_PROGBITS
 // SEC-NEXT:     Flags [
 // SEC-NEXT:    SHF_ALLOC
 // SEC-NEXT:    SHF_EXECINSTR
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x210290
+// SEC-NEXT:     Address: 0x2102A8
 // SEC:     Name: function
 // SEC-NEXT:     Type: SHT_PROGBITS
 // SEC-NEXT:     Flags [
 // SEC-NEXT:    SHF_ALLOC
 // SEC-NEXT:    SHF_EXECINSTR
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x210298
+// SEC-NEXT:     Address: 0x2102B0
 // SEC:     Name: ifunction
 // SEC-NEXT:     Type: SHT_PROGBITS
 // SEC-NEXT:     Flags [
 // SEC-NEXT:    SHF_ALLOC
 // SEC-NEXT:    SHF_EXECINSTR
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x21029C
+// SEC-NEXT:     Address: 0x2102B4
 // SEC:     Name: .iplt
 // SEC-NEXT:     Type: SHT_PROGBITS
 // SEC-NEXT:     Flags [
 // SEC-NEXT:    SHF_ALLOC
 // SEC-NEXT:    SHF_EXECINSTR
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x2102A0
+// SEC-NEXT:     Address: 0x2102C0
 // SEC-NEXT:     Offset:
 // SEC-NEXT:     Size: 16
 // SEC: Name: .got.plt
@@ -76,10 +76,10 @@ _start:
 
 // RELOCS: Relocations [
 // RELOCS-NEXT:   .rela.dyn {
-// RELOCS-NEXT:     0x230040 R_MORELLO_DESC_FUNC_RELATIVE - 0x10099
-// RELOCS-NEXT:     0x230050 R_MORELLO_DESC_FUNC_RELATIVE - 0x10099
-// RELOCS-NEXT:     0x230060 R_MORELLO_DESC_FUNC_RELATIVE - 0x100A0
-// RELOCS-NEXT:     0x230000 R_MORELLO_DESC_IRELATIVE - 0x1009D
+// RELOCS-NEXT:     0x230040 R_MORELLO_DESC_FUNC_RELATIVE - 0x100B1
+// RELOCS-NEXT:     0x230050 R_MORELLO_DESC_FUNC_RELATIVE - 0x100B1
+// RELOCS-NEXT:     0x230060 R_MORELLO_DESC_FUNC_RELATIVE - 0x100C0
+// RELOCS-NEXT:     0x230000 R_MORELLO_DESC_IRELATIVE - 0x100B5
 // RELOCS-NEXT:   }
 // RELOCS-NEXT: ]
 
@@ -107,14 +107,14 @@ _start:
 // SYM-NEXT:   Other: 0
 // SYM-NEXT:   Section: .data
 // SYM:   Name: func
-// SYM-NEXT:   Value: 0x210299
+// SYM-NEXT:   Value: 0x2102B1
 // SYM-NEXT:   Size: 3
 // SYM-NEXT:   Binding: Global
 // SYM-NEXT:   Type: Function
 // SYM-NEXT:   Other: 0
 // SYM-NEXT:   Section: function
 // SYM:   Name: ifunc
-// SYM-NEXT:   Value: 0x2102A0
+// SYM-NEXT:   Value: 0x2102C0
 // SYM-NEXT:   Size: 0
 // SYM-NEXT:   Binding: Global
 // SYM-NEXT:   Type: Function
@@ -124,11 +124,11 @@ _start:
 // NOCAPRELOCS:   There is no __cap_relocs section in the file.
 // CAPRELOCS-NOT:   There is no __cap_relocs section in the file.
 
-// DIS: 00000000002102a0 <ifunc>:
-// DIS-NEXT: 2102a0:    adrdp c16, 0x0
-// DIS-NEXT: 2102a4:    add c16, c16, #0x0
-// DIS-NEXT: 2102a8:    ldr c29, [c16, #0x0]
-// DIS-NEXT: 2102ac:    ldpbr c29, [c29]
+// DIS: 00000000002102c0 <ifunc>:
+// DIS-NEXT: 2102c0:    adrdp c16, 0x0
+// DIS-NEXT: 2102c4:    add c16, c16, #0x0
+// DIS-NEXT: 2102c8:    ldr c29, [c16, #0x0]
+// DIS-NEXT: 2102cc:    ldpbr c29, [c29]
 
 
 // SHARED_RELOCS: Relocations

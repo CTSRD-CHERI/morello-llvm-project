@@ -34,23 +34,23 @@ from_app:
 
 // CHECK: Contents of section .data.rel.ro:
 /// rodata (shlib.so) rw (default) size 8
-// CHECK-NEXT:  2203a0 00000000 00000000 08000000 00000002
+// CHECK-NEXT:  2203c0 00000000 00000000 08000000 00000002
 /// data (shlib.so) rw (default) size 8
-// CHECK-NEXT:  2203b0 00000000 00000000 08000000 00000002
-/// appdata 0x230440 rw size 8
-// CHECK-NEXT:  2203c0 b0042300 00000000 08000000 00000002
+// CHECK-NEXT:  2203d0 00000000 00000000 08000000 00000002
+/// appdata 0x2304d0 rw size 8
+// CHECK-NEXT:  2203e0 d0042300 00000000 08000000 00000002
 /// from_app 21032c exec size 4
-// CHECK-NEXT:  2203d0 40022000 00000000 60010100 00000004
+// CHECK-NEXT:  2203f0 40022000 00000000 80010100 00000004
 
 // CHECK-PIE: Contents of section .data.rel.ro:
 /// rodata (shlib.so) rw (default) size 8
-// CHECK-PIE-NEXT:  203a0 00000000 00000000 08000000 00000002
+// CHECK-PIE-NEXT:  203c0 00000000 00000000 08000000 00000002
 /// data (shlib.so) rw (default) size 8
-// CHECK-PIE-NEXT:  203b0 00000000 00000000 08000000 00000002
-/// appdata 0x30450 rw size 8
-// CHECK-PIE-NEXT:  203c0 c0040300 00000000 08000000 00000002
+// CHECK-PIE-NEXT:  203d0 00000000 00000000 08000000 00000002
+/// appdata 0x304e0 rw size 8
+// CHECK-PIE-NEXT:  203e0 e0040300 00000000 08000000 00000002
 /// from_app 1032c exec size 4
-// CHECK-PIE-NEXT:  203d0 40020000 00000000 60010100 00000004
+// CHECK-PIE-NEXT:  203f0 40020000 00000000 80010100 00000004
 
  .data
  .global appdata
@@ -59,22 +59,22 @@ from_app:
 appdata: .xword 8
 
 // CHECK: Contents of section .data:
-// CHECK-NEXT:  2304b0 08000000 00000000
+// CHECK-NEXT:  2304d0 08000000 00000000
 
 // CHECK-PIE: Contents of section .data:
-// CHECK-PIE-NEXT:  304c0 08000000 00000000
+// CHECK-PIE-NEXT:  304e0 08000000 00000000
 
 // CHECK-LABEL: <_start>:
-// CHECK-NEXT:   210398:        ret
+// CHECK-NEXT:   2103b0:        ret
 
 // CHECK-LABEL: <from_app>:
-// CHECK-NEXT:   21039c:        ret
+// CHECK-NEXT:   2103b4:        ret
 
 // CHECK-PIE-LABEL: <_start>:
-// CHECK-PIE-NEXT:    10398:            ret
+// CHECK-PIE-NEXT:    103b0:            ret
 
 // CHECK-PIE-LABEL: <from_app>:
-// CHECK-PIE-NEXT:    1039c:            ret
+// CHECK-PIE-NEXT:    103b4:            ret
 
 /// Check that the dynamic table holds the correct number of RELATIVE relocs
 // RELS: DynamicSection [
@@ -83,13 +83,13 @@ appdata: .xword 8
 // RELS: Relocations [
 // RELS-NEXT:   Section {{.*}} .rela.dyn {
 /// .chericap appdata
-// RELS-NEXT:     0x2203C0 R_MORELLO_RELATIVE - 0x0
+// RELS-NEXT:     0x2203E0 R_MORELLO_RELATIVE - 0x0
 /// .chericap from_app
-// RELS-NEXT:     0x2203D0 R_MORELLO_RELATIVE - 0x1015D
+// RELS-NEXT:     0x2203F0 R_MORELLO_RELATIVE - 0x10175
 /// .chericap rodata
-// RELS-NEXT:     0x2203A0 R_MORELLO_CAPINIT rodata 0x0
+// RELS-NEXT:     0x2203C0 R_MORELLO_CAPINIT rodata 0x0
 /// .chericap data
-// RELS-NEXT:     0x2203B0 R_MORELLO_CAPINIT data 0x0
+// RELS-NEXT:     0x2203D0 R_MORELLO_CAPINIT data 0x0
 // RELS-NEXT:   }
 
 /// Check that the dynamic table holds the correct number of RELATIVE relocs
@@ -99,11 +99,11 @@ appdata: .xword 8
 // RELS-PIE: Relocations [
 // RELS-PIE-NEXT:   Section {{.*}} .rela.dyn {
 /// .chericap appdata
-// RELS-PIE-NEXT:     0x203C0 R_MORELLO_RELATIVE - 0x0
+// RELS-PIE-NEXT:     0x203E0 R_MORELLO_RELATIVE - 0x0
 /// .chericap from_app
-// RELS-PIE-NEXT:     0x203D0 R_MORELLO_RELATIVE - 0x1015D
+// RELS-PIE-NEXT:     0x203F0 R_MORELLO_RELATIVE - 0x10175
 /// .chericap rodata
-// RELS-PIE-NEXT:     0x203A0 R_MORELLO_CAPINIT rodata 0x0
+// RELS-PIE-NEXT:     0x203C0 R_MORELLO_CAPINIT rodata 0x0
 /// .chericap data
-// RELS-PIE-NEXT:     0x203B0 R_MORELLO_CAPINIT data 0x0
+// RELS-PIE-NEXT:     0x203D0 R_MORELLO_CAPINIT data 0x0
 // RELS-PIE-NEXT:   }

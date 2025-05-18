@@ -90,21 +90,21 @@ _start:
 // CHECK: CHERI __cap_relocs [
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Location: 0x230000 ($d.4)
-// CHECK-NEXT:     Base: small (0x200210)
+// CHECK-NEXT:     Base: small (0x200230)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 1
 // CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Location: 0x230010
-// CHECK-NEXT:     Base: no_alignment (0x200211)
+// CHECK-NEXT:     Base: no_alignment (0x200231)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 16383
 // CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Location: 0x230020
-// CHECK-NEXT:     Base: rodata2_start (0x204210)
+// CHECK-NEXT:     Base: rodata2_start (0x204230)
 // CHECK-NEXT:     Offset: 4
 // CHECK-NEXT:     Length: 16392
 // CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)

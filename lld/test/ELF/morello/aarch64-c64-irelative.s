@@ -26,15 +26,15 @@ from_app:
  .size from_app, .-from_app
 
 
-// CHECK:   0x2304E0 R_MORELLO_IRELATIVE - 0x10111
+// CHECK:   0x2304F0 R_MORELLO_IRELATIVE - 0x10129
 // CHECK:      Name: from_app
-// CHECK-NEXT: Value: 0x210351
+// CHECK-NEXT: Value: 0x210369
 
 /// Fragment should be so that base + addend = from_app value
-// CHECK: 0x002304e0 40022000 00000000 c0020300 00000004
+// CHECK: 0x002304f0 40022000 00000000 c0020300 00000004
 
-// PIE:    0x304F0 R_MORELLO_IRELATIVE - 0x10111
+// PIE:    0x30500 R_MORELLO_IRELATIVE - 0x10129
 // PIE:      Name: from_app
-// PIE-NEXT: Value: 0x10351
+// PIE-NEXT: Value: 0x10369
 /// Fragment should be so that base + addend = from_app value
-// PIE: 0x000304f0 40020000 00000000 c0020300 00000004
+// PIE: 0x00030500 40020000 00000000 00030300 00000004
