@@ -606,6 +606,9 @@ def no_cheri_large_cap_table : Flag<["-"], "no-mxcaptable">, Flags<[NoXarchOptio
 
 def cheri_tgot_tls : Flag<["-"], "cheri-tgot-tls">, Group<cheri_Group>,
   HelpText<"Use TGOT for CHERI TLS">;
+def cheri_tgot_tls_compat : Flag<["-"], "cheri-tgot-tls=compat">, Group<cheri_Group>,
+  HelpText<"Use TGOT for CHERI TLS but keep ABI-compatible with traditional CHERI TLS "
+           "(less-optimised at both compile time and link time)">;
 def no_cheri_tgot_tls : Flag<["-"], "no-cheri-tgot-tls">, Group<cheri_Group>,
   HelpText<"Use traditional CHERI TLS">;
 

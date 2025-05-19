@@ -1775,8 +1775,8 @@ static void addMorelloFlags(const ArgList &Args, ArgStringList &CmdArgs,
     CmdArgs.push_back("--cheri-codeptr-relocs");
   }
 
-  if (Args.hasFlag(options::OPT_cheri_tgot_tls, options::OPT_no_cheri_tgot_tls,
-                   false)) {
+  if (Args.hasFlag(options::OPT_cheri_tgot_tls, options::OPT_cheri_tgot_tls_compat,
+                   options::OPT_no_cheri_tgot_tls, false)) {
     CmdArgs.push_back("-mllvm");
     CmdArgs.push_back("-cheri-tgot-tls");
   }

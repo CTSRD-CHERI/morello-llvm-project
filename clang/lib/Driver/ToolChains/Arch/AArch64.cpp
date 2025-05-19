@@ -539,6 +539,10 @@ void aarch64::getAArch64TargetFeatures(const Driver &D,
   if (Arg *A = Args.getLastArg(options::OPT_m16_cap_regs))
     Features.push_back("+use-16-cap-regs");
 
+  if (!Args.hasFlag(options::OPT_cheri_tgot_tls, options::OPT_no_cheri_tgot_tls,
+                    options::OPT_cheri_tgot_tls_compat, true))
+    Features.push_back("+morello-tgot-tls-compat");
+
   int V8Version = -1;
   int V9Version = -1;
   bool HasNoSM4 = false;
