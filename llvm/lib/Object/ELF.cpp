@@ -806,6 +806,16 @@ StringRef llvm::object::getELFCheriVariant(uint32_t Machine, unsigned Type,
     }
     break;
   case ELF::NT_CHERI_TLS_ABI:
+    switch (Machine) {
+      case ELF::EM_AARCH64:
+        switch (Variant) {
+          STRINGIFY_ENUM_CASE(ELF, CHERI_TLS_ABI_MORELLO_MIXED);
+          STRINGIFY_ENUM_CASE(ELF, CHERI_TLS_ABI_MORELLO_TGOT_COMPAT);
+        }
+        break;
+      default:
+        break;
+    }
     switch (Variant) {
       STRINGIFY_ENUM_CASE(ELF, CHERI_TLS_ABI_TRAD);
       STRINGIFY_ENUM_CASE(ELF, CHERI_TLS_ABI_TGOT);

@@ -6004,7 +6004,19 @@ getCHERINote(unsigned Machine, uint32_t NoteType, ArrayRef<uint8_t> Desc) {
       CHERI_VARIANT_CASE(CHERI_TLS_ABI_TRAD, "traditional");
       CHERI_VARIANT_CASE(CHERI_TLS_ABI_TGOT, "TGOT-based");
     default:
-      return std::nullopt;
+      switch (Machine) {
+      case ELF::EM_AARCH64:
+        switch (Variant) {
+          CHERI_VARIANT_CASE(CHERI_TLS_ABI_MORELLO_MIXED, "mixed traditional/TGOT-based");
+          CHERI_VARIANT_CASE(CHERI_TLS_ABI_MORELLO_TGOT_COMPAT, "TGOT-based, traditional-compatible");
+        default:
+          return std::nullopt;
+        }
+        break;
+      default:
+        return std::nullopt;
+      }
+      break;
     }
     break;
   default:

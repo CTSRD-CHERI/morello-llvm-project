@@ -1675,6 +1675,9 @@ enum : unsigned {
 enum : unsigned {
   CHERI_TLS_ABI_TRAD = 0,
   CHERI_TLS_ABI_TGOT = 1,
+
+  CHERI_TLS_ABI_MORELLO_MIXED = 0x80000000,
+  CHERI_TLS_ABI_MORELLO_TGOT_COMPAT = 0x80000001,
 };
 
 // GNU note types.
