@@ -9340,6 +9340,9 @@ AArch64TargetLowering::LowerELFGlobalTLSAddress(SDValue Op,
       Model = TLSModel::GeneralDynamic;
   }
 
+  if (Subtarget->hasMorelloTgotTlsCompat() && Model == TLSModel::LocalExec)
+    Model = TLSModel::InitialExec;
+
   if (MCTargetOptions::useTLSGDForPurecap() && HasC64)
     Model = TLSModel::GeneralDynamic;
 

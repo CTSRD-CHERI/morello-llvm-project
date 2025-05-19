@@ -161,6 +161,9 @@ MCOperand AArch64MCInstLower::lowerSymbolOperandELF(const MachineOperand &MO,
           Model == TLSModel::LocalDynamic)
         Model = TLSModel::GeneralDynamic;
 
+      if (MF->getSubtarget<AArch64Subtarget>().hasMorelloTgotTlsCompat() &&
+          Model == TLSModel::LocalExec)
+        Model = TLSModel::InitialExec;
     } else {
       assert(MO.isSymbol() &&
              StringRef(MO.getSymbolName()) == "_TLS_MODULE_BASE_" &&
