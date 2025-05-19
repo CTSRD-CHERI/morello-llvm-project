@@ -74,6 +74,7 @@ public:
         {"fixup_morello_pcrel_branch26", 0, 26, PCRelFlagVal },
         {"fixup_morello_pcrel_call26", 0, 26, PCRelFlagVal },
         {"fixup_morello_tlsdesc_call", 0, 0, 0},
+        {"fixup_morello_tgot_tlsdesc_call", 0, 0, 0},
         {"fixup_morello_pcrel_branch14", 5, 14, PCRelFlagVal},
         {"fixup_morello_pcrel_branch19", 5, 19, PCRelFlagVal}};
 
@@ -392,6 +393,7 @@ unsigned AArch64AsmBackend::getFixupKindContainereSizeInBytes(unsigned Kind) con
     return 16;
 
   case AArch64::fixup_morello_tlsdesc_call:
+  case AArch64::fixup_morello_tgot_tlsdesc_call:
   case AArch64::fixup_aarch64_movw:
   case AArch64::fixup_aarch64_pcrel_branch14:
   case AArch64::fixup_morello_pcrel_branch14:

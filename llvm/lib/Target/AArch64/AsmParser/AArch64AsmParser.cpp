@@ -191,6 +191,7 @@ private:
   bool parseDirectiveInst(SMLoc L);
 
   bool parseDirectiveTLSDescCall(SMLoc L);
+  bool parseDirectiveTGOTTLSDescCall(SMLoc L);
 
   bool parseDirectiveCapInit(SMLoc L);
 
@@ -936,7 +937,11 @@ public:
         ELFRefKind == AArch64MCExpr::VK_TPREL_LO12 ||
         ELFRefKind == AArch64MCExpr::VK_TPREL_LO12_NC ||
         ELFRefKind == AArch64MCExpr::VK_GOTTPREL_LO12_NC ||
+        ELFRefKind == AArch64MCExpr::VK_TGOT_LO12 ||
+        ELFRefKind == AArch64MCExpr::VK_TGOT_LO12_NC ||
+        ELFRefKind == AArch64MCExpr::VK_GOTTGOT_LO12_NC ||
         ELFRefKind == AArch64MCExpr::VK_TLSDESC_LO12 ||
+        ELFRefKind == AArch64MCExpr::VK_TGOT_TLSDESC_LO12 ||
         ELFRefKind == AArch64MCExpr::VK_SECREL_LO12 ||
         ELFRefKind == AArch64MCExpr::VK_SECREL_HI12 ||
         ELFRefKind == AArch64MCExpr::VK_GOT_PAGE_LO15) {
@@ -1070,7 +1075,12 @@ public:
           || ELFRefKind == AArch64MCExpr::VK_TPREL_HI12
           || ELFRefKind == AArch64MCExpr::VK_TPREL_LO12
           || ELFRefKind == AArch64MCExpr::VK_TPREL_LO12_NC
+          || ELFRefKind == AArch64MCExpr::VK_TGOT_HI12
+          || ELFRefKind == AArch64MCExpr::VK_TGOT_LO12
+          || ELFRefKind == AArch64MCExpr::VK_TGOT_LO12_NC
+          || ELFRefKind == AArch64MCExpr::VK_GOTTGOT_LO12_NC
           || ELFRefKind == AArch64MCExpr::VK_TLSDESC_LO12
+          || ELFRefKind == AArch64MCExpr::VK_TGOT_TLSDESC_LO12
           || ELFRefKind == AArch64MCExpr::VK_SECREL_HI12
           || ELFRefKind == AArch64MCExpr::VK_SECREL_LO12
           || ELFRefKind == AArch64MCExpr::VK_GOTTPREL_LO12_NC;
@@ -1210,7 +1220,8 @@ public:
          AArch64MCExpr::VK_SIZE_G1, AArch64MCExpr::VK_SIZE_G1_NC,
          AArch64MCExpr::VK_PREL_G1_NC, AArch64MCExpr::VK_GOTTPREL_G1,
          AArch64MCExpr::VK_TPREL_G1, AArch64MCExpr::VK_TPREL_G1_NC,
-         AArch64MCExpr::VK_DTPREL_G1, AArch64MCExpr::VK_DTPREL_G1_NC});
+         AArch64MCExpr::VK_DTPREL_G1, AArch64MCExpr::VK_DTPREL_G1_NC,
+         AArch64MCExpr::VK_TGOT_G1});
   }
 
   bool isMovWSymbolG0() const {
@@ -1220,7 +1231,8 @@ public:
          AArch64MCExpr::VK_SIZE_G0, AArch64MCExpr::VK_SIZE_G0_NC,
          AArch64MCExpr::VK_PREL_G0_NC, AArch64MCExpr::VK_GOTTPREL_G0_NC,
          AArch64MCExpr::VK_TPREL_G0, AArch64MCExpr::VK_TPREL_G0_NC,
-         AArch64MCExpr::VK_DTPREL_G0, AArch64MCExpr::VK_DTPREL_G0_NC});
+         AArch64MCExpr::VK_DTPREL_G0, AArch64MCExpr::VK_DTPREL_G0_NC,
+         AArch64MCExpr::VK_TGOT_G0, AArch64MCExpr::VK_TGOT_G0_NC});
   }
 
   template<int RegWidth, int Shift>
@@ -3406,7 +3418,9 @@ ParseStatus AArch64AsmParser::tryParseAdrpLabel(OperandVector &Operands) {
                ELFRefKind != AArch64MCExpr::VK_GOT_PAGE &&
                ELFRefKind != AArch64MCExpr::VK_GOT_PAGE_LO15 &&
                ELFRefKind != AArch64MCExpr::VK_GOTTPREL_PAGE &&
-               ELFRefKind != AArch64MCExpr::VK_TLSDESC_PAGE) {
+               ELFRefKind != AArch64MCExpr::VK_GOTTGOT_PAGE &&
+               ELFRefKind != AArch64MCExpr::VK_TLSDESC_PAGE &&
+               ELFRefKind != AArch64MCExpr::VK_TGOT_TLSDESC_PAGE) {
       // The operand must be an @page or @gotpage qualified symbolref.
       return Error(S, "page or gotpage label reference expected");
     }
@@ -4579,6 +4593,7 @@ bool AArch64AsmParser::parseSymbolicImmVal(const MCExpr *&ImmVal) {
                   .Case("tprel_lo12", AArch64MCExpr::VK_TPREL_LO12)
                   .Case("tprel_lo12_nc", AArch64MCExpr::VK_TPREL_LO12_NC)
                   .Case("tlsdesc_lo12", AArch64MCExpr::VK_TLSDESC_LO12)
+                  .Case("tgot_tlsdesc_lo12", AArch64MCExpr::VK_TGOT_TLSDESC_LO12)
                   .Case("got", AArch64MCExpr::VK_GOT_PAGE)
                   .Case("gotpage_lo15", AArch64MCExpr::VK_GOT_PAGE_LO15)
                   .Case("got_lo12", AArch64MCExpr::VK_GOT_LO12)
@@ -4586,7 +4601,16 @@ bool AArch64AsmParser::parseSymbolicImmVal(const MCExpr *&ImmVal) {
                   .Case("gottprel_lo12", AArch64MCExpr::VK_GOTTPREL_LO12_NC)
                   .Case("gottprel_g1", AArch64MCExpr::VK_GOTTPREL_G1)
                   .Case("gottprel_g0_nc", AArch64MCExpr::VK_GOTTPREL_G0_NC)
+                  .Case("tgot_g1", AArch64MCExpr::VK_TGOT_G1)
+                  .Case("tgot_g0", AArch64MCExpr::VK_TGOT_G0)
+                  .Case("tgot_g0_nc", AArch64MCExpr::VK_TGOT_G0_NC)
+                  .Case("tgot", AArch64MCExpr::VK_TGOT_HI12)
+                  .Case("tgot_lo12", AArch64MCExpr::VK_TGOT_LO12)
+                  .Case("tgot_lo12_nc", AArch64MCExpr::VK_TGOT_LO12_NC)
+                  .Case("gottgot", AArch64MCExpr::VK_GOTTGOT_PAGE)
+                  .Case("gottgot_lo12", AArch64MCExpr::VK_GOTTGOT_LO12_NC)
                   .Case("tlsdesc", AArch64MCExpr::VK_TLSDESC_PAGE)
+                  .Case("tgot_tlsdesc", AArch64MCExpr::VK_TGOT_TLSDESC_PAGE)
                   .Case("secrel_lo12", AArch64MCExpr::VK_SECREL_LO12)
                   .Case("secrel_hi12", AArch64MCExpr::VK_SECREL_HI12)
                   .Default(AArch64MCExpr::VK_INVALID);
@@ -7147,6 +7171,8 @@ bool AArch64AsmParser::ParseDirective(AsmToken DirectiveID) {
     parseDirectiveCPU(Loc);
   else if (IDVal == ".tlsdesccall")
     parseDirectiveTLSDescCall(Loc);
+  else if (IDVal == ".tgot_tlsdesccall")
+    parseDirectiveTGOTTLSDescCall(Loc);
   else if (IDVal == ".ltorg" || IDVal == ".pool")
     parseDirectiveLtorg(Loc);
   else if (IDVal == ".unreq")
@@ -7617,6 +7643,28 @@ bool AArch64AsmParser::parseDirectiveTLSDescCall(SMLoc L) {
 
   MCInst Inst;
   Inst.setOpcode(AArch64::TLSDESCCALL);
+  Inst.addOperand(MCOperand::createExpr(Expr));
+
+  getParser().getStreamer().emitInstruction(Inst, getSTI());
+  return false;
+}
+
+// parseDirectiveTGOTTLSDescCall:
+//   ::= .tgot_tlsdesccall symbol
+bool AArch64AsmParser::parseDirectiveTGOTTLSDescCall(SMLoc L) {
+  StringRef Name;
+  if (check(getParser().parseIdentifier(Name), L,
+            "expected symbol after directive") ||
+      parseToken(AsmToken::EndOfStatement))
+    return true;
+
+  MCSymbol *Sym = getContext().getOrCreateSymbol(Name);
+  const MCExpr *Expr = MCSymbolRefExpr::create(Sym, getContext());
+  Expr = AArch64MCExpr::create(Expr, AArch64MCExpr::VK_TGOT_TLSDESC,
+                               getContext());
+
+  MCInst Inst;
+  Inst.setOpcode(AArch64::TGOT_TLSDESCCALL);
   Inst.addOperand(MCOperand::createExpr(Expr));
 
   getParser().getStreamer().emitInstruction(Inst, getSTI());

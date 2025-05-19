@@ -74,6 +74,7 @@ StringRef AArch64MCExpr::getVariantKindName() const {
   case VK_TPREL_LO12:          return ":tprel_lo12:";
   case VK_TPREL_LO12_NC:       return ":tprel_lo12_nc:";
   case VK_TLSDESC_LO12:        return ":tlsdesc_lo12:";
+  case VK_TGOT_TLSDESC_LO12:   return ":tgot_tlsdesc_lo12:";
   case VK_ABS_PAGE:            return "";
   case VK_ABS_PAGE_NC:         return ":pg_hi21_nc:";
   case VK_GOT:                 return ":got:";
@@ -85,8 +86,18 @@ StringRef AArch64MCExpr::getVariantKindName() const {
   case VK_GOTTPREL_LO12_NC:    return ":gottprel_lo12:";
   case VK_GOTTPREL_G1:         return ":gottprel_g1:";
   case VK_GOTTPREL_G0_NC:      return ":gottprel_g0_nc:";
+  case VK_TGOT_G1:             return ":tgot_g1:";
+  case VK_TGOT_G0:             return ":tgot_g0:";
+  case VK_TGOT_G0_NC:          return ":tgot_g0_nc:";
+  case VK_TGOT_HI12:           return ":tgot:";
+  case VK_TGOT_LO12:           return ":tgot_lo12:";
+  case VK_TGOT_LO12_NC:        return ":tgot_lo12_nc:";
+  case VK_GOTTGOT_PAGE:        return ":gottgot:";
+  case VK_GOTTGOT_LO12_NC:     return ":gottgot_lo12:";
   case VK_TLSDESC:             return "";
   case VK_TLSDESC_PAGE:        return ":tlsdesc:";
+  case VK_TGOT_TLSDESC:        return "";
+  case VK_TGOT_TLSDESC_PAGE:   return ":tgot_tlsdesc:";
   case VK_SECREL_LO12:         return ":secrel_lo12:";
   case VK_SECREL_HI12:         return ":secrel_hi12:";
   default:
@@ -156,6 +167,9 @@ void AArch64MCExpr::fixELFSymbolsInTLSFixups(MCAssembler &Asm) const {
   case VK_GOTTPREL:
   case VK_TPREL:
   case VK_TLSDESC:
+  case VK_GOTTGOT:
+  case VK_TGOT:
+  case VK_TGOT_TLSDESC:
     break;
   }
 

@@ -2002,4 +2002,10 @@ def TLSDESC_C64_CALLSEQ
       Sched<[WriteI, WriteLD, WriteI, WriteBrReg]>;
 def : Pat<(AArch64C64tlsdesc_callseq texternalsym:$sym),
           (TLSDESC_C64_CALLSEQ texternalsym:$sym)>;
+
+// See TLSDESCCALL
+let hasSideEffects = 1 in
+def TGOT_TLSDESCCALL : Pseudo<(outs), (ins i64imm:$sym), []>, Sched<[]> {
+  let AsmString = ".tgot_tlsdesccall $sym";
+}
 }

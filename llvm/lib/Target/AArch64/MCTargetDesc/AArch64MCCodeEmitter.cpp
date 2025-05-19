@@ -762,6 +762,12 @@ void AArch64MCCodeEmitter::encodeInstruction(const MCInst &MI,
     return;
   }
 
+  if (MI.getOpcode() == AArch64::TGOT_TLSDESCCALL) {
+    auto Fixup = MCFixupKind(AArch64::fixup_morello_tgot_tlsdesc_call);
+    Fixups.push_back(MCFixup::create(0, MI.getOperand(0).getExpr(), Fixup));
+    return;
+  }
+
   if (MI.getOpcode() == AArch64::SPACE) {
     // SPACE just increases basic block size, in both cases no actual code.
     return;

@@ -179,8 +179,12 @@ unsigned AArch64ELFObjectWriter::getRelocType(MCContext &Ctx,
         return ELF::R_MORELLO_ADR_GOT_PAGE;
       if (SymLoc == AArch64MCExpr::VK_TLSDESC && !IsNC)
         return ELF::R_MORELLO_TLSDESC_ADR_PAGE20;
+      if (SymLoc == AArch64MCExpr::VK_TGOT_TLSDESC && !IsNC)
+        return ELF::R_MORELLO_TGOT_TLSDESC_ADR_PAGE20;
       if (SymLoc == AArch64MCExpr::VK_GOTTPREL && !IsNC)
         return ELF::R_MORELLO_TLSIE_ADR_GOTTPREL_PAGE20;
+      if (SymLoc == AArch64MCExpr::VK_GOTTGOT && !IsNC)
+        return ELF::R_MORELLO_TLSIE_ADR_GOTTGOT_PAGE20;
       Ctx.reportError(Fixup.getLoc(),
                       "invalid symbol kind for ADRP relocation");
       return ELF::R_AARCH64_NONE;
@@ -264,6 +268,8 @@ unsigned AArch64ELFObjectWriter::getRelocType(MCContext &Ctx,
         return R_CLS(TLSLD_ADD_DTPREL_HI12);
       if (RefKind == AArch64MCExpr::VK_TPREL_HI12)
         return R_CLS(TLSLE_ADD_TPREL_HI12);
+      if (RefKind == AArch64MCExpr::VK_TGOT_HI12)
+        return ELF::R_MORELLO_TLSLE_ADD_TGOT_HI12;
       if (RefKind == AArch64MCExpr::VK_DTPREL_LO12_NC)
         return R_CLS(TLSLD_ADD_DTPREL_LO12_NC);
       if (RefKind == AArch64MCExpr::VK_DTPREL_LO12)
@@ -274,6 +280,8 @@ unsigned AArch64ELFObjectWriter::getRelocType(MCContext &Ctx,
         return R_CLS(TLSLE_ADD_TPREL_LO12);
       if (RefKind == AArch64MCExpr::VK_TLSDESC_LO12)
         return R_CLS(TLSDESC_ADD_LO12);
+      if (RefKind == AArch64MCExpr::VK_TGOT_TLSDESC_LO12)
+        return ELF::R_MORELLO_TGOT_TLSDESC_ADD_LO12;
       if (SymLoc == AArch64MCExpr::VK_ABS && IsNC)
         return R_CLS(ADD_ABS_LO12_NC);
       if (SymLoc == AArch64MCExpr::VK_GOTTPREL)
@@ -406,6 +414,8 @@ unsigned AArch64ELFObjectWriter::getRelocType(MCContext &Ctx,
           return ELF::R_AARCH64_NONE;
         }
       }
+      if (SymLoc == AArch64MCExpr::VK_GOTTGOT && IsNC)
+        return ELF::R_MORELLO_TLSIE_LD64_GOTTGOT_LO12_NC;
       if (SymLoc == AArch64MCExpr::VK_TLSDESC) {
         if (!IsILP32) {
           return ELF::R_AARCH64_TLSDESC_LD64_LO12;
@@ -430,10 +440,16 @@ unsigned AArch64ELFObjectWriter::getRelocType(MCContext &Ctx,
         return R_CLS(TLSLE_LDST128_TPREL_LO12);
       if (SymLoc == AArch64MCExpr::VK_TPREL && IsNC)
         return R_CLS(TLSLE_LDST128_TPREL_LO12_NC);
+      if (SymLoc == AArch64MCExpr::VK_TGOT && !IsNC)
+        return ELF::R_MORELLO_TLSLE_LD128_TGOT_LO12;
+      if (SymLoc == AArch64MCExpr::VK_TGOT && IsNC)
+        return ELF::R_MORELLO_TLSLE_LD128_TGOT_LO12_NC;
       if (SymLoc == AArch64MCExpr::VK_GOT && IsNC)
         return ELF::R_MORELLO_LD128_GOT_LO12_NC;
       if (SymLoc == AArch64MCExpr::VK_TLSDESC)
         return ELF::R_MORELLO_TLSDESC_LD128_LO12;
+      if (SymLoc == AArch64MCExpr::VK_TGOT_TLSDESC)
+        return ELF::R_MORELLO_TGOT_TLSDESC_LD128_LO12;
 
       Ctx.reportError(Fixup.getLoc(),
                       "invalid fixup for 128-bit load/store instruction");
@@ -512,11 +528,19 @@ unsigned AArch64ELFObjectWriter::getRelocType(MCContext &Ctx,
         return ELF::R_AARCH64_TLSIE_MOVW_GOTTPREL_G1;
       if (RefKind == AArch64MCExpr::VK_GOTTPREL_G0_NC)
         return ELF::R_AARCH64_TLSIE_MOVW_GOTTPREL_G0_NC;
+      if (RefKind == AArch64MCExpr::VK_TGOT_G1)
+        return ELF::R_MORELLO_TLSLE_MOVW_TGOT_G1;
+      if (RefKind == AArch64MCExpr::VK_TGOT_G0)
+        return ELF::R_MORELLO_TLSLE_MOVW_TGOT_G0;
+      if (RefKind == AArch64MCExpr::VK_TGOT_G0_NC)
+        return ELF::R_MORELLO_TLSLE_MOVW_TGOT_G0_NC;
       Ctx.reportError(Fixup.getLoc(),
                       "invalid fixup for movz/movk instruction");
       return ELF::R_AARCH64_NONE;
     case AArch64::fixup_morello_tlsdesc_call:
       return ELF::R_MORELLO_TLSDESC_CALL;
+    case AArch64::fixup_morello_tgot_tlsdesc_call:
+      return ELF::R_MORELLO_TGOT_TLSDESC_CALL;
     case FK_Cap_16:
       if (Target.getAccessVariant() == MCSymbolRefExpr::VK_CHERI_CODE)
         return ELF::R_MORELLO_CODE_CAPINIT;
