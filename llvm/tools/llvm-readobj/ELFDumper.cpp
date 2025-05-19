@@ -6002,6 +6002,7 @@ getCHERINote(unsigned Machine, uint32_t NoteType, ArrayRef<uint8_t> Desc) {
     TypeDesc = "TLS ABI";
     switch (Variant) {
       CHERI_VARIANT_CASE(CHERI_TLS_ABI_TRAD, "traditional");
+      CHERI_VARIANT_CASE(CHERI_TLS_ABI_TGOT, "TGOT-based");
     default:
       return std::nullopt;
     }

@@ -1674,6 +1674,7 @@ enum : unsigned {
 // ABI variants used in NT_CHERI_TLS_ABI notes.
 enum : unsigned {
   CHERI_TLS_ABI_TRAD = 0,
+  CHERI_TLS_ABI_TGOT = 1,
 };
 
 // GNU note types.

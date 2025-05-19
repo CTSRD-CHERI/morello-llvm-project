@@ -806,7 +806,10 @@ StringRef llvm::object::getELFCheriVariant(uint32_t Machine, unsigned Type,
     }
     break;
   case ELF::NT_CHERI_TLS_ABI:
-    switch (Variant) { STRINGIFY_ENUM_CASE(ELF, CHERI_TLS_ABI_TRAD); }
+    switch (Variant) {
+      STRINGIFY_ENUM_CASE(ELF, CHERI_TLS_ABI_TRAD);
+      STRINGIFY_ENUM_CASE(ELF, CHERI_TLS_ABI_TGOT);
+    }
     break;
   default:
     llvm_unreachable("unknown ABI Type");

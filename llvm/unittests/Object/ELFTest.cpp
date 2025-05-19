@@ -331,4 +331,6 @@ TEST(ELFTest, getELFCheriVariant) {
                                CHERI_GLOBALS_ABI_FDESC));
   EXPECT_EQ("CHERI_TLS_ABI_TRAD",
             getELFCheriVariant(EM_NONE, NT_CHERI_TLS_ABI, CHERI_TLS_ABI_TRAD));
+  EXPECT_EQ("CHERI_TLS_ABI_TGOT",
+            getELFCheriVariant(EM_NONE, NT_CHERI_TLS_ABI, CHERI_TLS_ABI_TGOT));
 }

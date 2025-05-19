@@ -898,7 +898,10 @@ void MCELFStreamer::emitCHERINotes() {
   }
   emitCHERINote(Type, Variant);
   Type = llvm::ELF::NT_CHERI_TLS_ABI;
-  Variant = llvm::ELF::CHERI_TLS_ABI_TRAD;
+  if (MCTargetOptions::cheriTLSUseTGOT())
+    Variant = llvm::ELF::CHERI_TLS_ABI_TGOT;
+  else
+    Variant = llvm::ELF::CHERI_TLS_ABI_TRAD;
   emitCHERINote(Type, Variant);
 }
 
