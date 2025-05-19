@@ -27,6 +27,13 @@ CheriCapabilityTableABI MCTargetOptions::cheriCapabilityTableABI() {
   return CapTableABI;
 }
 
+static cl::opt<bool>
+    CheriTLSUseTGOT("cheri-tgot-tls",
+                    cl::desc("Use TGOT for CHERI TLS instead of legacy ABI"),
+                    cl::init(false));
+
+bool MCTargetOptions::cheriTLSUseTGOT() { return CheriTLSUseTGOT; }
+
 static cl::opt<CheriLandingPadEncoding> LandingPadEncoding(
     "cheri-landing-pad-encoding", cl::desc("encoding to use for landing pads :"),
     cl::init(CheriLandingPadEncoding::Absolute),

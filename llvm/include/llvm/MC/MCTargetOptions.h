@@ -116,6 +116,7 @@ public:
   StringRef getABIName() const;
 
   static CheriCapabilityTableABI cheriCapabilityTableABI();
+  static bool cheriTLSUseTGOT();
   static CheriLandingPadEncoding cheriLandingPadEncoding();
 
   static bool useTLSGDForPurecap();
