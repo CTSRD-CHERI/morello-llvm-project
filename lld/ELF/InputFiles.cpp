@@ -1009,10 +1009,23 @@ static void readCheriVariants(const InputSection &sec,
         case CHERI_TLS_ABI_TRAD:
         case CHERI_TLS_ABI_TGOT:
           break;
-        default:
-          reportFatal(place, "unknown " +
-                                 getELFCheriAbiType(config->emachine, type) +
-                                 " variant: 0x" + Twine::utohexstr(variant));
+        default: {
+          bool knownVariant = false;
+          switch (config->emachine) {
+          case EM_AARCH64:
+            switch (variant) {
+            case CHERI_TLS_ABI_MORELLO_MIXED:
+            case CHERI_TLS_ABI_MORELLO_TGOT_COMPAT:
+              knownVariant = true;
+              break;
+            }
+            break;
+          }
+          if (!knownVariant)
+            reportFatal(place, "unknown " +
+                                   getELFCheriAbiType(config->emachine, type) +
+                                   " variant: 0x" + Twine::utohexstr(variant));
+        }
         }
         break;
       default: {

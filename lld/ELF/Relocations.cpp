@@ -1517,9 +1517,12 @@ static unsigned handleTlsRelocation(RelType type, Symbol &sym,
     // depending on the symbol being locally defined or not.
     // Non-TGOT Morello does not support relaxing to Local-Exec.
     // TGOT can always relax to Local-Exec for executables.
-    if ((sym.isPreemptible ||
+    // Compat TGOT Morello does not use Local-Exec to remain compatible with
+    // non-TGOT TLS block layout.
+    if (((sym.isPreemptible ||
          (config->emachine == EM_AARCH64 && config->isCheriAbi)) &&
-        !isTgot) {
+        !isTgot) ||
+        (isTgot && config->morelloTgotTlsCompat)) {
       RelExpr relaxExpr;
       if (isTgot) {
         sym.setFlags(NEEDS_TGOT_GOT);
@@ -1550,10 +1553,13 @@ static unsigned handleTlsRelocation(RelType type, Symbol &sym,
     // defined.
     // Non-TGOT Morello does not support relaxing to Local-Exec.
     // TGOT can always relax Initial-Exec to Local-Exec for executables.
+    // Compat TGOT Morello does not use Local-Exec to remain compatible with
+    // non-TGOT TLS block layout.
     if (toExecRelax &&
         ((isLocalInExecutable &&
           (config->emachine != EM_AARCH64 || !config->isCheriAbi)) ||
-         isTgot)) {
+         isTgot) &&
+        (!isTgot || !config->morelloTgotTlsCompat)) {
       RelExpr relaxExpr;
       if (isTgot)
         relaxExpr = R_RELAX_TGOT_TLS_IE_TO_LE;
@@ -1956,7 +1962,7 @@ void elf::postScanRelocations() {
     if (flags & NEEDS_TGOT_GOT) {
       got->addTgotEntry(sym);
       uint64_t off = got->getTgotOffset(sym);
-      if (!config->shared)
+      if (!config->shared && !config->morelloTgotTlsCompat)
         got->relocations.push_back(
             {R_TGOT_TP, target->tgotGotRel, off, 0, &sym});
       else

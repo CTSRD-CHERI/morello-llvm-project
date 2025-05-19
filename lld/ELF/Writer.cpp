@@ -1108,7 +1108,10 @@ template <class ELFT> void Writer<ELFT>::addRelTgotSymbols() {
 // The beginning and the ending of .rela.dyn section are marked
 // with __rela_dyn_{start,end} symbols if it is a statically linked
 // executable. The runtime needs these symbols in order to resolve
-// all RELATIVE relocs and create capabilities on startup.
+// all RELATIVE relocs and create capabilities on startup, as well as any
+// TGOTREL relocs if using the traditional TLS-compatible TGOT ABI on Morello
+// (where we don't assume anything about the TGOT layout so it can be moved out
+// of the way to leave the static TLS block in its traditional location).
 template <class ELFT> void Writer<ELFT>::addRelDynSymbols() {
   if (config->emachine != EM_AARCH64 || config->relocatable || config->isPic)
     return;

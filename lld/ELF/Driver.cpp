@@ -2670,6 +2670,25 @@ template <class ELFT> static void readCheriVariants() {
         variantMap[type] = variant;
     };
 
+    auto mergeVariants = [](unsigned type, unsigned &variant, unsigned existing) {
+      unsigned variant1 = variant, variant2 = existing;
+      if (variant1 > variant2)
+        std::swap(variant1, variant2);
+      if (config->emachine == EM_AARCH64 && type == NT_CHERI_TLS_ABI) {
+        if ((variant1 == CHERI_TLS_ABI_TRAD && variant2 == CHERI_TLS_ABI_MORELLO_MIXED) ||
+            (variant1 == CHERI_TLS_ABI_TRAD && variant2 == CHERI_TLS_ABI_MORELLO_TGOT_COMPAT) ||
+            (variant1 == CHERI_TLS_ABI_MORELLO_MIXED && variant2 == CHERI_TLS_ABI_MORELLO_TGOT_COMPAT)) {
+          variant = CHERI_TLS_ABI_MORELLO_MIXED;
+          return true;
+        }
+        if (variant1 == CHERI_TLS_ABI_TGOT && variant2 == CHERI_TLS_ABI_MORELLO_TGOT_COMPAT) {
+          variant = CHERI_TLS_ABI_TGOT;
+          return true;
+        }
+      }
+      return false;
+    };
+
     // TODO: warn/error if missing
     applyDefault(NT_CHERI_GLOBALS_ABI, CHERI_GLOBALS_ABI_PCREL);
     applyDefault(NT_CHERI_TLS_ABI, CHERI_TLS_ABI_TRAD);
@@ -2683,7 +2702,8 @@ template <class ELFT> static void readCheriVariants() {
       unsigned type = entry.first;
       unsigned variant = entry.second;
       if (config->cheriVariants.count(type) &&
-          config->cheriVariants[type] != variant)
+          config->cheriVariants[type] != variant &&
+          !mergeVariants(type, variant, config->cheriVariants[type]))
         error(toString(f) + ": " + getELFCheriAbiType(config->emachine, type) +
               " variant mismatch: " +
               getELFCheriVariant(config->emachine, type, variant) + " vs " +
@@ -3043,6 +3063,8 @@ void LinkerDriver::link(opt::InputArgList &args) {
   if (config->emachine == EM_AARCH64) {
     config->morelloPurecapBenchmarkABI = static_cast<bool>(
         config->cheriVariants.lookup(NT_CHERI_MORELLO_PURECAP_BENCHMARK_ABI));
+    config->morelloTgotTlsCompat =
+        config->cheriVariants.lookup(NT_CHERI_TLS_ABI) != CHERI_TLS_ABI_TGOT;
     if (config->hasDynSymTab)
       config->useRelativeElfCheriRelocs = true;
   }

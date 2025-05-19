@@ -19,6 +19,13 @@
 // RUN: llvm-readelf -x .got -x .tgot %t.so | FileCheck --check-prefix=SO-GOT %s
 // RUN: llvm-objdump -d --no-show-raw-insn %t.so | FileCheck --check-prefix=SO-DIS %s
 
+// RUN: llvm-mc -triple=aarch64 -mattr=+c64,+morello,+morello-tgot-tls-compat -target-abi purecap \
+// RUN:   --defsym LE=0 -cheri-tgot-tls -filetype=obj %s -o %t.compat.o
+// RUN: ld.lld %t.compat.o %t1.so -o %t.compat
+// RUN: llvm-readobj -r %t.compat | FileCheck --check-prefix=COMPAT-REL %s
+// RUN: llvm-readelf -x .got -x .tgot %t.compat | FileCheck --check-prefix=COMPAT-GOT %s
+// RUN: llvm-objdump -d --no-show-raw-insn %t.compat | FileCheck --check-prefix=COMPAT-DIS %s
+
 // REL:      .rela.tgot {
 // REL-NEXT:   0x200390 R_MORELLO_TLS_TGOT_SLOT evar 0x0
 // REL-NEXT:   0x2003A0 R_MORELLO_TLS_TGOT_SLOT - 0x0
@@ -34,6 +41,15 @@
 // SO-REL-NEXT:   0x420 R_MORELLO_TLS_TGOT_SLOT evar 0x0
 // SO-REL-NEXT:   0x430 R_MORELLO_TLS_TGOT_SLOT - 0x0
 // SO-REL-NEXT: }
+
+// COMPAT-REL:      .rela.dyn {
+// COMPAT-REL-NEXT:   0x220500 R_MORELLO_TLS_TGOTREL64 - 0x0
+// COMPAT-REL-NEXT:   0x220510 R_MORELLO_TLS_TGOTREL64 - 0x10
+// COMPAT-REL-NEXT: }
+// COMPAT-REL:      .rela.tgot {
+// COMPAT-REL-NEXT:   0x2003C0 R_MORELLO_TLS_TGOT_SLOT evar 0x0
+// COMPAT-REL-NEXT:   0x2003D0 R_MORELLO_TLS_TGOT_SLOT - 0x0
+// COMPAT-REL-NEXT: }
 
 // GOT: section '.tgot':
 // GOT-NEXT: 0x00200390 00000000 00000000 00000000 00000000
@@ -51,6 +67,14 @@
 // SO-GOT-NEXT: 0x00020590 00000000 00000000 00000000 00000000
 // SO-GOT-NEXT: 0x000205a0 00000000 00000000 00000000 00000000
 // SO-GOT-NEXT: 0x000205b0 00000000 00000000 00000000 00000000
+
+// COMPAT-GOT: section '.tgot':
+// COMPAT-GOT-NEXT: 0x002003c0 00000000 00000000 00000000 00000000
+/// lval: address: 0x4, size = 4, perms = RW (0x2)
+// COMPAT-GOT-NEXT: 0x002003d0 04000000 00000000 04000000 00000002
+// COMPAT-GOT: section '.got':
+// COMPAT-GOT-NEXT: 0x00220500 00000000 00000000 00000000 00000000
+// COMPAT-GOT-NEXT: 0x00220510 00000000 00000000 00000000 00000000
 
 /// TGOTREL(eval) = 0x20
 // DIS:      2103b0: movz x0, #0x0, lsl #16
@@ -105,6 +129,26 @@
 /// GTGOTREL(lvar) = 0x20590
 // SO-DIS:      10468: adrp c0, 0x20000
 // SO-DIS-NEXT:        ldr x0, [c0, #0x590]
+
+/// GTGOTREL(evar) = 0x220500
+// COMPAT-DIS:      2103e0: adrp c0, 0x220000
+// COMPAT-DIS-NEXT:         ldr x0, [c0, #0x500]
+// COMPAT-DIS-NEXT:         ldr c0, [c1, x0]
+// COMPAT-DIS-NEXT:         nop
+
+/// GTGOTREL(evar) = 0x220500
+// COMPAT-DIS:      2103f0: adrp c0, 0x220000
+// COMPAT-DIS-NEXT:         ldr x0, [c0, #0x500]
+
+/// GTGOTREL(lvar) = 0x220510
+// COMPAT-DIS:      2103f8: adrp c0, 0x220000
+// COMPAT-DIS-NEXT:         ldr x0, [c0, #0x510]
+// COMPAT-DIS-NEXT:         ldr c0, [c1, x0]
+// COMPAT-DIS-NEXT:         nop
+
+/// GTGOTREL(lvar) = 0x220510
+// COMPAT-DIS:      210408: adrp c0, 0x220000
+// COMPAT-DIS-NEXT:         ldr x0, [c0, #0x510]
 
 .global _start
 _start:

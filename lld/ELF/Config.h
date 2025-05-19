@@ -216,6 +216,7 @@ struct Config {
   bool armJ1J2BranchEncoding = false;
   bool armCMSESupport = false;
   bool morelloPurecapBenchmarkABI = false;
+  bool morelloTgotTlsCompat = false;
   bool forceMorelloC64Plt = false;
   llvm::DenseMap<unsigned, unsigned> cheriVariants;
   bool asNeeded = false;
