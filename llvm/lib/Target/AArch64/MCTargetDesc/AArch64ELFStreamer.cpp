@@ -344,6 +344,14 @@ private:
   ElfMappingSymbol LastEMS;
   SmallVector<MCSymbol *, 3> CurrentLabels;
 
+  unsigned getCHERITLSNoteVariant() override {
+    const MCSubtargetInfo *STI = getContext().getSubtargetInfo();
+    if (MCTargetOptions::cheriTLSUseTGOT() &&
+        STI->getFeatureBits()[AArch64::FeatureMorelloTgotTlsCompat])
+      return ELF::CHERI_TLS_ABI_MORELLO_TGOT_COMPAT;
+    return MCELFStreamer::getCHERITLSNoteVariant();
+  }
+
   void emitCHERINotes() override {
     MCELFStreamer::emitCHERINotes();
     const AArch64MCAsmInfoELF *MAI =

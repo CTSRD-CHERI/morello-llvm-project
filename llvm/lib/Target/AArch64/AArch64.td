@@ -98,6 +98,10 @@ def FeatureMorelloBoundedMemArgsCallee : SubtargetFeature<"bounded-morello-memar
   "Internal_HasMorelloBoundedMemArgsCallee", "true",
   "Use c9 to access memory arguments", [FeatureMorelloBoundedMemArgsCaller]>;
 
+def FeatureMorelloTgotTlsCompat : SubtargetFeature<"morello-tgot-tls-compat",
+  "Internal_HasMorelloTgotTlsCompat", "true",
+  "Emit purecap Morello TGOT TLS code compatible with traditional TLS code">;
+
 def FeatureC64 : SubtargetFeature<"c64", "Internal_HasC64", "true",
   "Enable C64 mode", [FeatureMorello]>;
 

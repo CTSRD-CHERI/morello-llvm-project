@@ -294,6 +294,9 @@ public:
   bool hasPurecapBenchmarkABI() const {
     return HasMorello && HasPurecapBenchmarkABI;
   }
+  bool hasMorelloTgotTlsCompat() const {
+    return hasPureCap() && Internal_HasMorelloTgotTlsCompat;
+  }
 
   bool isLittleEndian() const { return IsLittle; }
 

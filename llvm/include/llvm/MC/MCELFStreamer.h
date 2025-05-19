@@ -142,6 +142,8 @@ public:
     GNUAttributes.push_back(Item);
   }
 
+  virtual unsigned getCHERITLSNoteVariant();
+
   void emitCHERINote(unsigned Type, unsigned Variant) {
     CHERINoteItem Item = {Type, Variant};
     CHERINotes.push_back(Item);

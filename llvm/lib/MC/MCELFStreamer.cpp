@@ -882,6 +882,13 @@ void MCELFStreamer::createAttributesSection(
   AttrsVec.clear();
 }
 
+unsigned MCELFStreamer::getCHERITLSNoteVariant() {
+  if (MCTargetOptions::cheriTLSUseTGOT())
+    return llvm::ELF::CHERI_TLS_ABI_TGOT;
+  else
+    return llvm::ELF::CHERI_TLS_ABI_TRAD;
+}
+
 void MCELFStreamer::emitCHERINotes() {
   unsigned Type = llvm::ELF::NT_CHERI_GLOBALS_ABI;
   unsigned Variant;
@@ -898,10 +905,7 @@ void MCELFStreamer::emitCHERINotes() {
   }
   emitCHERINote(Type, Variant);
   Type = llvm::ELF::NT_CHERI_TLS_ABI;
-  if (MCTargetOptions::cheriTLSUseTGOT())
-    Variant = llvm::ELF::CHERI_TLS_ABI_TGOT;
-  else
-    Variant = llvm::ELF::CHERI_TLS_ABI_TRAD;
+  Variant = getCHERITLSNoteVariant();
   emitCHERINote(Type, Variant);
 }
 
