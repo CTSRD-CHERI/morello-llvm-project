@@ -79,6 +79,7 @@ enum NodeType : unsigned {
   // Produces the full sequence of instructions for getting the thread pointer
   // offset of a variable into X0, using the TLSDesc model.
   TLSDESC_CALLSEQ,
+  TGOT_TLSDESC_CALLSEQ,
   ADRP,     // Page address of a TargetGlobalAddress operand.
   ADRPC,    // Page address of a TargetGlobalAddress operand as a capability.
   ADR,      // ADR
@@ -90,6 +91,9 @@ enum NodeType : unsigned {
             // Offset Table, TLS record). However, we are doing the load
             // via a capability so restrict this to a register that has
             // a capability sub-register.
+  LOADCgotX, // Load from automatically generated descriptor (e.g. Global
+             // Offset Table, TLS record). However, we are doing the load
+             // via a capability, and only loading an integer.
   LOADCapTable, // Load from the capability table
   CLoadTLSInfo, // Load the offset and size of the TLS variable (purecap).
                 // The offset (first result) is returned a capability for
@@ -1110,6 +1114,8 @@ private:
   SDValue LowerELFGlobalTLSAddress(SDValue Op, SelectionDAG &DAG) const;
   SDValue LowerELFTLSLocalExec(const GlobalValue *GV, SDValue ThreadBase,
                                const SDLoc &DL, SelectionDAG &DAG) const;
+  SDValue LowerC64TGOTELFTLSLocalExec(const GlobalValue *GV, SDValue ThreadBase,
+                                      const SDLoc &DL, SelectionDAG &DAG) const;
   SDValue LowerC64ELFTLSLocalExec(const GlobalValue *GV, SDValue ThreadBase,
                                  const SDLoc &DL, SelectionDAG &DAG) const;
   SDValue LowerELFTLSDescCallSeq(SDValue SymAddr, const SDLoc &DL,
@@ -1117,6 +1123,9 @@ private:
   SDValue LowerC64ELFTLSDescCallSeq(SDValue SymAddr, SDValue TP,
                                     const SDLoc &DL,
                                     SelectionDAG &DAG) const;
+  SDValue LowerC64TGOTELFTLSDescCallSeq(SDValue SymAddr, SDValue TP,
+                                        const SDLoc &DL,
+                                        SelectionDAG &DAG) const;
   SDValue LowerWindowsGlobalTLSAddress(SDValue Op, SelectionDAG &DAG) const;
   SDValue LowerSETCC(SDValue Op, SelectionDAG &DAG) const;
   SDValue LowerSETCCCARRY(SDValue Op, SelectionDAG &DAG) const;

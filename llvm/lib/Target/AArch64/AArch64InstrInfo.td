@@ -611,6 +611,7 @@ def AArch64adr           : SDNode<"AArch64ISD::ADR", SDTIntUnaryOp, []>;
 def AArch64addlow        : SDNode<"AArch64ISD::ADDlow", SDTIntBinOp, []>;
 def AArch64LOADgot       : SDNode<"AArch64ISD::LOADgot", SDTIntUnaryOp>;
 def AArch64LOADCgot      : SDNode<"AArch64ISD::LOADCgot", SDTIntToCapOp>;
+def AArch64LOADCgotX     : SDNode<"AArch64ISD::LOADCgotX", SDTIntUnaryOp>;
 def AArch64LOADCapTable  : SDNode<"AArch64ISD::LOADCapTable", SDTIntToCapOp>;
 def AArch64CLoadTLSInfo  : SDNode<"AArch64ISD::CLoadTLSInfo", SDTIntToIntPairOp>;
 
@@ -978,6 +979,10 @@ def LOADCgot : Pseudo<(outs Capsp:$dst), (ins i64imm:$addr), []>,
                Sched<[WriteLDAdr]>;
 
 let AddedComplexity = 10 in
+def LOADCgotX : Pseudo<(outs GPR64common:$dst), (ins i64imm:$addr), []>,
+                Sched<[WriteLDAdr]>;
+
+let AddedComplexity = 10 in
 def LOADCapTable : Pseudo<(outs Capsp:$dst), (ins i64imm:$addr), []>,
                    Sched<[WriteLDAdr]>;
 
@@ -1051,6 +1056,18 @@ def : Pat<(AArch64LOADCgot tconstpool:$addr),
 
 def : Pat<(AArch64LOADCgot tglobaladdr:$addr),
           (LOADCgot tglobaladdr:$addr)>;
+
+def : Pat<(AArch64LOADCgotX tglobaltlsaddr:$addr),
+          (LOADCgotX tglobaltlsaddr:$addr)>;
+
+def : Pat<(AArch64LOADCgotX texternalsym:$addr),
+          (LOADCgotX texternalsym:$addr)>;
+
+def : Pat<(AArch64LOADCgotX tconstpool:$addr),
+          (LOADCgotX tconstpool:$addr)>;
+
+def : Pat<(AArch64LOADCgotX tglobaladdr:$addr),
+          (LOADCgotX tglobaladdr:$addr)>;
 
 def : Pat<(AArch64LOADCapTable tglobaladdr:$addr),
           (LOADCapTable tglobaladdr:$addr)>;

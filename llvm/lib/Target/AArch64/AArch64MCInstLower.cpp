@@ -143,6 +143,7 @@ MCOperand AArch64MCInstLower::lowerSymbolOperandELF(const MachineOperand &MO,
   bool SetZeroBit = false;
   bool IsCode = false;
   const MachineFunction *MF = MO.getParent()->getParent()->getParent();
+  bool IsPurecap = MF->getSubtarget<AArch64Subtarget>().hasPureCap();
   bool HasC64 = MF->getSubtarget<AArch64Subtarget>().hasC64();
 
   if (MO.isBlockAddress() || MO.isMBB())
@@ -151,6 +152,7 @@ MCOperand AArch64MCInstLower::lowerSymbolOperandELF(const MachineOperand &MO,
   if (MO.getTargetFlags() & AArch64II::MO_GOT)
     RefFlags |= AArch64MCExpr::VK_GOT;
   else if (MO.getTargetFlags() & AArch64II::MO_TLS) {
+    bool IsTGOT = IsPurecap && MCTargetOptions::cheriTLSUseTGOT();
     TLSModel::Model Model;
     if (MO.isGlobal()) {
       const GlobalValue *GV = MO.getGlobal();
@@ -169,16 +171,26 @@ MCOperand AArch64MCInstLower::lowerSymbolOperandELF(const MachineOperand &MO,
     }
     switch (Model) {
     case TLSModel::InitialExec:
-      RefFlags |= AArch64MCExpr::VK_GOTTPREL;
+      if (IsTGOT)
+        RefFlags |= AArch64MCExpr::VK_GOTTGOT;
+      else
+        RefFlags |= AArch64MCExpr::VK_GOTTPREL;
       break;
     case TLSModel::LocalExec:
-      RefFlags |= AArch64MCExpr::VK_TPREL;
+      if (IsTGOT)
+        RefFlags |= AArch64MCExpr::VK_TGOT;
+      else
+        RefFlags |= AArch64MCExpr::VK_TPREL;
       break;
     case TLSModel::LocalDynamic:
+      assert(!IsTGOT && "Local Dynamic not supported for TGOT");
       RefFlags |= AArch64MCExpr::VK_DTPREL;
       break;
     case TLSModel::GeneralDynamic:
-      RefFlags |= AArch64MCExpr::VK_TLSDESC;
+      if (IsTGOT)
+        RefFlags |= AArch64MCExpr::VK_TGOT_TLSDESC;
+      else
+        RefFlags |= AArch64MCExpr::VK_TLSDESC;
       break;
     }
   } else if (MO.getTargetFlags() & AArch64II::MO_PREL) {

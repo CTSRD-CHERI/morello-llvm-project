@@ -1338,25 +1338,36 @@ bool AArch64ExpandPseudo::expandMI(MachineBasicBlock &MBB,
     MI.eraseFromParent();
     return true;
   }
+  case AArch64::LOADCgotX:
   case AArch64::LOADCgot: {
     // Expand into ADRP + ALDR.
     // The register should already be constrained such that it will have the
     // capability super-register.
-    unsigned SuperReg = MI.getOperand(0).getReg();
-    const MachineOperand &MO1 = MI.getOperand(1);
-    unsigned Flags = MO1.getTargetFlags();
     const AArch64Subtarget &STI =
         static_cast<const AArch64Subtarget &>(MBB.getParent()->getSubtarget());
     assert(STI.hasMorello() && "capability support missing");
+    assert(STI.hasC64() && "C64 missing");
+    assert(STI.hasCapGOT() && "capability GOT missing");
     assert(MBB.getParent()->getTarget().getCodeModel() != CodeModel::Tiny &&
            "Tiny code model not supported with capabilities");
     MachineOperand MO = MI.getOperand(0);
+    unsigned DestReg = MO.getReg();
+    const MachineOperand &MO1 = MI.getOperand(1);
+    unsigned Flags = MO1.getTargetFlags();
     MO.setImplicit();
-    unsigned DstReg = TRI->getSubReg(MO.getReg(), AArch64::sub_64);
+
+    unsigned BaseReg, OpCode2;
+    if (Opcode == AArch64::LOADCgotX) {
+      BaseReg = TRI->getMatchingSuperReg(DestReg, AArch64::sub_64,
+                                         &AArch64::CapRegClass);
+      OpCode2 = AArch64::ALDRXui;
+    } else {
+      BaseReg = DestReg;
+      OpCode2 = AArch64::PCapLoadImmPre;
+    }
 
     MachineInstrBuilder MIB1 =
-        BuildMI(MBB, MBBI, MI.getDebugLoc(),
-                TII->get(AArch64::PADRP), SuperReg);
+        BuildMI(MBB, MBBI, MI.getDebugLoc(), TII->get(AArch64::PADRP), BaseReg);
 
     if (MO1.isGlobal())
       MIB1 = MIB1.addGlobalAddress(MO1.getGlobal(), 0,
@@ -1371,19 +1382,9 @@ bool AArch64ExpandPseudo::expandMI(MachineBasicBlock &MBB,
                                        Flags | AArch64II::MO_PAGE);
     }
 
-    unsigned OpCode =
-        STI.hasC64() ? (STI.hasCapGOT() ? AArch64::PCapLoadImmPre
-                                        : AArch64::ALDRXui)
-                     : AArch64::CapLoadImmPre;
     MachineInstrBuilder MIB2 =
-        BuildMI(MBB, MBBI, MI.getDebugLoc(),
-                TII->get(OpCode), STI.hasCapGOT() ? SuperReg : DstReg);
-
-    // Add the base register. C64 always uses a capability.
-    if (STI.hasC64())
-      MIB2 = MIB2.addReg(SuperReg);
-    else
-      MIB2 = MIB2.addReg(DstReg);
+        BuildMI(MBB, MBBI, MI.getDebugLoc(), TII->get(OpCode2), DestReg)
+            .addReg(BaseReg);
 
     if (MO1.isGlobal()) {
       MIB2 = MIB2.addGlobalAddress(MO1.getGlobal(), 0,

@@ -22,6 +22,10 @@ def AArch64C64tlsdesc_callseq : SDNode<"AArch64ISD::TLSDESC_CALLSEQ",
                                        SDT_AArch64TLSDescC64CallSeq,
                                        [SDNPInGlue, SDNPOutGlue, SDNPHasChain,
                                         SDNPVariadic]>;
+def AArch64C64TGOTtlsdesc_callseq : SDNode<"AArch64ISD::TGOT_TLSDESC_CALLSEQ",
+                                       SDT_AArch64TLSDescC64CallSeq,
+                                       [SDNPInGlue, SDNPOutGlue, SDNPHasChain,
+                                        SDNPVariadic]>;
 
 def cap_label_operand : Operand<c128>;
 
@@ -2008,4 +2012,13 @@ let hasSideEffects = 1 in
 def TGOT_TLSDESCCALL : Pseudo<(outs), (ins i64imm:$sym), []>, Sched<[]> {
   let AsmString = ".tgot_tlsdesccall $sym";
 }
+
+let isCall = 1, Defs = [CLR, C0, C2], Uses = [C1], hasSideEffects = 1, Size = 16,
+    isCodeGenOnly = 1 in
+def TGOT_TLSDESC_C64_CALLSEQ
+    : Pseudo<(outs), (ins cap_label_operand:$sym),
+             [(AArch64C64TGOTtlsdesc_callseq tglobaltlsaddr:$sym)]>,
+      Sched<[WriteI, WriteLD, WriteI, WriteBrReg]>;
+def : Pat<(AArch64C64TGOTtlsdesc_callseq texternalsym:$sym),
+          (TGOT_TLSDESC_C64_CALLSEQ texternalsym:$sym)>;
 }

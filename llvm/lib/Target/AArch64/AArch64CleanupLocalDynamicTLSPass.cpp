@@ -69,6 +69,7 @@ struct LDTLSCleanup : public MachineFunctionPass {
     for (MachineBasicBlock::iterator I = BB->begin(), E = BB->end(); I != E;
          ++I) {
       switch (I->getOpcode()) {
+      // NB: No TGOT_TLSDESC_C64_CALLSEQ, not compatible with Local Dynamic
       case AArch64::TLSDESC_CALLSEQ:
       case AArch64::TLSDESC_C64_CALLSEQ:
         // Make sure it's a local dynamic access.
