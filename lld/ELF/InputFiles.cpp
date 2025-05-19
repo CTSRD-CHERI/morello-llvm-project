@@ -1007,6 +1007,7 @@ static void readCheriVariants(const InputSection &sec,
       case NT_CHERI_TLS_ABI:
         switch (variant) {
         case CHERI_TLS_ABI_TRAD:
+        case CHERI_TLS_ABI_TGOT:
           break;
         default:
           reportFatal(place, "unknown " +

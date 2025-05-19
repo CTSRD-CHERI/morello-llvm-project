@@ -142,6 +142,8 @@ Defined *ElfSym::mipsCheriCapabilityTable;
 Defined *ElfSym::riscvGlobalPointer;
 Defined *ElfSym::relaIpltStart;
 Defined *ElfSym::relaIpltEnd;
+Defined *ElfSym::relaTgotStart;
+Defined *ElfSym::relaTgotEnd;
 Defined *ElfSym::tlsModuleBase;
 SmallVector<SymbolAux, 0> elf::symAux;
 

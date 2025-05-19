@@ -897,6 +897,12 @@ uint64_t InputSectionBase::getRelocTargetVA(const InputFile *file, RelType type,
     return in.got->getTgotAddr(sym) + a - p;
   case R_TGOT_TLSDESC:
     return in.got->getTgotTlsDescAddr(sym) + a;
+  case R_MORELLO_TGOT_GOT_PAGE_PC:
+  case R_MORELLO_RELAX_TGOT_TLS_GD_TO_IE_PAGE_PC:
+    return getAArch64Page(in.got->getTgotAddr(sym) + a) - getAArch64Page(p);
+  case R_MORELLO_TGOT_TLSDESC_PAGE:
+    return getAArch64Page(in.got->getTgotTlsDescAddr(sym) + a) -
+           getAArch64Page(p);
   case R_TGOT_TLSGD_PC:
     return in.got->getTgotGlobalDynAddr(sym) + a - p;
   case R_ABS_CAP:

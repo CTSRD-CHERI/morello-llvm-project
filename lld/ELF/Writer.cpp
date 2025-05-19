@@ -1082,6 +1082,29 @@ template <class ELFT> void Writer<ELFT>::addRelIpltSymbols() {
       Out::elfHeader, 0, STV_HIDDEN);
 }
 
+// The beginning and the ending of .rel[a].tgot section are marked
+// with __rel[a]_tgot_{start,end} symbols if it is a statically linked
+// executable. The runtime needs these symbols in order to resolve
+// all TGOT_SLOT relocs on startup and thread creation. For dynamic
+// executables and shared libraries, we don't need these symbols, since
+// TGOT_SLOT relocs are resolved through DT_CHERI_TGOTREL.
+template <class ELFT> void Writer<ELFT>::addRelTgotSymbols() {
+  if (config->relocatable || config->isPic)
+    return;
+
+  // By default, __rela_tgot_{start,end} belong to a dummy section 0
+  // because .rela.tgot might be empty and thus removed from output.
+  // We'll override Out::elfHeader with in.relaTgot later when we are
+  // sure that .rela.tgot exists in output.
+  ElfSym::relaTgotStart = addOptionalRegular(
+      config->isRela ? "__rela_tgot_start" : "__rel_tgot_start",
+      Out::elfHeader, 0, STV_HIDDEN);
+
+  ElfSym::relaTgotEnd = addOptionalRegular(
+      config->isRela ? "__rela_tgot_end" : "__rel_tgot_end",
+      Out::elfHeader, 0, STV_HIDDEN);
+}
+
 // The beginning and the ending of .rela.dyn section are marked
 // with __rela_dyn_{start,end} symbols if it is a statically linked
 // executable. The runtime needs these symbols in order to resolve
@@ -1125,6 +1148,14 @@ template <class ELFT> void Writer<ELFT>::setReservedSymbolSections() {
     ElfSym::relaIpltEnd->section = in.relaIplt.get();
     ElfSym::relaIpltEnd->value = in.relaIplt->getSize();
     ElfSym::relaIpltEnd->isSectionStartSymbol = false;
+  }
+
+  // .rela_tgot_{start,end} mark the start and the end of in.relaTgot.
+  if (ElfSym::relaTgotStart && in.relaTgot->isNeeded()) {
+    ElfSym::relaTgotStart->section = in.relaTgot.get();
+    ElfSym::relaTgotEnd->section = in.relaTgot.get();
+    ElfSym::relaTgotEnd->value = in.relaTgot->getSize();
+    ElfSym::relaTgotEnd->isSectionStartSymbol = false;
   }
 
   // __rela_dyn_{start,end} mark the start and the end of relaDyn.
@@ -2131,6 +2162,9 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
 
     // Define __rel[a]_iplt_{start,end} symbols if needed.
     addRelIpltSymbols();
+
+    // Define __rel[a]_tgot_{start,end} symbols if needed.
+    addRelTgotSymbols();
 
     // Define __rel[a]_dyn_{start,end} symbols if needed.
     addRelDynSymbols();

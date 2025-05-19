@@ -1411,7 +1411,8 @@ static unsigned handleTlsRelocation(RelType type, Symbol &sym,
                                     int64_t addend, RelExpr expr) {
   bool isTgot =
       oneof<R_TGOT, R_TGOT_TP, R_TGOT_GOT, R_TGOT_GOT_PC, R_TGOT_TLSDESC,
-            R_TGOT_TLSDESC_CALL, R_TGOT_TLSGD_PC>(expr);
+            R_TGOT_TLSDESC_CALL, R_TGOT_TLSGD_PC, R_MORELLO_TGOT_GOT_PAGE_PC,
+            R_MORELLO_TGOT_TLSDESC_PAGE>(expr);
 
   if (oneof<R_TPREL, R_TPREL_NEG, R_TGOT, R_TGOT_TP>(expr)) {
     if (isTgot)
@@ -1433,7 +1434,7 @@ static unsigned handleTlsRelocation(RelType type, Symbol &sym,
 
   if (oneof<R_AARCH64_TLSDESC_PAGE, R_TLSDESC, R_TLSDESC_CALL, R_TLSDESC_PC,
             R_TLSDESC_GOTPLT, R_TGOT_TLSDESC, R_TGOT_TLSDESC_CALL,
-            R_MORELLO_TLSDESC_PAGE>(expr) &&
+            R_MORELLO_TLSDESC_PAGE, R_MORELLO_TGOT_TLSDESC_PAGE>(expr) &&
       config->shared) {
     if (!oneof<R_TLSDESC_CALL, R_TGOT_TLSDESC_CALL>(expr)) {
       if (isTgot)
@@ -1501,7 +1502,8 @@ static unsigned handleTlsRelocation(RelType type, Symbol &sym,
   if (oneof<R_AARCH64_TLSDESC_PAGE, R_TLSDESC, R_TLSDESC_CALL, R_TLSDESC_PC,
             R_TLSDESC_GOTPLT, R_TLSGD_GOT, R_TLSGD_GOTPLT, R_TLSGD_PC,
             R_TGOT_TLSDESC, R_TGOT_TLSDESC_CALL, R_TGOT_TLSGD_PC,
-            R_LOONGARCH_TLSGD_PAGE_PC, R_MORELLO_TLSDESC_PAGE>(expr)) {
+            R_LOONGARCH_TLSGD_PAGE_PC, R_MORELLO_TLSDESC_PAGE,
+            R_MORELLO_TGOT_TLSDESC_PAGE>(expr)) {
     if (!toExecRelax) {
       if (isTgot)
         sym.setFlags(NEEDS_TGOT_TLSGD);
@@ -1542,7 +1544,7 @@ static unsigned handleTlsRelocation(RelType type, Symbol &sym,
 
   if (oneof<R_GOT, R_GOTPLT, R_GOT_PC, R_AARCH64_GOT_PAGE_PC,
             R_LOONGARCH_GOT_PAGE_PC, R_GOT_OFF, R_TLSIE_HINT, R_TGOT_GOT,
-            R_TGOT_GOT_PC>(expr)) {
+            R_TGOT_GOT_PC, R_MORELLO_TGOT_GOT_PAGE_PC>(expr)) {
     ctx.hasTlsIe.store(true, std::memory_order_relaxed);
     // Initial-Exec relocs can be relaxed to Local-Exec if the symbol is locally
     // defined.
