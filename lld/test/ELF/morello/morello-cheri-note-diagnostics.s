@@ -28,7 +28,7 @@
 // INVALID-NAME: unexpected name CHERY
 // UNKNOWN-ABI: error: {{.*}} unknown type: 0xff
 // UNKNOWN-GLOBALS-ABI: error: {{.*}} unknown NT_CHERI_GLOBALS_ABI variant: 0x3
-// UNKNOWN-TLS-ABI: error: {{.*}} unknown NT_CHERI_TLS_ABI variant: 0x1
+// UNKNOWN-TLS-ABI: error: {{.*}} unknown NT_CHERI_TLS_ABI variant: 0x2
 // MISMATCHED-GLOBALS-ABI-PLT-FPTR: error: {{.*}} NT_CHERI_GLOBALS_ABI variant mismatch: CHERI_GLOBALS_ABI_PCREL vs CHERI_GLOBALS_ABI_PLT_FPTR
 // MISMATCHED-GLOBALS-ABI-FDESC: error: {{.*}} NT_CHERI_GLOBALS_ABI variant mismatch: CHERI_GLOBALS_ABI_PCREL vs CHERI_GLOBALS_ABI_FDESC
 
@@ -92,8 +92,8 @@
 .long 1
 .asciz "CHERI"
 .align 2
-/// out of range NT_CHERI_TLS_ABI variant (1)
-.long 1
+/// out of range NT_CHERI_TLS_ABI variant (2)
+.long 2
 
 //--- mismatched-globals-abi-pcrel-plt-fptr.s
 .section .note.cheri, "a", @note
