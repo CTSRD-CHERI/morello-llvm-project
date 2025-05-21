@@ -66,12 +66,14 @@ add_llvm_target(WebAssemblyCodeGen
   AsmPrinter
   BinaryFormat
   CodeGen
+  CodeGenTypes
   Core
   MC
   Scalar
   SelectionDAG
   Support
   Target
+  TargetParser
   TransformUtils
   WebAssemblyDesc
   WebAssemblyInfo
@@ -79,7 +81,7 @@ add_llvm_target(WebAssemblyCodeGen
 
   ADD_TO_COMPONENT
   WebAssembly
-)
+  )
 
 # TODO: remove
 add_definitions(-DLLVM_TARGETLOWERINGINFO_DEFAULT_AS=0)

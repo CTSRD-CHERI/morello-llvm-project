@@ -145,7 +145,7 @@ void test2(Foo2 f) {
   // CHECK-NEXT:   | `-DeclRefExpr {{.*}} 'f'
   // CHECK-NEXT: `-IntegerLiteral {{.*}} 'int' 1
   f.func(1);
-  // CHECK:      RecoveryExpr {{.*}} 'Foo2::ForwardClass'
+  // CHECK:      RecoveryExpr {{.*}} 'ForwardClass':'Foo2::ForwardClass'
   // CHECK-NEXT: `-MemberExpr {{.*}} '<bound member function type>' .createFwd
   // CHECK-NEXT:   `-DeclRefExpr {{.*}} 'f'
   f.createFwd();
@@ -406,8 +406,17 @@ void RecoveryExprForInvalidDecls(Unknown InvalidDecl) {
   InvalidDecl + 1;
   // CHECK:      BinaryOperator {{.*}}
   // CHECK-NEXT: |-RecoveryExpr {{.*}} '<dependent type>'
+  // CHECK-NEXT: | | `-DeclRefExpr {{.*}} 'InvalidDecl' 'int'
   // CHECK-NEXT: `-IntegerLiteral {{.*}} 'int' 1
   InvalidDecl();
   // CHECK:      CallExpr {{.*}}
   // CHECK-NEXT: `-RecoveryExpr {{.*}} '<dependent type>'
+}
+
+void RecoverToAnInvalidDecl() {
+  Unknown* foo; // invalid decl
+  goo; // the typo was correct to the invalid foo.
+  // Verify that RecoveryExpr has an inner DeclRefExpr.
+  // CHECK:      RecoveryExpr {{.*}} '<dependent type>' contains-errors lvalue
+  // CHECK-NEXT: `-DeclRefExpr {{.*}} 'foo' 'int *'
 }

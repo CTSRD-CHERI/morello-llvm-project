@@ -110,7 +110,7 @@ void MipsELFStreamer::EmitCheriCapability(const MCExpr *Value, unsigned CapSize,
   visitUsedExpr(*Value);
 
   // Pad to ensure that the capability is aligned
-  emitValueToAlignment(CapSize, 0, 1, 0);
+  emitValueToAlignment(Align(CapSize), 0, 1, 0);
 
   MCDataFragment *DF = new MCDataFragment();
   MCFixup cheriFixup = MCFixup::create(

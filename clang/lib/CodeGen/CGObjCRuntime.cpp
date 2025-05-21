@@ -22,6 +22,7 @@
 #include "clang/AST/StmtObjC.h"
 #include "clang/CodeGen/CGFunctionInfo.h"
 #include "clang/CodeGen/CodeGenABITypes.h"
+#include "llvm/IR/Instruction.h"
 #include "llvm/Support/SaveAndRestore.h"
 
 using namespace clang;
@@ -107,10 +108,10 @@ LValue CGObjCRuntime::EmitValueForIvarAtOffset(CodeGen::CodeGenFunction &CGF,
                              CGF.CGM.getContext().toBits(StorageSize),
                              CharUnits::fromQuantity(0)));
 
-  Address Addr = Address(V, CGF.Int8Ty, Alignment);
-  Addr = CGF.Builder.CreateElementBitCast(Addr,
-                                   llvm::Type::getIntNTy(CGF.getLLVMContext(),
-                                                         Info->StorageSize));
+  Address Addr =
+      Address(V, llvm::Type::getIntNTy(CGF.getLLVMContext(), Info->StorageSize),
+              Alignment);
+
   return LValue::MakeBitfield(Addr, *Info, IvarTy,
                               LValueBaseInfo(AlignmentSource::Decl),
                               TBAAAccessInfo());
@@ -240,21 +241,24 @@ void CGObjCRuntime::EmitTryCatchStmt(CodeGenFunction &CGF,
     CatchHandler &Handler = Handlers[I];
 
     CGF.EmitBlock(Handler.Block);
-    llvm::CatchPadInst *CPI = nullptr;
-    SaveAndRestore<llvm::Instruction *> RestoreCurrentFuncletPad(CGF.CurrentFuncletPad);
-    if (useFunclets)
-      if ((CPI = dyn_cast_or_null<llvm::CatchPadInst>(Handler.Block->getFirstNonPHI()))) {
+
+    CodeGenFunction::LexicalScope Cleanups(CGF, Handler.Body->getSourceRange());
+    SaveAndRestore RevertAfterScope(CGF.CurrentFuncletPad);
+    if (useFunclets) {
+      llvm::Instruction *CPICandidate = Handler.Block->getFirstNonPHI();
+      if (auto *CPI = dyn_cast_or_null<llvm::CatchPadInst>(CPICandidate)) {
         CGF.CurrentFuncletPad = CPI;
         CPI->setOperand(2, CGF.getExceptionSlot().getPointer());
+        CGF.EHStack.pushCleanup<CatchRetScope>(NormalCleanup, CPI);
       }
+    }
+
     llvm::Value *RawExn = CGF.getExceptionFromSlot();
 
     // Enter the catch.
     llvm::Value *Exn = RawExn;
     if (beginCatchFn)
       Exn = CGF.EmitNounwindRuntimeCall(beginCatchFn, RawExn, "exn.adjusted");
-
-    CodeGenFunction::LexicalScope cleanups(CGF, Handler.Body->getSourceRange());
 
     if (endCatchFn) {
       // Add a cleanup to leave the catch.
@@ -273,15 +277,13 @@ void CGObjCRuntime::EmitTryCatchStmt(CodeGenFunction &CGF,
       CGF.EmitAutoVarDecl(*CatchParam);
       EmitInitOfCatchParam(CGF, CastExn, CatchParam);
     }
-    if (CPI)
-        CGF.EHStack.pushCleanup<CatchRetScope>(NormalCleanup, CPI);
 
     CGF.ObjCEHValueStack.push_back(Exn);
     CGF.EmitStmt(Handler.Body);
     CGF.ObjCEHValueStack.pop_back();
 
     // Leave any cleanups associated with the catch.
-    cleanups.ForceCleanup();
+    Cleanups.ForceCleanup();
 
     CGF.EmitBranchThroughCleanup(Cont);
   }
@@ -306,7 +308,7 @@ void CGObjCRuntime::EmitInitOfCatchParam(CodeGenFunction &CGF,
   switch (paramDecl->getType().getQualifiers().getObjCLifetime()) {
   case Qualifiers::OCL_Strong:
     exn = CGF.EmitARCRetainNonBlock(exn);
-    LLVM_FALLTHROUGH;
+    [[fallthrough]];
 
   case Qualifiers::OCL_None:
   case Qualifiers::OCL_ExplicitNone:
@@ -373,14 +375,15 @@ CGObjCRuntime::MessageSendInfo
 CGObjCRuntime::getMessageSendInfo(const ObjCMethodDecl *method,
                                   QualType resultType,
                                   CallArgList &callArgs) {
+  unsigned ProgramAS = CGM.getDataLayout().getProgramAddressSpace();
+
+  llvm::PointerType *signatureType =
+      llvm::PointerType::get(CGM.getLLVMContext(), ProgramAS);
+
   // If there's a method, use information from that.
   if (method) {
     const CGFunctionInfo &signature =
       CGM.getTypes().arrangeObjCMessageSendSignature(method, callArgs[0].Ty);
-
-    llvm::PointerType *signatureType =
-      CGM.getTypes().GetFunctionType(signature)->getPointerTo(
-        CGM.getTargetCodeGenInfo().getDefaultAS());
 
     const CGFunctionInfo &signatureForCall =
       CGM.getTypes().arrangeCall(signature, callArgs);
@@ -392,10 +395,6 @@ CGObjCRuntime::getMessageSendInfo(const ObjCMethodDecl *method,
   const CGFunctionInfo &argsInfo =
     CGM.getTypes().arrangeUnprototypedObjCMessageSend(resultType, callArgs);
 
-  // Derive the signature to call from that.
-  llvm::PointerType *signatureType =
-    CGM.getTypes().GetFunctionType(argsInfo)->getPointerTo(
-      CGM.getTargetCodeGenInfo().getDefaultAS());
   return MessageSendInfo(argsInfo, signatureType);
 }
 

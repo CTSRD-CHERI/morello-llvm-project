@@ -256,7 +256,7 @@ bool ABI::GetCalleeRegisterToSearch(RegisterContext &reg_ctx,
 ValueObjectSP ABI::CreateSigInfoValueObject(Target &target,
                                             const DataBufferSP &data_sp,
                                             Status &error) const {
-  TypeSystemClang *ast_ctx = ScratchTypeSystemClang::GetForTarget(target);
+  TypeSystemClangSP ast_ctx = ScratchTypeSystemClang::GetForTarget(target);
   if (ast_ctx == nullptr) {
     error.SetErrorString(
         "failed to obtain Clang AST context to get hold of the siginfo type");

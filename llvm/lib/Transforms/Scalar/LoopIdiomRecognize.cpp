@@ -84,14 +84,11 @@
 #include "llvm/IR/User.h"
 #include "llvm/IR/Value.h"
 #include "llvm/IR/ValueHandle.h"
-#include "llvm/InitializePasses.h"
-#include "llvm/Pass.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/InstructionCost.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils/BuildLibCalls.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Transforms/Utils/LoopUtils.h"
@@ -255,61 +252,7 @@ private:
 
   /// @}
 };
-
-class LoopIdiomRecognizeLegacyPass : public LoopPass {
-public:
-  static char ID;
-
-  explicit LoopIdiomRecognizeLegacyPass() : LoopPass(ID) {
-    initializeLoopIdiomRecognizeLegacyPassPass(
-        *PassRegistry::getPassRegistry());
-  }
-
-  bool runOnLoop(Loop *L, LPPassManager &LPM) override {
-    if (DisableLIRP::All)
-      return false;
-
-    if (skipLoop(L))
-      return false;
-
-    AliasAnalysis *AA = &getAnalysis<AAResultsWrapperPass>().getAAResults();
-    DominatorTree *DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
-    LoopInfo *LI = &getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
-    ScalarEvolution *SE = &getAnalysis<ScalarEvolutionWrapperPass>().getSE();
-    TargetLibraryInfo *TLI =
-        &getAnalysis<TargetLibraryInfoWrapperPass>().getTLI(
-            *L->getHeader()->getParent());
-    const TargetTransformInfo *TTI =
-        &getAnalysis<TargetTransformInfoWrapperPass>().getTTI(
-            *L->getHeader()->getParent());
-    const DataLayout *DL = &L->getHeader()->getModule()->getDataLayout();
-    auto *MSSAAnalysis = getAnalysisIfAvailable<MemorySSAWrapperPass>();
-    MemorySSA *MSSA = nullptr;
-    if (MSSAAnalysis)
-      MSSA = &MSSAAnalysis->getMSSA();
-
-    // For the old PM, we can't use OptimizationRemarkEmitter as an analysis
-    // pass.  Function analyses need to be preserved across loop transformations
-    // but ORE cannot be preserved (see comment before the pass definition).
-    OptimizationRemarkEmitter ORE(L->getHeader()->getParent());
-
-    LoopIdiomRecognize LIR(AA, DT, LI, SE, TLI, TTI, MSSA, DL, ORE);
-    return LIR.runOnLoop(L);
-  }
-
-  /// This transformation requires natural loop information & requires that
-  /// loop preheaders be inserted into the CFG.
-  void getAnalysisUsage(AnalysisUsage &AU) const override {
-    AU.addRequired<TargetLibraryInfoWrapperPass>();
-    AU.addRequired<TargetTransformInfoWrapperPass>();
-    AU.addPreserved<MemorySSAWrapperPass>();
-    getLoopAnalysisUsage(AU);
-  }
-};
-
 } // end anonymous namespace
-
-char LoopIdiomRecognizeLegacyPass::ID = 0;
 
 PreservedAnalyses LoopIdiomRecognizePass::run(Loop &L, LoopAnalysisManager &AM,
                                               LoopStandardAnalysisResults &AR,
@@ -334,16 +277,6 @@ PreservedAnalyses LoopIdiomRecognizePass::run(Loop &L, LoopAnalysisManager &AM,
     PA.preserve<MemorySSAAnalysis>();
   return PA;
 }
-
-INITIALIZE_PASS_BEGIN(LoopIdiomRecognizeLegacyPass, "loop-idiom",
-                      "Recognize loop idioms", false, false)
-INITIALIZE_PASS_DEPENDENCY(LoopPass)
-INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfoWrapperPass)
-INITIALIZE_PASS_DEPENDENCY(TargetTransformInfoWrapperPass)
-INITIALIZE_PASS_END(LoopIdiomRecognizeLegacyPass, "loop-idiom",
-                    "Recognize loop idioms", false, false)
-
-Pass *llvm::createLoopIdiomPass() { return new LoopIdiomRecognizeLegacyPass(); }
 
 static void deleteDeadInstruction(Instruction *I) {
   I->replaceAllUsesWith(PoisonValue::get(I->getType()));
@@ -442,7 +375,7 @@ static Constant *getMemSetPatternValue(Value *V, const DataLayout *DL) {
   // array.  We could theoretically do a store to an alloca or something, but
   // that doesn't seem worthwhile.
   Constant *C = dyn_cast<Constant>(V);
-  if (!C)
+  if (!C || isa<ConstantExpr>(C))
     return nullptr;
 
   // Only handle simple values that are a power of two bytes in size.
@@ -497,8 +430,8 @@ LoopIdiomRecognize::isLegalStore(StoreInst *SI) {
   // When storing out scalable vectors we bail out for now, since the code
   // below currently only works for constant strides.
   TypeSize SizeInBits = DL->getTypeSizeInBits(StoredVal->getType());
-  if (SizeInBits.isScalable() || (SizeInBits.getFixedSize() & 7) ||
-      (SizeInBits.getFixedSize() >> 32) != 0)
+  if (SizeInBits.isScalable() || (SizeInBits.getFixedValue() & 7) ||
+      (SizeInBits.getFixedValue() >> 32) != 0)
     return LegalStoreKind::None;
 
   // See if the pointer expression is an AddRec like {base,+,1} on the current
@@ -1029,8 +962,7 @@ mayLoopAccessLocation(Value *Ptr, ModRefInfo Access, Loop *L,
   for (BasicBlock *B : L->blocks())
     for (Instruction &I : *B)
       if (!IgnoredInsts.contains(&I) &&
-          isModOrRefSet(
-              intersectModRef(AA.getModRefInfo(&I, StoreLoc), Access)))
+          isModOrRefSet(AA.getModRefInfo(&I, StoreLoc) & Access))
         return true;
   return false;
 }
@@ -1052,33 +984,6 @@ static const SCEV *getStartForNegStride(const SCEV *Start, const SCEV *BECount,
   return SE->getMinusSCEV(Start, Index);
 }
 
-/// Compute trip count from the backedge taken count.
-static const SCEV *getTripCount(const SCEV *BECount, Type *IntPtr,
-                                Loop *CurLoop, const DataLayout *DL,
-                                ScalarEvolution *SE) {
-  const SCEV *TripCountS = nullptr;
-  // The # stored bytes is (BECount+1).  Expand the trip count out to
-  // pointer size if it isn't already.
-  //
-  // If we're going to need to zero extend the BE count, check if we can add
-  // one to it prior to zero extending without overflow. Provided this is safe,
-  // it allows better simplification of the +1.
-  if (DL->getTypeSizeInBits(BECount->getType()) <
-          DL->getTypeSizeInBits(IntPtr) &&
-      SE->isLoopEntryGuardedByCond(
-          CurLoop, ICmpInst::ICMP_NE, BECount,
-          SE->getNegativeSCEV(SE->getOne(BECount->getType())))) {
-    TripCountS = SE->getZeroExtendExpr(
-        SE->getAddExpr(BECount, SE->getOne(BECount->getType()), SCEV::FlagNUW),
-        IntPtr);
-  } else {
-    TripCountS = SE->getAddExpr(SE->getTruncateOrZeroExtend(BECount, IntPtr),
-                                SE->getOne(IntPtr), SCEV::FlagNUW);
-  }
-
-  return TripCountS;
-}
-
 /// Compute the number of bytes as a SCEV from the backedge taken count.
 ///
 /// This also maps the SCEV into the provided type and tries to handle the
@@ -1086,8 +991,8 @@ static const SCEV *getTripCount(const SCEV *BECount, Type *IntPtr,
 static const SCEV *getNumBytes(const SCEV *BECount, Type *IntPtr,
                                const SCEV *StoreSizeSCEV, Loop *CurLoop,
                                const DataLayout *DL, ScalarEvolution *SE) {
-  const SCEV *TripCountSCEV = getTripCount(BECount, IntPtr, CurLoop, DL, SE);
-
+  const SCEV *TripCountSCEV =
+      SE->getTripCountFromExitCount(BECount, IntPtr, CurLoop);
   return SE->getMulExpr(TripCountSCEV,
                         SE->getTruncateOrZeroExtend(StoreSizeSCEV, IntPtr),
                         SCEV::FlagNUW);
@@ -1170,20 +1075,24 @@ bool LoopIdiomRecognize::processLoopStridedStore(
   Value *NumBytes =
       Expander.expandCodeFor(NumBytesS, IntIdxTy, Preheader->getTerminator());
 
+  if (!SplatValue && !isLibFuncEmittable(M, TLI, LibFunc_memset_pattern16))
+    return Changed;
+
+  AAMDNodes AATags = TheStore->getAAMetadata();
+  for (Instruction *Store : Stores)
+    AATags = AATags.merge(Store->getAAMetadata());
+  if (auto CI = dyn_cast<ConstantInt>(NumBytes))
+    AATags = AATags.extendTo(CI->getZExtValue());
+  else
+    AATags = AATags.extendTo(-1);
+
   CallInst *NewCall;
   if (SplatValue) {
-    AAMDNodes AATags = TheStore->getAAMetadata();
-    for (Instruction *Store : Stores)
-      AATags = AATags.merge(Store->getAAMetadata());
-    if (auto CI = dyn_cast<ConstantInt>(NumBytes))
-      AATags = AATags.extendTo(CI->getZExtValue());
-    else
-      AATags = AATags.extendTo(-1);
-
     NewCall = Builder.CreateMemSet(
         BasePtr, SplatValue, NumBytes, MaybeAlign(StoreAlignment),
         /*isVolatile=*/false, AATags.TBAA, AATags.Scope, AATags.NoAlias);
-  } else if (isLibFuncEmittable(M, TLI, LibFunc_memset_pattern16)) {
+  } else {
+    assert (isLibFuncEmittable(M, TLI, LibFunc_memset_pattern16));
     // Everything is emitted in default address space
     Type *Int8PtrTy = DestInt8PtrTy;
 
@@ -1201,8 +1110,17 @@ bool LoopIdiomRecognize::processLoopStridedStore(
     GV->setAlignment(Align(16));
     Value *PatternPtr = ConstantExpr::getBitCast(GV, Int8PtrTy);
     NewCall = Builder.CreateCall(MSP, {BasePtr, PatternPtr, NumBytes});
-  } else
-    return Changed;
+    
+    // Set the TBAA info if present.
+    if (AATags.TBAA)
+      NewCall->setMetadata(LLVMContext::MD_tbaa, AATags.TBAA);
+
+    if (AATags.Scope)
+      NewCall->setMetadata(LLVMContext::MD_alias_scope, AATags.Scope);
+
+    if (AATags.NoAlias)
+      NewCall->setMetadata(LLVMContext::MD_noalias, AATags.NoAlias);
+  } 
 
   NewCall->setDebugLoc(TheStore->getDebugLoc());
 
@@ -1283,6 +1201,7 @@ bool LoopIdiomRecognize::processLoopStoreOfLoopLoad(StoreInst *SI,
                                     StoreEv, LoadEv, BECount, PreserveTags);
 }
 
+namespace {
 class MemmoveVerifier {
 public:
   explicit MemmoveVerifier(const Value &LoadBasePtr, const Value &StoreBasePtr,
@@ -1306,7 +1225,7 @@ public:
       // Ensure that LoadBasePtr is after StoreBasePtr or before StoreBasePtr
       // for negative stride. LoadBasePtr shouldn't overlap with StoreBasePtr.
       int64_t LoadSize =
-          DL.getTypeSizeInBits(TheLoad.getType()).getFixedSize() / 8;
+          DL.getTypeSizeInBits(TheLoad.getType()).getFixedValue() / 8;
       if (BP1 != BP2 || LoadSize != int64_t(StoreSize))
         return false;
       if ((!IsNegStride && LoadOff < StoreOff + int64_t(StoreSize)) ||
@@ -1326,6 +1245,7 @@ private:
 public:
   const bool IsSameObject;
 };
+} // namespace
 
 bool LoopIdiomRecognize::processLoopStoreOfLoopLoad(
     Value *DestPtr, Value *SourcePtr, const SCEV *StoreSizeSCEV,
@@ -1494,7 +1414,7 @@ bool LoopIdiomRecognize::processLoopStoreOfLoopLoad(
     // anything where the alignment isn't at least the element size.
     assert((StoreAlign && LoadAlign) &&
            "Expect unordered load/store to have align.");
-    if (StoreAlign.value() < StoreSize || LoadAlign.value() < StoreSize)
+    if (*StoreAlign < StoreSize || *LoadAlign < StoreSize)
       return Changed;
 
     // If the element.atomic memcpy is not lowered into explicit
@@ -1508,9 +1428,8 @@ bool LoopIdiomRecognize::processLoopStoreOfLoopLoad(
     // Note that unordered atomic loads/stores are *required* by the spec to
     // have an alignment but non-atomic loads/stores may not.
     NewCall = Builder.CreateElementUnorderedAtomicMemCpy(
-        StoreBasePtr, StoreAlign.value(), LoadBasePtr, LoadAlign.value(),
-        NumBytes, StoreSize, PreserveTags, AATags.TBAA, AATags.TBAAStruct,
-        AATags.Scope, AATags.NoAlias);
+        StoreBasePtr, *StoreAlign, LoadBasePtr, *LoadAlign, NumBytes, StoreSize,
+        PreserveTags, AATags.TBAA, AATags.TBAAStruct, AATags.Scope, AATags.NoAlias);
   }
   NewCall->setDebugLoc(TheStore->getDebugLoc());
 
@@ -2482,7 +2401,7 @@ bool LoopIdiomRecognize::recognizeShiftUntilBitTest() {
   // intrinsic/shift we'll use are not cheap. Note that we are okay with *just*
   // making the loop countable, even if nothing else changes.
   IntrinsicCostAttributes Attrs(
-      IntrID, Ty, {UndefValue::get(Ty), /*is_zero_undef=*/Builder.getTrue()});
+      IntrID, Ty, {PoisonValue::get(Ty), /*is_zero_poison=*/Builder.getTrue()});
   InstructionCost Cost = TTI->getIntrinsicInstrCost(Attrs, CostKind);
   if (Cost > TargetTransformInfo::TCC_Basic) {
     LLVM_DEBUG(dbgs() << DEBUG_TYPE
@@ -2498,6 +2417,24 @@ bool LoopIdiomRecognize::recognizeShiftUntilBitTest() {
   // Ok, transform appears worthwhile.
   MadeChange = true;
 
+  if (!isGuaranteedNotToBeUndefOrPoison(BitPos)) {
+    // BitMask may be computed from BitPos, Freeze BitPos so we can increase
+    // it's use count.
+    Instruction *InsertPt = nullptr;
+    if (auto *BitPosI = dyn_cast<Instruction>(BitPos))
+      InsertPt = BitPosI->getInsertionPointAfterDef();
+    else
+      InsertPt = &*DT->getRoot()->getFirstNonPHIOrDbgOrAlloca();
+    if (!InsertPt)
+      return false;
+    FreezeInst *BitPosFrozen =
+        new FreezeInst(BitPos, BitPos->getName() + ".fr", InsertPt);
+    BitPos->replaceUsesWithIf(BitPosFrozen, [BitPosFrozen](Use &U) {
+      return U.getUser() != BitPosFrozen;
+    });
+    BitPos = BitPosFrozen;
+  }
+
   // Step 1: Compute the loop trip count.
 
   Value *LowBitMask = Builder.CreateAdd(BitMask, Constant::getAllOnesValue(Ty),
@@ -2506,7 +2443,7 @@ bool LoopIdiomRecognize::recognizeShiftUntilBitTest() {
       Builder.CreateOr(LowBitMask, BitMask, BitPos->getName() + ".mask");
   Value *XMasked = Builder.CreateAnd(X, Mask, X->getName() + ".masked");
   CallInst *XMaskedNumLeadingZeros = Builder.CreateIntrinsic(
-      IntrID, Ty, {XMasked, /*is_zero_undef=*/Builder.getTrue()},
+      IntrID, Ty, {XMasked, /*is_zero_poison=*/Builder.getTrue()},
       /*FMFSource=*/nullptr, XMasked->getName() + ".numleadingzeros");
   Value *XMaskedNumActiveBits = Builder.CreateSub(
       ConstantInt::get(Ty, Ty->getScalarSizeInBits()), XMaskedNumLeadingZeros,
@@ -2836,7 +2773,7 @@ bool LoopIdiomRecognize::recognizeShiftUntilZero() {
   // intrinsic we'll use are not cheap. Note that we are okay with *just*
   // making the loop countable, even if nothing else changes.
   IntrinsicCostAttributes Attrs(
-      IntrID, Ty, {UndefValue::get(Ty), /*is_zero_undef=*/Builder.getFalse()});
+      IntrID, Ty, {PoisonValue::get(Ty), /*is_zero_poison=*/Builder.getFalse()});
   InstructionCost Cost = TTI->getIntrinsicInstrCost(Attrs, CostKind);
   if (Cost > TargetTransformInfo::TCC_Basic) {
     LLVM_DEBUG(dbgs() << DEBUG_TYPE
@@ -2854,7 +2791,7 @@ bool LoopIdiomRecognize::recognizeShiftUntilZero() {
   // Step 1: Compute the loop's final IV value / trip count.
 
   CallInst *ValNumLeadingZeros = Builder.CreateIntrinsic(
-      IntrID, Ty, {Val, /*is_zero_undef=*/Builder.getFalse()},
+      IntrID, Ty, {Val, /*is_zero_poison=*/Builder.getFalse()},
       /*FMFSource=*/nullptr, Val->getName() + ".numleadingzeros");
   Value *ValNumActiveBits = Builder.CreateSub(
       ConstantInt::get(Ty, Ty->getScalarSizeInBits()), ValNumLeadingZeros,

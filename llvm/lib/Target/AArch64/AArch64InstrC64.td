@@ -327,7 +327,7 @@ defm ALDRW  : PLoad32RO<0b10, 0, 0b01, GPR32, "ldr", i32, load>;
 defm ALDRX  : PLoad64RO<0b11, 0, 0b01, GPR64, "ldr", i64, load>;
 
 // Floating-point
-defm ALDRB : PLoad8RO<0b00,   1, 0b01, FPR8Op,   "ldr", untyped, load>;
+defm ALDRB : PLoad8RO<0b00,   1, 0b01, FPR8Op,   "ldr", i8,  load>;
 defm ALDRH : PLoad16RO<0b01,  1, 0b01, FPR16Op,  "ldr", f16, load>;
 defm ALDRS : PLoad32RO<0b10,  1, 0b01, FPR32Op,  "ldr", f32, load>;
 defm ALDRD : PLoad64RO<0b11,  1, 0b01, FPR64Op,  "ldr", f64, load>;
@@ -811,7 +811,7 @@ defm ASTRW  : PStore32RO<0b10, 0, 0b00, GPR32, "str",  i32, store>;
 defm ASTRX  : PStore64RO<0b11, 0, 0b00, GPR64, "str",  i64, store>;
 
 // Floating point
-defm ASTRB : PStore8RO< 0b00,  1, 0b00, FPR8Op,   "str", untyped, store>;
+defm ASTRB : PStore8RO< 0b00,  1, 0b00, FPR8Op,   "str", i8,      store>;
 defm ASTRH : PStore16RO<0b01,  1, 0b00, FPR16Op,  "str", f16,     store>;
 defm ASTRS : PStore32RO<0b10,  1, 0b00, FPR32Op,  "str", f32,     store>;
 defm ASTRD : PStore64RO<0b11,  1, 0b00, FPR64Op,  "str", f64,     store>;
@@ -1098,7 +1098,7 @@ let Predicates = [HasC64] in {
 
 def ASTRWpre : PStorePreIdx<0b10, 0, 0b00, GPR32z, "str",  pre_inc_store, i32>;
 def ASTRXpre : PStorePreIdx<0b11, 0, 0b00, GPR64z, "str",  pre_inc_store, i64>;
-def ASTRBpre : PStorePreIdx<0b00, 1, 0b00, FPR8Op,  "str",  pre_inc_store, untyped>;
+def ASTRBpre : PStorePreIdx<0b00, 1, 0b00, FPR8Op,  "str",  pre_inc_store, i8>;
 def ASTRHpre : PStorePreIdx<0b01, 1, 0b00, FPR16Op, "str",  pre_inc_store, f16>;
 def ASTRSpre : PStorePreIdx<0b10, 1, 0b00, FPR32Op, "str",  pre_inc_store, f32>;
 def ASTRDpre : PStorePreIdx<0b11, 1, 0b00, FPR64Op, "str",  pre_inc_store, f64>;
@@ -1111,7 +1111,7 @@ def : Pat<(pre_dec_store (i32 GPR32:$Rt), Capsp:$addr, (negsimm i64imm:$off)),
           (ASTRWpre GPR32:$Rt, Capsp:$addr, i64imm:$off)>;
 def : Pat<(pre_dec_store (i64 GPR64:$Rt), Capsp:$addr, (negsimm i64imm:$off)),
           (ASTRXpre GPR64:$Rt, Capsp:$addr, i64imm:$off)>;
-def : Pat<(pre_dec_store (untyped FPR8:$Rt), Capsp:$addr, (negsimm i64imm:$off)),
+def : Pat<(pre_dec_store (i8 FPR8:$Rt), Capsp:$addr, (negsimm i64imm:$off)),
           (ASTRBpre FPR8:$Rt, Capsp:$addr, i64imm:$off)>;
 def : Pat<(pre_dec_store (f16 FPR16:$Rt), Capsp:$addr, (negsimm i64imm:$off)),
           (ASTRHpre FPR16:$Rt, Capsp:$addr, i64imm:$off)>;
@@ -1217,7 +1217,7 @@ let Predicates = [HasC64] in {
 
 def ASTRWpost : PStorePostIdx<0b10, 0, 0b00, GPR32z,  "str", post_inc_store, i32>;
 def ASTRXpost : PStorePostIdx<0b11, 0, 0b00, GPR64z,  "str", post_inc_store, i64>;
-def ASTRBpost : PStorePostIdx<0b00, 1, 0b00, FPR8Op,   "str", post_inc_store, untyped>;
+def ASTRBpost : PStorePostIdx<0b00, 1, 0b00, FPR8Op,   "str", post_inc_store, i8>;
 def ASTRHpost : PStorePostIdx<0b01, 1, 0b00, FPR16Op,  "str", post_inc_store, f16>;
 def ASTRSpost : PStorePostIdx<0b10, 1, 0b00, FPR32Op,  "str", post_inc_store, f32>;
 def ASTRDpost : PStorePostIdx<0b11, 1, 0b00, FPR64Op,  "str", post_inc_store, f64>;
@@ -1234,7 +1234,7 @@ def : Pat<(post_dec_store (i32 GPR32:$Rt), Capsp:$addr,
 def : Pat<(post_dec_store (i64 GPR64:$Rt), Capsp:$addr,
                            (negsimm i64imm:$off)),
           (ASTRXpost GPR64:$Rt, Capsp:$addr, i64imm:$off)>;
-def : Pat<(post_dec_store (untyped FPR8:$Rt), Capsp:$addr,
+def : Pat<(post_dec_store (i8 FPR8:$Rt), Capsp:$addr,
                            (negsimm i64imm:$off)),
           (ASTRBpost FPR8:$Rt, Capsp:$addr, i64imm:$off)>;
 def : Pat<(post_dec_store (f16 FPR16:$Rt), Capsp:$addr,

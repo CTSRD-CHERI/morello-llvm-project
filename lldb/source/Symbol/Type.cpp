@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include <cstdio>
+#include <optional>
 
 #include "lldb/Core/Module.h"
 #include "lldb/Utility/DataBufferHeap.h"
@@ -151,7 +152,7 @@ Type *SymbolFileType::GetType() {
 }
 
 Type::Type(lldb::user_id_t uid, SymbolFile *symbol_file, ConstString name,
-           llvm::Optional<uint64_t> byte_size, SymbolContextScope *context,
+           std::optional<uint64_t> byte_size, SymbolContextScope *context,
            user_id_t encoding_uid, EncodingDataType encoding_uid_type,
            const Declaration &decl, const CompilerType &compiler_type,
            ResolveState compiler_type_resolve_state, AddressSpace address_space,
@@ -195,7 +196,7 @@ void Type::GetDescription(Stream *s, lldb::DescriptionLevel level,
     }
   }
 
-  // Call the get byte size accesor so we resolve our byte size
+  // Call the get byte size accessor so we resolve our byte size
   if (GetByteSize(exe_scope))
     s->Printf(", byte-size = %" PRIu64, m_byte_size);
   if (m_address_space != 0)
@@ -322,6 +323,10 @@ ConstString Type::GetName() {
   return m_name;
 }
 
+ConstString Type::GetBaseName() {
+  return GetForwardCompilerType().GetTypeName(/*BaseOnly*/ true);
+}
+
 void Type::DumpTypeName(Stream *s) { GetName().Dump(s, "<invalid-type-name>"); }
 
 void Type::DumpValue(ExecutionContext *exe_ctx, Stream *s,
@@ -354,9 +359,9 @@ Type *Type::GetEncodingType() {
   return m_encoding_type;
 }
 
-llvm::Optional<uint64_t> Type::GetByteSize(ExecutionContextScope *exe_scope) {
+std::optional<uint64_t> Type::GetByteSize(ExecutionContextScope *exe_scope) {
   if (m_byte_size_has_value)
-    return m_byte_size;
+    return static_cast<uint64_t>(m_byte_size);
 
   switch (m_encoding_uid_type) {
   case eEncodingInvalid:
@@ -370,17 +375,18 @@ llvm::Optional<uint64_t> Type::GetByteSize(ExecutionContextScope *exe_scope) {
   case eEncodingIsTypedefUID: {
     Type *encoding_type = GetEncodingType();
     if (encoding_type)
-      if (llvm::Optional<uint64_t> size = encoding_type->GetByteSize(exe_scope)) {
+      if (std::optional<uint64_t> size =
+              encoding_type->GetByteSize(exe_scope)) {
         m_byte_size = *size;
         m_byte_size_has_value = true;
-        return m_byte_size;
+        return static_cast<uint64_t>(m_byte_size);
       }
 
-    if (llvm::Optional<uint64_t> size =
+    if (std::optional<uint64_t> size =
             GetLayoutCompilerType().GetByteSize(exe_scope)) {
       m_byte_size = *size;
       m_byte_size_has_value = true;
-        return m_byte_size;
+      return static_cast<uint64_t>(m_byte_size);
     }
   } break;
 
@@ -391,7 +397,7 @@ llvm::Optional<uint64_t> Type::GetByteSize(ExecutionContextScope *exe_scope) {
       if (ArchSpec arch = m_symbol_file->GetObjectFile()->GetArchitecture()) {
         m_byte_size = arch.GetAddressByteSize();
         m_byte_size_has_value = true;
-        return m_byte_size;
+        return static_cast<uint64_t>(m_byte_size);
       }
     } break;
   }
@@ -404,6 +410,10 @@ uint32_t Type::GetNumChildren(bool omit_empty_base_classes) {
 
 bool Type::IsAggregateType() {
   return GetForwardCompilerType().IsAggregateType();
+}
+
+bool Type::IsTemplateType() {
+  return GetForwardCompilerType().IsTemplateType();
 }
 
 lldb::TypeSP Type::GetTypedefType() {
@@ -556,11 +566,14 @@ bool Type::ResolveCompilerType(ResolveState compiler_type_resolve_state) {
       auto type_system_or_err =
           m_symbol_file->GetTypeSystemForLanguage(eLanguageTypeC);
       if (auto err = type_system_or_err.takeError()) {
-        LLDB_LOG_ERROR(GetLog(LLDBLog::Symbols), std::move(err),
-                       "Unable to construct void type from TypeSystemClang");
+        LLDB_LOG_ERROR(
+            GetLog(LLDBLog::Symbols), std::move(err),
+            "Unable to construct void type from TypeSystemClang: {0}");
       } else {
-        CompilerType void_compiler_type =
-            type_system_or_err->GetBasicTypeFromAST(eBasicTypeVoid);
+        CompilerType void_compiler_type;
+        auto ts = *type_system_or_err;
+        if (ts)
+          void_compiler_type = ts->GetBasicTypeFromAST(eBasicTypeVoid);
         switch (m_encoding_uid_type) {
         case eEncodingIsUID:
           m_compiler_type = void_compiler_type;
@@ -748,11 +761,14 @@ ModuleSP Type::GetModule() {
 
 ModuleSP Type::GetExeModule() {
   if (m_compiler_type) {
-    SymbolFile *symbol_file = m_compiler_type.GetTypeSystem()->GetSymbolFile();
+    auto ts = m_compiler_type.GetTypeSystem();
+    if (!ts)
+      return {};
+    SymbolFile *symbol_file = ts->GetSymbolFile();
     if (symbol_file)
       return symbol_file->GetObjectFile()->GetModule();
   }
-  return ModuleSP();
+  return {};
 }
 
 TypeAndOrName::TypeAndOrName(TypeSP &in_type_sp) {
@@ -1060,7 +1076,7 @@ CompilerType TypeImpl::GetCompilerType(bool prefer_dynamic) {
   return CompilerType();
 }
 
-TypeSystem *TypeImpl::GetTypeSystem(bool prefer_dynamic) {
+CompilerType::TypeSystemSPWrapper TypeImpl::GetTypeSystem(bool prefer_dynamic) {
   ModuleSP module_sp;
   if (CheckModule(module_sp)) {
     if (prefer_dynamic) {
@@ -1069,7 +1085,7 @@ TypeSystem *TypeImpl::GetTypeSystem(bool prefer_dynamic) {
     }
     return m_static_type.GetTypeSystem();
   }
-  return nullptr;
+  return {};
 }
 
 bool TypeImpl::GetDescription(lldb_private::Stream &strm,

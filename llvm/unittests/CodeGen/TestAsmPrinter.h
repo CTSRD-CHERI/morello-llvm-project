@@ -31,10 +31,10 @@ public:
   MOCK_METHOD2(emitSymbolAttribute,
                bool(MCSymbol *Symbol, MCSymbolAttr Attribute));
   MOCK_METHOD4(emitCommonSymbol,
-               void(MCSymbol *Symbol, uint64_t Size, unsigned ByteAlignment,
+               void(MCSymbol *Symbol, uint64_t Size, Align ByteAlignment,
                     TailPaddingAmount TailPadding));
   MOCK_METHOD6(emitZerofill, void(MCSection *Section, MCSymbol *Symbol,
-                                  uint64_t Size, unsigned ByteAlignment,
+                                  uint64_t Size, Align ByteAlignment,
                                   TailPaddingAmount TailPadding, SMLoc Loc));
 
   // The following are mock methods to be used in tests.

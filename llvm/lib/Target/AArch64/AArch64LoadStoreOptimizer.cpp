@@ -50,6 +50,7 @@
 #include <functional>
 #include <iterator>
 #include <limits>
+#include <optional>
 
 using namespace llvm;
 
@@ -98,7 +99,7 @@ using LdStPairFlags = struct LdStPairFlags {
   // If not none, RenameReg can be used to rename the result register of the
   // first store in a pair. Currently this only works when merging stores
   // forward.
-  Optional<MCPhysReg> RenameReg = None;
+  std::optional<MCPhysReg> RenameReg;
 
   LdStPairFlags() = default;
 
@@ -109,8 +110,8 @@ using LdStPairFlags = struct LdStPairFlags {
   int getSExtIdx() const { return SExtIdx; }
 
   void setRenameReg(MCPhysReg R) { RenameReg = R; }
-  void clearRenameReg() { RenameReg = None; }
-  Optional<MCPhysReg> getRenameReg() const { return RenameReg; }
+  void clearRenameReg() { RenameReg = std::nullopt; }
+  std::optional<MCPhysReg> getRenameReg() const { return RenameReg; }
 };
 
 struct AArch64LoadStoreOpt : public MachineFunctionPass {
@@ -240,10 +241,10 @@ static bool isTagStore(const MachineInstr &MI) {
   switch (MI.getOpcode()) {
   default:
     return false;
-  case AArch64::STGOffset:
-  case AArch64::STZGOffset:
-  case AArch64::ST2GOffset:
-  case AArch64::STZ2GOffset:
+  case AArch64::STGi:
+  case AArch64::STZGi:
+  case AArch64::ST2Gi:
+  case AArch64::STZ2Gi:
     return true;
   }
 }
@@ -349,6 +350,8 @@ static unsigned getMatchingNonSExtOpcode(unsigned Opc,
     return AArch64::ALDRWui;
   case AArch64::ALDURSWi:
     return AArch64::ALDURWi;
+  case AArch64::LDRSWpre:
+    return AArch64::LDRWpre;
   }
 }
 
@@ -505,6 +508,8 @@ static unsigned getMatchingPairOpcode(unsigned Opc) {
   case AArch64::CapLoadUnscaledImm:
   case AArch64::CapLoadImmPre:
     return AArch64::CapLoadPairImmPre;
+  case AArch64::LDRSWpre:
+    return AArch64::LDPSWpre;
   }
 }
 
@@ -686,13 +691,13 @@ static unsigned getPreIndexedOpcode(unsigned Opc) {
     return AArch64::CapStoreImmPreW;
   case AArch64::CapStorePairImmPre:
     return AArch64::CapStorePairImmPreW;
-  case AArch64::STGOffset:
+  case AArch64::STGi:
     return AArch64::STGPreIndex;
-  case AArch64::STZGOffset:
+  case AArch64::STZGi:
     return AArch64::STZGPreIndex;
-  case AArch64::ST2GOffset:
+  case AArch64::ST2Gi:
     return AArch64::ST2GPreIndex;
-  case AArch64::STZ2GOffset:
+  case AArch64::STZ2Gi:
     return AArch64::STZ2GPreIndex;
   case AArch64::STGPi:
     return AArch64::STGPpre;
@@ -765,13 +770,13 @@ static unsigned getPostIndexedOpcode(unsigned Opc) {
     return AArch64::STPWpost;
   case AArch64::STPXi:
     return AArch64::STPXpost;
-  case AArch64::STGOffset:
+  case AArch64::STGi:
     return AArch64::STGPostIndex;
-  case AArch64::STZGOffset:
+  case AArch64::STZGi:
     return AArch64::STZGPostIndex;
-  case AArch64::ST2GOffset:
+  case AArch64::ST2Gi:
     return AArch64::ST2GPostIndex;
-  case AArch64::STZ2GOffset:
+  case AArch64::STZ2Gi:
     return AArch64::STZ2GPostIndex;
   case AArch64::STGPi:
     return AArch64::STGPpost;
@@ -969,6 +974,8 @@ static bool isPreLdStPairCandidate(MachineInstr &FirstMI, MachineInstr &MI) {
     return (OpcB == AArch64::LDRWui) || (OpcB == AArch64::LDURWi);
   case AArch64::LDRXpre:
     return (OpcB == AArch64::LDRXui) || (OpcB == AArch64::LDURXi);
+  case AArch64::LDRSWpre:
+    return (OpcB == AArch64::LDRSWui) || (OpcB == AArch64::LDURSWi);
   case AArch64::ASTRSpre:
     return (OpcB == AArch64::ASTRSui) || (OpcB == AArch64::ASTURSi);
   case AArch64::ASTRDpre:
@@ -1114,10 +1121,10 @@ static bool isMergeableLdStUpdate(MachineInstr &MI) {
   case AArch64::PCapStoreImmPre:
   case AArch64::CapLoadImmPre:
   case AArch64::CapStoreImmPre:
-  case AArch64::STGOffset:
-  case AArch64::STZGOffset:
-  case AArch64::ST2GOffset:
-  case AArch64::STZ2GOffset:
+  case AArch64::STGi:
+  case AArch64::STZGi:
+  case AArch64::ST2Gi:
+  case AArch64::STZ2Gi:
   case AArch64::STGPi:
   // Unscaled instructions.
   case AArch64::STURSi:
@@ -1192,8 +1199,11 @@ AArch64LoadStoreOpt::mergeNarrowZeroStores(MachineBasicBlock::iterator I,
     NextI = next_nodbg(NextI, E);
 
   unsigned Opc = I->getOpcode();
+  unsigned MergeMIOpc = MergeMI->getOpcode();
   bool IsScaled = !TII->hasUnscaledLdStOffset(Opc);
-  int OffsetStride = IsScaled ? 1 : TII->getMemScale(*I);
+  bool IsMergedMIScaled = !TII->hasUnscaledLdStOffset(MergeMIOpc);
+  int OffsetStride = IsScaled ? TII->getMemScale(*I) : 1;
+  int MergeMIOffsetStride = IsMergedMIScaled ? TII->getMemScale(*MergeMI) : 1;
 
   bool MergeForward = Flags.getMergeForward();
   // Insert our new paired instruction after whichever of the paired
@@ -1206,18 +1216,27 @@ AArch64LoadStoreOpt::mergeNarrowZeroStores(MachineBasicBlock::iterator I,
                    : AArch64InstrInfo::getLdStBaseOp(*I);
 
   // Which register is Rt and which is Rt2 depends on the offset order.
-  MachineInstr *RtMI;
-  if (AArch64InstrInfo::getLdStOffsetOp(*I).getImm() ==
-      AArch64InstrInfo::getLdStOffsetOp(*MergeMI).getImm() + OffsetStride)
-    RtMI = &*MergeMI;
+  int64_t IOffsetInBytes =
+      AArch64InstrInfo::getLdStOffsetOp(*I).getImm() * OffsetStride;
+  int64_t MIOffsetInBytes =
+      AArch64InstrInfo::getLdStOffsetOp(*MergeMI).getImm() *
+      MergeMIOffsetStride;
+  // Select final offset based on the offset order.
+  int64_t OffsetImm;
+  if (IOffsetInBytes > MIOffsetInBytes)
+    OffsetImm = MIOffsetInBytes;
   else
-    RtMI = &*I;
+    OffsetImm = IOffsetInBytes;
 
-  int OffsetImm = AArch64InstrInfo::getLdStOffsetOp(*RtMI).getImm();
-  // Change the scaled offset from small to large type.
-  if (IsScaled) {
-    assert(((OffsetImm & 1) == 0) && "Unexpected offset to merge");
-    OffsetImm /= 2;
+  int NewOpcode = getMatchingWideOpcode(Opc);
+  bool FinalIsScaled = !TII->hasUnscaledLdStOffset(NewOpcode);
+
+  // Adjust final offset if the result opcode is a scaled store.
+  if (FinalIsScaled) {
+    int NewOffsetStride = FinalIsScaled ? TII->getMemScale(NewOpcode) : 1;
+    assert(((OffsetImm % NewOffsetStride) == 0) &&
+           "Offset should be a multiple of the store memory scale");
+    OffsetImm = OffsetImm / NewOffsetStride;
   }
 
   // Construct the new instruction.
@@ -1304,7 +1323,7 @@ AArch64LoadStoreOpt::mergePairedInsns(MachineBasicBlock::iterator I,
 
   bool MergeForward = Flags.getMergeForward();
 
-  Optional<MCPhysReg> RenameReg = Flags.getRenameReg();
+  std::optional<MCPhysReg> RenameReg = Flags.getRenameReg();
   if (MergeForward && RenameReg) {
     MCRegister RegToRename = getLdStRegOp(*I).getReg();
     DefinedInBB.addReg(*RenameReg);
@@ -1739,6 +1758,11 @@ bool AArch64LoadStoreOpt::findMatchingStore(
   return false;
 }
 
+static bool needsWinCFI(const MachineFunction *MF) {
+  return MF->getTarget().getMCAsmInfo()->usesWindowsCFI() &&
+         MF->getFunction().needsUnwindTableEntry();
+}
+
 // Returns true if FirstMI and MI are candidates for merging or pairing.
 // Otherwise, returns false.
 static bool areCandidatesToMergeOrPair(MachineInstr &FirstMI, MachineInstr &MI,
@@ -1752,6 +1776,10 @@ static bool areCandidatesToMergeOrPair(MachineInstr &FirstMI, MachineInstr &MI,
   assert(!FirstMI.hasOrderedMemoryRef() &&
          !TII->isLdStPairSuppressed(FirstMI) &&
          "FirstMI shouldn't get here if either of these checks are true.");
+
+  if (needsWinCFI(MI.getMF()) && (MI.getFlag(MachineInstr::FrameSetup) ||
+                                  MI.getFlag(MachineInstr::FrameDestroy)))
+    return false;
 
   unsigned OpcA = FirstMI.getOpcode();
   unsigned OpcB = MI.getOpcode();
@@ -1782,7 +1810,7 @@ static bool areCandidatesToMergeOrPair(MachineInstr &FirstMI, MachineInstr &MI,
     return false;
 
   // The STR<S,D,Q,W,X>pre - STR<S,D,Q,W,X>ui and
-  // LDR<S,D,Q,W,X>pre-LDR<S,D,Q,W,X>ui
+  // LDR<S,D,Q,W,X,SW>pre-LDR<S,D,Q,W,X,SW>ui
   // are candidate pairs that can be merged.
   if (isPreLdStPairCandidate(FirstMI, MI))
     return true;
@@ -1924,7 +1952,7 @@ canRenameUpToDef(MachineInstr &FirstMI, LiveRegUnits &UsedInBetween,
 // * not used in \p UsedInBetween; UsedInBetween must contain all accessed
 //   registers in the range the rename register will be used,
 // * is available in all used register classes (checked using RequiredClasses).
-static Optional<MCPhysReg> tryToFindRegisterToRename(
+static std::optional<MCPhysReg> tryToFindRegisterToRename(
     const MachineFunction &MF, Register Reg, LiveRegUnits &DefinedInBB,
     LiveRegUnits &UsedInBetween,
     SmallPtrSetImpl<const TargetRegisterClass *> &RequiredClasses,
@@ -1963,7 +1991,7 @@ static Optional<MCPhysReg> tryToFindRegisterToRename(
   }
   LLVM_DEBUG(dbgs() << "No rename register found from "
                     << TRI->getRegClassName(RegClass) << "\n");
-  return None;
+  return std::nullopt;
 }
 
 /// Scan the instructions looking for a load/store that can be combined with the
@@ -1986,7 +2014,7 @@ AArch64LoadStoreOpt::findMatchingInsn(MachineBasicBlock::iterator I,
   int OffsetStride = IsUnscaled ? TII->getMemScale(FirstMI) : 1;
   bool IsPromotableZeroStore = isPromotableZeroStoreInst(FirstMI);
 
-  Optional<bool> MaybeCanRename = None;
+  std::optional<bool> MaybeCanRename;
   if (!EnableRenaming)
     MaybeCanRename = {false};
 
@@ -2173,9 +2201,10 @@ AArch64LoadStoreOpt::findMatchingInsn(MachineBasicBlock::iterator I,
                                                  RequiredClasses, TRI)};
 
             if (*MaybeCanRename) {
-              Optional<MCPhysReg> MaybeRenameReg = tryToFindRegisterToRename(
-                  *FirstMI.getParent()->getParent(), Reg, DefinedInBB,
-                  UsedInBetween, RequiredClasses, TRI);
+              std::optional<MCPhysReg> MaybeRenameReg =
+                  tryToFindRegisterToRename(*FirstMI.getParent()->getParent(),
+                                            Reg, DefinedInBB, UsedInBetween,
+                                            RequiredClasses, TRI);
               if (MaybeRenameReg) {
                 Flags.setRenameReg(*MaybeRenameReg);
                 Flags.setMergeForward(true);
@@ -2384,11 +2413,6 @@ bool AArch64LoadStoreOpt::isMatchingUpdateInsn(MachineInstr &MemMI,
   return false;
 }
 
-static bool needsWinCFI(const MachineFunction *MF) {
-  return MF->getTarget().getMCAsmInfo()->usesWindowsCFI() &&
-         MF->getFunction().needsUnwindTableEntry();
-}
-
 MachineBasicBlock::iterator AArch64LoadStoreOpt::findMatchingUpdateInsnForward(
     MachineBasicBlock::iterator I, int UnscaledOffset, unsigned Limit) {
   MachineBasicBlock::iterator E = I->getParent()->end();
@@ -2555,6 +2579,9 @@ bool AArch64LoadStoreOpt::tryToPromoteLoadFromStore(
   MachineInstr &MI = *MBBI;
   // If this is a volatile load, don't mess with it.
   if (MI.hasOrderedMemoryRef())
+    return false;
+
+  if (needsWinCFI(MI.getMF()) && MI.getFlag(MachineInstr::FrameDestroy))
     return false;
 
   // Make sure this is a reg+imm.

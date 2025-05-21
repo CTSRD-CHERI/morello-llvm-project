@@ -46,12 +46,9 @@ CGCallee CGCXXABI::EmitLoadOfMemberFunctionPointer(
 
   ThisPtrForCall = This.getPointer();
   const auto *FPT = MPT->getPointeeType()->castAs<FunctionProtoType>();
-  const auto *RD =
-      cast<CXXRecordDecl>(MPT->getClass()->castAs<RecordType>()->getDecl());
-  llvm::FunctionType *FTy = CGM.getTypes().GetFunctionType(
-      CGM.getTypes().arrangeCXXMethodType(RD, FPT, /*FD=*/nullptr));
   unsigned AS = CGM.getTargetCodeGenInfo().getDefaultAS();
-  llvm::Constant *FnPtr = llvm::Constant::getNullValue(FTy->getPointerTo(AS));
+  llvm::Constant *FnPtr = llvm::Constant::getNullValue(
+      llvm::PointerType::get(CGM.getLLVMContext(), AS));
   return CGCallee::forDirect(FnPtr, FPT);
 }
 
@@ -60,8 +57,8 @@ CGCXXABI::EmitMemberDataPointerAddress(CodeGenFunction &CGF, const Expr *E,
                                        Address Base, llvm::Value *MemPtr,
                                        const MemberPointerType *MPT) {
   ErrorUnsupportedABI(CGF, "loads of member pointers");
-  llvm::Type *Ty = CGF.ConvertType(MPT->getPointeeType())
-                         ->getPointerTo(Base.getAddressSpace());
+  llvm::Type *Ty =
+      llvm::PointerType::get(CGF.getLLVMContext(), Base.getAddressSpace());
   return llvm::Constant::getNullValue(Ty);
 }
 
@@ -251,7 +248,7 @@ void CGCXXABI::ReadArrayCookie(CodeGenFunction &CGF, Address ptr,
                                llvm::Value *&numElements,
                                llvm::Value *&allocPtr, CharUnits &cookieSize) {
   // Derive a char* in the same address space as the pointer.
-  ptr = CGF.Builder.CreateElementBitCast(ptr, CGF.Int8Ty);
+  ptr = ptr.withElementType(CGF.Int8Ty);
 
   // If we don't need an array cookie, bail out early.
   if (!requiresArrayCookie(expr, eltTy)) {

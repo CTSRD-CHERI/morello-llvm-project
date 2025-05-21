@@ -19,10 +19,11 @@
 // FIXME: Is it easiest to fix this layering violation by moving the .inc
 // #includes from AArch64MCTargetDesc.h to here?
 #include "MCTargetDesc/AArch64MCTargetDesc.h" // For AArch64::X0 and friends.
+#include "llvm/ADT/BitmaskEnum.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringSwitch.h"
-#include "llvm/MC/SubtargetFeature.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/TargetParser/SubtargetFeature.h"
 
 namespace llvm {
 
@@ -493,6 +494,7 @@ inline static unsigned getNZCVToSatisfyCondCode(CondCode Code) {
   case LE: return Z; // Z == 1 || N != V
   }
 }
+
 } // end namespace AArch64CC
 
 struct SysAlias {
@@ -608,6 +610,14 @@ namespace AArch64SVEPRFM {
 #include "AArch64GenSystemOperands.inc"
 }
 
+namespace AArch64RPRFM {
+struct RPRFM : SysAlias {
+  using SysAlias::SysAlias;
+};
+#define GET_RPRFM_DECL
+#include "AArch64GenSystemOperands.inc"
+} // namespace AArch64RPRFM
+
 namespace AArch64SVEPredPattern {
   struct SVEPREDPAT {
     const char *Name;
@@ -616,6 +626,15 @@ namespace AArch64SVEPredPattern {
 #define GET_SVEPREDPAT_DECL
 #include "AArch64GenSystemOperands.inc"
 }
+
+namespace AArch64SVEVecLenSpecifier {
+  struct SVEVECLENSPECIFIER {
+    const char *Name;
+    uint16_t Encoding;
+  };
+#define GET_SVEVECLENSPECIFIER_DECL
+#include "AArch64GenSystemOperands.inc"
+} // namespace AArch64SVEVecLenSpecifier
 
 /// Return the number of active elements for VL1 to VL256 predicate pattern,
 /// zero for all other patterns.
@@ -646,11 +665,11 @@ inline unsigned getNumElementsFromSVEPredPattern(unsigned Pattern) {
 }
 
 /// Return specific VL predicate pattern based on the number of elements.
-inline Optional<unsigned>
+inline std::optional<unsigned>
 getSVEPredPatternFromNumElements(unsigned MinNumElts) {
   switch (MinNumElts) {
   default:
-    return None;
+    return std::nullopt;
   case 1:
   case 2:
   case 3:
@@ -673,6 +692,27 @@ getSVEPredPatternFromNumElements(unsigned MinNumElts) {
   }
 }
 
+/// An enum to describe what types of loops we should attempt to tail-fold:
+///   Disabled:    None
+///   Reductions:  Loops containing reductions
+///   Recurrences: Loops with first-order recurrences, i.e. that would
+///                  require a SVE splice instruction
+///   Reverse:     Reverse loops
+///   Simple:      Loops that are not reversed and don't contain reductions
+///                  or first-order recurrences.
+///   All:         All
+enum class TailFoldingOpts : uint8_t {
+  Disabled = 0x00,
+  Simple = 0x01,
+  Reductions = 0x02,
+  Recurrences = 0x04,
+  Reverse = 0x08,
+  All = Reductions | Recurrences | Simple | Reverse
+};
+
+LLVM_DECLARE_ENUM_AS_BITMASK(TailFoldingOpts,
+                             /* LargestValue */ (long)TailFoldingOpts::Reverse);
+
 namespace AArch64ExactFPImm {
   struct ExactFPImm {
     const char *Name;
@@ -684,10 +724,16 @@ namespace AArch64ExactFPImm {
 }
 
 namespace AArch64PState {
-  struct PState : SysAlias{
+  struct PStateImm0_15 : SysAlias{
     using SysAlias::SysAlias;
   };
-  #define GET_PSTATE_DECL
+  #define GET_PSTATEIMM0_15_DECL
+  #include "AArch64GenSystemOperands.inc"
+
+  struct PStateImm0_1 : SysAlias{
+    using SysAlias::SysAlias;
+  };
+  #define GET_PSTATEIMM0_1_DECL
   #include "AArch64GenSystemOperands.inc"
 }
 
@@ -953,11 +999,60 @@ namespace AArch64II {
     /// an LDG instruction to obtain the tag value.
     MO_TAGGED = 0x400,
 
+    /// MO_DLLIMPORTAUX - Symbol refers to "auxilliary" import stub. On
+    /// Arm64EC, there are two kinds of import stubs used for DLL import of
+    /// functions: MO_DLLIMPORT refers to natively callable Arm64 code, and
+    /// MO_DLLIMPORTAUX refers to the original address which can be compared
+    /// for equality.
+    MO_DLLIMPORTAUX = 0x800,
+
     /// MO_SIZE - Indicactes that MO_G0-MO_G3 are used to materialize the
     /// symbol size.
-    MO_SIZE = 0x800
+    MO_SIZE = 0x1000
   };
 } // end namespace AArch64II
+
+//===----------------------------------------------------------------------===//
+// v8.3a Pointer Authentication
+//
+
+namespace AArch64PACKey {
+enum ID : uint8_t {
+  IA = 0,
+  IB = 1,
+  DA = 2,
+  DB = 3,
+  LAST = DB
+};
+} // namespace AArch64PACKey
+
+/// Return 2-letter identifier string for numeric key ID.
+inline static StringRef AArch64PACKeyIDToString(AArch64PACKey::ID KeyID) {
+  switch (KeyID) {
+  case AArch64PACKey::IA:
+    return StringRef("ia");
+  case AArch64PACKey::IB:
+    return StringRef("ib");
+  case AArch64PACKey::DA:
+    return StringRef("da");
+  case AArch64PACKey::DB:
+    return StringRef("db");
+  }
+}
+
+/// Return numeric key ID for 2-letter identifier string.
+inline static std::optional<AArch64PACKey::ID>
+AArch64StringToPACKeyID(StringRef Name) {
+  if (Name == "ia")
+    return AArch64PACKey::IA;
+  if (Name == "ib")
+    return AArch64PACKey::IB;
+  if (Name == "da")
+    return AArch64PACKey::DA;
+  if (Name == "db")
+    return AArch64PACKey::DB;
+  return std::nullopt;
+}
 
 namespace AArch64 {
 // The number of bits in a SVE register is architecturally defined

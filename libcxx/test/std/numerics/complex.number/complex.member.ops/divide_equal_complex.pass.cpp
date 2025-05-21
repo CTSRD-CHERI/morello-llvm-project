@@ -8,7 +8,7 @@
 
 // <complex>
 
-// complex& operator/=(const complex& rhs);
+// complex& operator/=(const complex& rhs); // constexpr in C++20
 
 #include <complex>
 #include <cassert>
@@ -16,7 +16,8 @@
 #include "test_macros.h"
 
 template <class T>
-void
+TEST_CONSTEXPR_CXX20
+bool
 test()
 {
     std::complex<T> c(-4, 7.5);
@@ -35,15 +36,15 @@ test()
     c3 = c;
     std::complex<int> ic (1,1);
     c3 /= ic;
-    assert(c3.real() ==  0.5);
+    assert(c3.real() == 0.5);
     assert(c3.imag() == -0.5);
 
     c3 = c;
     std::complex<float> fc (1,1);
     c3 /= fc;
-    assert(c3.real() ==  0.5);
+    assert(c3.real() == 0.5);
     assert(c3.imag() == -0.5);
-
+    return true;
 }
 
 int main(int, char**)
@@ -54,5 +55,11 @@ int main(int, char**)
     test<long double>();
 #endif // ! _LIBCPP_HAS_NEWLIB
 
-  return 0;
+#if TEST_STD_VER >= 20
+    static_assert(test<float>());
+    static_assert(test<double>());
+    static_assert(test<long double>());
+#endif
+
+    return 0;
 }

@@ -91,7 +91,6 @@ llvm::Function *GetOpenMPVprintfDeclaration(CodeGenModule &CGM) {
 std::pair<llvm::Value *, llvm::TypeSize>
 packArgsIntoNVPTXFormatBuffer(CodeGenFunction *CGF, const CallArgList &Args) {
   const llvm::DataLayout &DL = CGF->CGM.getDataLayout();
-  llvm::LLVMContext &Ctx = CGF->CGM.getLLVMContext();
   CGBuilderTy &Builder = CGF->Builder;
 
   // Construct and fill the args buffer that we'll pass to vprintf.
@@ -123,7 +122,7 @@ packArgsIntoNVPTXFormatBuffer(CodeGenFunction *CGF, const CallArgList &Args) {
   }
 }
 
-bool containsNonScalarVarargs(CodeGenFunction *CGF, CallArgList Args) {
+bool containsNonScalarVarargs(CodeGenFunction *CGF, const CallArgList &Args) {
   return llvm::any_of(llvm::drop_begin(Args), [&](const CallArg &A) {
     return !A.getRValue(*CGF).isScalar();
   });
@@ -160,7 +159,7 @@ RValue EmitDevicePrintfCallExpr(const CallExpr *E, CodeGenFunction *CGF,
     // amdgpu
     llvm::Constant *Size =
         llvm::ConstantInt::get(llvm::Type::getInt32Ty(CGM.getLLVMContext()),
-                               static_cast<uint32_t>(r.second.getFixedSize()));
+                               static_cast<uint32_t>(r.second.getFixedValue()));
 
     Vec.push_back(Size);
   }
@@ -187,7 +186,7 @@ RValue CodeGenFunction::EmitAMDGPUDevicePrintfCallExpr(const CallExpr *E) {
                /* ParamsToSkip = */ 0);
 
   SmallVector<llvm::Value *, 8> Args;
-  for (auto A : CallArgs) {
+  for (const auto &A : CallArgs) {
     // We don't know how to emit non-scalar varargs.
     if (!A.getRValue(*this).isScalar()) {
       CGM.ErrorUnsupported(E, "non-scalar arg to printf");
@@ -200,7 +199,10 @@ RValue CodeGenFunction::EmitAMDGPUDevicePrintfCallExpr(const CallExpr *E) {
 
   llvm::IRBuilder<> IRB(Builder.GetInsertBlock(), Builder.GetInsertPoint());
   IRB.SetCurrentDebugLocation(Builder.getCurrentDebugLocation());
-  auto Printf = llvm::emitAMDGPUPrintfCall(IRB, Args);
+
+  bool isBuffered = (CGM.getTarget().getTargetOpts().AMDGPUPrintfKindVal ==
+                     clang::TargetOptions::AMDGPUPrintfKind::Buffered);
+  auto Printf = llvm::emitAMDGPUPrintfCall(IRB, Args, isBuffered);
   Builder.SetInsertPoint(IRB.GetInsertBlock(), IRB.GetInsertPoint());
   return RValue::get(Printf);
 }

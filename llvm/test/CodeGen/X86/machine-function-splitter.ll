@@ -1,6 +1,10 @@
 ; RUN: llc < %s -mtriple=x86_64-unknown-linux-gnu -split-machine-functions | FileCheck %s -check-prefix=MFS-DEFAULTS
 ; RUN: llc < %s -mtriple=x86_64-unknown-linux-gnu -split-machine-functions -mfs-psi-cutoff=0 -mfs-count-threshold=2000 | FileCheck %s --dump-input=always -check-prefix=MFS-OPTS1
 ; RUN: llc < %s -mtriple=x86_64-unknown-linux-gnu -split-machine-functions -mfs-psi-cutoff=950000 | FileCheck %s -check-prefix=MFS-OPTS2
+; RUN: llc < %s -mtriple=x86_64-unknown-linux-gnu -split-machine-functions -mfs-split-ehcode | FileCheck %s -check-prefix=MFS-EH-SPLIT
+; RUN: sed 's/InstrProf/SampleProfile/g' %s > %t.ll
+; RUN: llc < %t.ll -mtriple=x86_64-unknown-linux-gnu -split-machine-functions | FileCheck %s --check-prefix=FSAFDO-MFS
+; RUN: llc < %t.ll -mtriple=x86_64-unknown-linux-gnu -split-machine-functions | FileCheck %s --check-prefix=FSAFDO-MFS2
 
 define void @foo1(i1 zeroext %0) nounwind !prof !14 !section_prefix !15 {
 ;; Check that cold block is moved to .text.split.
@@ -190,6 +194,14 @@ define i32 @foo8(i1 zeroext %0) personality ptr @__gxx_personality_v0 !prof !14 
 ; MFS-DEFAULTS:       .section        .text.split.foo8,"ax",@progbits
 ; MFS-DEFAULTS-NEXT:  foo8.cold:
 ; MFS-DEFAULTS:       callq   baz
+
+;; Check that all ehpads are by default treated as cold with -mfs-split-ehcode.
+; MFS-EH-SPLIT-LABEL: foo8
+; MFS-EH-SPLIT:       callq   baz
+; MFS-EH-SPLIT:       .section        .text.split.foo8,"ax",@progbits
+; MFS-EH-SPLIT-NEXT:  foo8.cold:
+; MFS-EH-SPLIT:       callq   _Unwind_Resume@PLT
+; MFS-EH-SPLIT:       callq   _Unwind_Resume@PLT
 entry:
   invoke void @_Z1fv()
           to label %try.cont unwind label %lpad1
@@ -265,6 +277,161 @@ try.cont:
   ret i32 %2
 }
 
+define void @foo11(i1 zeroext %0) personality ptr @__gxx_personality_v0 {
+;; Check that function having landing pads are split with mfs-split-ehcode
+;; even in the absence of profile data
+; MFS-EH-SPLIT-LABEL: foo11
+; MFS-EH-SPLIT:       .section        .text.split.foo11,"ax",@progbits
+; MFS-EH-SPLIT-NEXT:  foo11.cold:
+; MFS-EH-SPLIT:       nop
+; MFS-EH-SPLIT:       callq   _Unwind_Resume@PLT
+entry:
+  invoke void @_Z1fv()
+        to label %2 unwind label %lpad
+
+lpad:
+  %1 = landingpad { ptr, i32 }
+          cleanup
+          catch ptr @_ZTIi
+  resume { ptr, i32 } %1
+
+2:                                                ; preds = entry
+  %3 = tail call i32 @qux()
+  ret void
+}
+
+define i32 @foo12(i1 zeroext %0) personality ptr @__gxx_personality_v0 !prof !14 {
+;; Check that all code reachable from ehpad is split out with cycles.
+; MFS-EH-SPLIT-LABEL: foo12
+; MFS-EH-SPLIT:       .section        .text.split.foo12,"ax",@progbits
+; MFS-EH-SPLIT-NEXT:  foo12.cold:
+; MFS-EH-SPLIT:       callq   bar
+; MFS-EH-SPLIT:       callq   baz
+; MFS-EH-SPLIT:       callq   qux
+entry:
+  invoke void @_Z1fv()
+          to label %8 unwind label %lpad
+
+lpad:
+  %1 = landingpad { ptr, i32 }
+          cleanup
+          catch ptr @_ZTIi
+  br label %2
+
+2:                                                ; preds = lpad
+  %3 = call i32 @bar()
+  br i1 %0, label %4, label %6
+
+4:                                                ; preds = lpad
+  %5 = call i32 @baz()
+  br label %6
+
+6:                                                ; preds = %4, %2
+  %7 = tail call i32 @qux()
+  br i1 %0, label %2, label %8
+
+8:                                                ; preds = %6
+  ret i32 0
+}
+
+define i32 @foo13(i1 zeroext %0) personality ptr @__gxx_personality_v0 !prof !14{
+;; Check that all code reachable from EH
+;; that is also reachable from outside EH pad
+;; is not touched.
+; MFS-EH-SPLIT-LABEL: foo13
+; MFS-EH-SPLIT:       callq   bam
+; MFS-EH-SPLIT:       .section        .text.split.foo13,"ax",@progbits
+; MFS-EH-SPLIT-NEXT:  foo13.cold:
+; MFS-EH-SPLIT:       callq   baz
+; MFS-EH-SPLIT:       callq   bar
+; MFS-EH-SPLIT:       callq   qux
+entry:
+  invoke void @_Z1fv()
+          to label %try.cont unwind label %lpad, !prof !17
+
+lpad:
+  %1 = landingpad { ptr, i32 }
+          cleanup
+          catch ptr @_ZTIi
+  br i1 %0, label %2, label %4, !prof !17
+
+2:                                                ; preds = lpad
+  %3 = call i32 @bar()
+  br label %6
+
+4:                                                ; preds = lpad
+  %5 = call i32 @baz()
+  br label %6
+
+6:                                                ; preds = %4, %2
+  %7 = tail call i32 @qux()
+  br i1 %0, label %2, label %try.cont, !prof !17
+
+try.cont:                                        ; preds = %entry
+  %8 = call i32 @bam()
+  ret i32 %8
+}
+
+define void @foo14(i1 zeroext %0, i1 zeroext %1) nounwind !prof !24 {
+; FSAFDO-MFS: .section	.text.split.foo14,"ax"
+; FSAFDO-MFS: foo14.cold:
+  br i1 %0, label %3, label %7, !prof !25
+
+3:
+  %4 = call i32 @bar()
+  br label %7
+
+5:
+  %6 = call i32 @baz()
+  br label %7
+
+7:
+  br i1 %1, label %8, label %10, !prof !26
+
+8:
+  %9 = call i32 @bam()
+  br label %12
+
+10:
+  %11 = call i32 @baz()
+  br label %12
+
+12:
+  %13 = tail call i32 @qux()
+  ret void
+}
+
+define void @foo15(i1 zeroext %0, i1 zeroext %1) nounwind !prof !27 {
+;; HasAccurateProfile is false, foo15 is hot, but no profile data for
+;; blocks, no split should happen.
+; FSAFDO-MFS2-NOT: .section	.text.split.foo15,"ax"
+; FSAFDO-MFS2-NOT: foo15.cold:
+  br i1 %0, label %3, label %7
+
+3:
+  %4 = call i32 @bar()
+  br label %7
+
+5:
+  %6 = call i32 @baz()
+  br label %7
+
+7:
+  br i1 %1, label %8, label %10
+
+8:
+  %9 = call i32 @bam()
+  br label %12
+
+10:
+  %11 = call i32 @baz()
+  br label %12
+
+12:
+  %13 = tail call i32 @qux()
+  ret void
+}
+
 declare i32 @bar()
 declare i32 @baz()
 declare i32 @bam()
@@ -301,3 +468,7 @@ attributes #0 = { "implicit-section-name"="nosplit" }
 !21 = !{!"branch_weights", i32 6000, i32 4000}
 !22 = !{!"branch_weights", i32 80, i32 9920}
 !23 = !{!"function_entry_count", i64 7}
+!24 = !{!"function_entry_count", i64 10000}
+!25 = !{!"branch_weights", i32 0, i32 7000}
+!26 = !{!"branch_weights", i32 1000, i32 6000}
+!27 = !{!"function_entry_count", i64 10000}

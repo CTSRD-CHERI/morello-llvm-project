@@ -31,7 +31,6 @@
 #include "llvm/MC/TargetRegistry.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/raw_ostream.h"
 #include <cassert>
 #include <vector>
 
@@ -103,18 +102,18 @@ public:
   void emitThumbFunc(MCSymbol *Func) override;
   bool emitSymbolAttribute(MCSymbol *Symbol, MCSymbolAttr Attribute) override;
   void emitSymbolDesc(MCSymbol *Symbol, unsigned DescValue) override;
-  void emitCommonSymbol(MCSymbol *Symbol, uint64_t Size, unsigned ByteAlignment,
+  void emitCommonSymbol(MCSymbol *Symbol, uint64_t Size, Align ByteAlignment,
                         TailPaddingAmount TailPadding) override;
 
   void emitLocalCommonSymbol(MCSymbol *Symbol, uint64_t Size,
-                             unsigned ByteAlignment,
-                             TailPaddingAmount TailPadding) override;
-  void emitZerofill(MCSection *Section, MCSymbol *Symbol, uint64_t Size,
-                    unsigned ByteAlignment, TailPaddingAmount TailPadding,
+                             Align ByteAlignment, TailPaddingAmount TailPadding) override;
+  void emitZerofill(MCSection *Section, MCSymbol *Symbol = nullptr,
+                    uint64_t Size = 0, Align ByteAlignment = Align(1),
+                    TailPaddingAmount TailPadding = TailPaddingAmount::None,
                     SMLoc Loc = SMLoc()) override;
   void emitTBSSSymbol(MCSection *Section, MCSymbol *Symbol, uint64_t Size,
-                      unsigned ByteAlignment,
-                      TailPaddingAmount TailPadding) override;
+                      Align ByteAlignment = Align(1),
+                      TailPaddingAmount TailPadding = TailPaddingAmount::None) override;
 
   void emitIdent(StringRef IdentString) override {
     llvm_unreachable("macho doesn't support this directive");
@@ -175,9 +174,7 @@ void MCMachOStreamer::changeSection(MCSection *Section,
   if (SegName == "__DWARF")
     CreatedADWARFSection = true;
   else if (Created && DWARFMustBeAtTheEnd && !canGoAfterDWARF(MSec))
-    assert((!CreatedADWARFSection ||
-            Section == getContext().getObjectFileInfo()->getStackMapSection())
-           && "Creating regular section after DWARF");
+    assert(!CreatedADWARFSection && "Creating regular section after DWARF");
 
   // Output a linker-local symbol so we don't need section-relative local
   // relocations. The linker hates us when we do that.
@@ -362,6 +359,8 @@ bool MCMachOStreamer::emitSymbolAttribute(MCSymbol *Sym,
   case MCSA_Local:
   case MCSA_LGlobal:
   case MCSA_Exported:
+  case MCSA_Memtag:
+  case MCSA_WeakAntiDep:
     return false;
 
   case MCSA_Global:
@@ -434,7 +433,7 @@ void MCMachOStreamer::emitSymbolDesc(MCSymbol *Symbol, unsigned DescValue) {
 }
 
 void MCMachOStreamer::emitCommonSymbol(MCSymbol *Symbol, uint64_t Size,
-                                       unsigned ByteAlignment,
+                                       Align ByteAlignment,
                                        TailPaddingAmount TailPadding) {
   assert(TailPadding == TailPaddingAmount::None && "Not supported yet");
   // FIXME: Darwin 'as' does appear to allow redef of a .comm by itself.
@@ -446,7 +445,7 @@ void MCMachOStreamer::emitCommonSymbol(MCSymbol *Symbol, uint64_t Size,
 }
 
 void MCMachOStreamer::emitLocalCommonSymbol(MCSymbol *Symbol, uint64_t Size,
-                                            unsigned ByteAlignment,
+                                            Align ByteAlignment,
                                             TailPaddingAmount TailPadding) {
   // '.lcomm' is equivalent to '.zerofill'.
   return emitZerofill(getContext().getObjectFileInfo()->getDataBSSSection(),
@@ -454,7 +453,7 @@ void MCMachOStreamer::emitLocalCommonSymbol(MCSymbol *Symbol, uint64_t Size,
 }
 
 void MCMachOStreamer::emitZerofill(MCSection *Section, MCSymbol *Symbol,
-                                   uint64_t Size, unsigned ByteAlignment,
+                                   uint64_t Size, Align ByteAlignment,
                                    TailPaddingAmount TailPadding, SMLoc Loc) {
   assert(TailPadding == TailPaddingAmount::None && "Not implemented yet");
   // On darwin all virtual sections have zerofill type. Disallow the usage of
@@ -483,7 +482,7 @@ void MCMachOStreamer::emitZerofill(MCSection *Section, MCSymbol *Symbol,
 // This should always be called with the thread local bss section.  Like the
 // .zerofill directive this doesn't actually switch sections on us.
 void MCMachOStreamer::emitTBSSSymbol(MCSection *Section, MCSymbol *Symbol,
-                                     uint64_t Size, unsigned ByteAlignment,
+                                     uint64_t Size, Align ByteAlignment,
                                      TailPaddingAmount TailPadding) {
   emitZerofill(Section, Symbol, Size, ByteAlignment, TailPadding);
 }
@@ -494,8 +493,7 @@ void MCMachOStreamer::emitInstToData(const MCInst &Inst,
 
   SmallVector<MCFixup, 4> Fixups;
   SmallString<256> Code;
-  raw_svector_ostream VecOS(Code);
-  getAssembler().getEmitter().encodeInstruction(Inst, VecOS, Fixups, STI);
+  getAssembler().getEmitter().encodeInstruction(Inst, Code, Fixups, STI);
 
   // Add the fixups and data.
   for (MCFixup &Fixup : Fixups) {
@@ -544,9 +542,7 @@ void MCMachOStreamer::finishImpl() {
 
 void MCMachOStreamer::finalizeCGProfileEntry(const MCSymbolRefExpr *&SRE) {
   const MCSymbol *S = &SRE->getSymbol();
-  bool Created;
-  getAssembler().registerSymbol(*S, &Created);
-  if (Created)
+  if (getAssembler().registerSymbol(*S))
     S->setExternal(true);
 }
 

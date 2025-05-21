@@ -164,7 +164,7 @@ bool MCWasmStreamer::emitSymbolAttribute(MCSymbol *S, MCSymbolAttr Attribute) {
 }
 
 void MCWasmStreamer::emitCommonSymbol(MCSymbol *S, uint64_t Size,
-                                      unsigned ByteAlignment,
+                                      Align ByteAlignment,
                                       TailPaddingAmount TailPadding) {
   assert(TailPadding == TailPaddingAmount::None && "Not supported yet");
   llvm_unreachable("Common symbols are not yet implemented for Wasm");
@@ -175,7 +175,7 @@ void MCWasmStreamer::emitELFSize(MCSymbol *Symbol, const MCExpr *Value) {
 }
 
 void MCWasmStreamer::emitLocalCommonSymbol(MCSymbol *S, uint64_t Size,
-                                           unsigned ByteAlignment,
+                                           Align ByteAlignment,
                                            TailPaddingAmount TailPadding) {
   llvm_unreachable("Local common symbols are not yet implemented for Wasm");
 }
@@ -199,8 +199,7 @@ void MCWasmStreamer::emitInstToData(const MCInst &Inst,
   MCAssembler &Assembler = getAssembler();
   SmallVector<MCFixup, 4> Fixups;
   SmallString<256> Code;
-  raw_svector_ostream VecOS(Code);
-  Assembler.getEmitter().encodeInstruction(Inst, VecOS, Fixups, STI);
+  Assembler.getEmitter().encodeInstruction(Inst, Code, Fixups, STI);
 
   for (auto &Fixup : Fixups)
     fixSymbolsInTLSFixups(Fixup.getValue());
@@ -266,13 +265,13 @@ void MCWasmStreamer::emitSymbolDesc(MCSymbol *Symbol, unsigned DescValue) {
 }
 
 void MCWasmStreamer::emitZerofill(MCSection *Section, MCSymbol *Symbol,
-                                  uint64_t Size, unsigned ByteAlignment,
+                                  uint64_t Size, Align ByteAlignment,
                                   TailPaddingAmount TailPadding, SMLoc Loc) {
   llvm_unreachable("Wasm doesn't support this directive");
 }
 
 void MCWasmStreamer::emitTBSSSymbol(MCSection *Section, MCSymbol *Symbol,
-                                    uint64_t Size, unsigned ByteAlignment,
+                                    uint64_t Size, Align ByteAlignment,
                                     TailPaddingAmount TailPadding) {
   llvm_unreachable("Wasm doesn't support this directive");
 }

@@ -253,7 +253,7 @@ getReservedRegs(const MachineFunction &MF) const {
   }
 
   if (Subtarget.isCheri()) {
-    for (unsigned I = 0; I < array_lengthof(ReservedCheriRegs); ++I)
+    for (unsigned I = 0; I < std::size(ReservedCheriRegs); ++I)
       Reserved.set(ReservedCheriRegs[I]);
     auto &ABI = Subtarget.getABI();
     auto *FL =
@@ -269,10 +269,10 @@ getReservedRegs(const MachineFunction &MF) const {
 
     }
     if (Cheri8)
-      for (unsigned I = 0; I < array_lengthof(ReservedCheri8Regs); ++I)
+      for (unsigned I = 0; I < std::size(ReservedCheri8Regs); ++I)
         Reserved.set(ReservedCheri8Regs[I]);
     if (Cheri16)
-      for (unsigned I = 0; I < array_lengthof(ReservedCheri16Regs); ++I)
+      for (unsigned I = 0; I < std::size(ReservedCheri16Regs); ++I)
         Reserved.set(ReservedCheri16Regs[I]);
   } else
     Reserved.set(Mips::DDC);
@@ -329,15 +329,10 @@ getReservedRegs(const MachineFunction &MF) const {
   return Reserved;
 }
 
-bool
-MipsRegisterInfo::requiresRegisterScavenging(const MachineFunction &MF) const {
-  return true;
-}
-
 // FrameIndex represent objects inside a abstract stack.
 // We must replace FrameIndex with an stack/frame pointer
 // direct reference.
-void MipsRegisterInfo::
+bool MipsRegisterInfo::
 eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
                     unsigned FIOperandNum, RegScavenger *RS) const {
   MachineInstr &MI = *II;
@@ -359,6 +354,7 @@ eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
                     << "\n");
 
   eliminateFI(MI, FIOperandNum, FrameIndex, stackSize, spOffset, RS);
+  return false;
 }
 
 Register MipsRegisterInfo::
@@ -371,10 +367,6 @@ getFrameRegister(const MachineFunction &MF) const {
     return TFI->hasFP(MF) ? Mips::S0 : Mips::SP;
   else
     return TFI->hasFP(MF) ? ABI.GetFramePtr() : ABI.GetStackPtr();
-}
-
-bool MipsRegisterInfo::isConstantPhysReg(MCRegister PhysReg) const {
-  return PhysReg == Mips::ZERO || PhysReg == Mips::ZERO_64 || PhysReg == Mips::CNULL;
 }
 
 bool MipsRegisterInfo::canRealignStack(const MachineFunction &MF) const {

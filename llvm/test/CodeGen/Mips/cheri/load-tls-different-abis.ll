@@ -13,8 +13,8 @@ target triple = "cheri-unknown-freebsd"
 ; Function Attrs: nounwind
 define i64 @test() local_unnamed_addr {
 entry:
-  %loaded_tls = load i64, i64 addrspace(TLS)* @global_tls, align 8
-  %loaded_normal = load i64, i64 addrspace(200)* @global_normal, align 8
+  %loaded_tls = load i64, ptr addrspace(TLS) @global_tls, align 8
+  %loaded_normal = load i64, ptr addrspace(200) @global_normal, align 8
   %result = add i64 %loaded_tls, %loaded_normal
   ret i64 %result
 }
@@ -37,9 +37,9 @@ entry:
 ; MIPS-NEXT:  $v1_64 = COPY %2:gpr64
 ; MIPS-NEXT:  %3:gpr64 = COPY $v1_64
 ; MIPS-NEXT:  %4:gpr64 = DADDu %3:gpr64, killed %1:gpr64
-; MIPS-NEXT:  %5:gpr64 = LD killed %4:gpr64, 0 :: (dereferenceable load (s64) from @global_tls)
+; MIPS-NEXT:  %5:gpr64 = LD killed %4:gpr64, 0 :: (load (s64) from @global_tls)
 ; MIPS-NEXT:  %6:gpr64 = LD %0:gpr64, target-flags(mips-got-disp) @global_normal :: (load (s64) from got)
-; MIPS-NEXT:  %7:gpr64 = LD killed %6:gpr64, 0 :: (dereferenceable load (s64) from @global_normal)
+; MIPS-NEXT:  %7:gpr64 = LD killed %6:gpr64, 0 :: (load (s64) from @global_normal)
 ; MIPS-NEXT:  [[RESULT:%8]]:gpr64 = DADDu killed %5:gpr64, killed %7
 
 ; PCREL, PLT and FNDESC only differ in the prologue since they all use the same TLS mechanism:
@@ -57,9 +57,9 @@ entry:
 ; CAP-TABLE-NEXT:  %[[D:([0-9])]]:gpr64 = CAPLOAD64 $zero_64, 0, killed %[[C]]:cherigpr :: (load (s64) from cap-table)
 ; CAP-TABLE-NEXT:  %[[E:([0-9])]]:cherigpr = CReadHwr $caphwr1
 ; CAP-TABLE-NEXT:  %[[F:([0-9])]]:cherigpr = CIncOffset killed %[[E]]:cherigpr, killed %[[D]]:gpr64
-; CAP-TABLE-NEXT:  %[[G:([0-9])]]:gpr64 = CAPLOAD64 $zero_64, 0, killed %[[F]]:cherigpr :: (dereferenceable load (s64) from @global_tls, addrspace 200)
+; CAP-TABLE-NEXT:  %[[G:([0-9])]]:gpr64 = CAPLOAD64 $zero_64, 0, killed %[[F]]:cherigpr :: (load (s64) from @global_tls, addrspace 200)
 ; CAP-TABLE-NEXT:  %[[H:([0-9])+]]:cherigpr = LOADCAP_BigImm target-flags(mips-captable20) @global_normal, [[CGP_VREG]]:cherigpr :: (load (s128) from cap-table)
-; CAP-TABLE-NEXT:  %[[I:([0-9])+]]:gpr64 = CAPLOAD64 $zero_64, 0, killed %[[H]]:cherigpr :: (dereferenceable load (s64) from @global_normal, addrspace 200)
+; CAP-TABLE-NEXT:  %[[I:([0-9])+]]:gpr64 = CAPLOAD64 $zero_64, 0, killed %[[H]]:cherigpr :: (load (s64) from @global_normal, addrspace 200)
 ; CAP-TABLE-NEXT:  [[RESULT:%([0-9])+]]:gpr64 = DADDu killed %[[G]]:gpr64, killed %[[I]]:gpr64
 
 

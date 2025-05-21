@@ -28,6 +28,7 @@
 #include "llvm/MC/MCInstrDesc.h"
 #include "llvm/Target/TargetMachine.h"
 #include <cassert>
+#include <optional>
 
 using namespace llvm;
 
@@ -71,7 +72,8 @@ MachineInstrBuilder MipsInstrInfo::insertNop(MachineBasicBlock &MBB,
          "insertNop does not support MIPS16e mode at this time");
   const unsigned MMOpc =
       Subtarget.hasMips32r6() ? Mips::SLL_MMR6 : Mips::SLL_MM;
-  const unsigned Opc = Subtarget.inMicroMipsMode() ? MMOpc : Mips::SLL;
+  const unsigned Opc =
+      Subtarget.inMicroMipsMode() ? MMOpc : (unsigned)Mips::SLL;
   return BuildMI(MBB, MI, DL, get(Opc), Mips::ZERO)
       .addReg(Mips::ZERO)
       .addImm(0);
@@ -859,7 +861,7 @@ static bool verifyInsExtInstruction(const MachineInstr &MI, StringRef &ErrInfo,
 //  Perform target specific instruction verification.
 template<unsigned Width, unsigned Scale>
 bool checkScaledImmediate(const MachineInstr &MI, StringRef& ErrInfo, unsigned OpndIdx) {
-  assert(MI.getDesc().OpInfo[OpndIdx].OperandType == MCOI::OPERAND_IMMEDIATE);
+  assert(MI.getDesc().operands()[OpndIdx].OperandType == MCOI::OPERAND_IMMEDIATE);
   if (MI.getOperand(OpndIdx).isImm() && !isShiftedInt<Width, Scale>(MI.getOperand(OpndIdx).getImm())) {
     ErrInfo = "Operand immediate is not representable!";
     return false;
@@ -1028,10 +1030,10 @@ MipsInstrInfo::getSerializableDirectMachineOperandTargetFlags() const {
     { MO_CAPTAB_TPREL_HI16,  "mips-captable-gottprel-hi16" },
     { MO_CAPTAB_TPREL_LO16,  "mips-captable-gottprel-lo16" },
   };
-  return makeArrayRef(Flags);
+ return ArrayRef(Flags);
 }
 
-Optional<ParamLoadedValue>
+std::optional<ParamLoadedValue>
 MipsInstrInfo::describeLoadedValue(const MachineInstr &MI, Register Reg) const {
   DIExpression *Expr =
       DIExpression::get(MI.getMF()->getFunction().getContext(), {});
@@ -1054,13 +1056,13 @@ MipsInstrInfo::describeLoadedValue(const MachineInstr &MI, Register Reg) const {
     // TODO: Handle cases where the Reg is sub- or super-register of the
     // DestReg.
     if (TRI->isSuperRegister(Reg, DestReg) || TRI->isSubRegister(Reg, DestReg))
-      return None;
+      return std::nullopt;
   }
 
   return TargetInstrInfo::describeLoadedValue(MI, Reg);
 }
 
-Optional<int64_t>
+std::optional<int64_t>
 MipsInstrInfo::getAsIntImmediate(const MachineOperand &Op,
                                  const MachineRegisterInfo &MRI) const {
   if (Op.isImm())
@@ -1073,7 +1075,7 @@ MipsInstrInfo::getAsIntImmediate(const MachineOperand &Op,
       auto *Def = MRI.getUniqueVRegDef(Reg);
       switch (Def->getOpcode()) {
       default:
-        return None; // Unknown immediate
+        return std::nullopt; // Unknown immediate
       case Mips::ADDiu:
       case Mips::DADDiu:
       case Mips::ORi:
@@ -1081,12 +1083,12 @@ MipsInstrInfo::getAsIntImmediate(const MachineOperand &Op,
         Register BaseReg = Def->getOperand(1).getReg();
         if (BaseReg == Mips::ZERO || BaseReg == Mips::ZERO_64)
           return Def->getOperand(2).getImm();
-        return None;
+        return std::nullopt;
       }
       }
     }
   }
-  return None; // Unknown immediate
+  return std::nullopt; // Unknown immediate
 }
 
 bool MipsInstrInfo::isSetBoundsInstr(const MachineInstr &I,
@@ -1118,13 +1120,13 @@ bool MipsInstrInfo::isPtrAddInstr(const MachineInstr &I,
   }
 }
 
-Optional<RegImmPair> MipsInstrInfo::isAddImmediate(const MachineInstr &MI,
-                                                   Register Reg) const {
+std::optional<RegImmPair> MipsInstrInfo::isAddImmediate(const MachineInstr &MI,
+                                                        Register Reg) const {
   // TODO: Handle cases where Reg is a super- or sub-register of the
   // destination register.
   const MachineOperand &Op0 = MI.getOperand(0);
   if (!Op0.isReg() || Reg != Op0.getReg())
-    return None;
+    return std::nullopt;
 
   switch (MI.getOpcode()) {
   case Mips::ADDiu:
@@ -1139,5 +1141,5 @@ Optional<RegImmPair> MipsInstrInfo::isAddImmediate(const MachineInstr &MI,
     // TODO: Handle case where Sop1 is a frame-index.
   }
   }
-  return None;
+  return std::nullopt;
 }

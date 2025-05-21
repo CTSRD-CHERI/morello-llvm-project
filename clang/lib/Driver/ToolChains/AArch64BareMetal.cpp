@@ -34,9 +34,10 @@ bool AArch64BareMetalToolChain::isPICDefaultForced() const { return false; }
 bool AArch64BareMetalToolChain::IsIntegratedAssemblerDefault() const {
   return true;
 }
-bool AArch64BareMetalToolChain::IsUnwindTablesDefault(
-    const llvm::opt::ArgList &Args) const {
-  return false;
+ToolChain::UnwindTableLevel
+AArch64BareMetalToolChain::getDefaultUnwindTableLevel(
+    const ArgList &Args) const {
+  return UnwindTableLevel::None;
 }
 bool AArch64BareMetalToolChain::SupportsProfiling() const { return false; }
 std::string
@@ -67,9 +68,9 @@ static const char *getLinkerName(const Driver &D, const ArgList &Args) {
   if (Args.hasArg(options::OPT_fuse_ld_EQ) ) {
     StringRef Ld = Args.getLastArgValue(options::OPT_fuse_ld_EQ);
 
-    if (Ld.endswith_insensitive("lld"))
+    if (Ld.ends_with_insensitive("lld"))
       return "ld.lld";
-    if (Ld.endswith_insensitive("bfd"))
+    if (Ld.ends_with_insensitive("bfd"))
       return "aarch64-none-elf-ld.bfd";
     D.Diag(diag::err_drv_unsupported_option_argument) << "-fuse-ld=" << Ld;
   }
@@ -198,7 +199,7 @@ void Linker::ConstructJob(Compilation &C, const JobAction &JA,
       static_cast<const toolchains::AArch64BareMetalToolChain &>(
           getToolChain());
   bool UsesLLD =
-      Args.getLastArgValue(options::OPT_fuse_ld_EQ).endswith_insensitive("lld") ||
+      Args.getLastArgValue(options::OPT_fuse_ld_EQ).ends_with_insensitive("lld") ||
     LinkerName == "ld.lld";
 
   ArgStringList CmdArgs;

@@ -36,7 +36,7 @@ static cl::opt<bool> RoundSectionSizes(
     cl::desc("Round section sizes up to the section alignment"), cl::Hidden);
 } // end anonymous namespace
 
-llvm::Optional<unsigned> llvm::getCheriCapabilitySize(FeatureBitset Features) {
+std::optional<unsigned> llvm::getCheriCapabilitySize(FeatureBitset Features) {
   if (Features[Mips::FeatureMipsCheri256]) {
     assert(Features[Mips::FeatureMipsCheri]);
     return 32;
@@ -50,15 +50,15 @@ llvm::Optional<unsigned> llvm::getCheriCapabilitySize(FeatureBitset Features) {
     return 8;
   }
   assert(!Features[Mips::FeatureMipsCheri]);
-  return None;
+  return std::nullopt;
 }
 
 static bool isMicroMips(const MCSubtargetInfo *STI) {
-  return STI->getFeatureBits()[Mips::FeatureMicroMips];
+  return STI->hasFeature(Mips::FeatureMicroMips);
 }
 
 static bool isMips32r6(const MCSubtargetInfo *STI) {
-  return STI->getFeatureBits()[Mips::FeatureMips32r6];
+  return STI->hasFeature(Mips::FeatureMips32r6);
 }
 
 MipsTargetStreamer::MipsTargetStreamer(MCStreamer &S)
@@ -923,9 +923,9 @@ void MipsTargetELFStreamer::finish() {
   MCSection &BSSSection = *OFI.getBSSSection();
   MCA.registerSection(BSSSection);
 
-  TextSection.setAlignment(Align(std::max(16u, TextSection.getAlignment())));
-  DataSection.setAlignment(Align(std::max(16u, DataSection.getAlignment())));
-  BSSSection.setAlignment(Align(std::max(16u, BSSSection.getAlignment())));
+  TextSection.ensureMinAlignment(Align(16));
+  DataSection.ensureMinAlignment(Align(16));
+  BSSSection.ensureMinAlignment(Align(16));
 
   if (RoundSectionSizes) {
     // Make sections sizes a multiple of the alignment. This is useful for
@@ -936,14 +936,12 @@ void MipsTargetELFStreamer::finish() {
     for (MCSection &S : MCA) {
       MCSectionELF &Section = static_cast<MCSectionELF &>(S);
 
-      unsigned Alignment = Section.getAlignment();
-      if (Alignment) {
-        OS.switchSection(&Section);
-        if (Section.useCodeAlign())
-          OS.emitCodeAlignment(Alignment, &STI, Alignment);
-        else
-          OS.emitValueToAlignment(Alignment, 0, 1, Alignment);
-      }
+      Align Alignment = Section.getAlign();
+      OS.switchSection(&Section);
+      if (Section.useCodeAlign())
+        OS.emitCodeAlignment(Alignment, &STI, Alignment.value());
+      else
+        OS.emitValueToAlignment(Alignment, 0, 1, Alignment.value());
     }
   }
 

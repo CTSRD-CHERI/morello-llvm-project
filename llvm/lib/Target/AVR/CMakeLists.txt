@@ -32,19 +32,20 @@ add_llvm_target(AVRCodeGen
   intrinsics_gen
 
   LINK_COMPONENTS
-  AsmPrinter
-  CodeGen
-  Core
-  MC
   AVRDesc
   AVRInfo
+  AsmPrinter
+  CodeGen
+  CodeGenTypes
+  Core
+  MC
   SelectionDAG
   Support
   Target
 
   ADD_TO_COMPONENT
   AVR
-)
+  )
 
 # TODO: remove
 add_definitions(-DLLVM_TARGETLOWERINGINFO_DEFAULT_AS=0)

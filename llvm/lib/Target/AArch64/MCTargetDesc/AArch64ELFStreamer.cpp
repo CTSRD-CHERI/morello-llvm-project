@@ -24,7 +24,6 @@
 #include "AArch64WinCOFFStreamer.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/ADT/Triple.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/BinaryFormat/ELF.h"
 #include "llvm/MC/MCAsmBackend.h"
@@ -44,6 +43,7 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/FormattedStream.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/TargetParser/Triple.h"
 
 using namespace llvm;
 
@@ -113,6 +113,46 @@ class AArch64TargetAsmStreamer : public AArch64TargetStreamer {
   void emitARM64WinCFIContext() override { OS << "\t.seh_context\n"; }
   void emitARM64WinCFIClearUnwoundToCall() override {
     OS << "\t.seh_clear_unwound_to_call\n";
+  }
+  void emitARM64WinCFIPACSignLR() override {
+    OS << "\t.seh_pac_sign_lr\n";
+  }
+
+  void emitARM64WinCFISaveAnyRegI(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_any_reg\tx" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveAnyRegIP(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_any_reg_p\tx" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveAnyRegD(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_any_reg\td" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveAnyRegDP(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_any_reg_p\td" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveAnyRegQ(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_any_reg\tq" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveAnyRegQP(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_any_reg_p\tq" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveAnyRegIX(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_any_reg_x\tx" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveAnyRegIPX(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_any_reg_px\tx" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveAnyRegDX(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_any_reg_x\td" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveAnyRegDPX(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_any_reg_px\td" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveAnyRegQX(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_any_reg_x\tq" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveAnyRegQPX(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_any_reg_px\tq" << Reg << ", " << Offset << "\n";
   }
 
 public:
@@ -348,7 +388,7 @@ void AArch64ELFStreamer::EmitCheriCapability(const MCExpr *Value,
   // Pad to ensure that the capability is aligned
   // TODO: in the future we should check alignment when emitting relocations
   //  instead of adding alignment for all capabilities.
-  emitValueToAlignment(CapSize, 0, 1, 0);
+  emitValueToAlignment(Align(CapSize), 0, 1, 0);
   emitCapInit(Value);
   emitIntValue(0, 8);
   emitIntValue(0, 8);

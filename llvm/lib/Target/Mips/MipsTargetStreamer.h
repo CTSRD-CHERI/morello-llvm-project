@@ -11,19 +11,18 @@
 
 #include "MCTargetDesc/MipsABIFlagsSection.h"
 #include "MCTargetDesc/MipsABIInfo.h"
-#include "llvm/ADT/Optional.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/MC/MCELFStreamer.h"
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCStreamer.h"
-#include "llvm/MC/SubtargetFeature.h"
+#include "llvm/TargetParser/SubtargetFeature.h"
 
 namespace llvm {
 
 class formatted_raw_ostream;
 
 // TODO: move this somewhere common
-llvm::Optional<unsigned> getCheriCapabilitySize(FeatureBitset Features);
+std::optional<unsigned> getCheriCapabilitySize(FeatureBitset Features);
 
 class MipsTargetStreamer : public MCTargetStreamer {
 public:
@@ -187,7 +186,7 @@ public:
   }
 
 protected:
-  llvm::Optional<MipsABIInfo> ABI;
+  std::optional<MipsABIInfo> ABI;
   MipsABIFlagsSection ABIFlagsSection;
 
   bool GPRInfoSet;

@@ -35,6 +35,7 @@ public:
   // of the local symbol so that it still works even if the local symbol table
   // is stripped. This function tries to find the local symbol to a better match
   SymbolAndOffset findRealSymbol() const;
+  SymbolAndOffset findSymbolForCapabilityRelocation() const;
   Symbol *sym() const {
     assert(symOrSec.is<Symbol *>());
     return symOrSec.get<Symbol *>();
@@ -300,10 +301,10 @@ private:
     // immediate can be ordered before ones that are accessed using the
     // longer sequence of instructions
     // int64_t Index = -1;
-    llvm::Optional<uint32_t> index;
+    std::optional<uint32_t> index;
     bool needsSmallImm = false;
     bool usedInCallExpr = false;
-    llvm::Optional<SymbolAndOffset> firstUse;
+    std::optional<SymbolAndOffset> firstUse;
   };
   struct CaptableMap {
     uint64_t firstIndex = std::numeric_limits<uint64_t>::max();

@@ -24,7 +24,7 @@
 using namespace llvm;
 
 #define RISCV_EXPAND_ATOMIC_PSEUDO_NAME                                        \
-  "RISCV atomic pseudo instruction expansion pass"
+  "RISC-V atomic pseudo instruction expansion pass"
 
 namespace {
 
@@ -60,15 +60,34 @@ private:
                            MachineBasicBlock::iterator MBBI, bool IsMasked,
                            MVT VT, bool PtrIsCap,
                            MachineBasicBlock::iterator &NextMBBI);
+#ifndef NDEBUG
+  unsigned getInstSizeInBytes(const MachineFunction &MF) const {
+    unsigned Size = 0;
+    for (auto &MBB : MF)
+      for (auto &MI : MBB)
+        Size += TII->getInstSizeInBytes(MI);
+    return Size;
+  }
+#endif
 };
 
 char RISCVExpandAtomicPseudo::ID = 0;
 
 bool RISCVExpandAtomicPseudo::runOnMachineFunction(MachineFunction &MF) {
-  TII = static_cast<const RISCVInstrInfo *>(MF.getSubtarget().getInstrInfo());
+  TII = MF.getSubtarget<RISCVSubtarget>().getInstrInfo();
+
+#ifndef NDEBUG
+  const unsigned OldSize = getInstSizeInBytes(MF);
+#endif
+
   bool Modified = false;
   for (auto &MBB : MF)
     Modified |= expandMBB(MBB);
+
+#ifndef NDEBUG
+  const unsigned NewSize = getInstSizeInBytes(MF);
+  assert(OldSize >= NewSize);
+#endif
   return Modified;
 }
 
@@ -381,7 +400,7 @@ static unsigned getSCForRMW32(bool PtrIsCap, AtomicOrdering Ordering) {
   case AtomicOrdering::AcquireRelease:
     return PtrIsCap ? RISCV::CSC_W_RL : RISCV::SC_W_RL;
   case AtomicOrdering::SequentiallyConsistent:
-    return PtrIsCap ? RISCV::CSC_W_AQ_RL : RISCV::SC_W_AQ_RL;
+    return PtrIsCap ? RISCV::CSC_W_RL : RISCV::SC_W_RL;
   }
 }
 
@@ -415,7 +434,7 @@ static unsigned getSCForRMW64(bool PtrIsCap, AtomicOrdering Ordering) {
   case AtomicOrdering::AcquireRelease:
     return PtrIsCap ? RISCV::CSC_D_RL : RISCV::SC_D_RL;
   case AtomicOrdering::SequentiallyConsistent:
-    return PtrIsCap ? RISCV::CSC_D_AQ_RL : RISCV::SC_D_AQ_RL;
+    return PtrIsCap ? RISCV::CSC_D_RL : RISCV::SC_D_RL;
   }
 }
 
@@ -970,6 +989,63 @@ bool RISCVExpandAtomicPseudo::expandAtomicMinMaxOp(
   return true;
 }
 
+// If a BNE on the cmpxchg comparison result immediately follows the cmpxchg
+// operation, it can be folded into the cmpxchg expansion by
+// modifying the branch within 'LoopHead' (which performs the same
+// comparison). This is a valid transformation because after altering the
+// LoopHead's BNE destination, the BNE following the cmpxchg becomes
+// redundant and and be deleted. In the case of a masked cmpxchg, an
+// appropriate AND and BNE must be matched.
+//
+// On success, returns true and deletes the matching BNE or AND+BNE, sets the
+// LoopHeadBNETarget argument to the target that should be used within the
+// loop head, and removes that block as a successor to MBB.
+bool tryToFoldBNEOnCmpXchgResult(MachineBasicBlock &MBB,
+                                 MachineBasicBlock::iterator MBBI,
+                                 Register DestReg, Register CmpValReg,
+                                 Register MaskReg,
+                                 MachineBasicBlock *&LoopHeadBNETarget) {
+  SmallVector<MachineInstr *> ToErase;
+  auto E = MBB.end();
+  if (MBBI == E)
+    return false;
+  MBBI = skipDebugInstructionsForward(MBBI, E);
+
+  // If we have a masked cmpxchg, match AND dst, DestReg, MaskReg.
+  if (MaskReg.isValid()) {
+    if (MBBI == E || MBBI->getOpcode() != RISCV::AND)
+      return false;
+    Register ANDOp1 = MBBI->getOperand(1).getReg();
+    Register ANDOp2 = MBBI->getOperand(2).getReg();
+    if (!(ANDOp1 == DestReg && ANDOp2 == MaskReg) &&
+        !(ANDOp1 == MaskReg && ANDOp2 == DestReg))
+      return false;
+    // We now expect the BNE to use the result of the AND as an operand.
+    DestReg = MBBI->getOperand(0).getReg();
+    ToErase.push_back(&*MBBI);
+    MBBI = skipDebugInstructionsForward(std::next(MBBI), E);
+  }
+
+  // Match BNE DestReg, MaskReg.
+  if (MBBI == E || MBBI->getOpcode() != RISCV::BNE)
+    return false;
+  Register BNEOp0 = MBBI->getOperand(0).getReg();
+  Register BNEOp1 = MBBI->getOperand(1).getReg();
+  if (!(BNEOp0 == DestReg && BNEOp1 == CmpValReg) &&
+      !(BNEOp0 == CmpValReg && BNEOp1 == DestReg))
+    return false;
+  ToErase.push_back(&*MBBI);
+  LoopHeadBNETarget = MBBI->getOperand(2).getMBB();
+  MBBI = skipDebugInstructionsForward(std::next(MBBI), E);
+  if (MBBI != E)
+    return false;
+
+  MBB.removeSuccessor(LoopHeadBNETarget);
+  for (auto *MI : ToErase)
+    MI->eraseFromParent();
+  return true;
+}
+
 bool RISCVExpandAtomicPseudo::expandAtomicCmpXchg(
     MachineBasicBlock &MBB, MachineBasicBlock::iterator MBBI, bool IsMasked,
     MVT VT, bool PtrIsCap, MachineBasicBlock::iterator &NextMBBI) {
@@ -980,6 +1056,17 @@ bool RISCVExpandAtomicPseudo::expandAtomicCmpXchg(
   auto LoopTailMBB = MF->CreateMachineBasicBlock(MBB.getBasicBlock());
   auto DoneMBB = MF->CreateMachineBasicBlock(MBB.getBasicBlock());
 
+  Register DestReg = MI.getOperand(0).getReg();
+  Register ScratchReg = MI.getOperand(1).getReg();
+  Register AddrReg = MI.getOperand(2).getReg();
+  Register CmpValReg = MI.getOperand(3).getReg();
+  Register NewValReg = MI.getOperand(4).getReg();
+  Register MaskReg = IsMasked ? MI.getOperand(5).getReg() : Register();
+
+  MachineBasicBlock *LoopHeadBNETarget = DoneMBB;
+  tryToFoldBNEOnCmpXchgResult(MBB, std::next(MBBI), DestReg, CmpValReg, MaskReg,
+                              LoopHeadBNETarget);
+
   // Insert new MBBs.
   MF->insert(++MBB.getIterator(), LoopHeadMBB);
   MF->insert(++LoopHeadMBB->getIterator(), LoopTailMBB);
@@ -987,18 +1074,13 @@ bool RISCVExpandAtomicPseudo::expandAtomicCmpXchg(
 
   // Set up successors and transfer remaining instructions to DoneMBB.
   LoopHeadMBB->addSuccessor(LoopTailMBB);
-  LoopHeadMBB->addSuccessor(DoneMBB);
+  LoopHeadMBB->addSuccessor(LoopHeadBNETarget);
   LoopTailMBB->addSuccessor(DoneMBB);
   LoopTailMBB->addSuccessor(LoopHeadMBB);
   DoneMBB->splice(DoneMBB->end(), &MBB, MI, MBB.end());
   DoneMBB->transferSuccessors(&MBB);
   MBB.addSuccessor(LoopHeadMBB);
 
-  Register DestReg = MI.getOperand(0).getReg();
-  Register ScratchReg = MI.getOperand(1).getReg();
-  Register AddrReg = MI.getOperand(2).getReg();
-  Register CmpValReg = MI.getOperand(3).getReg();
-  Register NewValReg = MI.getOperand(4).getReg();
   AtomicOrdering Ordering =
       static_cast<AtomicOrdering>(MI.getOperand(IsMasked ? 6 : 5).getImm());
 
@@ -1023,7 +1105,7 @@ bool RISCVExpandAtomicPseudo::expandAtomicCmpXchg(
     BuildMI(LoopHeadMBB, DL, TII->get(RISCV::BNE))
         .addReg(DestIntReg, 0)
         .addReg(CmpValIntReg, 0)
-        .addMBB(DoneMBB);
+        .addMBB(LoopHeadBNETarget);
     // .looptail:
     //   sc.[w|d] scratch, newval, (addr)
     //   bnez scratch, loophead
@@ -1053,7 +1135,7 @@ bool RISCVExpandAtomicPseudo::expandAtomicCmpXchg(
     BuildMI(LoopHeadMBB, DL, TII->get(RISCV::BNE))
         .addReg(ScratchReg)
         .addReg(CmpValReg)
-        .addMBB(DoneMBB);
+        .addMBB(LoopHeadBNETarget);
 
     // .looptail:
     //   xor scratch, dest, newval

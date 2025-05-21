@@ -283,6 +283,8 @@ void TextNodeDumper::Visit(const Decl *D) {
       OS << " constexpr";
     if (FD->isConsteval())
       OS << " consteval";
+    else if (FD->isImmediateFunction())
+      OS << " immediate";
     if (FD->isMultiVersion())
       OS << " multiversion";
   }
@@ -1063,6 +1065,8 @@ void TextNodeDumper::VisitDeclRefExpr(const DeclRefExpr *Node) {
   case NOUR_Constant: OS << " non_odr_use_constant"; break;
   case NOUR_Discarded: OS << " non_odr_use_discarded"; break;
   }
+  if (Node->isImmediateEscalating())
+    OS << " immediate-escalating";
 }
 
 void TextNodeDumper::VisitUnresolvedLookupExpr(
@@ -1244,6 +1248,8 @@ void TextNodeDumper::VisitCXXConstructExpr(const CXXConstructExpr *Node) {
     OS << " std::initializer_list";
   if (Node->requiresZeroInitialization())
     OS << " zeroing";
+  if (Node->isImmediateEscalating())
+    OS << " immediate-escalating";
 }
 
 void TextNodeDumper::VisitCXXBindTemporaryExpr(
@@ -1512,6 +1518,9 @@ void TextNodeDumper::VisitVectorType(const VectorType *T) {
   case VectorType::SveFixedLengthPredicateVector:
     OS << " fixed-length sve predicate vector";
     break;
+  case VectorType::RVVFixedLengthDataVector:
+    OS << " fixed-length rvv data vector";
+    break;
   }
   OS << " " << T->getNumElements();
 }
@@ -1560,17 +1569,23 @@ void TextNodeDumper::VisitUnresolvedUsingType(const UnresolvedUsingType *T) {
 
 void TextNodeDumper::VisitUsingType(const UsingType *T) {
   dumpDeclRef(T->getFoundDecl());
+  if (!T->typeMatchesDecl())
+    OS << " divergent";
 }
 
 void TextNodeDumper::VisitTypedefType(const TypedefType *T) {
   dumpDeclRef(T->getDecl());
+  if (!T->typeMatchesDecl())
+    OS << " divergent";
 }
 
 void TextNodeDumper::VisitUnaryTransformType(const UnaryTransformType *T) {
   switch (T->getUTTKind()) {
-  case UnaryTransformType::EnumUnderlyingType:
-    OS << " underlying_type";
+#define TRANSFORM_TYPE_TRAIT_DEF(Enum, Trait)                                  \
+  case UnaryTransformType::Enum:                                               \
+    OS << " " #Trait;                                                          \
     break;
+#include "clang/Basic/TransformTypeTraits.def"
   }
 }
 
@@ -1583,6 +1598,20 @@ void TextNodeDumper::VisitTemplateTypeParmType(const TemplateTypeParmType *T) {
   if (T->isParameterPack())
     OS << " pack";
   dumpDeclRef(T->getDecl());
+}
+
+void TextNodeDumper::VisitSubstTemplateTypeParmType(
+    const SubstTemplateTypeParmType *T) {
+  dumpDeclRef(T->getAssociatedDecl());
+  VisitTemplateTypeParmDecl(T->getReplacedParameter());
+  if (auto PackIndex = T->getPackIndex())
+    OS << " pack_index " << *PackIndex;
+}
+
+void TextNodeDumper::VisitSubstTemplateTypeParmPackType(
+    const SubstTemplateTypeParmPackType *T) {
+  dumpDeclRef(T->getAssociatedDecl());
+  VisitTemplateTypeParmDecl(T->getReplacedParameter());
 }
 
 void TextNodeDumper::VisitAutoType(const AutoType *T) {
@@ -1803,6 +1832,8 @@ void TextNodeDumper::VisitVarDecl(const VarDecl *D) {
     case VarDecl::ListInit:
       OS << " listinit";
       break;
+    case VarDecl::ParenListInit:
+      OS << " parenlistinit";
     }
   }
   if (D->needsDestruction(D->getASTContext()))
@@ -1813,7 +1844,8 @@ void TextNodeDumper::VisitVarDecl(const VarDecl *D) {
   if (D->hasInit()) {
     const Expr *E = D->getInit();
     // Only dump the value of constexpr VarDecls for now.
-    if (E && !E->isValueDependent() && D->isConstexpr()) {
+    if (E && !E->isValueDependent() && D->isConstexpr() &&
+        !D->getType()->isDependentType()) {
       const APValue *Value = D->evaluateValue();
       if (Value)
         AddChild("value", [=] { Visit(*Value, E->getType()); });
@@ -1928,6 +1960,8 @@ void TextNodeDumper::VisitNamespaceDecl(const NamespaceDecl *D) {
   dumpName(D);
   if (D->isInline())
     OS << " inline";
+  if (D->isNested())
+    OS << " nested";
   if (!D->isOriginalNamespace())
     dumpDeclRef(D->getOriginalNamespace(), "original");
 }
@@ -2396,4 +2430,12 @@ void TextNodeDumper::VisitCompoundStmt(const CompoundStmt *S) {
   VisitStmt(S);
   if (S->hasStoredFPFeatures())
     printFPOptions(S->getStoredFPFeatures());
+}
+
+void TextNodeDumper::VisitHLSLBufferDecl(const HLSLBufferDecl *D) {
+  if (D->isCBuffer())
+    OS << " cbuffer";
+  else
+    OS << " tbuffer";
+  dumpName(D);
 }

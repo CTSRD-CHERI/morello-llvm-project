@@ -147,8 +147,8 @@ struct MorelloCapabilityEncoding {
     assert(bottom.getBitWidth() == CAP_MW && "Invalid width for bottom");
     assert(top.getBitWidth() == CAP_MW && "Invalid width for top");
 
-    base = llvm::APInt::getNullValue(CAP_BOUND_NUM_BITS + 1);
-    limit = llvm::APInt::getNullValue(CAP_BOUND_NUM_BITS + 1);
+    base = llvm::APInt::getZero(CAP_BOUND_NUM_BITS + 1);
+    limit = llvm::APInt::getZero(CAP_BOUND_NUM_BITS + 1);
 
     base.insertBits(bottom, exponent);
     limit.insertBits(top, exponent);
@@ -262,8 +262,7 @@ private:
     LLDB_LOGF(log, "[CapGetEffectiveExponent] nexpLimit = 0x%" PRIx64,
               nexpLimit.getZExtValue());
 
-    llvm::APInt exp =
-        llvm::APInt::getNullValue(NumExpBitsBase + NumExpBitsLimit);
+    llvm::APInt exp = llvm::APInt::getZero(NumExpBitsBase + NumExpBitsLimit);
     exp.insertBits(nexpLimit, NumExpBitsBase);
     exp.insertBits(nexpBase, 0);
     LLDB_LOGF(log, "[CapGetEffectiveExponent] negated exponent = 0x%" PRIx64,

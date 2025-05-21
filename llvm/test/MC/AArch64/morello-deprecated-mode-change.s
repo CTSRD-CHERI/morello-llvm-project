@@ -1,3 +1,4 @@
+# RUN: llvm-mc -triple aarch64-none-elf %s -aarch64-warn-on-deprecated-arch
 # RUN: llvm-mc -triple aarch64-none-elf %s -aarch64-warn-on-deprecated-arch 2> %t.log | FileCheck %s
 # RUN: FileCheck %s --check-prefix=CHECK-WARN < %t.log
 

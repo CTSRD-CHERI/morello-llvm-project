@@ -10,6 +10,7 @@
 
 #include <cctype>
 #include <cstring>
+#include <optional>
 
 constexpr lldb::pid_t StringExtractorGDBRemote::AllProcesses;
 constexpr lldb::tid_t StringExtractorGDBRemote::AllThreads;
@@ -642,7 +643,7 @@ bool StringExtractorGDBRemote::ValidateResponse() const {
     return true; // No validator, so response is valid
 }
 
-llvm::Optional<std::pair<lldb::pid_t, lldb::tid_t>>
+std::optional<std::pair<lldb::pid_t, lldb::tid_t>>
 StringExtractorGDBRemote::GetPidTid(lldb::pid_t default_pid) {
   llvm::StringRef view = llvm::StringRef(m_packet).substr(m_index);
   size_t initial_length = view.size();
@@ -657,7 +658,7 @@ StringExtractorGDBRemote::GetPidTid(lldb::pid_t default_pid) {
     } else if (view.consumeInteger(16, pid) || pid == 0) {
       // not a valid hex integer OR unsupported pid 0
       m_index = UINT64_MAX;
-      return llvm::None;
+      return std::nullopt;
     }
 
     // "." must follow if we expect TID too; otherwise, we assume -1
@@ -676,7 +677,7 @@ StringExtractorGDBRemote::GetPidTid(lldb::pid_t default_pid) {
   } else if (view.consumeInteger(16, tid) || tid == 0 || pid == AllProcesses) {
     // not a valid hex integer OR tid 0 OR pid -1 + a specific tid
     m_index = UINT64_MAX;
-    return llvm::None;
+    return std::nullopt;
   }
 
   // update m_index

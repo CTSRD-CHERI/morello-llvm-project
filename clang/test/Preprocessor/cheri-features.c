@@ -5,6 +5,15 @@
 // RUN:   2>&1 | FileCheck --check-prefix=CHECK-MIPS %s
 
 
+#if __has_feature(cheri)
+#pragma message("__has_feature(cheri)")
+// CHECK-CHERI: warning: __has_feature(cheri)
+void* __capability w = 0;
+#else
+#pragma message("no cheri")
+// CHECK-MIPS: warning: no cheri
+#endif
+
 #if __has_feature(capabilities)
 #pragma message("__has_feature(capabilities)")
 // CHECK-CHERI: warning: __has_feature(capabilities)
@@ -16,11 +25,20 @@ void* __capability x = 0;
 
 #if defined(__CHERI__)
 #pragma message("__CHERI__ defined")
-// CHECK-CHERI: warning: __CHERI__ defined
 void* __capability y = 0;
 #else
 #pragma message("__CHERI__ not defined")
+// CHECK-CHERI: warning: __CHERI__ not defined
 // CHECK-MIPS: warning: __CHERI__ not defined
+#endif
+
+#if defined(__CHERI_HYBRID__)
+#pragma message("__CHERI_HYBRID__ defined")
+// CHECK-CHERI: warning: __CHERI_HYBRID__ defined
+void* __capability y = 0;
+#else
+#pragma message("__CHERI_HYBRID__ not defined")
+// CHECK-MIPS: warning: __CHERI_HYBRID__ not defined
 #endif
 
 int main() {

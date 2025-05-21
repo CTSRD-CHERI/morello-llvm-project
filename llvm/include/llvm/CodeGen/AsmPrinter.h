@@ -15,12 +15,15 @@
 #ifndef LLVM_CODEGEN_ASMPRINTER_H
 #define LLVM_CODEGEN_ASMPRINTER_H
 
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/MapVector.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/BinaryFormat/Dwarf.h"
 #include "llvm/CodeGen/AsmPrinterHandler.h"
 #include "llvm/CodeGen/DwarfStringPoolEntry.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
+#include "llvm/CodeGen/StackMaps.h"
 #include "llvm/IR/InlineAsm.h"
 #include "llvm/Support/ErrorHandling.h"
 #include <cstdint>
@@ -68,7 +71,6 @@ class MDNode;
 class Module;
 class PseudoProbeHandler;
 class raw_ostream;
-class StackMaps;
 class StringRef;
 class TargetLoweringObjectFile;
 class TargetMachine;
@@ -85,7 +87,7 @@ public:
   TargetMachine &TM;
 
   /// Target Asm Printer information.
-  const MCAsmInfo *MAI;
+  const MCAsmInfo *MAI = nullptr;
 
   /// This is the context for the output file that we are streaming. This owns
   /// all of the global MC-related objects for the generated translation unit.
@@ -109,7 +111,7 @@ public:
   MachineLoopInfo *MLI = nullptr;
 
   /// Optimization remark emitter.
-  MachineOptimizationRemarkEmitter *ORE;
+  MachineOptimizationRemarkEmitter *ORE = nullptr;
 
   /// The symbol for the entry in __patchable_function_entires.
   MCSymbol *CurrentPatchableFunctionEntrySym = nullptr;
@@ -180,8 +182,8 @@ private:
   /// block's address of label.
   std::unique_ptr<AddrLabelMap> AddrLabelSymbols;
 
-  // The garbage collection metadata printer table.
-  void *GCMetadataPrinters = nullptr; // Really a DenseMap.
+  /// The garbage collection metadata printer table.
+  DenseMap<GCStrategy *, std::unique_ptr<GCMetadataPrinter>> GCMetadataPrinters;
 
   /// Emit comments in assembly output if this is true.
   bool VerboseAsm;
@@ -189,22 +191,24 @@ private:
   /// Output stream for the stack usage file (i.e., .su file).
   std::unique_ptr<raw_fd_ostream> StackUsageStream;
 
+  /// List of symbols to be inserted into PC sections.
+  DenseMap<const MDNode *, SmallVector<const MCSymbol *>> PCSectionsSymbols;
+
   static char ID;
 
 protected:
   MCSymbol *CurrentFnBegin = nullptr;
 
   /// For dso_local functions, the current $local alias for the function.
+  /// Also used for exception handling for pure-capability CHERI targets.
   MCSymbol *CurrentFnBeginLocal = nullptr;
-
-  /// The symbol used to represent the start of the current function for the
-  /// purpose of exception handling for pure-capability CHERI targets.
-  MCSymbol *CurrentFnBeginForEH = nullptr;
 
   /// A vector of all debug/EH info emitters we should use. This vector
   /// maintains ownership of the emitters.
   std::vector<HandlerInfo> Handlers;
   size_t NumUserHandlers = 0;
+
+  StackMaps SM;
 
 private:
   /// If generated on the fly this own the instance.
@@ -232,6 +236,10 @@ private:
   /// .note.GNU-no-split-stack section when it also contains functions without a
   /// split stack prologue.
   bool HasNoSplitStack = false;
+
+  /// Raw FDOstream for outputting machine basic block frequncies if the
+  /// --mbb-profile-dump flag is set for downstream cost modelling applications
+  std::unique_ptr<raw_fd_ostream> MBBProfileDumpFileOutput;
 
 protected:
   explicit AsmPrinter(TargetMachine &TM, std::unique_ptr<MCStreamer> Streamer);
@@ -271,7 +279,7 @@ public:
   MCSymbol *getFunctionBegin() const { return CurrentFnBegin; }
   MCSymbol *getFunctionEnd() const { return CurrentFnEnd; }
 
-  MCSymbol *getFunctionForEH() const { return CurrentFnBeginForEH; }
+  MCSymbol *getFunctionForEH() const { return CurrentFnBeginLocal; }
 
   // Return the exception symbol associated with the MBB section containing a
   // given basic block.
@@ -324,7 +332,18 @@ public:
   /// Similar to getSymbol() but preferred for references. On ELF, this uses a
   /// local symbol if a reference to GV is guaranteed to be resolved to the
   /// definition in the same module.
-  MCSymbol *getSymbolPreferLocal(const GlobalValue &GV) const;
+  /// If \p Force is set to true, return a local alias if possible even if the
+  /// normal heuristics say it is not beneficial.
+  MCSymbol *getSymbolPreferLocal(const GlobalValue &GV,
+                                 bool Force = false) const;
+
+  bool doesDwarfUseRelocationsAcrossSections() const {
+    return DwarfUsesRelocationsAcrossSections;
+  }
+
+  void setDwarfUsesRelocationsAcrossSections(bool Enable) {
+    DwarfUsesRelocationsAcrossSections = Enable;
+  }
 
   //===------------------------------------------------------------------===//
   // XRay instrumentation implementation.
@@ -410,9 +429,18 @@ public:
 
   void emitBBAddrMapSection(const MachineFunction &MF);
 
+  void emitKCFITrapEntry(const MachineFunction &MF, const MCSymbol *Symbol);
+  virtual void emitKCFITypeId(const MachineFunction &MF);
+
   void emitPseudoProbe(const MachineInstr &MI);
 
   void emitRemarksSection(remarks::RemarkStreamer &RS);
+
+  /// Emits a label as reference for PC sections.
+  void emitPCSectionsLabel(const MachineFunction &MF, const MDNode &MD);
+
+  /// Emits the PC sections collected from instructions.
+  void emitPCSections(const MachineFunction &MF);
 
   /// Get the CFISection type for a function.
   CFISection getFunctionCFISectionType(const Function &F) const;
@@ -427,9 +455,9 @@ public:
 
   /// Since emitting CFI unwind information is entangled with supporting the
   /// exceptions, this returns true for platforms which use CFI unwind
-  /// information for debugging purpose when
+  /// information for other purposes (debugging, sanitizers, ...) when
   /// `MCAsmInfo::ExceptionsType == ExceptionHandling::None`.
-  bool needsCFIForDebug() const;
+  bool usesCFIWithoutEH() const;
 
   /// Print to the current output stream assembly representations of the
   /// constants in the constant pool MCP. This is used to print out constants
@@ -506,7 +534,7 @@ public:
   void emitGlobalGOTEquivs();
 
   /// Emit the stack maps.
-  void emitStackMaps(StackMaps &SM);
+  void emitStackMaps();
 
   //===------------------------------------------------------------------===//
   // Overridable Hooks
@@ -625,6 +653,13 @@ public:
   /// Emit a long long directive and value.
   void emitInt64(uint64_t Value) const;
 
+  /// Emit the specified signed leb128 value.
+  void emitSLEB128(int64_t Value, const char *Desc = nullptr) const;
+
+  /// Emit the specified unsigned leb128 value.
+  void emitULEB128(uint64_t Value, const char *Desc = nullptr,
+                   unsigned PadTo = 0) const;
+
   /// Emit something like ".long Hi-Lo" where the size in bytes of the directive
   /// is specified by Size and Hi/Lo specify the labels.  This implicitly uses
   /// .set if it is available.
@@ -651,13 +686,6 @@ public:
   //===------------------------------------------------------------------===//
   // Dwarf Emission Helper Routines
   //===------------------------------------------------------------------===//
-
-  /// Emit the specified signed leb128 value.
-  void emitSLEB128(int64_t Value, const char *Desc = nullptr) const;
-
-  /// Emit the specified unsigned leb128 value.
-  void emitULEB128(uint64_t Value, const char *Desc = nullptr,
-                   unsigned PadTo = 0) const;
 
   /// Emit a .byte 42 directive that corresponds to an encoding.  If verbose
   /// assembly output is enabled, we output comments describing the encoding.
@@ -813,6 +841,8 @@ private:
   mutable unsigned LastFn = 0;
   mutable unsigned Counter = ~0U;
 
+  bool DwarfUsesRelocationsAcrossSections = false;
+
   /// This method emits the header for the current function.
   virtual void emitFunctionHeader();
 
@@ -845,9 +875,9 @@ private:
   /// Emit llvm.ident metadata in an '.ident' directive.
   void emitModuleIdents(Module &M);
   /// Emit bytes for llvm.commandline metadata.
-  void emitModuleCommandLines(Module &M);
+  virtual void emitModuleCommandLines(Module &M);
 
-  GCMetadataPrinter *GetOrCreateGCPrinter(GCStrategy &S);
+  GCMetadataPrinter *getOrCreateGCPrinter(GCStrategy &S);
   void emitGlobalAlias(Module &M, const GlobalAlias &GA);
   void emitGlobalIFunc(Module &M, const GlobalIFunc &GI);
 

@@ -8,7 +8,7 @@
 
 // <iostream>
 
-// istream wcerr;
+// wostream wcerr;
 
 // The FVP for now doesn't output to stderr so this doesn't work.
 // Temporarily xfailing this.

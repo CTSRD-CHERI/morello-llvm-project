@@ -5,7 +5,9 @@ function(add_mlir_unittest test_dirname)
 endfunction()
 
 add_subdirectory(Analysis)
+add_subdirectory(Bytecode)
 add_subdirectory(Conversion)
+add_subdirectory(Debug)
 add_subdirectory(Dialect)
 add_subdirectory(Interfaces)
 add_subdirectory(IR)
@@ -16,7 +18,6 @@ add_subdirectory(Rewrite)
 add_subdirectory(TableGen)
 add_subdirectory(Transforms)
 
-# The native target may not be enabled when cross compiling.
-if(TARGET ${LLVM_NATIVE_ARCH})
+if(MLIR_ENABLE_EXECUTION_ENGINE)
   add_subdirectory(ExecutionEngine)
 endif()

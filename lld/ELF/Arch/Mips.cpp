@@ -84,8 +84,8 @@ template <class ELFT> uint32_t MIPS<ELFT>::calcEFlags() const {
 template <class ELFT> bool MIPS<ELFT>::calcIsCheriAbi() const {
   bool isCheriAbi = (config->eflags & EF_MIPS_ABI) == EF_MIPS_ABI_CHERIABI;
 
-  if (config->isCheriAbi && !ctx->objectFiles.empty() && !isCheriAbi)
-    error(toString(ctx->objectFiles.front()) +
+  if (config->isCheriAbi && !ctx.objectFiles.empty() && !isCheriAbi)
+    error(toString(ctx.objectFiles.front()) +
           ": object file is non-CheriABI but emulation forces it");
 
   return isCheriAbi;
@@ -154,7 +154,7 @@ RelExpr MIPS<ELFT>::getRelExpr(RelType type, const Symbol &s,
       return R_MIPS_GOT_GP_PC;
     if (&s == ElfSym::mipsLocalGp)
       return R_MIPS_GOT_GP;
-    LLVM_FALLTHROUGH;
+    [[fallthrough]];
   case R_MIPS_32:
   case R_MIPS_64:
   case R_MIPS_GOT_OFST:
@@ -193,7 +193,7 @@ RelExpr MIPS<ELFT>::getRelExpr(RelType type, const Symbol &s,
   case R_MICROMIPS_GOT16:
     if (s.isLocal())
       return R_MIPS_GOT_LOCAL_PAGE;
-    LLVM_FALLTHROUGH;
+    [[fallthrough]];
   case R_MIPS_CALL16:
   case R_MIPS_GOT_DISP:
   case R_MIPS_TLS_GOTTPREL:
@@ -685,7 +685,7 @@ void MIPS<ELFT>::relocate(uint8_t *loc, const Relocation &rel,
   case R_MIPS_TLS_GOTTPREL:
   case R_MIPS_TLS_LDM:
     checkInt(loc, val, 16, rel);
-    LLVM_FALLTHROUGH;
+    [[fallthrough]];
   case R_MIPS_CALL_LO16:
   case R_MIPS_GOT_LO16:
   case R_MIPS_GOT_OFST:

@@ -23,11 +23,11 @@ let isCall = 1, Defs = [LR], Uses = [SP] in {
 
 let isBarrier = 1, isReturn = 1, isTerminator = 1 in {
   def CRET_ReallyLR : Pseudo<(outs), (ins),
-                             [(AArch64cretflag)]>;
+                             [(AArch64cretglue)]>;
   def CRET_ReallyLRClear : Pseudo<(outs), (ins),
-                                  [(AArch64cretflagclear)]>;
+                                  [(AArch64cretglueclear)]>;
   def RET_ReallyLRClear : Pseudo<(outs), (ins),
-                                 [(AArch64retflagclear)]>;
+                                 [(AArch64retglueclear)]>;
 }
 
 let isCall = 1, isTerminator = 1, isReturn = 1,

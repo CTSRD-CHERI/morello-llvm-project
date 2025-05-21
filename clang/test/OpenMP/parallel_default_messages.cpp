@@ -1,11 +1,11 @@
 // RUN: %clang_cc1 -verify=expected,ge40 -fopenmp-version=45 -fopenmp -ferror-limit 100 -o - %s -Wuninitialized
-// RUN: %clang_cc1 -verify=expected,ge40 -fopenmp-simd -ferror-limit 100 -o - %s -Wuninitialized
-// RUN: %clang_cc1 -verify=expected,ge40 -fopenmp -ferror-limit 100 -o - %s -Wuninitialized
+// RUN: %clang_cc1 -verify=expected,ge40 -fopenmp-version=50 -fopenmp-simd -ferror-limit 100 -o - %s -Wuninitialized
+// RUN: %clang_cc1 -verify=expected,ge40 -fopenmp-version=50 -fopenmp -ferror-limit 100 -o - %s -Wuninitialized
 // RUN: %clang_cc1 -verify=expected,ge40 -fopenmp-version=40 -fopenmp -ferror-limit 100 -o - %s -Wuninitialized
 // RUN: %clang_cc1 -verify -fopenmp-version=31 -fopenmp -ferror-limit 100 -o - %s -Wuninitialized
 // RUN: %clang_cc1 -verify -fopenmp-version=30 -fopenmp -ferror-limit 100 -o - %s -Wuninitialized
-// RUN: %clang_cc1 -verify=expected,ge40 -fopenmp-version=51 -fopenmp -DOMP51 -ferror-limit 100 -o - %s -Wuninitialized
-// RUN: %clang_cc1 -verify=expected,ge40 -fopenmp-version=51 -fopenmp-simd -DOMP51 -ferror-limit 100 -o - %s -Wuninitialized
+// RUN: %clang_cc1 -verify=expected,ge40 -fopenmp -DOMP51 -ferror-limit 100 -o - %s -Wuninitialized
+// RUN: %clang_cc1 -verify=expected,ge40 -fopenmp-simd -DOMP51 -ferror-limit 100 -o - %s -Wuninitialized
 
 void foo();
 
@@ -49,3 +49,10 @@ int main(int argc, char **argv) {
 
   return 0;
 }
+
+class A{
+  void a() {
+    #pragma omp parallel
+    a(b); // expected-error {{use of undeclared identifier 'b'}}
+ }
+};

@@ -19,29 +19,20 @@ define double @double_add_const(double %a) nounwind {
 ; CHECK-NEXT:  .LBB0_1: # Label of block must be emitted
 ; CHECK-NEXT:    auipcc ca0, %pcrel_hi(.LCPI0_0)
 ; CHECK-NEXT:    cincoffset ca0, ca0, %pcrel_lo(.LBB0_1)
-; CHECK-NEXT:    cfld ft0, 0(ca0)
-; CHECK-NEXT:    fadd.d fa0, fa0, ft0
-; CHECK-NEXT:    cret
+; CHECK-NEXT:    fld fa5, 0(ca0)
+; CHECK-NEXT:    fadd.d fa0, fa0, fa5
+; CHECK-NEXT:    ret
   %1 = fadd double %a, 1.0
   ret double %1
 }
 
-; CHECK-LABEL: .section .sdata,"aw",@progbits
-; CHECK-NEXT:  .p2align 2
-; CHECK-NEXT: .LCPI1_0:
-; CHECK-NEXT:  .word 0x3f800000 # float 1
-; CHECK-NEXT:  .size .LCPI1_0, 4
-; CHECK-NEXT:  .text
-
 define float @float_add_const(float %a) nounwind {
 ; CHECK-LABEL: float_add_const:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:  .LBB1_1: # Label of block must be emitted
-; CHECK-NEXT:    auipcc ca0, %pcrel_hi(.LCPI1_0)
-; CHECK-NEXT:    cincoffset ca0, ca0, %pcrel_lo(.LBB1_1)
-; CHECK-NEXT:    cflw ft0, 0(ca0)
-; CHECK-NEXT:    fadd.s fa0, fa0, ft0
-; CHECK-NEXT:    cret
+; CHECK-NEXT:    lui a0, 260096
+; CHECK-NEXT:    fmv.w.x fa5, a0
+; CHECK-NEXT:    fadd.s fa0, fa0, fa5
+; CHECK-NEXT:    ret
   %1 = fadd float %a, 1.0
   ret float %1
 }

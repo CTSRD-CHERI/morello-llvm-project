@@ -89,22 +89,20 @@ __attribute__((weak)) extern void *__capability __cap_table_end;
  */
 #ifdef CHERI_INIT_GLOBALS_USE_OFFSET
 #ifdef __aarch64__
-#define cgetaddr_or_offset "gcoff"
 #define csetaddr_or_offset "scoff"
 #else
-#define cgetaddr_or_offset "cgetoffset"
 #define csetaddr_or_offset "csetoffset"
 #endif
+#define cheri_address_or_offset_get(_cap) __builtin_cheri_offset_get((_cap))
 #define cheri_address_or_offset_set(_cap, _val)                                \
   __builtin_cheri_offset_set((_cap), (_val))
 #else
 #ifdef __aarch64__
-#define cgetaddr_or_offset "gcvalue"
 #define csetaddr_or_offset "scvalue"
 #else
-#define cgetaddr_or_offset "cgetaddr"
 #define csetaddr_or_offset "csetaddr"
 #endif
+#define cheri_address_or_offset_get(_cap) __builtin_cheri_address_get((_cap))
 #define cheri_address_or_offset_set(_cap, _val)                                \
   __builtin_cheri_address_set((_cap), (_val))
 #endif
@@ -246,13 +244,11 @@ cheri_init_globals_3(void *__capability data_cap,
           "lla %1, __stop___cap_relocs\n\t"
           : "=r"(start_addr), "=r"(stop_addr));
 #else
-  void *__capability tmp;
-  __asm__ (
-       "cllc %2, __start___cap_relocs\n\t"
-       cgetaddr_or_offset " %0, %2\n\t"
-       "cllc %2, __stop___cap_relocs\n\t"
-       cgetaddr_or_offset " %1, %2\n\t"
-       :"=r"(start_addr), "=r"(stop_addr), "=&C"(tmp));
+  __asm__("cllc %0, __start___cap_relocs\n\t"
+          "cllc %1, __stop___cap_relocs\n\t"
+          : "=C"(start_relocs), "=C"(stop_relocs));
+  start_addr = cheri_address_or_offset_get(start_relocs);
+  stop_addr = cheri_address_or_offset_get(stop_relocs);
 #endif
 #elif defined(__aarch64__)
 #if !defined(__CHERI_PURE_CAPABILITY__)
@@ -263,15 +259,14 @@ cheri_init_globals_3(void *__capability data_cap,
        "add %1, %1, :lo12:__stop___cap_relocs\n\t"
        : "=r"(start_addr), "=r"(stop_addr));
 #else
-  void *__capability tmp;
   __asm__ (
-       "adrp %2, __start___cap_relocs\n\t"
-       "add %2, %2, :lo12:__start___cap_relocs\n\t"
-       cgetaddr_or_offset " %0, %2\n\t"
-       "adrp %2, __stop___cap_relocs\n\t"
-       "add %2, %2, :lo12:__stop___cap_relocs\n\t"
-       cgetaddr_or_offset " %1, %2\n\t"
-       : "=r"(start_addr), "=r"(stop_addr), "=&C"(tmp));
+       "adrp %0, __start___cap_relocs\n\t"
+       "add %0, %0, :lo12:__start___cap_relocs\n\t"
+       "adrp %1, __stop___cap_relocs\n\t"
+       "add %1, %1, :lo12:__stop___cap_relocs\n\t"
+       : "=C"(start_relocs), "=C"(stop_relocs));
+  start_addr = cheri_address_or_offset_get(start_relocs);
+  stop_addr = cheri_address_or_offset_get(stop_relocs);
 #endif
 #else
 #error Unknown architecture

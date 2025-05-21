@@ -31,7 +31,7 @@ define dso_local i8 @test_atomic_load_add_i8(i8 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldadd1_acq_rel
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw add i8* @var8, i8 %offset seq_cst
+   %old = atomicrmw add ptr @var8, i8 %offset seq_cst
    ret i8 %old
 }
 
@@ -58,7 +58,7 @@ define dso_local i16 @test_atomic_load_add_i16(i16 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldadd2_acq
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw add i16* @var16, i16 %offset acquire
+   %old = atomicrmw add ptr @var16, i16 %offset acquire
    ret i16 %old
 }
 
@@ -85,7 +85,7 @@ define dso_local i32 @test_atomic_load_add_i32(i32 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldadd4_rel
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw add i32* @var32, i32 %offset release
+   %old = atomicrmw add ptr @var32, i32 %offset release
    ret i32 %old
 }
 
@@ -112,7 +112,7 @@ define dso_local i64 @test_atomic_load_add_i64(i64 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldadd8_relax
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw add i64* @var64, i64 %offset monotonic
+   %old = atomicrmw add ptr @var64, i64 %offset monotonic
    ret i64 %old
 }
 
@@ -140,7 +140,7 @@ define dso_local i8 @test_atomic_load_sub_i8(i8 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldadd1_relax
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw sub i8* @var8, i8 %offset monotonic
+   %old = atomicrmw sub ptr @var8, i8 %offset monotonic
    ret i8 %old
 }
 
@@ -168,7 +168,7 @@ define dso_local i16 @test_atomic_load_sub_i16(i16 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldadd2_rel
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw sub i16* @var16, i16 %offset release
+   %old = atomicrmw sub ptr @var16, i16 %offset release
    ret i16 %old
 }
 
@@ -196,7 +196,7 @@ define dso_local i32 @test_atomic_load_sub_i32(i32 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldadd4_acq
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw sub i32* @var32, i32 %offset acquire
+   %old = atomicrmw sub ptr @var32, i32 %offset acquire
    ret i32 %old
 }
 
@@ -224,7 +224,7 @@ define dso_local i64 @test_atomic_load_sub_i64(i64 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldadd8_acq_rel
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw sub i64* @var64, i64 %offset seq_cst
+   %old = atomicrmw sub ptr @var64, i64 %offset seq_cst
    ret i64 %old
 }
 
@@ -252,7 +252,7 @@ define dso_local i8 @test_atomic_load_and_i8(i8 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldclr1_rel
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw and i8* @var8, i8 %offset release
+   %old = atomicrmw and ptr @var8, i8 %offset release
    ret i8 %old
 }
 
@@ -280,7 +280,7 @@ define dso_local i16 @test_atomic_load_and_i16(i16 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldclr2_relax
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw and i16* @var16, i16 %offset monotonic
+   %old = atomicrmw and ptr @var16, i16 %offset monotonic
    ret i16 %old
 }
 
@@ -308,7 +308,7 @@ define dso_local i32 @test_atomic_load_and_i32(i32 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldclr4_acq_rel
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw and i32* @var32, i32 %offset seq_cst
+   %old = atomicrmw and ptr @var32, i32 %offset seq_cst
    ret i32 %old
 }
 
@@ -336,7 +336,7 @@ define dso_local i64 @test_atomic_load_and_i64(i64 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldclr8_acq
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw and i64* @var64, i64 %offset acquire
+   %old = atomicrmw and ptr @var64, i64 %offset acquire
    ret i64 %old
 }
 
@@ -363,7 +363,7 @@ define dso_local i8 @test_atomic_load_or_i8(i8 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldset1_acq_rel
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw or i8* @var8, i8 %offset seq_cst
+   %old = atomicrmw or ptr @var8, i8 %offset seq_cst
    ret i8 %old
 }
 
@@ -390,7 +390,7 @@ define dso_local i16 @test_atomic_load_or_i16(i16 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldset2_relax
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw or i16* @var16, i16 %offset monotonic
+   %old = atomicrmw or ptr @var16, i16 %offset monotonic
    ret i16 %old
 }
 
@@ -417,7 +417,7 @@ define dso_local i32 @test_atomic_load_or_i32(i32 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldset4_acq
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw or i32* @var32, i32 %offset acquire
+   %old = atomicrmw or ptr @var32, i32 %offset acquire
    ret i32 %old
 }
 
@@ -444,7 +444,7 @@ define dso_local i64 @test_atomic_load_or_i64(i64 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldset8_rel
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw or i64* @var64, i64 %offset release
+   %old = atomicrmw or ptr @var64, i64 %offset release
    ret i64 %old
 }
 
@@ -471,7 +471,7 @@ define dso_local i8 @test_atomic_load_xor_i8(i8 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldeor1_acq
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw xor i8* @var8, i8 %offset acquire
+   %old = atomicrmw xor ptr @var8, i8 %offset acquire
    ret i8 %old
 }
 
@@ -498,7 +498,7 @@ define dso_local i16 @test_atomic_load_xor_i16(i16 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldeor2_rel
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw xor i16* @var16, i16 %offset release
+   %old = atomicrmw xor ptr @var16, i16 %offset release
    ret i16 %old
 }
 
@@ -525,7 +525,7 @@ define dso_local i32 @test_atomic_load_xor_i32(i32 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldeor4_acq_rel
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw xor i32* @var32, i32 %offset seq_cst
+   %old = atomicrmw xor ptr @var32, i32 %offset seq_cst
    ret i32 %old
 }
 
@@ -552,7 +552,7 @@ define dso_local i64 @test_atomic_load_xor_i64(i64 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_ldeor8_relax
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw xor i64* @var64, i64 %offset monotonic
+   %old = atomicrmw xor ptr @var64, i64 %offset monotonic
    ret i64 %old
 }
 
@@ -579,7 +579,7 @@ define dso_local i8 @test_atomic_load_xchg_i8(i8 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_swp1_relax
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw xchg i8* @var8, i8 %offset monotonic
+   %old = atomicrmw xchg ptr @var8, i8 %offset monotonic
    ret i8 %old
 }
 
@@ -606,7 +606,7 @@ define dso_local i16 @test_atomic_load_xchg_i16(i16 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_swp2_acq_rel
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw xchg i16* @var16, i16 %offset seq_cst
+   %old = atomicrmw xchg ptr @var16, i16 %offset seq_cst
    ret i16 %old
 }
 
@@ -633,7 +633,7 @@ define dso_local i32 @test_atomic_load_xchg_i32(i32 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_swp4_rel
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw xchg i32* @var32, i32 %offset release
+   %old = atomicrmw xchg ptr @var32, i32 %offset release
    ret i32 %old
 }
 
@@ -659,7 +659,7 @@ define dso_local i64 @test_atomic_load_xchg_i64(i64 %offset) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_swp8_acq
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %old = atomicrmw xchg i64* @var64, i64 %offset acquire
+   %old = atomicrmw xchg ptr @var64, i64 %offset acquire
    ret i64 %old
 }
 
@@ -680,7 +680,7 @@ define dso_local i8 @test_atomic_load_min_i8(i8 %offset) nounwind {
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    mov w0, w8
 ; CHECK-NEXT:    ret
-   %old = atomicrmw min i8* @var8, i8 %offset acquire
+   %old = atomicrmw min ptr @var8, i8 %offset acquire
    ret i8 %old
 }
 
@@ -700,7 +700,7 @@ define dso_local i16 @test_atomic_load_min_i16(i16 %offset) nounwind {
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    mov w0, w8
 ; CHECK-NEXT:    ret
-   %old = atomicrmw min i16* @var16, i16 %offset release
+   %old = atomicrmw min ptr @var16, i16 %offset release
    ret i16 %old
 }
 
@@ -719,7 +719,7 @@ define dso_local i32 @test_atomic_load_min_i32(i32 %offset) nounwind {
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    mov w0, w8
 ; CHECK-NEXT:    ret
-   %old = atomicrmw min i32* @var32, i32 %offset monotonic
+   %old = atomicrmw min ptr @var32, i32 %offset monotonic
    ret i32 %old
 }
 
@@ -738,7 +738,7 @@ define dso_local i64 @test_atomic_load_min_i64(i64 %offset) nounwind {
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    mov x0, x8
 ; CHECK-NEXT:    ret
-   %old = atomicrmw min i64* @var64, i64 %offset seq_cst
+   %old = atomicrmw min ptr @var64, i64 %offset seq_cst
    ret i64 %old
 }
 
@@ -758,7 +758,7 @@ define dso_local i8 @test_atomic_load_max_i8(i8 %offset) nounwind {
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    mov w0, w8
 ; CHECK-NEXT:    ret
-   %old = atomicrmw max i8* @var8, i8 %offset seq_cst
+   %old = atomicrmw max ptr @var8, i8 %offset seq_cst
    ret i8 %old
 }
 
@@ -778,7 +778,7 @@ define dso_local i16 @test_atomic_load_max_i16(i16 %offset) nounwind {
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    mov w0, w8
 ; CHECK-NEXT:    ret
-   %old = atomicrmw max i16* @var16, i16 %offset acquire
+   %old = atomicrmw max ptr @var16, i16 %offset acquire
    ret i16 %old
 }
 
@@ -797,7 +797,7 @@ define dso_local i32 @test_atomic_load_max_i32(i32 %offset) nounwind {
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    mov w0, w8
 ; CHECK-NEXT:    ret
-   %old = atomicrmw max i32* @var32, i32 %offset release
+   %old = atomicrmw max ptr @var32, i32 %offset release
    ret i32 %old
 }
 
@@ -816,7 +816,7 @@ define dso_local i64 @test_atomic_load_max_i64(i64 %offset) nounwind {
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    mov x0, x8
 ; CHECK-NEXT:    ret
-   %old = atomicrmw max i64* @var64, i64 %offset monotonic
+   %old = atomicrmw max ptr @var64, i64 %offset monotonic
    ret i64 %old
 }
 
@@ -836,7 +836,7 @@ define dso_local i8 @test_atomic_load_umin_i8(i8 %offset) nounwind {
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    // kill: def $w0 killed $w0 killed $x0
 ; CHECK-NEXT:    ret
-   %old = atomicrmw umin i8* @var8, i8 %offset monotonic
+   %old = atomicrmw umin ptr @var8, i8 %offset monotonic
    ret i8 %old
 }
 
@@ -856,7 +856,7 @@ define dso_local i16 @test_atomic_load_umin_i16(i16 %offset) nounwind {
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    // kill: def $w0 killed $w0 killed $x0
 ; CHECK-NEXT:    ret
-   %old = atomicrmw umin i16* @var16, i16 %offset acquire
+   %old = atomicrmw umin ptr @var16, i16 %offset acquire
    ret i16 %old
 }
 
@@ -875,7 +875,7 @@ define dso_local i32 @test_atomic_load_umin_i32(i32 %offset) nounwind {
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    mov w0, w8
 ; CHECK-NEXT:    ret
-   %old = atomicrmw umin i32* @var32, i32 %offset seq_cst
+   %old = atomicrmw umin ptr @var32, i32 %offset seq_cst
    ret i32 %old
 }
 
@@ -894,7 +894,7 @@ define dso_local i64 @test_atomic_load_umin_i64(i64 %offset) nounwind {
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    mov x0, x8
 ; CHECK-NEXT:    ret
-   %old = atomicrmw umin i64* @var64, i64 %offset acq_rel
+   %old = atomicrmw umin ptr @var64, i64 %offset acq_rel
    ret i64 %old
 }
 
@@ -914,7 +914,7 @@ define dso_local i8 @test_atomic_load_umax_i8(i8 %offset) nounwind {
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    // kill: def $w0 killed $w0 killed $x0
 ; CHECK-NEXT:    ret
-   %old = atomicrmw umax i8* @var8, i8 %offset acq_rel
+   %old = atomicrmw umax ptr @var8, i8 %offset acq_rel
    ret i8 %old
 }
 
@@ -934,7 +934,7 @@ define dso_local i16 @test_atomic_load_umax_i16(i16 %offset) nounwind {
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    // kill: def $w0 killed $w0 killed $x0
 ; CHECK-NEXT:    ret
-   %old = atomicrmw umax i16* @var16, i16 %offset monotonic
+   %old = atomicrmw umax ptr @var16, i16 %offset monotonic
    ret i16 %old
 }
 
@@ -953,7 +953,7 @@ define dso_local i32 @test_atomic_load_umax_i32(i32 %offset) nounwind {
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    mov w0, w8
 ; CHECK-NEXT:    ret
-   %old = atomicrmw umax i32* @var32, i32 %offset seq_cst
+   %old = atomicrmw umax ptr @var32, i32 %offset seq_cst
    ret i32 %old
 }
 
@@ -972,7 +972,7 @@ define dso_local i64 @test_atomic_load_umax_i64(i64 %offset) nounwind {
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    mov x0, x8
 ; CHECK-NEXT:    ret
-   %old = atomicrmw umax i64* @var64, i64 %offset release
+   %old = atomicrmw umax ptr @var64, i64 %offset release
    ret i64 %old
 }
 
@@ -1008,7 +1008,7 @@ define dso_local i8 @test_atomic_cmpxchg_i8(i8 %wanted, i8 %new) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_cas1_acq
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %pair = cmpxchg i8* @var8, i8 %wanted, i8 %new acquire acquire
+   %pair = cmpxchg ptr @var8, i8 %wanted, i8 %new acquire acquire
    %old = extractvalue { i8, i1 } %pair, 0
    ret i8 %old
 }
@@ -1045,7 +1045,7 @@ define dso_local i16 @test_atomic_cmpxchg_i16(i16 %wanted, i16 %new) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_cas2_acq_rel
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %pair = cmpxchg i16* @var16, i16 %wanted, i16 %new seq_cst seq_cst
+   %pair = cmpxchg ptr @var16, i16 %wanted, i16 %new seq_cst seq_cst
    %old = extractvalue { i16, i1 } %pair, 0
    ret i16 %old
 }
@@ -1081,7 +1081,7 @@ define dso_local i32 @test_atomic_cmpxchg_i32(i32 %wanted, i32 %new) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    bl __aarch64_cas4_rel
 ; OUTLINE_ATOMICS-NEXT:    ldr x30, [sp], #16 // 8-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %pair = cmpxchg i32* @var32, i32 %wanted, i32 %new release monotonic
+   %pair = cmpxchg ptr @var32, i32 %wanted, i32 %new release monotonic
    %old = extractvalue { i32, i1 } %pair, 0
    ret i32 %old
 }
@@ -1118,9 +1118,9 @@ define dso_local void @test_atomic_cmpxchg_i64(i64 %wanted, i64 %new) nounwind {
 ; OUTLINE_ATOMICS-NEXT:    str x0, [x19]
 ; OUTLINE_ATOMICS-NEXT:    ldp x30, x19, [sp], #16 // 16-byte Folded Reload
 ; OUTLINE_ATOMICS-NEXT:    ret
-   %pair = cmpxchg i64* @var64, i64 %wanted, i64 %new monotonic monotonic
+   %pair = cmpxchg ptr @var64, i64 %wanted, i64 %new monotonic monotonic
    %old = extractvalue { i64, i1 } %pair, 0
-   store i64 %old, i64* @var64
+   store i64 %old, ptr @var64
    ret void
 }
 
@@ -1130,7 +1130,7 @@ define dso_local i8 @test_atomic_load_monotonic_i8() nounwind {
 ; CHECK-NEXT:    adrp x8, var8
 ; CHECK-NEXT:    ldrb w0, [x8, :lo12:var8]
 ; CHECK-NEXT:    ret
-  %val = load atomic i8, i8* @var8 monotonic, align 1
+  %val = load atomic i8, ptr @var8 monotonic, align 1
   ret i8 %val
 }
 
@@ -1140,8 +1140,8 @@ define dso_local i8 @test_atomic_load_monotonic_regoff_i8(i64 %base, i64 %off) n
 ; CHECK-NEXT:    ldrb w0, [x0, x1]
 ; CHECK-NEXT:    ret
   %addr_int = add i64 %base, %off
-  %addr = inttoptr i64 %addr_int to i8*
-  %val = load atomic i8, i8* %addr monotonic, align 1
+  %addr = inttoptr i64 %addr_int to ptr
+  %val = load atomic i8, ptr %addr monotonic, align 1
   ret i8 %val
 }
 
@@ -1152,7 +1152,7 @@ define dso_local i8 @test_atomic_load_acquire_i8() nounwind {
 ; CHECK-NEXT:    add x8, x8, :lo12:var8
 ; CHECK-NEXT:    ldarb w0, [x8]
 ; CHECK-NEXT:    ret
-  %val = load atomic i8, i8* @var8 acquire, align 1
+  %val = load atomic i8, ptr @var8 acquire, align 1
   ret i8 %val
 }
 
@@ -1163,7 +1163,7 @@ define dso_local i8 @test_atomic_load_seq_cst_i8() nounwind {
 ; CHECK-NEXT:    add x8, x8, :lo12:var8
 ; CHECK-NEXT:    ldarb w0, [x8]
 ; CHECK-NEXT:    ret
-  %val = load atomic i8, i8* @var8 seq_cst, align 1
+  %val = load atomic i8, ptr @var8 seq_cst, align 1
   ret i8 %val
 }
 
@@ -1173,7 +1173,7 @@ define dso_local i16 @test_atomic_load_monotonic_i16() nounwind {
 ; CHECK-NEXT:    adrp x8, var16
 ; CHECK-NEXT:    ldrh w0, [x8, :lo12:var16]
 ; CHECK-NEXT:    ret
-  %val = load atomic i16, i16* @var16 monotonic, align 2
+  %val = load atomic i16, ptr @var16 monotonic, align 2
   ret i16 %val
 }
 
@@ -1183,8 +1183,8 @@ define dso_local i32 @test_atomic_load_monotonic_regoff_i32(i64 %base, i64 %off)
 ; CHECK-NEXT:    ldr w0, [x0, x1]
 ; CHECK-NEXT:    ret
   %addr_int = add i64 %base, %off
-  %addr = inttoptr i64 %addr_int to i32*
-  %val = load atomic i32, i32* %addr monotonic, align 4
+  %addr = inttoptr i64 %addr_int to ptr
+  %val = load atomic i32, ptr %addr monotonic, align 4
   ret i32 %val
 }
 
@@ -1195,7 +1195,7 @@ define dso_local i64 @test_atomic_load_seq_cst_i64() nounwind {
 ; CHECK-NEXT:    add x8, x8, :lo12:var64
 ; CHECK-NEXT:    ldar x0, [x8]
 ; CHECK-NEXT:    ret
-  %val = load atomic i64, i64* @var64 seq_cst, align 8
+  %val = load atomic i64, ptr @var64 seq_cst, align 8
   ret i64 %val
 }
 
@@ -1205,7 +1205,7 @@ define dso_local void @test_atomic_store_monotonic_i8(i8 %val) nounwind {
 ; CHECK-NEXT:    adrp x8, var8
 ; CHECK-NEXT:    strb w0, [x8, :lo12:var8]
 ; CHECK-NEXT:    ret
-  store atomic i8 %val, i8* @var8 monotonic, align 1
+  store atomic i8 %val, ptr @var8 monotonic, align 1
   ret void
 }
 
@@ -1215,8 +1215,8 @@ define dso_local void @test_atomic_store_monotonic_regoff_i8(i64 %base, i64 %off
 ; CHECK-NEXT:    strb w2, [x0, x1]
 ; CHECK-NEXT:    ret
   %addr_int = add i64 %base, %off
-  %addr = inttoptr i64 %addr_int to i8*
-  store atomic i8 %val, i8* %addr monotonic, align 1
+  %addr = inttoptr i64 %addr_int to ptr
+  store atomic i8 %val, ptr %addr monotonic, align 1
   ret void
 }
 define dso_local void @test_atomic_store_release_i8(i8 %val) nounwind {
@@ -1226,7 +1226,7 @@ define dso_local void @test_atomic_store_release_i8(i8 %val) nounwind {
 ; CHECK-NEXT:    add x8, x8, :lo12:var8
 ; CHECK-NEXT:    stlrb w0, [x8]
 ; CHECK-NEXT:    ret
-  store atomic i8 %val, i8* @var8 release, align 1
+  store atomic i8 %val, ptr @var8 release, align 1
   ret void
 }
 
@@ -1237,7 +1237,7 @@ define dso_local void @test_atomic_store_seq_cst_i8(i8 %val) nounwind {
 ; CHECK-NEXT:    add x8, x8, :lo12:var8
 ; CHECK-NEXT:    stlrb w0, [x8]
 ; CHECK-NEXT:    ret
-  store atomic i8 %val, i8* @var8 seq_cst, align 1
+  store atomic i8 %val, ptr @var8 seq_cst, align 1
   ret void
 }
 
@@ -1247,7 +1247,7 @@ define dso_local void @test_atomic_store_monotonic_i16(i16 %val) nounwind {
 ; CHECK-NEXT:    adrp x8, var16
 ; CHECK-NEXT:    strh w0, [x8, :lo12:var16]
 ; CHECK-NEXT:    ret
-  store atomic i16 %val, i16* @var16 monotonic, align 2
+  store atomic i16 %val, ptr @var16 monotonic, align 2
   ret void
 }
 
@@ -1257,8 +1257,8 @@ define dso_local void @test_atomic_store_monotonic_regoff_i32(i64 %base, i64 %of
 ; CHECK-NEXT:    str w2, [x0, x1]
 ; CHECK-NEXT:    ret
   %addr_int = add i64 %base, %off
-  %addr = inttoptr i64 %addr_int to i32*
-  store atomic i32 %val, i32* %addr monotonic, align 4
+  %addr = inttoptr i64 %addr_int to ptr
+  store atomic i32 %val, ptr %addr monotonic, align 4
   ret void
 }
 
@@ -1269,6 +1269,6 @@ define dso_local void @test_atomic_store_release_i64(i64 %val) nounwind {
 ; CHECK-NEXT:    add x8, x8, :lo12:var64
 ; CHECK-NEXT:    stlr x0, [x8]
 ; CHECK-NEXT:    ret
-  store atomic i64 %val, i64* @var64 release, align 8
+  store atomic i64 %val, ptr @var64 release, align 8
   ret void
 }

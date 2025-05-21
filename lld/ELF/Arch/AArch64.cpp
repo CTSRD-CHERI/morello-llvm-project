@@ -41,6 +41,7 @@ public:
   int getCapabilitySize() const override { return 16; }
   int64_t getImplicitAddend(const uint8_t *buf, RelType type) const override;
   void writeGotPlt(uint8_t *buf, const Symbol &s) const override;
+  void writeIgotPlt(uint8_t *buf, const Symbol &s) const override;
   void writePltHeader(uint8_t *buf) const override;
   void writeFragmentAddress(uint8_t *buf, uint64_t val) const override;
   void writeFragmentSizeAndPermissions(uint8_t *buf,
@@ -56,12 +57,25 @@ public:
   void relocate(uint8_t *loc, const Relocation &rel,
                 uint64_t val) const override;
   RelExpr adjustTlsExpr(RelType type, RelExpr expr) const override;
-  void relaxTlsGdToLe(uint8_t *loc, const Relocation &rel,
-                      uint64_t val) const override;
-  void relaxTlsGdToIe(uint8_t *loc, const Relocation &rel,
-                      uint64_t val) const override;
-  void relaxTlsIeToLe(uint8_t *loc, const Relocation &rel,
-                      uint64_t val) const override;
+  void relocateAlloc(InputSectionBase &sec, uint8_t *buf) const override;
+
+private:
+  virtual void relaxTlsGdToLe(uint8_t *loc, const Relocation &rel,
+                              uint64_t val) const;
+  virtual void relaxTlsGdToIe(uint8_t *loc, const Relocation &rel,
+                              uint64_t val) const;
+  virtual void relaxTlsIeToLe(uint8_t *loc, const Relocation &rel,
+                              uint64_t val) const;
+};
+
+struct AArch64Relaxer {
+  bool safeToRelaxAdrpLdr = false;
+
+  AArch64Relaxer(ArrayRef<Relocation> relocs);
+  bool tryRelaxAdrpAdd(const Relocation &adrpRel, const Relocation &addRel,
+                       uint64_t secAddr, uint8_t *buf) const;
+  bool tryRelaxAdrpLdr(const Relocation &adrpRel, const Relocation &ldrRel,
+                       uint64_t secAddr, uint8_t *buf) const;
 };
 } // namespace
 
@@ -89,8 +103,8 @@ AArch64::AArch64() {
 bool AArch64::calcIsCheriAbi() const {
   bool isCheriAbi = config->eflags & EF_AARCH64_CHERI_PURECAP;
 
-  if (config->isCheriAbi && !ctx->objectFiles.empty() && !isCheriAbi)
-    error(toString(ctx->objectFiles.front()) +
+  if (config->isCheriAbi && !ctx.objectFiles.empty() && !isCheriAbi)
+    error(toString(ctx.objectFiles.front()) +
           ": object file is non-CheriABI but emulation forces it");
 
   return isCheriAbi;
@@ -101,12 +115,12 @@ static uint32_t getEFlags(InputFile *f) {
 }
 
 uint32_t AArch64::calcEFlags() const {
-  if (ctx->objectFiles.empty())
+  if (ctx.objectFiles.empty())
     return 0;
 
-  uint32_t target = getEFlags(ctx->objectFiles.front());
+  uint32_t target = getEFlags(ctx.objectFiles.front());
 
-  for (InputFile *f : ctx->objectFiles) {
+  for (InputFile *f : ctx.objectFiles) {
     uint32_t eflags = getEFlags(f);
 
     if ((eflags & EF_AARCH64_CHERI_PURECAP) !=
@@ -182,11 +196,13 @@ RelExpr AArch64::getRelExpr(RelType type, const Symbol &s,
   case R_AARCH64_CONDBR19:
   case R_AARCH64_JUMP26:
   case R_AARCH64_TSTBR14:
-  case R_AARCH64_PLT32:
   case R_MORELLO_DESC_GLOBAL_CALL26:
   case R_MORELLO_DESC_GLOBAL_JUMP26:
   case R_AARCH64_DESC_GLOBAL_CALL26:
   case R_AARCH64_DESC_GLOBAL_JUMP26:
+    return R_PLT_PC;
+  case R_AARCH64_PLT32:
+    const_cast<Symbol &>(s).thunkAccessed = true;
     return R_PLT_PC;
   case R_AARCH64_PREL16:
   case R_AARCH64_PREL32:
@@ -298,11 +314,16 @@ int64_t AArch64::getImplicitAddend(const uint8_t *buf, RelType type) const {
   case R_AARCH64_TLSDESC:
     return read64(buf + 8);
   case R_AARCH64_NONE:
+  case R_AARCH64_GLOB_DAT:
+  case R_AARCH64_JUMP_SLOT:
     return 0;
   case R_AARCH64_PREL32:
     return SignExtend64<32>(read32(buf));
   case R_AARCH64_ABS64:
   case R_AARCH64_PREL64:
+  case R_AARCH64_RELATIVE:
+  case R_AARCH64_IRELATIVE:
+  case R_AARCH64_TLS_TPREL64:
     return read64(buf);
   default:
     internalLinkerError(getErrorLocation(buf),
@@ -315,12 +336,17 @@ void AArch64::writeGotPlt(uint8_t *buf, const Symbol &) const {
   write64(buf, in.plt->getVA());
 }
 
+void AArch64::writeIgotPlt(uint8_t *buf, const Symbol &s) const {
+  if (config->writeAddends)
+    write64(buf, s.getVA());
+}
+
 void AArch64::writePltHeader(uint8_t *buf) const {
   const uint8_t pltData[] = {
       0xf0, 0x7b, 0xbf, 0xa9, // stp    x16, x30, [sp,#-16]!
-      0x10, 0x00, 0x00, 0x90, // adrp   x16, Page(&(.plt.got[2]))
-      0x11, 0x02, 0x40, 0xf9, // ldr    x17, [x16, Offset(&(.plt.got[2]))]
-      0x10, 0x02, 0x00, 0x91, // add    x16, x16, Offset(&(.plt.got[2]))
+      0x10, 0x00, 0x00, 0x90, // adrp   x16, Page(&(.got.plt[2]))
+      0x11, 0x02, 0x40, 0xf9, // ldr    x17, [x16, Offset(&(.got.plt[2]))]
+      0x10, 0x02, 0x00, 0x91, // add    x16, x16, Offset(&(.got.plt[2]))
       0x20, 0x02, 0x1f, 0xd6, // br     x17
       0x1f, 0x20, 0x03, 0xd5, // nop
       0x1f, 0x20, 0x03, 0xd5, // nop
@@ -339,9 +365,9 @@ void AArch64::writePltHeader(uint8_t *buf) const {
 void AArch64::writePlt(uint8_t *buf, const Symbol &sym,
                        uint64_t pltEntryAddr) const {
   const uint8_t inst[] = {
-      0x10, 0x00, 0x00, 0x90, // adrp x16, Page(&(.plt.got[n]))
-      0x11, 0x02, 0x40, 0xf9, // ldr  x17, [x16, Offset(&(.plt.got[n]))]
-      0x10, 0x02, 0x00, 0x91, // add  x16, x16, Offset(&(.plt.got[n]))
+      0x10, 0x00, 0x00, 0x90, // adrp x16, Page(&(.got.plt[n]))
+      0x11, 0x02, 0x40, 0xf9, // ldr  x17, [x16, Offset(&(.got.plt[n]))]
+      0x10, 0x02, 0x00, 0x91, // add  x16, x16, Offset(&(.got.plt[n]))
       0x20, 0x02, 0x1f, 0xd6  // br   x17
   };
   memcpy(buf, inst, sizeof(inst));
@@ -485,7 +511,7 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
   case R_AARCH64_TLSIE_ADR_GOTTPREL_PAGE21:
   case R_AARCH64_TLSDESC_ADR_PAGE21:
     checkInt(loc, val, 33, rel);
-    LLVM_FALLTHROUGH;
+    [[fallthrough]];
   case R_AARCH64_ADR_PREL_PG_HI21_NC:
     write32Addr(loc, val >> 12, 0x1FFFFC);
     break;
@@ -510,7 +536,7 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
   case R_AARCH64_DESC_GLOBAL_CALL26:
   case R_AARCH64_DESC_GLOBAL_JUMP26:
     // if not in PLT jump over the first instruction for the desc relocations
-    if (rel.sym && rel.sym->type == STT_FUNC && !rel.sym->needsPlt)
+    if (rel.sym && rel.sym->type == STT_FUNC && !rel.sym->hasFlag(NEEDS_PLT))
       val += 4;
     LLVM_FALLTHROUGH;
   case R_MORELLO_CALL26:
@@ -534,7 +560,7 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
     // transformation by placing a R_AARCH64_JUMP26 relocation at the offset of
     // the instruction we want to patch.
     write32le(loc, 0x14000000);
-    LLVM_FALLTHROUGH;
+    [[fallthrough]];
   case R_AARCH64_CALL26:
     checkInt(loc, val, 28, rel);
     or32le(loc, (val & 0x0FFFFFFC) >> 2);
@@ -599,7 +625,7 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
   case R_MORELLO_MOVW_SIZE_G0:
   case R_AARCH64_MOVW_UABS_G0:
     checkUInt(loc, val, 16, rel);
-    LLVM_FALLTHROUGH;
+    [[fallthrough]];
   case R_MORELLO_MOVW_SIZE_G0_NC:
   case R_AARCH64_MOVW_UABS_G0_NC:
     or32le(loc, (val & 0xFFFF) << 5);
@@ -607,7 +633,7 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
   case R_MORELLO_MOVW_SIZE_G1:
   case R_AARCH64_MOVW_UABS_G1:
     checkUInt(loc, val, 32, rel);
-    LLVM_FALLTHROUGH;
+    [[fallthrough]];
   case R_MORELLO_MOVW_SIZE_G1_NC:
   case R_AARCH64_MOVW_UABS_G1_NC:
     or32le(loc, (val & 0xFFFF0000) >> 11);
@@ -615,7 +641,7 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
   case R_MORELLO_MOVW_SIZE_G2:
   case R_AARCH64_MOVW_UABS_G2:
     checkUInt(loc, val, 48, rel);
-    LLVM_FALLTHROUGH;
+    [[fallthrough]];
   case R_MORELLO_MOVW_SIZE_G2_NC:
   case R_AARCH64_MOVW_UABS_G2_NC:
     or32le(loc, (val & 0xFFFF00000000) >> 27);
@@ -628,7 +654,7 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
   case R_AARCH64_MOVW_SABS_G0:
   case R_AARCH64_TLSLE_MOVW_TPREL_G0:
     checkInt(loc, val, 17, rel);
-    LLVM_FALLTHROUGH;
+    [[fallthrough]];
   case R_AARCH64_MOVW_PREL_G0_NC:
   case R_AARCH64_TLSLE_MOVW_TPREL_G0_NC:
     writeSMovWImm(loc, val);
@@ -637,7 +663,7 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
   case R_AARCH64_MOVW_SABS_G1:
   case R_AARCH64_TLSLE_MOVW_TPREL_G1:
     checkInt(loc, val, 33, rel);
-    LLVM_FALLTHROUGH;
+    [[fallthrough]];
   case R_AARCH64_MOVW_PREL_G1_NC:
   case R_AARCH64_TLSLE_MOVW_TPREL_G1_NC:
     writeSMovWImm(loc, val >> 16);
@@ -646,7 +672,7 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
   case R_AARCH64_MOVW_SABS_G2:
   case R_AARCH64_TLSLE_MOVW_TPREL_G2:
     checkInt(loc, val, 49, rel);
-    LLVM_FALLTHROUGH;
+    [[fallthrough]];
   case R_AARCH64_MOVW_PREL_G2_NC:
     writeSMovWImm(loc, val >> 32);
     break;
@@ -782,10 +808,8 @@ void AArch64::relaxTlsIeToLe(uint8_t *loc, const Relocation &rel,
 }
 
 AArch64Relaxer::AArch64Relaxer(ArrayRef<Relocation> relocs) {
-  if (!config->relax || config->emachine != EM_AARCH64) {
-    safeToRelaxAdrpLdr = false;
+  if (!config->relax)
     return;
-  }
   // Check if R_AARCH64_ADR_GOT_PAGE and R_AARCH64_LD64_GOT_LO12_NC
   // always appear in pairs.
   size_t i = 0;
@@ -928,6 +952,63 @@ bool AArch64Relaxer::tryRelaxAdrpLdr(const Relocation &adrpRel,
   return true;
 }
 
+void AArch64::relocateAlloc(InputSectionBase &sec, uint8_t *buf) const {
+  uint64_t secAddr = sec.getOutputSection()->addr;
+  if (auto *s = dyn_cast<InputSection>(&sec))
+    secAddr += s->outSecOff;
+  AArch64Relaxer relaxer(sec.relocs());
+  for (size_t i = 0, size = sec.relocs().size(); i != size; ++i) {
+    const Relocation &rel = sec.relocs()[i];
+    uint8_t *loc = buf + rel.offset;
+    const uint64_t val =
+        sec.getRelocTargetVA(sec.file, rel.type, rel.addend,
+                             secAddr + rel.offset, *rel.sym, rel.expr, &sec, rel.offset);
+    switch (rel.expr) {
+    case R_AARCH64_GOT_PAGE_PC:
+      if (i + 1 < size &&
+          relaxer.tryRelaxAdrpLdr(rel, sec.relocs()[i + 1], secAddr, buf)) {
+        ++i;
+        continue;
+      }
+      break;
+    case R_AARCH64_PAGE_PC:
+      if (i + 1 < size &&
+          relaxer.tryRelaxAdrpAdd(rel, sec.relocs()[i + 1], secAddr, buf)) {
+        ++i;
+        continue;
+      }
+      break;
+    case R_AARCH64_RELAX_TLS_GD_TO_IE_PAGE_PC:
+    case R_RELAX_TLS_GD_TO_IE_ABS:
+      relaxTlsGdToIe(loc, rel, val);
+      continue;
+    case R_RELAX_TLS_GD_TO_LE:
+    case R_MORELLO_RELAX_TLS_GD_TO_LE_PAGE_PC:
+    case R_MORELLO_RELAX_TLS_GD_TO_LE_ADD_LO12:
+      relaxTlsGdToLe(loc, rel, val);
+      continue;
+    case R_RELAX_TLS_IE_TO_LE:
+    case R_MORELLO_RELAX_TLS_IE_TO_LE_PAGE_PC:
+    case R_MORELLO_RELAX_TLS_IE_TO_LE_ADD_LO12:
+      relaxTlsIeToLe(loc, rel, val);
+      continue;
+    case R_MORELLO_CAPFRAG_ALIGNED_BASE:
+    case R_MORELLO_CAPFRAG_UNALIGNED_BASE:
+      writeFragmentAddress(loc, val);
+      break;
+    case R_MORELLO_CAPFRAG_ALIGNED_SIZE_AND_PERM:
+    case R_MORELLO_CAPFRAG_UNALIGNED_SIZE_AND_PERM:
+      writeFragmentSizeAndPermissions(loc, val);
+      break;
+    case R_MORELLO_TLSIE_OFFSET_AND_SIZE:
+      break;
+    default:
+      break;
+    }
+    relocate(loc, rel, val);
+  }
+}
+
 // AArch64 may use security features in variant PLT sequences. These are:
 // Pointer Authentication (PAC), introduced in armv8.3-a and Branch Target
 // Indicator (BTI) introduced in armv8.5-a. The additional instructions used
@@ -1000,9 +1081,9 @@ void AArch64BtiPac::writePltHeader(uint8_t *buf) const {
   const uint8_t btiData[] = { 0x5f, 0x24, 0x03, 0xd5 }; // bti c
   const uint8_t pltData[] = {
       0xf0, 0x7b, 0xbf, 0xa9, // stp    x16, x30, [sp,#-16]!
-      0x10, 0x00, 0x00, 0x90, // adrp   x16, Page(&(.plt.got[2]))
-      0x11, 0x02, 0x40, 0xf9, // ldr    x17, [x16, Offset(&(.plt.got[2]))]
-      0x10, 0x02, 0x00, 0x91, // add    x16, x16, Offset(&(.plt.got[2]))
+      0x10, 0x00, 0x00, 0x90, // adrp   x16, Page(&(.got.plt[2]))
+      0x11, 0x02, 0x40, 0xf9, // ldr    x17, [x16, Offset(&(.got.plt[2]))]
+      0x10, 0x02, 0x00, 0x91, // add    x16, x16, Offset(&(.got.plt[2]))
       0x20, 0x02, 0x1f, 0xd6, // br     x17
       0x1f, 0x20, 0x03, 0xd5, // nop
       0x1f, 0x20, 0x03, 0xd5  // nop
@@ -1036,9 +1117,9 @@ void AArch64BtiPac::writePlt(uint8_t *buf, const Symbol &sym,
   // [btiData] addrInst (pacBr | stdBr) [nopData]
   const uint8_t btiData[] = { 0x5f, 0x24, 0x03, 0xd5 }; // bti c
   const uint8_t addrInst[] = {
-      0x10, 0x00, 0x00, 0x90,  // adrp x16, Page(&(.plt.got[n]))
-      0x11, 0x02, 0x40, 0xf9,  // ldr  x17, [x16, Offset(&(.plt.got[n]))]
-      0x10, 0x02, 0x00, 0x91   // add  x16, x16, Offset(&(.plt.got[n]))
+      0x10, 0x00, 0x00, 0x90,  // adrp x16, Page(&(.got.plt[n]))
+      0x11, 0x02, 0x40, 0xf9,  // ldr  x17, [x16, Offset(&(.got.plt[n]))]
+      0x10, 0x02, 0x00, 0x91   // add  x16, x16, Offset(&(.got.plt[n]))
   };
   const uint8_t pacBr[] = {
       0x9f, 0x21, 0x03, 0xd5,  // autia1716
@@ -1050,11 +1131,13 @@ void AArch64BtiPac::writePlt(uint8_t *buf, const Symbol &sym,
   };
   const uint8_t nopData[] = { 0x1f, 0x20, 0x03, 0xd5 }; // nop
 
-  // needsCopy indicates a non-ifunc canonical PLT entry whose address may
+  // NEEDS_COPY indicates a non-ifunc canonical PLT entry whose address may
   // escape to shared objects. isInIplt indicates a non-preemptible ifunc. Its
-  // address may escape if referenced by a direct relocation. The condition is
-  // conservative.
-  bool hasBti = btiHeader && (sym.needsCopy || sym.isInIplt);
+  // address may escape if referenced by a direct relocation. If relative
+  // vtables are used then if the vtable is in a shared object the offsets will
+  // be to the PLT entry. The condition is conservative.
+  bool hasBti = btiHeader &&
+                (sym.hasFlag(NEEDS_COPY) || sym.isInIplt || sym.thunkAccessed);
   if (hasBti) {
     memcpy(buf, btiData, sizeof(btiData));
     buf += sizeof(btiData);
@@ -1085,13 +1168,13 @@ public:
   void writePlt(uint8_t *buf, const Symbol &sym,
                 uint64_t pltEntryAddr) const override;
   void writeGotPlt(uint8_t *buf, const Symbol &s) const override;
+private:
   void relaxTlsGdToLe(uint8_t *loc, const Relocation &rel,
-                      uint64_t val) const override;
+                    uint64_t val) const override;
   void relaxTlsGdToIe(uint8_t *loc, const Relocation &rel,
                       uint64_t val) const override;
   void relaxTlsIeToLe(uint8_t *loc, const Relocation &rel,
                       uint64_t val) const override;
-private:
   const uint8_t *getPltBranchR17() const;
 };
 
@@ -1325,8 +1408,8 @@ static TargetInfo *getTargetInfo() {
       return &t;
     }
   }
-  if (config->andFeatures & (GNU_PROPERTY_AARCH64_FEATURE_1_BTI |
-                             GNU_PROPERTY_AARCH64_FEATURE_1_PAC)) {
+  if ((config->andFeatures & GNU_PROPERTY_AARCH64_FEATURE_1_BTI) ||
+      config->zPacPlt) {
     static AArch64BtiPac t;
     return &t;
   }

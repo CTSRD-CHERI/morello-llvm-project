@@ -178,7 +178,7 @@ bool MipsSEDAGToDAGISel::replaceUsesWithCheriNullReg(
     // Also, we have to check that the register class of the operand
     // contains the null register.
     // This can happen for instructions where register zero encodes $ddc.
-    auto OperandType = MI->getDesc().OpInfo[OpNo].OperandType;
+    auto OperandType = MI->getDesc().operands()[OpNo].OperandType;
     if (OperandType != Mips::OPERAND_CHERI_GPR_OR_NULL) {
       if (OperandType == Mips::OPERAND_CHERI_GPR_OR_DDC) {
         LLVM_DEBUG(dbgs() << "Cannot replace use of NULL register for operand "
@@ -315,7 +315,7 @@ void MipsSEDAGToDAGISel::processFunctionAfterISel(MachineFunction &MF) {
           MI.addOperand(MachineOperand::CreateReg(Mips::SP, false, true));
           break;
         }
-        LLVM_FALLTHROUGH;
+        [[fallthrough]];
       case Mips::BuildPairF64:
       case Mips::ExtractElementF64:
         if (Subtarget->isABI_FPXX() && !Subtarget->hasMTHC1())
@@ -351,15 +351,15 @@ void MipsSEDAGToDAGISel::processFunctionAfterISel(MachineFunction &MF) {
 }
 
 void MipsSEDAGToDAGISel::selectAddE(SDNode *Node, const SDLoc &DL) const {
-  SDValue InFlag = Node->getOperand(2);
-  unsigned Opc = InFlag.getOpcode();
+  SDValue InGlue = Node->getOperand(2);
+  unsigned Opc = InGlue.getOpcode();
   SDValue LHS = Node->getOperand(0), RHS = Node->getOperand(1);
   EVT VT = LHS.getValueType();
 
   // In the base case, we can rely on the carry bit from the addsc
   // instruction.
   if (Opc == ISD::ADDC) {
-    SDValue Ops[3] = {LHS, RHS, InFlag};
+    SDValue Ops[3] = {LHS, RHS, InGlue};
     CurDAG->SelectNodeTo(Node, Mips::ADDWC, VT, MVT::Glue, Ops);
     return;
   }
@@ -383,7 +383,7 @@ void MipsSEDAGToDAGISel::selectAddE(SDNode *Node, const SDLoc &DL) const {
   SDValue OuFlag = CurDAG->getTargetConstant(20, DL, MVT::i32);
 
   SDNode *DSPCtrlField = CurDAG->getMachineNode(Mips::RDDSP, DL, MVT::i32,
-                                                MVT::Glue, CstOne, InFlag);
+                                                MVT::Glue, CstOne, InGlue);
 
   SDNode *Carry = CurDAG->getMachineNode(
       Mips::EXT, DL, MVT::i32, SDValue(DSPCtrlField, 0), OuFlag, CstOne);
@@ -825,8 +825,7 @@ bool MipsSEDAGToDAGISel::selectVSplatMaskL(SDValue N, SDValue &Imm) const {
     // as the original value.
     if (ImmValue == ~(~ImmValue & ~(~ImmValue + 1))) {
 
-      Imm = CurDAG->getTargetConstant(ImmValue.countPopulation() - 1, SDLoc(N),
-                                      EltTy);
+      Imm = CurDAG->getTargetConstant(ImmValue.popcount() - 1, SDLoc(N), EltTy);
       return true;
     }
   }
@@ -857,8 +856,7 @@ bool MipsSEDAGToDAGISel::selectVSplatMaskR(SDValue N, SDValue &Imm) const {
     // Extract the run of set bits starting with bit zero, and test that the
     // result is the same as the original value
     if (ImmValue == (ImmValue & ~(ImmValue + 1))) {
-      Imm = CurDAG->getTargetConstant(ImmValue.countPopulation() - 1, SDLoc(N),
-                                      EltTy);
+      Imm = CurDAG->getTargetConstant(ImmValue.popcount() - 1, SDLoc(N), EltTy);
       return true;
     }
   }

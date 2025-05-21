@@ -16,13 +16,10 @@
 #include <bit>
 #include <cassert>
 #include <cstdint>
+#include <limits>
 #include <type_traits>
 
 #include "test_macros.h"
-
-#if defined(__CHERI__)
-#pragma clang diagnostic ignored "-Wcheri-provenance"
-#endif
 
 struct A {};
 enum       E1 : unsigned char { rEd };
@@ -84,13 +81,13 @@ int main(int, char**)
     static_assert(!std::is_invocable_v<L, __int128_t>);
 #endif
 
-    static_assert(!std::is_invocable_v<L, int8_t>);
-    static_assert(!std::is_invocable_v<L, int16_t>);
-    static_assert(!std::is_invocable_v<L, int32_t>);
-    static_assert(!std::is_invocable_v<L, int64_t>);
-    static_assert(!std::is_invocable_v<L, intmax_t>);
-    static_assert(!std::is_invocable_v<L, intptr_t>);
-    static_assert(!std::is_invocable_v<L, ptrdiff_t>);
+    static_assert(!std::is_invocable_v<L, std::int8_t>);
+    static_assert(!std::is_invocable_v<L, std::int16_t>);
+    static_assert(!std::is_invocable_v<L, std::int32_t>);
+    static_assert(!std::is_invocable_v<L, std::int64_t>);
+    static_assert(!std::is_invocable_v<L, std::intmax_t>);
+    static_assert(!std::is_invocable_v<L, std::intptr_t>);
+    static_assert(!std::is_invocable_v<L, std::ptrdiff_t>);
 
     static_assert(!std::is_invocable_v<L, bool>);
     static_assert(!std::is_invocable_v<L, char>);
@@ -116,15 +113,13 @@ int main(int, char**)
     static_assert(test<__uint128_t>());
 #endif
 
-    static_assert(test<uint8_t>());
-    static_assert(test<uint16_t>());
-    static_assert(test<uint32_t>());
-    static_assert(test<uint64_t>());
-    static_assert(test<uintmax_t>());
-#ifndef __CHERI_PURE_CAPABILITY__
-    static_assert(test<uintptr_t>());
-#endif
-    static_assert(test<size_t>());
+    static_assert(test<std::uint8_t>());
+    static_assert(test<std::uint16_t>());
+    static_assert(test<std::uint32_t>());
+    static_assert(test<std::uint64_t>());
+    static_assert(test<std::uintmax_t>());
+    static_assert(test<std::uintptr_t>());
+    static_assert(test<std::size_t>());
 
     test<unsigned char>();
     test<unsigned short>();
@@ -135,13 +130,13 @@ int main(int, char**)
     test<__uint128_t>();
 #endif
 
-    test<uint8_t>();
-    test<uint16_t>();
-    test<uint32_t>();
-    test<uint64_t>();
-    test<uintmax_t>();
-    test<uintptr_t>();
-    test<size_t>();
+    test<std::uint8_t>();
+    test<std::uint16_t>();
+    test<std::uint32_t>();
+    test<std::uint64_t>();
+    test<std::uintmax_t>();
+    test<std::uintptr_t>();
+    test<std::size_t>();
 
     return 0;
 }

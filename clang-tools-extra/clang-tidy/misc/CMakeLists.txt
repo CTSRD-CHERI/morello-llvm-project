@@ -3,21 +3,16 @@ set(LLVM_LINK_COMPONENTS
   Support
   )
 
-if(LLVM_USE_HOST_TOOLS)
-  build_native_tool(make-confusable-table make_confusable_table)
-  set(make_confusable_table_target "${make_confusable_table}")
-else()
-  set(make_confusable_table $<TARGET_FILE:make-confusable-table>)
-  set(make_confusable_table_target make-confusable-table)
-endif()
+setup_host_tool(clang-tidy-confusable-chars-gen CLANG_TIDY_CONFUSABLE_CHARS_GEN clang_tidy_confusable_chars_gen clang_tidy_confusable_chars_gen_target)
 
 add_subdirectory(ConfusableTable)
 
+include_directories(BEFORE "${CMAKE_CURRENT_SOURCE_DIR}/../../include-cleaner/include")
 
 add_custom_command(
     OUTPUT Confusables.inc
-    COMMAND ${make_confusable_table} ${CMAKE_CURRENT_SOURCE_DIR}/ConfusableTable/confusables.txt ${CMAKE_CURRENT_BINARY_DIR}/Confusables.inc
-    DEPENDS ${make_confusable_table_target} ConfusableTable/confusables.txt)
+    COMMAND ${clang_tidy_confusable_chars_gen} ${CMAKE_CURRENT_SOURCE_DIR}/ConfusableTable/confusables.txt ${CMAKE_CURRENT_BINARY_DIR}/Confusables.inc
+    DEPENDS ${clang_tidy_confusable_chars_gen_target} ConfusableTable/confusables.txt)
 
 add_custom_target(genconfusable DEPENDS Confusables.inc)
 
@@ -25,6 +20,8 @@ add_clang_library(clangTidyMiscModule
   ConstCorrectnessCheck.cpp
   DefinitionsInHeadersCheck.cpp
   ConfusableIdentifierCheck.cpp
+  HeaderIncludeCycleCheck.cpp
+  IncludeCleanerCheck.cpp
   MiscTidyModule.cpp
   MisleadingBidirectional.cpp
   MisleadingIdentifier.cpp
@@ -41,6 +38,7 @@ add_clang_library(clangTidyMiscModule
   UnusedAliasDeclsCheck.cpp
   UnusedParametersCheck.cpp
   UnusedUsingDeclsCheck.cpp
+  UseAnonymousNamespaceCheck.cpp
 
   LINK_LIBS
   clangAnalysis
@@ -58,7 +56,14 @@ clang_target_link_libraries(clangTidyMiscModule
   clangAST
   clangASTMatchers
   clangBasic
+  clangFormat
   clangLex
   clangSerialization
   clangTooling
+  clangToolingInclusions
+  clangToolingInclusionsStdlib
+  )
+target_link_libraries(clangTidyMiscModule
+  PRIVATE
+  clangIncludeCleaner
   )

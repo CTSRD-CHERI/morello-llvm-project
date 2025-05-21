@@ -17,10 +17,10 @@
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Basic/TargetOptions.h"
 #include "llvm/ADT/StringSwitch.h"
-#include "llvm/ADT/Triple.h"
 #include "llvm/MC/MCTargetOptions.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Compiler.h"
+#include "llvm/TargetParser/Triple.h"
 
 namespace clang {
 namespace targets {
@@ -66,7 +66,6 @@ class LLVM_LIBRARY_VISIBILITY MipsTargetInfo : public TargetInfo {
           ("e-" + Layout + (CapabilityABI ? PurecapOptions : "")).str());
   }
 
-  static const Builtin::Info BuiltinInfo[];
   std::string CPU;
   bool IsMips16;
   bool IsMicromips;
@@ -88,7 +87,7 @@ protected:
   int CapSize = -1;
   // Note: clang/Basic should not depend on llvm/IR headers so we have to
   // duplicate this information here.
-  bool isCheriAddrSpace(unsigned AS) const { return AS == 200; }
+  bool isCheriAddrSpace(LangAS AS) const { return AS == LangAS::cheri_capability; }
 
 public:
   MipsTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
@@ -332,7 +331,7 @@ public:
         "$c28", "$c29", "$c30", "$c31", "$idc", "$kr1c", "$kr2c", "$kcc", "$kdc",
         "$epcc", "$ddc"
     };
-    return llvm::makeArrayRef(GCCRegNames);
+    return llvm::ArrayRef(GCCRegNames);
   }
 
   bool validateAsmConstraint(const char *&Name,
@@ -394,7 +393,7 @@ public:
         CCCR_OK : CCCR_Warning;
   }
 
-  const char *getClobbers() const override {
+  std::string_view getClobbers() const override {
     // In GCC, $1 is not widely used in generated code (it's used only in a few
     // specific situations), so there is no real need for users to add it to
     // the clobbers list if they want to use it in their inline assembly code.
@@ -537,8 +536,8 @@ public:
         {{"ra"}, "$31"}
     };
     if (ABI == "o32")
-      return llvm::makeArrayRef(O32RegAliases);
-    return llvm::makeArrayRef(NewABIRegAliases);
+      return llvm::ArrayRef(O32RegAliases);
+    return llvm::ArrayRef(NewABIRegAliases);
   }
 
   bool hasInt128Type() const override {
@@ -558,15 +557,15 @@ public:
 
   uint64_t getPointerRangeForCHERICapability() const override { return 64; }
 
-  uint64_t getPointerWidthV(unsigned AddrSpace) const override {
+  uint64_t getPointerWidthV(LangAS AddrSpace) const override {
     return isCheriAddrSpace(AddrSpace) ? CapSize : PointerWidth;
   }
 
-  uint64_t getPointerRangeV(unsigned AddrSpace) const override {
+  uint64_t getPointerRangeV(LangAS AddrSpace) const override {
     return isCheriAddrSpace(AddrSpace) ? getPointerRangeForCHERICapability() : PointerWidth;
   }
 
-  uint64_t getPointerAlignV(unsigned AddrSpace) const override {
+  uint64_t getPointerAlignV(LangAS AddrSpace) const override {
     return isCheriAddrSpace(AddrSpace) ? CapSize : PointerAlign;
   }
 

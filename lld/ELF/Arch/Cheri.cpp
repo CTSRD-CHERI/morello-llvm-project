@@ -18,11 +18,6 @@ using namespace llvm::object;
 using namespace llvm::support::endian;
 using namespace llvm::ELF;
 
-
-// Change these to #define for extremely verbose debug output
-#undef DEBUG_CAP_RELOCS
-#undef DEBUG_CAP_TABLE
-
 namespace lld {
 namespace elf {
 
@@ -124,6 +119,64 @@ SymbolAndOffset SymbolAndOffset::findRealSymbol() const {
   return *this;
 }
 
+SymbolAndOffset SymbolAndOffset::findSymbolForCapabilityRelocation() const {
+  // In some cases we can end up with a symbol+offset that points to an
+  // assembler local symbol without a type or size.
+  // This happens e.g. for exception landing pads that are a relocation
+  // against "fnstart+(lpad-fnstart)", but when building with RISC-V -mrelax,
+  // the addend value may not be a constant, so the compiler must emit a
+  // relocation against `lpad` instead which does not have a type or size
+  // information. For such STT_NOTYPE symbols, we identify the surrounding one.
+  // NOTE: This must only be called after linker relaxations are processed.
+  Defined *self = dyn_cast<Defined>(sym());
+  if (!self)
+    return *this;
+  assert(self->getSize() == 0);
+  assert(self->type == STT_NOTYPE);
+  Defined *bestMatch = self;
+  uint64_t bestSize = bestMatch->getSize();
+  const uint64_t targetValue = self->value + offset;
+  auto foundBetterMatch = [&](Defined *newMatch) {
+    int64_t oldOffset = targetValue - bestMatch->value;
+    int64_t newOffset = targetValue - newMatch->value;
+    log("Found better match for capability relocation against " +
+        lld::toString(*bestMatch) + "+" + Twine(oldOffset) + ": " +
+        lld::toString(*newMatch) + "+" + Twine(newOffset));
+    bestMatch = newMatch;
+    bestSize = bestMatch->getSize();
+  };
+  if (auto *isec = dyn_cast_or_null<InputSectionBase>(self->section)) {
+    if (!isec->file)
+      return *this;
+    for (Symbol *b : isec->file->getSymbols()) {
+      if (auto *d = dyn_cast<Defined>(b)) {
+        if (d->section != isec)
+          continue;
+        uint64_t dsize = d->getSize();
+        if (d->value <= targetValue && targetValue < d->value + dsize) {
+          // Try to find a better match (with a size/type). The match is
+          // considered better if
+          //  - The current match has no size, and the new one does
+          //  - The current match is preemptible, and the new one isn't
+          //  - The current match has a smaller (non-zero) size
+          //  - The current match has no type, and the new one is func/object
+          if (d->type != STT_FUNC && d->type != STT_OBJECT)
+            continue;
+          if (bestSize == 0 && dsize != 0)
+            foundBetterMatch(d);
+          else if (bestMatch->isPreemptible && !d->isPreemptible)
+            foundBetterMatch(d);
+          else if (dsize != 0 && dsize < bestSize)
+            foundBetterMatch(d);
+          else if (bestMatch->type == STT_NOTYPE)
+            foundBetterMatch(d);
+        }
+      }
+    }
+  }
+  return {bestMatch, (int64_t)(targetValue - bestMatch->value)};
+}
+
 std::string CheriCapRelocLocation::toString() const {
  return SymbolAndOffset(section, offset).verboseToString();
 }
@@ -193,7 +246,7 @@ void CheriCapRelocsSection::processSection(InputSectionBase *s) {
     //           << Twine((int)LocationSym.Type) << " against "
     //           << toString(TargetSym) << "\n";
     auto *rawInput = reinterpret_cast<const InMemoryCapRelocEntry<ELFT> *>(
-        s->data().begin() + capRelocsOffset);
+        s->content().begin() + capRelocsOffset);
     int64_t targetCapabilityOffset = (int64_t)rawInput->offset;
     assert(rawInput->size == 0 && "Clang should not have set size in __cap_relocs");
     if (!isa<Defined>(locationSym)) {
@@ -296,13 +349,6 @@ void CheriCapRelocsSection::addCapReloc(CheriCapRelocLocation loc,
     return; // Maybe happens with vtables?
   }
   if (targetNeedsDynReloc) {
-#ifdef DEBUG_CAP_RELOCS
-    message("Adding dyn reloc at " + toString(this) + "+0x" +
-            utohexstr(CurrentEntryOffset) + " against " +
-            Target.verboseToString());
-    message("Symbol preemptible:" + Twine(Target.Sym->IsPreemptible));
-#endif
-
     bool relativeToLoadAddress = false;
     // The addend is not used as the offset into the capability here, as we
     // have the offset field in the __cap_relocs for that. The Addend
@@ -336,7 +382,7 @@ void CheriCapRelocsSection::addCapReloc(CheriCapRelocLocation loc,
   }
 }
 
-template<typename ELFT>
+template <typename ELFT>
 static uint64_t getTargetSize(const CheriCapRelocLocation &location,
                               const SymbolAndOffset &target) {
   uint64_t targetSize = target.sym()->getSize(/*forCheriCap=*/true);
@@ -381,8 +427,9 @@ static uint64_t getTargetSize(const CheriCapRelocLocation &location,
       // R_MORELLO_CAPFRAG_SIZE_AND_PERM internal  static relocation (see
       // getMorelloSizeAndPermissions()). So (buf) can be used because it
       // already has the 8 byte offset built into it.
-
-      const uint8_t *buf = location.section->data().begin() + location.offset;
+      assert(!location.section->compressed);
+      const uint8_t *buf =
+          location.section->content().begin() + location.offset;
       targetSize = ((config->localCapRelocsMode == CapRelocsMode::Legacy) &&
                     !config->shared)
                        ? read64le(buf + 8)
@@ -423,7 +470,8 @@ static uint64_t getTargetSize(const CheriCapRelocLocation &location,
              " is defined as being in section " + os->name +
              " but the value (0x" + utohexstr(targetSym->getVA()) +
              ") is outside this section. Will create a zero-size capability."
-             "\n>>> referenced by " + location.toString());
+             "\n>>> referenced by " +
+             location.toString());
         return 0;
       }
       // For negative offsets use 0 instead (we want the range of the full symbol in that case)
@@ -435,19 +483,13 @@ static uint64_t getTargetSize(const CheriCapRelocLocation &location,
       // Use less-or-equal here to account for __end_foo symbols which point 1 past the section
       if (offsetInOS <= os->size) {
         targetSize = os->size - offsetInOS;
-#ifdef DEBUG_CAP_RELOCS
-        if (Config->verboseCapRelocs)
-            errs() << " OS OFFSET 0x" << utohexstr(OS->Addr) << "SYM OFFSET 0x"
-                   << utohexstr(OffsetInOS) << " SECLEN 0x" << utohexstr(OS->Size)
-                   << " -> target size 0x" << utohexstr(TargetSize) << "\n";
-#endif
         UnknownSectionSize = false;
       }
     }
     if (warnAboutUnknownSize || errorHandler().verbose) {
       std::string msg = "could not determine size of cap reloc against " +
-          target.verboseToString() +
-          "\n>>> referenced by " + location.toString();
+                        target.verboseToString() + "\n>>> referenced by " +
+                        location.toString();
       warn(msg);
     }
     if (UnknownSectionSize) {
@@ -477,6 +519,15 @@ void CheriCapRelocsSection::writeToImpl(uint8_t *buf) {
     const CheriCapRelocLocation &location = i.first;
     const CheriCapReloc &reloc = i.second;
     assert(location.offset <= location.section->getSize());
+
+    // If we are targeting a symbol that does not have type and size
+    // information, try to find the intended target symbol. This can happen for
+    // relocations against a label inside a function or a subobject.
+    SymbolAndOffset realTarget = reloc.target;
+    if (Symbol *s = reloc.target.symOrSec.dyn_cast<Symbol *>())
+      if (s->type == STT_NOTYPE && s->getSize() == 0)
+        realTarget = reloc.target.findSymbolForCapabilityRelocation();
+
     // We write the virtual address of the location in both static and the
     // shared library case:
     // In the static case we can compute the final virtual address and write it
@@ -486,43 +537,38 @@ void CheriCapRelocsSection::writeToImpl(uint8_t *buf) {
     uint64_t locationVA =
         location.section->getOutputSection()->addr + outSecOffset;
 
-    // For the target the virtual address the addend is always zero so
-    // if we need a dynamic reloc we write zero
-    // TODO: would it be more efficient for local symbols to write the DSO VA
-    // and add a relocation against the load address?
-    // Also this would make llvm-objdump --cap-relocs more useful because it
-    // would actually display the symbol that the relocation is against
-    uint64_t targetVA = reloc.target.sym()->getVA(reloc.target.offset);
+    // The target VA is the base address of the capability, so symbol + 0
+    uint64_t targetVA = realTarget.sym()->getVA(0);
     bool preemptibleDynReloc =
-        reloc.needsDynReloc && reloc.target.sym()->isPreemptible;
+        reloc.needsDynReloc && realTarget.sym()->isPreemptible;
     uint64_t targetSize = 0;
     if (preemptibleDynReloc) {
       // If we have a relocation against a preemptible symbol (even in the
       // current DSO) we can't compute the virtual address here so we only write
       // the addend
-      if (reloc.target.offset != 0)
+      if (realTarget.offset != 0)
         error("Dyn Reloc Target offset was nonzero: " +
-              Twine(reloc.target.offset) + " - " +
-              reloc.target.verboseToString());
-      targetVA = reloc.target.offset;
+              Twine(realTarget.offset) + " - " + realTarget.verboseToString());
+      targetVA = realTarget.offset;
     } else {
       // For non-preemptible symbols we can write the target size:
-      targetSize = getTargetSize<ELFT>(location, reloc.target);
+      targetSize = getTargetSize<ELFT>(location, realTarget);
     }
-    uint64_t targetOffset = reloc.capabilityOffset;
+    uint64_t targetOffset = reloc.capabilityOffset + realTarget.offset;
     uint64_t permissions = 0;
     // Fow now Function implies ReadOnly so don't add the flag
-    if (reloc.target.sym()->isFunc()) {
+    if (realTarget.sym()->isFunc()) {
       permissions |= CaptablePermissions<ELFT>::function;
-    } else if (auto os = reloc.target.sym()->getOutputSection()) {
-      assert(!reloc.target.sym()->isTls());
+    } else if (auto os = realTarget.sym()->getOutputSection()) {
+      assert(!realTarget.sym()->isTls());
       // if ((OS->getPhdrFlags() & PF_W) == 0) {
       if (((os->flags & SHF_WRITE) == 0) || isRelroSection(os)) {
         permissions |= CaptablePermissions<ELFT>::readOnly;
       } else if (os->flags & SHF_EXECINSTR) {
         warn("Non-function __cap_reloc against symbol in section with "
-             "SHF_EXECINSTR (" + toString(os->name) + ") for symbol " +
-             reloc.target.verboseToString());
+             "SHF_EXECINSTR (" +
+             toString(os->name) + ") for symbol " +
+             realTarget.verboseToString());
       }
     }
 
@@ -601,11 +647,11 @@ void MorelloCapRelocsSection::addCapReloc(CheriCapRelocLocation loc,
 }
 
 void MorelloCapRelocsSection::finalizeContents() {
-  if (auto *r = symtab->find("__cap_relocs_start"))
+  if (auto *r = symtab.find("__cap_relocs_start"))
     if (auto *d = dyn_cast<Defined>(r))
       d->value = this->outSecOff;
 
-  if (auto *r = symtab->find("__cap_relocs_end"))
+  if (auto *r = symtab.find("__cap_relocs_end"))
     if (auto *d = dyn_cast<Defined>(r))
       d->value = this->outSecOff + this->getSize();
 }
@@ -778,8 +824,8 @@ static bool alignToRequired(OutputSection *first, OutputSection *last,
   bool changed = false;
   if (reqdAlign == 1)
     return changed;
-  if (reqdAlign > first->alignment) {
-    first->alignment = reqdAlign;
+  if (reqdAlign > first->addralign) {
+    first->addralign = reqdAlign;
     changed = true;
   }
   if ((last->getVA() + last->size) & (reqdAlign - 1)) {
@@ -1039,7 +1085,7 @@ void CheriCapTableSection::writeTo(uint8_t* buf) {
   // it in. For the TLS part, assignValuesAndAddCapTableSymbols adds any static
   // relocations needed, and should be procesed by relocateAlloc.
   // TODO: Fill in the raw capability bits and use CBuildCap
-  relocateAlloc(buf, buf + getSize());
+  target->relocateAlloc(*this, buf);
 }
 
 static Defined *findMatchingFunction(const InputSectionBase *isec,
@@ -1131,16 +1177,6 @@ void CheriCapTableSection::addEntry(Symbol &sym, RelExpr expr,
     if (!idx.usedInCallExpr)
       it.first->second.usedInCallExpr = false;
   }
-#if defined(DEBUG_CAP_TABLE)
-  std::string DbgContext;
-  if (Config->CapTableScope == CapTableScopePolicy::File) {
-    DbgContext = " for file '" + toString(IS->File) + "'";
-  } else if (Config->CapTableScope == CapTableScopePolicy::Function) {
-    DbgContext =  " for function '" + toString(*findMatchingFunction(IS, Offset)) + "'";
-  }
-  llvm::errs() << "Added symbol " << toString(Sym) << " to .captable"
-               << DbgContext << ". Total count " << Entries.size() << "\n";
-#endif
 }
 
 void CheriCapTableSection::addDynTlsEntry(Symbol &sym) {
@@ -1170,12 +1206,6 @@ uint32_t CheriCapTableSection::getIndex(const Symbol &sym,
   // start of the current captable subset (or the global table in the default
   // case). When using per-function tables the first index in every function
   // will always be zero.
-#if defined(DEBUG_CAP_TABLE)
-  message("captable index for " + toString(Sym) + " is " +
-          Twine(*it->second.Index) + " - " +
-          Twine(Entries.FirstIndex) + ": " +
-          Twine(*it->second.Index - Entries.FirstIndex));
-#endif
   return *it->second.index - entries.firstIndex;
 }
 
@@ -1400,6 +1430,7 @@ void CheriCapTableSection::assignValuesAndAddCapTableSymbols() {
     if (!s->isPreemptible && !config->shared)
       this->relocations.push_back({R_TPREL, target->symbolicRel, offset, 0, s});
     else
+      // FIXME: casting to GotSection here is a massive hack!!
       mainPart->relaDyn->addAddendOnlyRelocIfNonPreemptible(
           target->tlsGotRel, *this, offset, *s, target->symbolicRel);
   }
@@ -1609,11 +1640,11 @@ void addCapabilityRelocation(Symbol *sym, RelType type, InputSectionBase *sec,
       // Hack: Add a new global symbol with a unique name so that we can use
       // a dynamic relocation against it.
       // TODO: should it be possible to add STB_LOCAL symbols to .dynsymtab?
-      Defined* newSym = symtab->ensureSymbolWillBeInDynsym(sym);
+      Defined* newSym = symtab.ensureSymbolWillBeInDynsym(sym);
       assert(newSym->isFunc() && "This should only be used for functions");
       assert(newSym->includeInDynsym());
       assert(newSym->binding == llvm::ELF::STB_GLOBAL);
-      assert(newSym->visibility == llvm::ELF::STV_HIDDEN);
+      assert(newSym->visibility() == llvm::ELF::STV_HIDDEN);
       sym = newSym; // Make the relocation point to the newly added symbol
     }
     dynRelSec->addReloc(

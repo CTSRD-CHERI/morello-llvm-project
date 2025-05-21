@@ -63,7 +63,8 @@ public:
   bool isPIEDefault(const llvm::opt::ArgList &Args) const override;
   bool isPICDefaultForced() const override;
   bool IsIntegratedAssemblerDefault() const override;
-  bool IsUnwindTablesDefault(const llvm::opt::ArgList &Args) const override;
+  UnwindTableLevel
+  getDefaultUnwindTableLevel(const llvm::opt::ArgList &Args) const override;
   bool SupportsProfiling() const override;
   std::string getThreadModel() const override;
   bool isThreadModelSupported(const StringRef Model) const override;

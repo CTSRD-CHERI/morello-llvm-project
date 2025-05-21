@@ -1,6 +1,6 @@
 // REQUIRES: aarch64
 // RUN: llvm-mc --triple=aarch64-none-elf -target-abi purecap -mattr=+c64 -filetype=obj %s -o %t.o
-// RUN: ld.lld -shared -cheri-codeptr-relocs %t.o -o %t
+// RUN: ld.lld -shared --cheri-codeptr-relocs %t.o -o %t
 // RUN: llvm-readobj --relocs %t | FileCheck %s
 
  .text

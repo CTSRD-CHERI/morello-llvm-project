@@ -1412,15 +1412,20 @@ bool FPPassManager::runOnFunction(Function &F) {
     FunctionSize = F.getInstructionCount();
   }
 
-  llvm::TimeTraceScope FunctionScope("OptFunction", F.getName());
+  // Store name outside of loop to avoid redundant calls.
+  const StringRef Name = F.getName();
+  llvm::TimeTraceScope FunctionScope("OptFunction", Name);
 
   for (unsigned Index = 0; Index < getNumContainedPasses(); ++Index) {
     FunctionPass *FP = getContainedPass(Index);
     bool LocalChanged = false;
 
-    llvm::TimeTraceScope PassScope("RunPass", FP->getPassName());
+    // Call getPassName only when required. The call itself is fairly cheap, but
+    // still virtual and repeated calling adds unnecessary overhead.
+    llvm::TimeTraceScope PassScope(
+        "RunPass", [FP]() { return std::string(FP->getPassName()); });
 
-    dumpPassInfo(FP, EXECUTION_MSG, ON_FUNCTION_MSG, F.getName());
+    dumpPassInfo(FP, EXECUTION_MSG, ON_FUNCTION_MSG, Name);
     dumpRequiredSet(FP);
 
     initializeAnalysisImpl(FP);
@@ -1459,7 +1464,7 @@ bool FPPassManager::runOnFunction(Function &F) {
 
     Changed |= LocalChanged;
     if (LocalChanged)
-      dumpPassInfo(FP, MODIFICATION_MSG, ON_FUNCTION_MSG, F.getName());
+      dumpPassInfo(FP, MODIFICATION_MSG, ON_FUNCTION_MSG, Name);
     dumpPreservedSet(FP);
     dumpUsedSet(FP);
 
@@ -1467,7 +1472,7 @@ bool FPPassManager::runOnFunction(Function &F) {
     if (LocalChanged)
       removeNotPreservedAnalysis(FP);
     recordAvailableAnalysis(FP);
-    removeDeadPasses(FP, F.getName(), ON_FUNCTION_MSG);
+    removeDeadPasses(FP, Name, ON_FUNCTION_MSG);
   }
 
   return Changed;

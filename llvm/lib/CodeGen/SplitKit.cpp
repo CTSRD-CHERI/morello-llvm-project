@@ -12,7 +12,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "SplitKit.h"
-#include "llvm/ADT/None.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
@@ -323,7 +322,7 @@ unsigned SplitAnalysis::countLiveBlocks(const LiveInterval *cli) const {
 }
 
 bool SplitAnalysis::isOriginalEndpoint(SlotIndex Idx) const {
-  unsigned OrigReg = VRM.getOriginal(CurLI->reg());
+  Register OrigReg = VRM.getOriginal(CurLI->reg());
   const LiveInterval &Orig = LIS.getInterval(OrigReg);
   assert(!Orig.empty() && "Splitting empty interval?");
   LiveInterval::const_iterator I = Orig.find(Idx);
@@ -515,10 +514,10 @@ void SplitEditor::forceRecompute(unsigned RegIdx, const VNInfo &ParentVNI) {
   VFP = ValueForcePair(nullptr, true);
 }
 
-SlotIndex SplitEditor::buildSingleSubRegCopy(Register FromReg, Register ToReg,
-    MachineBasicBlock &MBB, MachineBasicBlock::iterator InsertBefore,
-    unsigned SubIdx, LiveInterval &DestLI, bool Late, SlotIndex Def) {
-  const MCInstrDesc &Desc = TII.get(TargetOpcode::COPY);
+SlotIndex SplitEditor::buildSingleSubRegCopy(
+    Register FromReg, Register ToReg, MachineBasicBlock &MBB,
+    MachineBasicBlock::iterator InsertBefore, unsigned SubIdx,
+    LiveInterval &DestLI, bool Late, SlotIndex Def, const MCInstrDesc &Desc) {
   bool FirstCopy = !Def.isValid();
   MachineInstr *CopyMI = BuildMI(MBB, InsertBefore, DebugLoc(), Desc)
       .addReg(ToReg, RegState::Define | getUndefRegState(FirstCopy)
@@ -537,7 +536,8 @@ SlotIndex SplitEditor::buildSingleSubRegCopy(Register FromReg, Register ToReg,
 SlotIndex SplitEditor::buildCopy(Register FromReg, Register ToReg,
     LaneBitmask LaneMask, MachineBasicBlock &MBB,
     MachineBasicBlock::iterator InsertBefore, bool Late, unsigned RegIdx) {
-  const MCInstrDesc &Desc = TII.get(TargetOpcode::COPY);
+  const MCInstrDesc &Desc =
+      TII.get(TII.getLiveRangeSplitOpcode(FromReg, *MBB.getParent()));
   SlotIndexes &Indexes = *LIS.getSlotIndexes();
   if (LaneMask.all() || LaneMask == MRI.getMaxLaneMaskForVReg(FromReg)) {
     // The full vreg is copied.
@@ -565,7 +565,7 @@ SlotIndex SplitEditor::buildCopy(Register FromReg, Register ToReg,
   SlotIndex Def;
   for (unsigned BestIdx : SubIndexes) {
     Def = buildSingleSubRegCopy(FromReg, ToReg, MBB, InsertBefore, BestIdx,
-                                DestLI, Late, Def);
+                                DestLI, Late, Def, Desc);
   }
 
   BumpPtrAllocator &Allocator = LIS.getVNInfoAllocator();
@@ -590,7 +590,7 @@ VNInfo *SplitEditor::defFromParent(unsigned RegIdx, const VNInfo *ParentVNI,
   bool Late = RegIdx != 0;
 
   // Attempt cheap-as-a-copy rematerialization.
-  unsigned Original = VRM.getOriginal(Edit->get(RegIdx));
+  Register Original = VRM.getOriginal(Edit->get(RegIdx));
   LiveInterval &OrigLI = LIS.getInterval(Original);
   VNInfo *OrigVNI = OrigLI.getVNInfoAt(UseIdx);
 
@@ -1366,7 +1366,7 @@ void SplitEditor::rewriteAssigned(bool ExtendRanges) {
         // The point we want to extend is 0d to 16e not 16r in this case, but if
         // we use 16r here we will extend nothing because that already contained
         // in [16e, 32d).
-        unsigned OpIdx = MI->getOperandNo(&MO);
+        unsigned OpIdx = MO.getOperandNo();
         unsigned DefOpIdx = MI->findTiedOperandIdx(OpIdx);
         const MachineOperand &DefOp = MI->getOperand(DefOpIdx);
         IsEarlyClobber = DefOp.isEarlyClobber();
@@ -1450,7 +1450,7 @@ void SplitEditor::deleteRematVictims() {
   if (Dead.empty())
     return;
 
-  Edit->eliminateDeadDefs(Dead, None);
+  Edit->eliminateDeadDefs(Dead, std::nullopt);
 }
 
 void SplitEditor::forceRecomputeVNI(const VNInfo &ParentVNI) {
@@ -1585,7 +1585,9 @@ bool SplitAnalysis::shouldSplitSingleBlock(const BlockInfo &BI,
   if (BI.LiveIn && BI.LiveOut)
     return true;
   // No point in isolating a copy. It has no register class constraints.
-  if (LIS.getInstructionFromIndex(BI.FirstInstr)->isCopyLike())
+  MachineInstr *MI = LIS.getInstructionFromIndex(BI.FirstInstr);
+  bool copyLike = TII.isCopyInstr(*MI) || MI->isSubregToReg();
+  if (copyLike)
     return false;
   // Finally, don't isolate an end point that was created by earlier splits.
   return isOriginalEndpoint(BI.FirstInstr);

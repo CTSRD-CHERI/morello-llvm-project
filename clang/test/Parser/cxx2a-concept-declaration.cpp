@@ -50,7 +50,7 @@ template <bool word> concept C6 = integral_constant<bool, wor>::value;
 // expected-note@-2{{'word' declared here}}
 
 template<typename T> concept bool C7 = true;
-// expected-warning@-1{{ISO C++20 does not permit the 'bool' keyword after 'concept'}}
+// expected-error@-1{{ISO C++ does not permit the 'bool' keyword after 'concept'}}
 
 template<> concept C8 = false;
 // expected-error@-1{{concept template parameter list must have at least one parameter; explicit specialization of concepts is not allowed}}
@@ -79,6 +79,11 @@ template<typename T> concept C16 = true && (0 && 0); // expected-error {{atomic 
 // expected-warning@-1{{use of logical '&&' with constant operand}}
 // expected-note@-2{{use '&' for a bitwise operation}}
 // expected-note@-3{{remove constant to silence this warning}}
+// expected-warning@-4{{use of logical '&&' with constant operand}}
+// expected-note@-5{{use '&' for a bitwise operation}}
+// expected-note@-6{{remove constant to silence this warning}}
+
+
 template<typename T> concept C17 = T{};
 static_assert(!C17<bool>);
 template<typename T> concept C18 = (bool&&)true;

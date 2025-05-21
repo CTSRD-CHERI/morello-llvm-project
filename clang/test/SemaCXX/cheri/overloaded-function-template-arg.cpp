@@ -1,10 +1,10 @@
 /// Regression test based on libcxx/test/libcxx/utilities/function.objects/func.require/bullet_7.pass.cpp
 /// which started to fail after recent changes to CHERI cap <-> non-cap conversion checks.
 /// See https://github.com/CTSRD-CHERI/llvm-project/issues/500
-// RUN: %clang_cc1 -fsyntax-only -verify %s
-// RUN: %cheri_purecap_cc1 -fsyntax-only -verify %s
-// RUN: %cheri_cc1 -fsyntax-only -verify=expected,hybrid,hybrid-explicit %s -cheri-int-to-cap=explicit
-// RUN: %cheri_cc1 -fsyntax-only -verify=expected,hybrid,hybrid-implicit %s
+// RUN: %clang_cc1 -std=c++14 -fsyntax-only  -verify %s
+// RUN: %cheri_purecap_cc1 -std=c++14 -fsyntax-only -verify %s
+// RUN: %cheri_cc1 -std=c++14 -fsyntax-only -verify=expected,hybrid,hybrid-explicit %s -cheri-int-to-cap=explicit
+// RUN: %cheri_cc1 -std=c++14 -fsyntax-only -verify=expected,hybrid,hybrid-implicit %s
 
 void a(int);  // expected-note 1-2 {{candidate function has type mismatch at 1st parameter (expected 'char' but has 'int')}}
 void a(long); // expected-note 1-2 {{candidate function has type mismatch at 1st parameter (expected 'char' but has 'long')}}
@@ -32,7 +32,7 @@ void instantiate() {
   c<void(char), a>::function(1);         // expected-error{{address of overloaded function 'a' does not match required type 'void (char)'}}
 }
 
-#if __has_feature(capabilities)
+#if __has_feature(cheri)
 template <class T, T *__capability Func>
 // hybrid-note@-1 3 {{template parameter is declared here}}
 struct c_cap {

@@ -8,7 +8,7 @@
 
 // <iostream>
 
-// istream clog;
+// ostream clog;
 
 // The FVP for now doesn't output to stderr so this doesn't work.
 // Temporarily xfailing this.

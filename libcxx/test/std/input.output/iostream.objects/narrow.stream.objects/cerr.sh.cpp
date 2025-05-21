@@ -8,7 +8,7 @@
 
 // <iostream>
 
-// istream cerr;
+// ostream cerr;
 
 // The FVP for now doesn't output to stderr so this doesn't work.
 // Temporarily xfailing this.

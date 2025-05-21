@@ -295,6 +295,8 @@ public:
   CreateSigInfoValueObject(Target &target, const lldb::DataBufferSP &data_sp,
                            Status &error) const;
 
+  virtual uint64_t GetStackFrameSize() { return 512 * 1024; }
+
   static lldb::ABISP FindPlugin(lldb::ProcessSP process_sp, const ArchSpec &arch);
 
   //------------------------------------------------------------------

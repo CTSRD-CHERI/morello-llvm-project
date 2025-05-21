@@ -13,20 +13,11 @@
 
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringSwitch.h"
-#include "llvm/ADT/Triple.h"
 #include "llvm/BinaryFormat/Magic.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/Object/Archive.h"
 #include "llvm/Object/ArchiveWriter.h"
-#include "llvm/Object/COFFImportFile.h"
-#include "llvm/Object/ELFObjectFile.h"
-#include "llvm/Object/IRObjectFile.h"
-#include "llvm/Object/MachO.h"
-#include "llvm/Object/ObjectFile.h"
 #include "llvm/Object/SymbolicFile.h"
-#include "llvm/Object/TapiFile.h"
-#include "llvm/Object/Wasm.h"
-#include "llvm/Object/XCOFFObjectFile.h"
 #include "llvm/Support/Chrono.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ConvertUTF.h"
@@ -34,8 +25,8 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Format.h"
 #include "llvm/Support/FormatVariadic.h"
-#include "llvm/Support/Host.h"
 #include "llvm/Support/InitLLVM.h"
+#include "llvm/Support/LLVMDriver.h"
 #include "llvm/Support/LineIterator.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
@@ -45,6 +36,8 @@
 #include "llvm/Support/ToolOutputFile.h"
 #include "llvm/Support/WithColor.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/TargetParser/Host.h"
+#include "llvm/TargetParser/Triple.h"
 #include "llvm/ToolDrivers/llvm-dlltool/DlltoolDriver.h"
 #include "llvm/ToolDrivers/llvm-lib/LibDriver.h"
 
@@ -68,9 +61,9 @@ static StringRef ToolName;
 static StringRef Stem;
 
 static void printRanLibHelp(StringRef ToolName) {
-  outs() << "OVERVIEW: LLVM Ranlib\n\n"
-         << "This program generates an index to speed access to archives\n\n"
-         << "USAGE: " + ToolName + " <archive-file>\n\n"
+  outs() << "OVERVIEW: LLVM ranlib\n\n"
+         << "Generate an index for archives\n\n"
+         << "USAGE: " + ToolName + " archive...\n\n"
          << "OPTIONS:\n"
          << "  -h --help             - Display available options\n"
          << "  -v --version          - Display the version of this program\n"
@@ -646,31 +639,12 @@ static bool shouldCreateArchive(ArchiveOperation Op) {
   llvm_unreachable("Missing entry in covered switch.");
 }
 
-static bool is64BitSymbolicFile(SymbolicFile &Obj) {
-  if (auto *IRObj = dyn_cast<IRObjectFile>(&Obj))
-    return Triple(IRObj->getTargetTriple()).isArch64Bit();
-  if (isa<COFFObjectFile>(Obj) || isa<COFFImportFile>(Obj))
-    return false;
-  if (XCOFFObjectFile *XCOFFObj = dyn_cast<XCOFFObjectFile>(&Obj))
-    return XCOFFObj->is64Bit();
-  if (isa<WasmObjectFile>(Obj))
-    return false;
-  if (TapiFile *Tapi = dyn_cast<TapiFile>(&Obj))
-    return Tapi->is64Bit();
-  if (MachOObjectFile *MachO = dyn_cast<MachOObjectFile>(&Obj))
-    return MachO->is64Bit();
-  if (ELFObjectFileBase *ElfO = dyn_cast<ELFObjectFileBase>(&Obj))
-    return ElfO->getBytesInAddress() == 8;
-
-  fail("unsupported file format");
-}
-
 static bool isValidInBitMode(Binary &Bin) {
   if (BitMode == BitModeTy::Bit32_64 || BitMode == BitModeTy::Any)
     return true;
 
   if (SymbolicFile *SymFile = dyn_cast<SymbolicFile>(&Bin)) {
-    bool Is64Bit = is64BitSymbolicFile(*SymFile);
+    bool Is64Bit = SymFile->is64Bit();
     if ((Is64Bit && (BitMode == BitModeTy::Bit32)) ||
         (!Is64Bit && (BitMode == BitModeTy::Bit64)))
       return false;
@@ -875,8 +849,16 @@ static InsertAction computeInsertAction(ArchiveOperation Operation,
 
   if (Operation == QuickAppend || Members.empty())
     return IA_AddOldMember;
-  auto MI = find_if(
-      Members, [Name](StringRef Path) { return comparePaths(Name, Path); });
+
+  auto MI = find_if(Members, [Name](StringRef Path) {
+    if (Thin && !sys::path::is_absolute(Path)) {
+      Expected<std::string> PathOrErr =
+          computeArchiveRelativePath(ArchiveName, Path);
+      return comparePaths(Name, PathOrErr ? *PathOrErr : Path);
+    } else {
+      return comparePaths(Name, Path);
+    }
+  });
 
   if (MI == Members.end())
     return IA_AddOldMember;
@@ -1125,8 +1107,7 @@ static void performOperation(ArchiveOperation Operation,
   llvm_unreachable("Unknown operation.");
 }
 
-static int performOperation(ArchiveOperation Operation,
-                            std::vector<NewArchiveMember> *NewMembers) {
+static int performOperation(ArchiveOperation Operation) {
   // Create or open the archive object.
   ErrorOr<std::unique_ptr<MemoryBuffer>> Buf = MemoryBuffer::getFile(
       ArchiveName, /*IsText=*/false, /*RequiresNullTerminator=*/false);
@@ -1145,7 +1126,7 @@ static int performOperation(ArchiveOperation Operation,
     if (Archive->isThin())
       CompareFullPath = true;
     performOperation(Operation, Archive.get(), std::move(Buf.get()),
-                     NewMembers);
+                     /*NewMembers=*/nullptr);
     return 0;
   }
 
@@ -1160,7 +1141,7 @@ static int performOperation(ArchiveOperation Operation,
     }
   }
 
-  performOperation(Operation, nullptr, nullptr, NewMembers);
+  performOperation(Operation, nullptr, nullptr, /*NewMembers=*/nullptr);
   return 0;
 }
 
@@ -1219,7 +1200,7 @@ static void runMRIScript() {
       break;
     case MRICommand::CreateThin:
       Thin = true;
-      LLVM_FALLTHROUGH;
+      [[fallthrough]];
     case MRICommand::Create:
       Create = true;
       if (!ArchiveName.empty())
@@ -1323,7 +1304,7 @@ static int ar_main(int argc, char **argv) {
   SmallVector<const char *, 0> Argv(argv + 1, argv + argc);
   StringSaver Saver(Alloc);
 
-  cl::ExpandResponseFiles(Saver, getRspQuoting(makeArrayRef(argv, argc)), Argv);
+  cl::ExpandResponseFiles(Saver, getRspQuoting(ArrayRef(argv, argc)), Argv);
 
   // Get BitMode from enviorment variable "OBJECT_MODE" for AIX OS, if
   // specified.
@@ -1403,12 +1384,11 @@ static int ar_main(int argc, char **argv) {
     Options += *ArgIt + 1;
   }
 
-  ArchiveOperation Operation = parseCommandLine();
-  return performOperation(Operation, nullptr);
+  return performOperation(parseCommandLine());
 }
 
 static int ranlib_main(int argc, char **argv) {
-  bool ArchiveSpecified = false;
+  std::vector<StringRef> Archives;
   for (int i = 1; i < argc; ++i) {
     StringRef arg(argv[i]);
     if (handleGenericOption(arg)) {
@@ -1433,19 +1413,20 @@ static int ranlib_main(int argc, char **argv) {
         arg = arg.drop_front(1);
       }
     } else {
-      if (ArchiveSpecified)
-        fail("exactly one archive should be specified");
-      ArchiveSpecified = true;
-      ArchiveName = arg.str();
+      Archives.push_back(arg);
     }
   }
-  if (!ArchiveSpecified) {
-    badUsage("an archive name must be specified");
+
+  for (StringRef Archive : Archives) {
+    ArchiveName = Archive.str();
+    performOperation(CreateSymTab);
   }
-  return performOperation(CreateSymTab, nullptr);
+  if (Archives.empty())
+    badUsage("an archive name must be specified");
+  return 0;
 }
 
-int llvm_ar_main(int argc, char **argv) {
+int llvm_ar_main(int argc, char **argv, const llvm::ToolContext &) {
   InitLLVM X(argc, argv);
   ToolName = argv[0];
 
@@ -1466,11 +1447,11 @@ int llvm_ar_main(int argc, char **argv) {
   };
 
   if (Is("dlltool"))
-    return dlltoolDriverMain(makeArrayRef(argv, argc));
+    return dlltoolDriverMain(ArrayRef(argv, argc));
   if (Is("ranlib"))
     return ranlib_main(argc, argv);
   if (Is("lib"))
-    return libDriverMain(makeArrayRef(argv, argc));
+    return libDriverMain(ArrayRef(argv, argc));
   if (Is("ar"))
     return ar_main(argc, argv);
 

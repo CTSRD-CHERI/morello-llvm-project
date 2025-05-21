@@ -54,17 +54,15 @@ public:
   void emitCOFFSectionIndex(MCSymbol const *Symbol) override;
   void emitCOFFSecRel32(MCSymbol const *Symbol, uint64_t Offset) override;
   void emitCOFFImgRel32(MCSymbol const *Symbol, int64_t Offset) override;
-  void emitCommonSymbol(MCSymbol *Symbol, uint64_t Size, unsigned ByteAlignment,
+  void emitCommonSymbol(MCSymbol *Symbol, uint64_t Size, Align ByteAlignment,
                         TailPaddingAmount TailPadding) override;
   void emitLocalCommonSymbol(MCSymbol *Symbol, uint64_t Size,
-                             unsigned ByteAlignment,
-                             TailPaddingAmount TailPadding) override;
+                             Align ByteAlignment, TailPaddingAmount TailPadding) override;
   void emitWeakReference(MCSymbol *Alias, const MCSymbol *Symbol) override;
   void emitZerofill(MCSection *Section, MCSymbol *Symbol, uint64_t Size,
-                    unsigned ByteAlignment, TailPaddingAmount TailPadding,
-                    SMLoc Loc = SMLoc()) override;
+                    Align ByteAlignment, TailPaddingAmount TailPadding, SMLoc Loc = SMLoc()) override;
   void emitTBSSSymbol(MCSection *Section, MCSymbol *Symbol, uint64_t Size,
-                      unsigned ByteAlignment,
+                      Align ByteAlignment,
                       TailPaddingAmount TailPadding) override;
   void emitIdent(StringRef IdentString) override;
   void emitWinEHHandlerData(SMLoc Loc) override;

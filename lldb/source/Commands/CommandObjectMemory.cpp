@@ -42,6 +42,7 @@
 #include "llvm/Support/MathExtras.h"
 #include <cinttypes>
 #include <memory>
+#include <optional>
 
 using namespace lldb;
 using namespace lldb_private;
@@ -58,7 +59,7 @@ public:
   ~OptionGroupReadMemory() override = default;
 
   llvm::ArrayRef<OptionDefinition> GetDefinitions() override {
-    return llvm::makeArrayRef(g_memory_read_options);
+    return llvm::ArrayRef(g_memory_read_options);
   }
 
   Status SetOptionValue(uint32_t option_idx, llvm::StringRef option_value,
@@ -396,8 +397,8 @@ public:
 
   Options *GetOptions() override { return &m_option_group; }
 
-  llvm::Optional<std::string> GetRepeatCommand(Args &current_command_args,
-                                               uint32_t index) override {
+  std::optional<std::string> GetRepeatCommand(Args &current_command_args,
+                                              uint32_t index) override {
     return m_cmd_name;
   }
 
@@ -532,7 +533,7 @@ protected:
           switch (type_str[type_str.size() - 1]) {
           case '*':
             ++pointer_count;
-            LLVM_FALLTHROUGH;
+            [[fallthrough]];
           case ' ':
           case '\t':
             type_str.erase(type_str.size() - 1);
@@ -581,7 +582,7 @@ protected:
         for (auto lang : languages_to_check) {
           if (auto *persistent_vars =
                   target->GetPersistentExpressionStateForLanguage(lang)) {
-            if (llvm::Optional<CompilerType> type =
+            if (std::optional<CompilerType> type =
                     persistent_vars->GetCompilerTypeFromPersistentDecl(
                         lookup_type_name)) {
               user_defined_types.emplace(*type);
@@ -626,7 +627,7 @@ protected:
         --pointer_count;
       }
 
-      llvm::Optional<uint64_t> size = compiler_type.GetByteSize(nullptr);
+      std::optional<uint64_t> size = compiler_type.GetByteSize(nullptr);
       if (!size) {
         result.AppendErrorWithFormat(
             "unable to get the byte size of the type '%s'\n",
@@ -729,18 +730,9 @@ protected:
       addr = aligned;
     }
 
-    ABISP abi;
-    if (Process *proc = m_exe_ctx.GetProcessPtr())
-      abi = proc->GetABI();
-
-    if (abi)
-      addr = abi->FixDataAddress(addr);
-
     if (argc == 2) {
       lldb::addr_t end_addr = OptionArgParser::ToAddress(
           &m_exe_ctx, command[1].ref(), LLDB_INVALID_ADDRESS, nullptr);
-      if (end_addr != LLDB_INVALID_ADDRESS && abi)
-        end_addr = abi->FixDataAddress(end_addr);
 
       if (end_addr == LLDB_INVALID_ADDRESS) {
         result.AppendError("invalid end address expression.");
@@ -793,7 +785,7 @@ protected:
       if (!m_format_options.GetFormatValue().OptionWasSet())
         m_format_options.GetFormatValue().SetCurrentValue(eFormatDefault);
 
-      llvm::Optional<uint64_t> size = compiler_type.GetByteSize(nullptr);
+      std::optional<uint64_t> size = compiler_type.GetByteSize(nullptr);
       if (!size) {
         result.AppendError("can't get size of type");
         return false;
@@ -1073,7 +1065,7 @@ public:
     ~OptionGroupFindMemory() override = default;
 
     llvm::ArrayRef<OptionDefinition> GetDefinitions() override {
-      return llvm::makeArrayRef(g_memory_find_options);
+      return llvm::ArrayRef(g_memory_find_options);
     }
 
     Status SetOptionValue(uint32_t option_idx, llvm::StringRef option_value,
@@ -1214,12 +1206,6 @@ protected:
       return false;
     }
 
-    ABISP abi = m_exe_ctx.GetProcessPtr()->GetABI();
-    if (abi) {
-      low_addr = abi->FixDataAddress(low_addr);
-      high_addr = abi->FixDataAddress(high_addr);
-    }
-
     if (high_addr <= low_addr) {
       result.AppendError(
           "starting address must be smaller than ending address");
@@ -1231,7 +1217,8 @@ protected:
     DataBufferHeap buffer;
 
     if (m_memory_options.m_string.OptionWasSet()) {
-      llvm::StringRef str = m_memory_options.m_string.GetStringValue();
+      llvm::StringRef str =
+          m_memory_options.m_string.GetValueAs<llvm::StringRef>().value_or("");
       if (str.empty()) {
         result.AppendError("search string must have non-zero length.");
         return false;
@@ -1242,10 +1229,12 @@ protected:
       ValueObjectSP result_sp;
       if ((eExpressionCompleted ==
            process->GetTarget().EvaluateExpression(
-               m_memory_options.m_expr.GetStringValue(), frame, result_sp)) &&
+               m_memory_options.m_expr.GetValueAs<llvm::StringRef>().value_or(
+                   ""),
+               frame, result_sp)) &&
           result_sp) {
         uint64_t value = result_sp->GetValueAsUnsigned(0);
-        llvm::Optional<uint64_t> size =
+        std::optional<uint64_t> size =
             result_sp->GetCompilerType().GetByteSize(nullptr);
         if (!size)
           return false;
@@ -1376,7 +1365,7 @@ public:
     ~OptionGroupWriteMemory() override = default;
 
     llvm::ArrayRef<OptionDefinition> GetDefinitions() override {
-      return llvm::makeArrayRef(g_memory_write_options);
+      return llvm::ArrayRef(g_memory_write_options);
     }
 
     Status SetOptionValue(uint32_t option_idx, llvm::StringRef option_value,
@@ -1771,8 +1760,8 @@ public:
 
   ~CommandObjectMemoryHistory() override = default;
 
-  llvm::Optional<std::string> GetRepeatCommand(Args &current_command_args,
-                                               uint32_t index) override {
+  std::optional<std::string> GetRepeatCommand(Args &current_command_args,
+                                              uint32_t index) override {
     return m_cmd_name;
   }
 
@@ -1835,7 +1824,7 @@ public:
     ~OptionGroupMemoryRegion() override = default;
 
     llvm::ArrayRef<OptionDefinition> GetDefinitions() override {
-      return llvm::makeArrayRef(g_memory_region_options);
+      return llvm::ArrayRef(g_memory_region_options);
     }
 
     Status SetOptionValue(uint32_t option_idx, llvm::StringRef option_value,
@@ -1907,10 +1896,10 @@ protected:
     if (memory_tagged == MemoryRegionInfo::OptionalBool::eYes)
       result.AppendMessage("memory tagging: enabled");
 
-    const llvm::Optional<std::vector<addr_t>> &dirty_page_list =
+    const std::optional<std::vector<addr_t>> &dirty_page_list =
         range_info.GetDirtyPageList();
     if (dirty_page_list) {
-      const size_t page_count = dirty_page_list.value().size();
+      const size_t page_count = dirty_page_list->size();
       result.AppendMessageWithFormat(
           "Modified memory (dirty) page list provided, %zu entries.\n",
           page_count);
@@ -1953,7 +1942,6 @@ protected:
       }
 
       auto load_addr_str = command[0].ref();
-      // Non-address bits in this will be handled later by GetMemoryRegion
       load_addr = OptionArgParser::ToAddress(&m_exe_ctx, load_addr_str,
                                              LLDB_INVALID_ADDRESS, &error);
       if (error.Fail() || load_addr == LLDB_INVALID_ADDRESS) {
@@ -1992,7 +1980,7 @@ protected:
              // When there are non-address bits the last range will not extend
              // to LLDB_INVALID_ADDRESS but to the max virtual address.
              // This prevents us looping forever if that is the case.
-             (abi && (abi->FixAnyAddress(addr) == addr))) {
+             (!abi || (abi->FixAnyAddress(addr) == addr))) {
         lldb_private::MemoryRegionInfo region_info;
         error = process_sp->GetMemoryRegionInfo(addr, region_info);
 
@@ -2001,9 +1989,6 @@ protected:
           addr = region_info.GetRange().GetRangeEnd();
         }
       }
-
-      // Even if we read nothing, don't error for --all
-      error.Clear();
     } else {
       lldb_private::MemoryRegionInfo region_info;
       error = process_sp->GetMemoryRegionInfo(load_addr, region_info);
@@ -2025,8 +2010,8 @@ protected:
     return false;
   }
 
-  llvm::Optional<std::string> GetRepeatCommand(Args &current_command_args,
-                                               uint32_t index) override {
+  std::optional<std::string> GetRepeatCommand(Args &current_command_args,
+                                              uint32_t index) override {
     // If we repeat this command, repeat it without any arguments so we can
     // show the next memory range
     return m_cmd_name;

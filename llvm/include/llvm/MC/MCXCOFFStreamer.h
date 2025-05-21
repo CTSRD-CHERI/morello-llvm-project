@@ -20,27 +20,28 @@ public:
                   std::unique_ptr<MCCodeEmitter> Emitter);
 
   bool emitSymbolAttribute(MCSymbol *Symbol, MCSymbolAttr Attribute) override;
-  void emitCommonSymbol(MCSymbol *Symbol, uint64_t Size, unsigned ByteAlignment,
+  void emitCommonSymbol(MCSymbol *Symbol, uint64_t Size, Align ByteAlignment,
                         TailPaddingAmount TailPadding) override;
-  void emitZerofill(MCSection *Section, MCSymbol *Symbol, uint64_t Size,
-                    unsigned ByteAlignment, TailPaddingAmount TailPadding,
+  void emitZerofill(MCSection *Section, MCSymbol *Symbol = nullptr,
+                    uint64_t Size = 0, Align ByteAlignment = Align(1),
+                    TailPaddingAmount TailPadding = TailPaddingAmount::None,
                     SMLoc Loc = SMLoc()) override;
   void emitInstToData(const MCInst &Inst, const MCSubtargetInfo &) override;
   void emitXCOFFLocalCommonSymbol(MCSymbol *LabelSym, uint64_t Size,
-                                  MCSymbol *CsectSym,
-                                  unsigned ByteAlign) override;
+                                  MCSymbol *CsectSym, Align Alignment) override;
   void emitXCOFFSymbolLinkageWithVisibility(MCSymbol *Symbol,
                                             MCSymbolAttr Linkage,
                                             MCSymbolAttr Visibility) override;
-  void emitXCOFFRefDirective(StringRef Name) override {
-    report_fatal_error("emitXCOFFRefDirective is not implemented yet on object"
-                       "generation path");
-  }
+  void emitXCOFFRefDirective(const MCSymbol *Symbol) override;
   void emitXCOFFRenameDirective(const MCSymbol *Name,
                                 StringRef Rename) override {
     report_fatal_error("emitXCOFFRenameDirective is not implemented yet on "
                        "object generation path");
   }
+  void emitXCOFFExceptDirective(const MCSymbol *Symbol, const MCSymbol *Trap,
+                                unsigned Lang, unsigned Reason,
+                                unsigned FunctionSize, bool hasDebug) override;
+  void emitXCOFFCInfoSym(StringRef Name, StringRef Metadata) override;
 };
 
 } // end namespace llvm

@@ -327,10 +327,10 @@ let isSelect = 1, Uses = [NZCV] in
                                      (ins Capsp:$Cn, GPR64:$Rm,
                                           arith_extendlsl64:$ext),
                                      "add", "\t$Cd, $Cn, $Rm$ext", []>;
-  def CapAddRegW : CapAddRegBaseWFmt<(outs Capsp:$R1),
-                                     (ins Capsp:$R2,
-                                          arith_extended_reg32to64_i64:$R3),
-                                     "add", "\t$R1, $R2, $R3", []>;
+  def CapAddRegW : CapAddRegBaseWFmt<(outs Capsp:$Cd),
+                                     (ins Capsp:$Cn,
+                                          arith_extended_reg32to64_i64:$Rm),
+                                     "add", "\t$Cd, $Cn, $Rm", []>;
 
   // Capability set bounds (immediate)
   def CapSetBoundsImm : CapSetBoundsImmFmt<(outs Capsp:$Cd),
@@ -669,21 +669,21 @@ def : InstAlias<"sttr\t$Ct, [$Rn]",
 let Predicates = [HasMorello] in {
 // Add/Sub instructions.
 let AddedComplexity = 5 in
-def : Pat<(ptradd Capsp:$Cn, addsub_shifted_imm64:$imm),
+def : Pat<(cptradd Capsp:$Cn, addsub_shifted_imm64:$imm),
           (CapAddImm Capsp:$Cn, addsub_shifted_imm64:$imm)>;
-def : Pat<(ptradd Capsp:$Cn, neg_addsub_shifted_imm64:$imm),
+def : Pat<(cptradd Capsp:$Cn, neg_addsub_shifted_imm64:$imm),
           (CapSubImm Capsp:$Cn, neg_addsub_shifted_imm64:$imm)>;
-def : Pat<(ptradd Capsp:$Cn, arith_extended_reg32to64_i64:$R3),
+def : Pat<(cptradd Capsp:$Cn, arith_extended_reg32to64_i64:$R3),
           (CapAddRegW Capsp:$Cn, arith_extended_reg32to64_i64:$R3)>;
-def : Pat<(ptradd Capsp:$Cn, GPR64:$Rm),
+def : Pat<(cptradd Capsp:$Cn, GPR64:$Rm),
           (CapAddRegX Capsp:$Cn, GPR64:$Rm, (i32 24))>;
-def : Pat<(ptradd Capsp:$Cn, (i64 (shl GPR64:$Rm, (i64 1)))),
+def : Pat<(cptradd Capsp:$Cn, (i64 (shl GPR64:$Rm, (i64 1)))),
           (CapAddRegX Capsp:$Cn, GPR64:$Rm, (i32 25))>;
-def : Pat<(ptradd Capsp:$Cn, (i64 (shl GPR64:$Rm, (i64 2)))),
+def : Pat<(cptradd Capsp:$Cn, (i64 (shl GPR64:$Rm, (i64 2)))),
           (CapAddRegX Capsp:$Cn, GPR64:$Rm, (i32 26))>;
-def : Pat<(ptradd Capsp:$Cn, (i64 (shl GPR64:$Rm, (i64 3)))),
+def : Pat<(cptradd Capsp:$Cn, (i64 (shl GPR64:$Rm, (i64 3)))),
           (CapAddRegX Capsp:$Cn, GPR64:$Rm, (i32 27))>;
-def : Pat<(ptradd Capsp:$Cn, (i64 (shl GPR64:$Rm, (i64 4)))),
+def : Pat<(cptradd Capsp:$Cn, (i64 (shl GPR64:$Rm, (i64 4)))),
           (CapAddRegX Capsp:$Cn, GPR64:$Rm, (i32 28))>;
 
 def : Pat<(ptrtoint Capsp:$Cn), (CapGetValue Capsp:$Cn)>;

@@ -36,33 +36,23 @@ struct CrashReasonTestInfo {
   int si_code;
 
   // Test outputs.
-  CrashReason reason;
   const char *description;
 };
 } // namespace
 
 TEST(CrashReasonTest, ReasonAndDescriptionForSIGSEGV) {
   const std::vector<CrashReasonTestInfo> crashReasonTestInfos = {
-      {SEGV_CAPTAGERR, CrashReason::eCapabilityTagError,
-       "signal SIGSEGV: capability tag fault"},
-      {SEGV_CAPSEALEDERR, CrashReason::eCapabilitySealedError,
-       "signal SIGSEGV: capability sealed fault"},
-      {SEGV_CAPBOUNDSERR, CrashReason::eCapabilityBoundsError,
-       "signal SIGSEGV: capability bounds fault"},
-      {SEGV_CAPPERMERR, CrashReason::eCapabilityPermError,
-       "signal SIGSEGV: capability permission fault"},
-      {SEGV_CAPACCESSERR, CrashReason::eCapabilityAccessError,
-       "signal SIGSEGV: capability access fault"},
+      {SEGV_CAPTAGERR, "signal SIGSEGV: capability tag fault"},
+      {SEGV_CAPSEALEDERR, "signal SIGSEGV: capability sealed fault"},
+      {SEGV_CAPBOUNDSERR, "signal SIGSEGV: capability bounds fault"},
+      {SEGV_CAPPERMERR, "signal SIGSEGV: capability permission fault"},
+      {SEGV_CAPACCESSERR, "signal SIGSEGV: capability access fault"},
   };
 
   for (const CrashReasonTestInfo &t : crashReasonTestInfos) {
     siginfo_t info;
     info.si_signo = SIGSEGV;
     info.si_code = t.si_code;
-
-    EXPECT_EQ(t.reason, GetCrashReason(info))
-        << "while testing " << t.description;
-
-    EXPECT_EQ(t.description, GetCrashReasonString(t.reason, info));
+    EXPECT_EQ(t.description, GetCrashReasonString(info));
   }
 }
