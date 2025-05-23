@@ -3095,6 +3095,8 @@ void LinkerDriver::link(opt::InputArgList &args) {
     combineEhSections();
     if (in.capRelocs)
       ctx.inputSections.push_back(in.capRelocs.get());
+    if (in.tgotCapRelocs)
+      ctx.inputSections.push_back(in.tgotCapRelocs.get());
   }
 
   // Merge .riscv.attributes sections.
