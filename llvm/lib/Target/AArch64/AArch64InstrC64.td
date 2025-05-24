@@ -1408,12 +1408,12 @@ let Predicates = [HasLOR, HasC64] in {
 
 let Predicates = [HasC64] in {
   def APRFMui : PPrefetchUI<0b11, 0, 0b10, "prfm",
-                        [(AArch64CPrefetch imm:$Rt,
+                        [(AArch64CPrefetch timm:$Rt,
                                         (am_cindexed64 Capsp:$Rn,
                                                       uimm12s8:$offset))]>;
   defm APRFM : PPrefetchRO<0b11, 0, 0b10, "prfm">;
   defm APRFUM : PPrefetchUnscaled<0b11, 0, 0b10, "prfum",
-                  [(AArch64CPrefetch imm:$Rt,
+                  [(AArch64CPrefetch timm:$Rt,
                                   (am_cunscaled64 Capsp:$Rn, simm9:$offset))]>;
 
   def : InstAlias<"prfm $Rt, [$Rn]", (APRFMui prfop:$Rt, Capsp:$Rn, 0)>;
