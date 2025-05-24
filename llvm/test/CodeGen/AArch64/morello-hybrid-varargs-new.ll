@@ -4,12 +4,12 @@
 target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
 target triple = "aarch64-none-unknown-elf"
 
-%struct.__va_list = type { i8*, i8*, i8*, i32, i32 }
+%struct.__va_list = type { ptr, ptr, ptr, i32, i32 }
 
 ; Capabilities are passed indirectly so we don't need to spill any capability
 ; registers.
 
-define dso_local void @test_varargs(%struct.__va_list* noalias sret(%struct.__va_list) align 8 %agg.result, i32 %count, ...) local_unnamed_addr #0 {
+define dso_local void @test_varargs(ptr noalias sret(%struct.__va_list) align 8 %agg.result, i32 %count, ...) local_unnamed_addr #0 {
 ; CHECK-LABEL: test_varargs:
 ; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    sub sp, sp, #224
@@ -36,18 +36,16 @@ define dso_local void @test_varargs(%struct.__va_list* noalias sret(%struct.__va
 ; CHECK-NEXT:    ret
 entry:
   %args = alloca %struct.__va_list, align 8
-  %0 = bitcast %struct.__va_list* %args to i8*
-  call void @llvm.lifetime.start.p0i8(i64 32, i8* nonnull %0) #0
-  call void @llvm.va_start.p0i8(i8* nonnull %0)
-  %1 = bitcast %struct.__va_list* %agg.result to i8*
-  call void @llvm.va_copy.p0i8.p0i8(i8* %1, i8* nonnull %0)
-  call void @llvm.lifetime.end.p0i8(i64 32, i8* nonnull %0) #0
+  call void @llvm.lifetime.start.p0(i64 32, ptr nonnull %args) #0
+  call void @llvm.va_start.p0(ptr nonnull %args)
+  call void @llvm.va_copy.p0.p0(ptr %agg.result, ptr nonnull %args)
+  call void @llvm.lifetime.end.p0(i64 32, ptr nonnull %args) #0
   ret void
 }
 
-declare void @llvm.va_copy.p0i8.p0i8(i8*, i8*) #0
-declare void @llvm.va_start.p0i8(i8*) #0
-declare void @llvm.lifetime.start.p0i8(i64 immarg, i8* nocapture) #0
-declare void @llvm.lifetime.end.p0i8(i64 immarg, i8* nocapture) #0
+declare void @llvm.va_copy.p0.p0(ptr, ptr) #0
+declare void @llvm.va_start.p0(ptr) #0
+declare void @llvm.lifetime.start.p0(i64 immarg, ptr nocapture) #0
+declare void @llvm.lifetime.end.p0(i64 immarg, ptr nocapture) #0
 
 attributes #0 = { nounwind }
