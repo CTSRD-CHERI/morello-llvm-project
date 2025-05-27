@@ -2670,7 +2670,7 @@ void SelectionDAGBuilder::visitJumpTable(SwitchCG::JumpTable &JT) {
   assert(JT.Reg != -1U && "Should lower JT Header first!");
   const DataLayout &TD = DAG.getDataLayout();
   const auto &TLI = DAG.getTargetLoweringInfo();
-  bool AddrSpace = TLI.useDefaultAddrSpaceForJT() ?
+  unsigned AddrSpace = TLI.useDefaultAddrSpaceForJT() ?
     0 : TD.getGlobalsAddressSpace();
   EVT PTy = TLI.getPointerTy(TD,  AddrSpace);
   EVT IndexTy = TLI.getPointerRangeTy(TD, AddrSpace);
