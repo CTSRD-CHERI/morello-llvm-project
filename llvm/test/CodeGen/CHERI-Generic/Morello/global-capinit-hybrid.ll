@@ -1,8 +1,8 @@
 ; DO NOT EDIT -- This file was generated from test/CodeGen/CHERI-Generic/Inputs/global-capinit-hybrid.ll
 ; RUN: llc -mtriple=aarch64 --relocation-model=pic -target-abi aapcs -mattr=+morello,-c64 %s -o - | FileCheck %s --check-prefix=ASM \
 ; RUN: -DPTR_DIRECTIVE=.xword
-; RUN: llc -mtriple=aarch64 --relocation-model=pic -target-abi aapcs -mattr=+morello,-c64 %s -filetype=obj -o - | llvm-objdump -r -t -
-
+; RUN: llc -mtriple=aarch64 --relocation-model=pic -target-abi aapcs -mattr=+morello,-c64 %s -filetype=obj -o - | llvm-objdump -r -t - | \
+; RUN:   FileCheck %s --check-prefix=RELOCS -DINTEGER_RELOC=R_AARCH64_ABS64 '-DCAPABILITY_RELOC=R_MORELLO_CAPINIT'
 target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
 
 declare void @extern_fn()

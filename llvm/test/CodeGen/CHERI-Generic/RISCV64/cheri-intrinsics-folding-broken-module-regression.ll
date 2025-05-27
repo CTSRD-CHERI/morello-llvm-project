@@ -2,7 +2,6 @@
 ; DO NOT EDIT -- This file was generated from test/CodeGen/CHERI-Generic/Inputs/cheri-intrinsics-folding-broken-module-regression.ll
 ; This used to create a broken function.
 ; FIXME: the getoffset+add sequence should be folded to an increment
-; REQUIRES: mips-registered-target
 ; RUN: opt -mtriple=riscv64 --relocation-model=pic -target-abi l64pc128d -mattr=+xcheri,+cap-mode,+f,+d -S -passes=instcombine %s -o - | FileCheck %s
 ; RUN: opt -mtriple=riscv64 --relocation-model=pic -target-abi l64pc128d -mattr=+xcheri,+cap-mode,+f,+d -S '-passes=default<O3>' %s | llc -mtriple=riscv64 --relocation-model=pic -target-abi l64pc128d -mattr=+xcheri,+cap-mode,+f,+d -O3 -o - | FileCheck %s --check-prefix ASM
 target datalayout = "e-m:e-pf200:128:128:128:64-p:64:64-i64:64-i128:128-n64-S128-A200-P200-G200"

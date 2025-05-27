@@ -17,7 +17,8 @@ define void @_ZN3fooD2Ev() addrspace(200) nounwind {
 @elem1 = alias i32, getelementptr({i32, i32}, {i32, i32}*  @two_ints, i32 0, i32 1)
 
 ; UTC_ARGS: --disable
-; ASM: .size _ZN3fooD2Ev, .Lfunc_end0-.Lfunc_begin0
+@IF-MORELLO@; ASM: .size _ZN3fooD2Ev, .Lfunc_end0-.Lfunc_begin0
+@IFNOT-MORELLO@; ASM: .size _ZN3fooD2Ev, .Lfunc_end0-_ZN3fooD2Ev
 
 ; ASM-LABEL: .Ltwo_ints:
 ; ASM-NEXT: .{{4byte|word}} 1
@@ -28,7 +29,8 @@ define void @_ZN3fooD2Ev() addrspace(200) nounwind {
 ; ASM-LABEL: .globl _ZN3fooD1Ev
 ; ASM-NEXT: .type _ZN3fooD1Ev,@function
 ; ASM-NEXT: .set _ZN3fooD1Ev, _ZN3fooD2Ev
-; ASM-NEXT: .size _ZN3fooD1Ev, .Lfunc_end0-.Lfunc_begin0
+@IF-MORELLO@; ASM-NEXT: .size _ZN3fooD1Ev, .Lfunc_end0-.Lfunc_begin0
+@IFNOT-MORELLO@; ASM-NEXT: .size _ZN3fooD1Ev, .Lfunc_end0-_ZN3fooD2Ev
 
 ; But for the aliases using a GEP, we have to subtract the offset:
 ; ASM-LABEL: .globl elem0

@@ -1,4 +1,4 @@
-; RUN: llc @PURECAP_HARDFLOAT_ARGS@ --relocation-model=pic < %s -o - | FileCheck %s --check-prefixes=CHECK,NOCODEPTR
+; RUN: llc @PURECAP_HARDFLOAT_ARGS@ --relocation-model=pic < %s -o - | FileCheck %s --check-prefixes=CHECK,NOCODEPTR --allow-unused-prefixes
 @IF-MORELLO@; RUN: llc @PURECAP_HARDFLOAT_ARGS@ --relocation-model=pic < %s -o - --cheri-codeptr-relocs | FileCheck %s --check-prefixes=CHECK,CODEPTR
 ; RUN: llc @PURECAP_HARDFLOAT_ARGS@ --relocation-model=pic < %s -o - -filetype=obj | llvm-readobj --relocs --symbols - | FileCheck %s --check-prefix=RELOCS
 ; Capabilities for exception landing pads were using preemptible relocations such as
@@ -58,8 +58,10 @@ declare dso_local void @__cxa_end_catch() local_unnamed_addr addrspace(200)
 
 ; UTC_ARGS: --disable
 ; CHECK: .Lfunc_end0:
-; CHECK-NEXT: .size _Z8do_catchv, .Lfunc_end0-_Z8do_catchv
-; CHECK-NEXT: .size .L_Z8do_catchv$local, .Lfunc_end0-_Z8do_catchv
+@IF-MORELLO@; CHECK-NEXT: .size _Z8do_catchv, .Lfunc_end0-.Lfunc_begin0
+@IFNOT-MORELLO@; CHECK-NEXT: .size _Z8do_catchv, .Lfunc_end0-_Z8do_catchv
+@IF-MORELLO@; CHECK-NEXT: .size .L_Z8do_catchv$local, .Lfunc_end0-.Lfunc_begin0
+@IFNOT-MORELLO@; CHECK-NEXT: .size .L_Z8do_catchv$local, .Lfunc_end0-_Z8do_catchv
 
 ; CHECK:      GCC_except_table0:
 ; CHECK-NEXT: .Lexception0:
@@ -111,28 +113,18 @@ declare dso_local void @__cxa_end_catch() local_unnamed_addr addrspace(200)
 ; RELOCS-LABEL:  Section ({{.+}}) .rela.gcc_except_table {
 @IF-MIPS@; RELOCS-NEXT:    R_MIPS_CHERI_CAPABILITY/R_MIPS_NONE/R_MIPS_NONE  .L_Z8do_catchv$local 0x4C
 @IF-MIPS@; RELOCS-NEXT:    R_MIPS_PC32/R_MIPS_NONE/R_MIPS_NONE .L_ZTIi.DW.stub 0x0
-@IF-RISCV@; RELOCS-NEXT:   R_RISCV_ADD32 - 0x0
-@IF-RISCV@; RELOCS-NEXT:   R_RISCV_SUB32 - 0x0
-@IF-RISCV@; RELOCS-NEXT:   R_RISCV_ADD32 - 0x0
-@IF-RISCV@; RELOCS-NEXT:   R_RISCV_SUB32 - 0x0
 @IF-RISCV@; RELOCS-NEXT:   R_RISCV_CHERI_CAPABILITY  .L_Z8do_catchv$local 0x34
-@IF-RISCV@; RELOCS-NEXT:   R_RISCV_ADD32 - 0x0
-@IF-RISCV@; RELOCS-NEXT:   R_RISCV_SUB32 - 0x0
-@IF-RISCV@; RELOCS-NEXT:   R_RISCV_ADD32 - 0x0
-@IF-RISCV@; RELOCS-NEXT:   R_RISCV_SUB32 - 0x0
-@IF-RISCV@; RELOCS-NEXT:   R_RISCV_32_PCREL .L_ZTIi.DW.stub 0x0
-@IF-MORELLO@; RELOCS-NEXT: R_MORELLO_CAPINIT .L_Z8do_catchv$eh_alias 0x10
+@IF-RISCV@; RELOCS-NEXT:   R_RISCV_ADD32 <null> 0x0
+@IF-RISCV@; RELOCS-NEXT:   R_RISCV_SUB32 <null> 0x0
+@IF-RISCV@; RELOCS-NEXT:   R_RISCV_ADD32 .L_ZTIi.DW.stub 0x0
+@IF-RISCV@; RELOCS-NEXT:   R_RISCV_SUB32 <null> 0x0
+@IF-MORELLO@; RELOCS-NEXT: R_MORELLO_CAPINIT .L_Z8do_catchv$local 0x10
 @IF-MORELLO@; RELOCS-NEXT: R_AARCH64_PREL64 .data 0x0
 ; RELOCS-NEXT:  }
 
 ; The local alias should have the same type and non-zero size as the real function:
 ; RELOCS:       Symbol {
 ; RELOCS-LABEL:   Name:  .L_Z8do_catchv$local (
-@IF-RISCV@; RELOCS-NEXT:   R_RISCV_CHERI_CAPABILITY  .L_Z8do_catchv$local 0x34
-@IF-RISCV@; RELOCS-NEXT:   R_RISCV_ADD32 <null> 0x0
-@IF-RISCV@; RELOCS-NEXT:   R_RISCV_SUB32 <null> 0x0
-@IF-RISCV@; RELOCS-NEXT:   R_RISCV_ADD32 .L_ZTIi.DW.stub 0x0
-@IF-RISCV@; RELOCS-NEXT:   R_RISCV_SUB32 <null> 0x0
 @IF-MORELLO@; RELOCS-NEXT:    Value: 0x1
 @IFNOT-MORELLO@; RELOCS-NEXT:    Value: 0x0
 ; RELOCS-NEXT:    Size: [[FN_SIZE:[1-9][0-9]*]]

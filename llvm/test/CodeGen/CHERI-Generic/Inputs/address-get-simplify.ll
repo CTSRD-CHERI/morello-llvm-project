@@ -1,5 +1,7 @@
-; RUN: opt < %s @HYBRID_HARDFLOAT_ARGS@ -instsimplify -S | FileCheck %s
-; RUN: opt < %s @PURECAP_HARDFLOAT_ARGS@ -instsimplify -S | FileCheck %s
+; RUN: opt < %s @HYBRID_HARDFLOAT_ARGS@ -passes=instsimplify -S | FileCheck %s
+; RUN: opt < %s @PURECAP_HARDFLOAT_ARGS@ -passes=instsimplify -S | FileCheck %s
+
+target datalayout = "@PURECAP_DATALAYOUT@"
 
 ; Derived from various existing ptrtoint tests.
 

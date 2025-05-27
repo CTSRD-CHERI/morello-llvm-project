@@ -1,5 +1,8 @@
-; RUN: opt -S -instcombine @HYBRID_HARDFLOAT_ARGS@ %s -o - | FileCheck %s --check-prefix=HYBRID
-; RUN: opt -S -instcombine @PURECAP_HARDFLOAT_ARGS@ %s -o - | FileCheck %s --check-prefix=PURECAP
+; RUN: opt -S --passes=instcombine @HYBRID_HARDFLOAT_ARGS@ %s -o - | FileCheck %s --check-prefix=HYBRID
+; RUN: opt -S --passes=instcombine @PURECAP_HARDFLOAT_ARGS@ %s -o - | FileCheck %s --check-prefix=PURECAP
+
+target datalayout = "@PURECAP_DATALAYOUT@"
+
 
 @a = addrspace(200) global [200 x i32] zeroinitializer, align 4
 
