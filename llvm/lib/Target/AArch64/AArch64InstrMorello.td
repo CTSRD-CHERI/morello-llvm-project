@@ -710,9 +710,14 @@ def : Pat<(int_morello_round_representable_length_inexact GPR64:$Rn),
           (CapRoundRepresentableLength GPR64:$Rn)>;
 def : Pat<(int_morello_representable_alignment_mask_inexact GPR64:$Rn),
           (CapRoundRepresentableMask GPR64:$Rn)>;
+// FIXME: remove Morello intrinsic name
 def : Pat<(int_cheri_cap_copy_from_high Capsp:$Rn),
           (CapCopyFromHigh Capsp:$Rn)>;
 def : Pat<(int_cheri_cap_copy_to_high Cap:$Rn, GPR64:$Rm),
+          (CapCopyToHigh Cap:$Rn, GPR64:$Rm)>;
+def : Pat<(int_cheri_cap_high_get Capsp:$Rn),
+          (CapCopyFromHigh Capsp:$Rn)>;
+def : Pat<(int_cheri_cap_high_set Cap:$Rn, GPR64:$Rm),
           (CapCopyToHigh Cap:$Rn, GPR64:$Rm)>;
 let AddedComplexity = 5 in
 def : Pat<(int_cheri_cap_bounds_set Capsp:$Cn, scbnds_imm:$imm),
