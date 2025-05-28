@@ -3694,12 +3694,25 @@ static void emitGlobalConstantCHERICap(const DataLayout &DL, const Constant *CV,
     AP.OutStreamer->EmitCheriCapability(AP.getSymbol(GV), Addend.getSExtValue(),
                                         CapWidth);
     return;
-  } else if (const MCSymbolRefExpr *SRE = dyn_cast<MCSymbolRefExpr>(Expr)) {
+  }
+
+  // Morello sometimes wraps MCSymbolRefExpr in an explicit add of 1 to ensure
+  // that the LSB is set. Handle this case.
+  std::optional<int64_t> ExtraAddend;
+  const MCSymbolRefExpr *SRE = dyn_cast<MCSymbolRefExpr>(Expr);
+  if (const auto *BE = dyn_cast<MCBinaryExpr>(Expr)) {
+    if (auto ConstRHS = dyn_cast<MCConstantExpr>(BE->getRHS())) {
+      ExtraAddend = ConstRHS->getValue();
+      SRE = dyn_cast<MCSymbolRefExpr>(BE->getLHS());
+    }
+  }
+
+  if (SRE) {
     if (auto BA = dyn_cast<BlockAddress>(CV)) {
       // For block addresses we emit `.chericap FN@code+(.LtmpN - FN)`
       // NB: Must use a non-preemptible symbol
       auto FnStart = AP.getSymbolPreferLocal(*BA->getFunction(), true);
-      const MCExpr *DiffToStart = MCBinaryExpr::createSub(SRE, MCSymbolRefExpr::create(FnStart, AP.OutContext), AP.OutContext);
+      const MCExpr *DiffToStart = MCBinaryExpr::createSub(Expr, MCSymbolRefExpr::create(FnStart, AP.OutContext), AP.OutContext);
       AP.OutStreamer->EmitCheriCapability(FnStart, DiffToStart, CapWidth,
                                           CheriEmitCodePtrRelocs);
       return;
@@ -3710,7 +3723,8 @@ static void emitGlobalConstantCHERICap(const DataLayout &DL, const Constant *CV,
       report_fatal_error(
           "Cannot emit a global .chericap referring to a temporary since this "
           "will result in the wrong value at runtime!");
-      AP.OutStreamer->EmitCheriCapability(&SRE->getSymbol(), CapWidth);
+      AP.OutStreamer->EmitCheriCapability(&SRE->getSymbol(),
+                                          ExtraAddend.value_or(0), CapWidth);
       return;
     }
   }
