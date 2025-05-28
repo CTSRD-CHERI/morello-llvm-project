@@ -16,7 +16,7 @@ int check_pointer() {
 // CHECK-PURECAP: ret i32 16
 }
 
-#ifdef __CHERI__
+#if defined(__CHERI__) || defined(__CHERI_HYBRID__)
 int check_capability_pointer() {
   return sizeof(int *__capability);
 // CHECK-HYBRID: ret i32 16
