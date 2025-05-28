@@ -38,6 +38,8 @@ ASM_FUNCTION_ARM_RE = re.compile(
 
 ASM_FUNCTION_AARCH64_RE = re.compile(
     r'^_?(?P<func>[^:]+):[ \t]*\/\/[ \t]*@"?(?P=func)"?( (Function|Tail Call))?\n'
+    r"(?:\.L(?P=func)\$local:\n)?"  # drop .L<func>$local:
+    r"(?:\s*\.type\s+\.L(?P=func)\$local,@function\n)?"  # drop .type .L<func>$local
     r"(?:[ \t]+.cfi_startproc\n)?"  # drop optional cfi noise
     r"(?P<body>.*?)\n"
     # This list is incomplete
