@@ -365,9 +365,21 @@ private:
     MCELFStreamer::emitCHERINotes();
     const AArch64MCAsmInfoELF *MAI =
         static_cast<const AArch64MCAsmInfoELF *>(getContext().getAsmInfo());
-    if (MAI->isCheriPurecapABI())
+    if (MAI->isCheriPurecapABI()) {
+      unsigned GlobalsABI = []() {
+        switch (MCTargetOptions::cheriCapabilityTableABI()) {
+        case CheriCapabilityTableABI::Pcrel:
+          return llvm::ELF::CHERI_GLOBALS_ABI_PCREL;
+        case CheriCapabilityTableABI::PLT:
+          return llvm::ELF::CHERI_GLOBALS_ABI_PLT_FPTR;
+        case CheriCapabilityTableABI::FunctionDescriptor:
+          return llvm::ELF::CHERI_GLOBALS_ABI_FDESC;
+        }
+      }();
+      emitCHERINote(llvm::ELF::NT_CHERI_GLOBALS_ABI, GlobalsABI);
       emitCHERINote(ELF::NT_CHERI_MORELLO_PURECAP_BENCHMARK_ABI,
                     MAI->isPurecapBenchmarkABI());
+    }
   }
 };
 
