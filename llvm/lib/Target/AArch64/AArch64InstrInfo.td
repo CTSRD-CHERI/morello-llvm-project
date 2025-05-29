@@ -9321,7 +9321,7 @@ def RPRFM:
 //===----------------------------------------------------------------------===//
 // 128-bit Atomics (FEAT_LSE128)
 //===----------------------------------------------------------------------===//
-let Predicates = [HasLSE128] in {
+let Predicates = [HasLSE128, HasNotC64] in {
   def SWPP     : LSE128Base<0b000, 0b00, 0b1, "swpp">;
   def SWPPA    : LSE128Base<0b000, 0b10, 0b1, "swppa">;
   def SWPPAL   : LSE128Base<0b000, 0b11, 0b1, "swppal">;
@@ -9340,7 +9340,7 @@ let Predicates = [HasLSE128] in {
 // RCPC Instructions (FEAT_LRCPC3)
 //===----------------------------------------------------------------------===//
 
-let Predicates = [HasRCPC3] in {
+let Predicates = [HasRCPC3, HasNotC64] in {
   //                                             size   opc    opc2
   def STILPWpre:  BaseLRCPC3IntegerLoadStorePair<0b10, 0b00, 0b0000, (outs GPR64sp:$wback), (ins GPR32:$Rt, GPR32:$Rt2, GPR64sp:$Rn), "stilp", "\t$Rt, $Rt2, [$Rn, #-8]!", "$Rn = $wback">;
   def STILPXpre:  BaseLRCPC3IntegerLoadStorePair<0b11, 0b00, 0b0000, (outs GPR64sp:$wback), (ins GPR64:$Rt, GPR64:$Rt2, GPR64sp:$Rn), "stilp", "\t$Rt, $Rt2, [$Rn, #-16]!", "$Rn = $wback">;
@@ -9365,7 +9365,7 @@ let Predicates = [HasRCPC3] in {
   def LDAPRXpre: BaseLRCPC3IntegerLoadStore<0b11, 0b11, (outs GPR64sp:$wback, GPR64:$Rt), (ins GPR64sp:$Rn),            "ldapr", "\t$Rt, [$Rn], #8",   "$Rn = $wback">;
 }
 
-let Predicates = [HasRCPC3, HasNEON] in {
+let Predicates = [HasRCPC3, HasNEON, HasNotC64] in {
   //                                              size   opc regtype
   defm STLURb:  LRCPC3NEONLoadStoreUnscaledOffset<0b00, 0b00, FPR8  , (outs), (ins FPR8  :$Rt, GPR64sp:$Rn, simm9:$simm), "stlur">;
   defm STLURh:  LRCPC3NEONLoadStoreUnscaledOffset<0b01, 0b00, FPR16 , (outs), (ins FPR16 :$Rt, GPR64sp:$Rn, simm9:$simm), "stlur">;
