@@ -27,13 +27,13 @@ somewhere:
   ldr c0, [x1, :lo12:sym+1]
   str c1, [x2, :lo12:sym+1]
 
-// OBJ:  ldr c0, [x1, #0]
+// OBJ:  ldr c0, [x1, #0x0]
 // OBJ-NEXT: R_AARCH64_LDST128_ABS_LO12_NC sym
-// OBJ:  str c1, [x2, #0]
+// OBJ:  str c1, [x2, #0x0]
 // OBJ-NEXT: R_AARCH64_LDST128_ABS_LO12_NC sym
-// OBJ:  ldr c0, [x1, #0]
+// OBJ:  ldr c0, [x1, #0x0]
 // OBJ-NEXT: R_AARCH64_LDST128_ABS_LO12_NC sym+0x1
-// OBJ:  str c1, [x2, #0]
+// OBJ:  str c1, [x2, #0x0]
 // OBJ-NEXT: R_AARCH64_LDST128_ABS_LO12_NC sym+0x1
 
 // ASM:  ldr c0, [x1, :lo12:sym]                // encoding: [0x20,0bAAAAAA00,0b01AAAAAA,0xc2]
@@ -50,13 +50,13 @@ somewhere:
   ldr c0, [x1, :got_lo12:sym+1]
   str c1, [x2, :got_lo12:sym+1]
 
-// OBJ:  ldr c0, [x1, #0]
+// OBJ:  ldr c0, [x1, #0x0]
 // OBJ-NEXT: R_MORELLO_LD128_GOT_LO12_NC sym
-// OBJ:  str c1, [x2, #0]
+// OBJ:  str c1, [x2, #0x0]
 // OBJ-NEXT: R_MORELLO_LD128_GOT_LO12_NC sym
-// OBJ:  ldr c0, [x1, #0]
+// OBJ:  ldr c0, [x1, #0x0]
 // OBJ-NEXT: R_MORELLO_LD128_GOT_LO12_NC sym+0x1
-// OBJ:  str c1, [x2, #0]
+// OBJ:  str c1, [x2, #0x0]
 // OBJ-NEXT: R_MORELLO_LD128_GOT_LO12_NC sym+0x1
 
 // ASM:  ldr c0, [x1, :got_lo12:sym]            // encoding: [0x20,0bAAAAAA00,0b01AAAAAA,0xc2]

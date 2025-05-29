@@ -3,11 +3,11 @@
 
     .globl var
     .text
-// CHECK: adrp c0, 0x0
+// CHECK: adrp c0, 0x0 <var>
 // CHECK-NEXT: R_MORELLO_TLSDESC_ADR_PAGE20 var
-// CHECK: ldr c1, [c0, #0]
+// CHECK: ldr c1, [c0, #0x0]
 // CHECK-NEXT: R_MORELLO_TLSDESC_LD128_LO12 var
-// CHECK: add c0, c0, #0
+// CHECK: add c0, c0, #0x0
 // CHECK-NEXT: R_AARCH64_TLSDESC_ADD_LO12 var
 // CHECK: blr c1
 // CHECK-NEXT: R_MORELLO_TLSDESC_CALL var
@@ -19,7 +19,7 @@
 
     adrp c11, :gottprel:var
     add c10, c0, #:gottprel_lo12:var
-// CHECK: adrp c11, 0x0
+// CHECK: adrp c11, 0x0 <var>
 // CHECK-NEXT: R_MORELLO_TLSIE_ADR_GOTTPREL_PAGE20 var
-// CHECK: add c10, c0, #0
+// CHECK: add c10, c0, #0x0
 // CHECK-NEXT: R_MORELLO_TLSIE_ADD_LO12 var

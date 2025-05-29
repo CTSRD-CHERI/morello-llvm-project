@@ -1,6 +1,6 @@
 // RUN: llvm-mc -triple=arm64 -mattr=+morello,+c64 -show-encoding < %s | FileCheck %s
 // RUN: llvm-mc -triple=arm64 -mattr=+morello,+c64  -filetype=obj < %s -o - | \
-// RUN:     llvm-objdump --mattr=+morello -d - |  FileCheck %s
+// RUN:     llvm-objdump --mattr=+morello --no-print-imm-hex -d - |  FileCheck %s
 
     ret
 // CHECK:       ret c30

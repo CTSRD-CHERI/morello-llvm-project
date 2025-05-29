@@ -1,6 +1,6 @@
 // RUN: llvm-mc -triple=arm64 -mattr=+morello -show-encoding < %s | FileCheck %s
 // RUN: llvm-mc -triple=arm64 -mattr=+morello  -filetype=obj < %s -o - | \
-// RUN:     llvm-objdump --mattr=+morello -d - |  FileCheck %s
+// RUN:     llvm-objdump --no-print-imm-hex --mattr=+morello -d - |  FileCheck %s
 
 // Load byte, alternate
     ldurb w13, [csp]
