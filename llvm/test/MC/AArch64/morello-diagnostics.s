@@ -27,7 +27,7 @@
          ld1 {v1.8h-v1.8h}, [c0]
          ld1 {v15.8h-v17.4h}, [c24]
          ld1 {v0.8b-v2.8b, [c0]
-// CHECK-ERROR: error: registers must be sequential
+// CHECK-ERROR: error: invalid operand for instruction
 // CHECK-ERROR:        ld1 {v0.16b, v2.16b}, [c0]
 // CHECK-ERROR:                     ^
 // CHECK-ERROR: error: invalid number of vectors
@@ -57,7 +57,7 @@
 // CHECK-ERROR: error: mismatched register size suffix
 // CHECK-ERROR:        ld2 {v15.8h, v16.4h}, [c24]
 // CHECK-ERROR:                     ^
-// CHECK-ERROR: error: registers must be sequential
+// CHECK-ERROR: error: invalid operand for instruction
 // CHECK-ERROR:        ld2 {v0.8b, v2.8b}, [c0]
 // CHECK-ERROR:                    ^
 // CHECK-ERROR:        ld2 {v15.4h, v16.4h, v17.4h}, [c32]
@@ -80,7 +80,7 @@
 // CHECK-ERROR: error: mismatched register size suffix
 // CHECK-ERROR:        ld3 {v0.8b, v1,8b, v2.8b, v3.8b}, [c0]
 // CHECK-ERROR:                    ^
-// CHECK-ERROR: error: registers must be sequential
+// CHECK-ERROR: error: registers must have the same sequential stride
 // CHECK-ERROR:        ld3 {v0.8b, v2.8b, v3.8b}, [c0]
 // CHECK-ERROR:                    ^
 // CHECK-ERROR: error: mismatched register size suffix
@@ -98,7 +98,7 @@
 // CHECK-ERROR: error: mismatched register size suffix
 // CHECK-ERROR:        ld4 {v15.8h, v16.8h, v17.4h, v18.8h}, [c24]
 // CHECK-ERROR:                             ^
-// CHECK-ERROR: error: registers must be sequential
+// CHECK-ERROR: error: registers must have the same sequential stride
 // CHECK-ERROR:        ld4 {v0.8b, v2.8b, v3.8b, v4.8b}, [c0]
 // CHECK-ERROR:                    ^
 // CHECK-ERROR: error: invalid number of vectors
@@ -135,7 +135,7 @@
          st1 {v1.8h-v1.8h}, [c0]
          st1 {v15.8h-v17.4h}, [c24]
          st1 {v0.8b-v2.8b, [c0]
-// CHECK-ERROR: error: registers must be sequential
+// CHECK-ERROR: error: invalid operand for instruction
 // CHECK-ERROR:        st1 {v0.16b, v2.16b}, [c0]
 // CHECK-ERROR:                     ^
 // CHECK-ERROR: error: invalid number of vectors
@@ -165,7 +165,7 @@
 // CHECK-ERROR: error: mismatched register size suffix
 // CHECK-ERROR:        st2 {v15.8h, v16.4h}, [c24]
 // CHECK-ERROR:                     ^
-// CHECK-ERROR: error: registers must be sequential
+// CHECK-ERROR: error: invalid operand for instruction
 // CHECK-ERROR:        st2 {v0.8b, v2.8b}, [c0]
 // CHECK-ERROR:                    ^
 // CHECK-ERROR: error: invalid operand for instruction
@@ -189,7 +189,7 @@
 // CHECK-ERROR: error: mismatched register size suffix
 // CHECK-ERROR:        st3 {v0.8b, v1,8b, v2.8b, v3.8b}, [c0]
 // CHECK-ERROR:                    ^
-// CHECK-ERROR: error: registers must be sequential
+// CHECK-ERROR: error: registers must have the same sequential stride
 // CHECK-ERROR:        st3 {v0.8b, v2.8b, v3.8b}, [c0]
 // CHECK-ERROR:                    ^
 // CHECK-ERROR: error: mismatched register size suffix
@@ -207,7 +207,7 @@
 // CHECK-ERROR: error: mismatched register size suffix
 // CHECK-ERROR:        st4 {v15.8h, v16.8h, v17.4h, v18.8h}, [c24]
 // CHECK-ERROR:                             ^
-// CHECK-ERROR: error: registers must be sequential
+// CHECK-ERROR: error: registers must have the same sequential stride
 // CHECK-ERROR:        st4 {v0.8b, v2.8b, v3.8b, v4.8b}, [c0]
 // CHECK-ERROR:                    ^
 // CHECK-ERROR: error: invalid number of vectors
@@ -393,5 +393,3 @@
 // CHECK-ERROR: error: invalid operand for instruction
 // CHECK-ERROR: st4 {v0.b, v1.b, v2.b, v3.b}[1], [c0], #1
 // CHECK-ERROR:                                        ^
-
-
