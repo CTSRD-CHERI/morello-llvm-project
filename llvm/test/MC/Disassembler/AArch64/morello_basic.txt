@@ -18,23 +18,23 @@
   0x26,0xef,0xc5,0xc2
   0x26,0xff,0xc5,0xc2
 
-
-# CHECK: csel c6, c25, c5, eq
-# CHECK: csel c6, c25, c5, ne
-# CHECK: csel c6, c25, c5, hs
-# CHECK: csel c25, c6, c26, lo
-# CHECK: csel c6, c25, c5, mi
-# CHECK: csel c6, c25, c5, pl
-# CHECK: csel c6, c25, c5, vs
-# CHECK: csel c6, c25, c5, vc
-# CHECK: csel c6, c25, c5, hi
-# CHECK: csel c6, c25, c5, ls
-# CHECK: csel c6, c25, c5, ge
-# CHECK: csel c6, c25, c5, lt
-# CHECK: csel c6, c25, c5, gt
-# CHECK: csel c6, c25, c5, le
-# CHECK: csel c6, c25, c5, al
-# CHECK: csel c6, c25, c5, nv
+# CHECK: .text
+# CHECK-NEXT: csel c6, c25, c5, eq
+# CHECK-NEXT: csel c6, c25, c5, ne
+# CHECK-NEXT: csel c6, c25, c5, hs
+# CHECK-NEXT: csel c25, c6, c26, lo
+# CHECK-NEXT: csel c6, c25, c5, mi
+# CHECK-NEXT: csel c6, c25, c5, pl
+# CHECK-NEXT: csel c6, c25, c5, vs
+# CHECK-NEXT: csel c6, c25, c5, vc
+# CHECK-NEXT: csel c6, c25, c5, hi
+# CHECK-NEXT: csel c6, c25, c5, ls
+# CHECK-NEXT: csel c6, c25, c5, ge
+# CHECK-NEXT: csel c6, c25, c5, lt
+# CHECK-NEXT: csel c6, c25, c5, gt
+# CHECK-NEXT: csel c6, c25, c5, le
+# CHECK-NEXT: csel c6, c25, c5, al
+# CHECK-NEXT: csel c6, c25, c5, nv
 
   0x9c,0xc4,0x14,0x02
   0x9c,0x38,0x6b,0x02
@@ -47,16 +47,16 @@
   0x63,0xff,0x3f,0x02
   0x63,0xff,0x7f,0x02
 
-# CHECK: add c28, c4, #1329
-# CHECK: add c28, c4, #2766, lsl #12
-# CHECK: add c28, c27, #1329
-# CHECK: add c28, c27, #2766, lsl #12
-# CHECK: add c3, c4, #1329
-# CHECK: add c3, c4, #2766, lsl #12
-# CHECK: add c3, c27, #1329
-# CHECK: add c3, c27, #2766, lsl #12
-# CHECK: add c3, c27, #4095
-# CHECK: add c3, c27, #4095, lsl #12
+# CHECK-NEXT: add c28, c4, #1329
+# CHECK-NEXT: add c28, c4, #2766, lsl #12
+# CHECK-NEXT: add c28, c27, #1329
+# CHECK-NEXT: add c28, c27, #2766, lsl #12
+# CHECK-NEXT: add c3, c4, #1329
+# CHECK-NEXT: add c3, c4, #2766, lsl #12
+# CHECK-NEXT: add c3, c27, #1329
+# CHECK-NEXT: add c3, c27, #2766, lsl #12
+# CHECK-NEXT: add c3, c27, #4095
+# CHECK-NEXT: add c3, c27, #4095, lsl #12
 
   0xf9,0xc7,0x8a,0x02
   0xf9,0x3b,0xf5,0x02
@@ -69,16 +69,16 @@
   0x06,0xfc,0xbf,0x02
   0x06,0xfc,0xff,0x02
 
-# CHECK: sub c25, csp, #689
-# CHECK: sub c25, csp, #3406, lsl #12
-# CHECK: sub c25, c0, #689
-# CHECK: sub c25, c0, #3406, lsl #12
-# CHECK: sub c6, csp, #689
-# CHECK: sub c6, csp, #3406, lsl #12
-# CHECK: sub c6, c0, #689
-# CHECK: sub c6, c0, #3406, lsl #12
-# CHECK: sub c6, c0, #4095
-# CHECK: sub c6, c0, #4095, lsl #12
+# CHECK-NEXT: sub c25, csp, #689
+# CHECK-NEXT: sub c25, csp, #3406, lsl #12
+# CHECK-NEXT: sub c25, c0, #689
+# CHECK-NEXT: sub c25, c0, #3406, lsl #12
+# CHECK-NEXT: sub c6, csp, #689
+# CHECK-NEXT: sub c6, csp, #3406, lsl #12
+# CHECK-NEXT: sub c6, c0, #689
+# CHECK-NEXT: sub c6, c0, #3406, lsl #12
+# CHECK-NEXT: sub c6, c0, #4095
+# CHECK-NEXT: sub c6, c0, #4095, lsl #12
 
   0x26,0x03,0xa7,0xc2
   0xff,0x27,0xa8,0xc2
@@ -89,15 +89,15 @@
   0x63,0xc7,0xb7,0xc2
   0x87,0xeb,0xa6,0xc2
   0x00,0x60,0xa0,0xc2
-# CHECK: add c6, c25, w7, uxtb
-# CHECK: add csp, csp, w8, uxth #1
-# CHECK: add c25, c6, w16, uxtw #2
-# CHECK: add csp, c6, x24, uxtx #3
-# CHECK: add c5, c7, w3, sxtb #4
-# CHECK: add c4, c24, wzr, sxth
-# CHECK: add c3, c27, w23,  sxtw #1
-# CHECK: add c7, c28, x6, sxtx #2
-# CHECK: add c0, c0, x0, uxtx
+# CHECK-NEXT: add c6, c25, w7, uxtb
+# CHECK-NEXT: add csp, csp, w8, uxth #1
+# CHECK-NEXT: add c25, c6, w16, uxtw #2
+# CHECK-NEXT: add csp, c6, x24, uxtx #3
+# CHECK-NEXT: add c5, c7, w3, sxtb #4
+# CHECK-NEXT: add c4, c24, wzr, sxth
+# CHECK-NEXT: add c3, c27, w23,  sxtw #1
+# CHECK-NEXT: add c7, c28, x6, sxtx #2
+# CHECK-NEXT: add c0, c0, x0, uxtx
 
   0x67,0x38,0xc0,0xc2
   0x1c,0xfb,0xc2,0xc2
@@ -105,9 +105,9 @@
   0xff,0xbb,0xd8,0xc2
   0xff,0xfb,0xd8,0xc2
   0x24,0x3b,0xc7,0xc2
-# CHECK: scbnds c7, c3, #0
-# CHECK: scbnds c28, c24, #5, lsl #4
-# CHECK: scbnds c0, c7, #63, lsl #4
-# CHECK: scbnds csp, csp, #49
-# CHECK: scbnds csp, csp, #49, lsl #4
-# CHECK: scbnds c4, c25, #14
+# CHECK-NEXT: scbnds c7, c3, #0
+# CHECK-NEXT: scbnds c28, c24, #5, lsl #4
+# CHECK-NEXT: scbnds c0, c7, #63, lsl #4
+# CHECK-NEXT: scbnds csp, csp, #49
+# CHECK-NEXT: scbnds csp, csp, #49, lsl #4
+# CHECK-NEXT: scbnds c4, c25, #14

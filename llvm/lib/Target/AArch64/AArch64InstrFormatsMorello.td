@@ -1569,7 +1569,7 @@ class CapAddRegBaseWFmt<dag oops, dag iops, string asm,
   bits<6> ext;
   let Inst{31-21} = 0b11000010101;
   let Inst{20-16} = Rm;
-  let Inst{15-10} = 0; // FIXME: previously used "ext", but that is not an argument
+  let Inst{15-10} = ext;
   let Inst{9-5} = Cn;
   let Inst{4-0} = Cd;
   let DecoderMethod = "DecodeAddSubERegInstruction";

@@ -328,9 +328,8 @@ let isSelect = 1, Uses = [NZCV] in
                                           arith_extendlsl64:$ext),
                                      "add", "\t$Cd, $Cn, $Rm$ext", []>;
   def CapAddRegW : CapAddRegBaseWFmt<(outs Capsp:$Cd),
-                                     (ins Capsp:$Cn,
-                                          arith_extended_reg32to64_i64:$Rm),
-                                     "add", "\t$Cd, $Cn, $Rm", []>;
+                                     (ins Capsp:$Cn, (arith_extended_reg32to64_i64 $Rm, $ext):$Rm_and_ext),
+                                     "add", "\t$Cd, $Cn, $Rm_and_ext", []>;
 
   // Capability set bounds (immediate)
   def CapSetBoundsImm : CapSetBoundsImmFmt<(outs Capsp:$Cd),
