@@ -1373,10 +1373,7 @@ def ProcessorFeatures {
                                        FeatureFPARMv8, FeatureFullFP16, FeatureNEON,
                                        FeatureRCPC, FeatureSPE, FeatureSSBS,
                                        FeaturePerfMon];
-  list<SubtargetFeature> Rainier = [HasV8_2aOps, FeatureCrypto, FeatureDotProd,
-                                    FeatureFPARMv8, FeatureFullFP16, FeatureNEON,
-                                    FeatureRCPC, FeatureSPE, FeatureSSBS,
-                                    FeaturePerfMon, FeatureMorello];
+  list<SubtargetFeature> Rainier = !listconcat(NeoverseN1, [FeatureMorello]);
   list<SubtargetFeature> NeoverseN2 = [HasV8_5aOps, FeatureBF16, FeatureETE,
                                        FeatureMatMulInt8, FeatureMTE, FeatureSVE2,
                                        FeatureSVE2BitPerm, FeatureTRBE, FeatureCrypto,
