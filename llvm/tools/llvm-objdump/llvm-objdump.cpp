@@ -519,7 +519,8 @@ static bool hasMappingSymbols(const ObjectFile &Obj) {
 
 static bool isMappingSymbol(const SymbolInfoTy &Sym) {
   return Sym.Name.startswith("$d") || Sym.Name.startswith("$x") ||
-         Sym.Name.startswith("$a") || Sym.Name.startswith("$t");
+         Sym.Name.startswith("$a") || Sym.Name.startswith("$t") ||
+         Sym.Name.startswith("$c");
 }
 
 static void printRelocation(formatted_raw_ostream &OS, StringRef FileName,
