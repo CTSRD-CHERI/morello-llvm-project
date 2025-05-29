@@ -257,7 +257,8 @@ def : InstAlias<"str\t$Rt, [$Rn, $Rm]", (PAltStoreSFPRegExtX FPR32:$Rt, GPR64sp:
 
 let Predicates = [HasMorello, HasC64], isReMaterializable = 1,
     DecoderNamespace = "AArch64MorelloC64" in {
-def PADRP : CapADRI<1, 1, "adrp", adrplabel_simm20, []>;
+def PADRP : CapADRI<1, 1, "adrp", adrplabel_simm20,
+                    [(set Cap:$Cd, (AArch64cadrp tglobaladdr:$label))]>;
 def PADRDP : CapADRI<1, 0, "adrdp", adrdplabel_uimm20, []>;
 }
 
