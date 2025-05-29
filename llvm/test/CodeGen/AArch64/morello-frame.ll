@@ -6,7 +6,6 @@ define dso_local void @func(ptr addrspace(200) nocapture readnone %bb, ptr addrs
 ; CHECK-LABEL: func:
 ; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    stp d15, d14, [sp, #-144]! // 16-byte Folded Spill
-; CHECK-NEXT:    .cfi_def_cfa_offset 144
 ; CHECK-NEXT:    stp d13, d12, [sp, #16] // 16-byte Folded Spill
 ; CHECK-NEXT:    stp d11, d10, [sp, #32] // 16-byte Folded Spill
 ; CHECK-NEXT:    stp d9, d8, [sp, #48] // 16-byte Folded Spill
@@ -15,6 +14,7 @@ define dso_local void @func(ptr addrspace(200) nocapture readnone %bb, ptr addrs
 ; CHECK-NEXT:    stp x24, x23, [sp, #96] // 16-byte Folded Spill
 ; CHECK-NEXT:    stp x22, x21, [sp, #112] // 16-byte Folded Spill
 ; CHECK-NEXT:    stp x20, x19, [sp, #128] // 16-byte Folded Spill
+; CHECK-NEXT:    .cfi_def_cfa_offset 144
 ; CHECK-NEXT:    .cfi_offset w19, -8
 ; CHECK-NEXT:    .cfi_offset w20, -16
 ; CHECK-NEXT:    .cfi_offset w21, -24
@@ -54,8 +54,8 @@ define i32 @frameWithCapabilityRegisters(i32 %argc, ptr %argv) {
 ; CHECK-LABEL: frameWithCapabilityRegisters:
 ; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    str x30, [sp, #-32]! // 8-byte Folded Spill
-; CHECK-NEXT:    .cfi_def_cfa_offset 32
 ; CHECK-NEXT:    stp x20, x19, [sp, #16] // 16-byte Folded Spill
+; CHECK-NEXT:    .cfi_def_cfa_offset 32
 ; CHECK-NEXT:    .cfi_offset w19, -8
 ; CHECK-NEXT:    .cfi_offset w20, -16
 ; CHECK-NEXT:    .cfi_offset w30, -32
