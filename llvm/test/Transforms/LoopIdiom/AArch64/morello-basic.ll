@@ -3,7 +3,7 @@
 target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128-A200-P200-G200"
 target triple = "aarch64"
 
-define void @test1(i8 addrspace(200)* %Base, i64 %Size) nounwind ssp {
+define void @test1(ptr addrspace(200) %Base, i64 %Size) nounwind ssp {
 ; CHECK-LABEL: define void @test1
 ; CHECK-SAME: (ptr addrspace(200) [[BASE:%.*]], i64 [[SIZE:%.*]]) addrspace(200) #[[ATTR0:[0-9]+]] {
 ; CHECK-NEXT:  bb.nph:
@@ -23,8 +23,8 @@ bb.nph:                                           ; preds = %entry
 
 for.body:                                         ; preds = %bb.nph, %for.body
   %indvar = phi i64 [ 0, %bb.nph ], [ %indvar.next, %for.body ]
-  %I.0.014 = getelementptr i8, i8 addrspace(200)* %Base, i64 %indvar
-  store i8 0, i8 addrspace(200)* %I.0.014, align 1
+  %I.0.014 = getelementptr i8, ptr addrspace(200) %Base, i64 %indvar
+  store i8 0, ptr addrspace(200) %I.0.014, align 1
   %indvar.next = add i64 %indvar, 1
   %exitcond = icmp eq i64 %indvar.next, %Size
   br i1 %exitcond, label %for.end, label %for.body
@@ -35,7 +35,7 @@ for.end:                                          ; preds = %for.body, %entry
 
 ; This is a loop that was rotated but where the blocks weren't merged.  This
 ; shouldn't perturb us.
-define void @test1a(i8 addrspace(200)* %Base, i64 %Size) nounwind ssp {
+define void @test1a(ptr addrspace(200) %Base, i64 %Size) nounwind ssp {
 ; CHECK-LABEL: define void @test1a
 ; CHECK-SAME: (ptr addrspace(200) [[BASE:%.*]], i64 [[SIZE:%.*]]) addrspace(200) #[[ATTR0]] {
 ; CHECK-NEXT:  bb.nph:
@@ -57,8 +57,8 @@ bb.nph:                                           ; preds = %entry
 
 for.body:                                         ; preds = %bb.nph, %for.body
   %indvar = phi i64 [ 0, %bb.nph ], [ %indvar.next, %for.body.cont ]
-  %I.0.014 = getelementptr i8, i8 addrspace(200)* %Base, i64 %indvar
-  store i8 0, i8 addrspace(200)* %I.0.014, align 1
+  %I.0.014 = getelementptr i8, ptr addrspace(200) %Base, i64 %indvar
+  store i8 0, ptr addrspace(200) %I.0.014, align 1
   %indvar.next = add i64 %indvar, 1
   br label %for.body.cont
 for.body.cont:
@@ -70,7 +70,7 @@ for.end:                                          ; preds = %for.body, %entry
 }
 
 
-define void @test2(i32 addrspace(200)* %Base, i64 %Size) nounwind ssp {
+define void @test2(ptr addrspace(200) %Base, i64 %Size) nounwind ssp {
 ; CHECK-LABEL: define void @test2
 ; CHECK-SAME: (ptr addrspace(200) [[BASE:%.*]], i64 [[SIZE:%.*]]) addrspace(200) #[[ATTR0]] {
 ; CHECK-NEXT:  entry:
@@ -97,8 +97,8 @@ entry:
 
 for.body:                                         ; preds = %entry, %for.body
   %i.011 = phi i64 [ %inc, %for.body ], [ 0, %entry ]
-  %add.ptr.i = getelementptr i32, i32 addrspace(200)* %Base, i64 %i.011
-  store i32 16843009, i32 addrspace(200)* %add.ptr.i, align 4
+  %add.ptr.i = getelementptr i32, ptr addrspace(200) %Base, i64 %i.011
+  store i32 16843009, ptr addrspace(200) %add.ptr.i, align 4
   %inc = add nsw i64 %i.011, 1
   %exitcond = icmp eq i64 %inc, %Size
   br i1 %exitcond, label %for.end, label %for.body
@@ -109,7 +109,7 @@ for.end:                                          ; preds = %for.body, %entry
 
 ; This is a case where there is an extra may-aliased store in the loop, we can't
 ; promote the memset.
-define void @test3(i32 addrspace(200)* %Base, i64 %Size, i8 addrspace(200)* %MayAlias) nounwind ssp {
+define void @test3(ptr addrspace(200) %Base, i64 %Size, ptr addrspace(200) %MayAlias) nounwind ssp {
 ; CHECK-LABEL: define void @test3
 ; CHECK-SAME: (ptr addrspace(200) [[BASE:%.*]], i64 [[SIZE:%.*]], ptr addrspace(200) [[MAYALIAS:%.*]]) addrspace(200) #[[ATTR0]] {
 ; CHECK-NEXT:  entry:
@@ -130,10 +130,10 @@ entry:
 
 for.body:                                         ; preds = %entry, %for.body
   %i.011 = phi i64 [ %inc, %for.body ], [ 0, %entry ]
-  %add.ptr.i = getelementptr i32, i32 addrspace(200)* %Base, i64 %i.011
-  store i32 16843009, i32 addrspace(200)* %add.ptr.i, align 4
+  %add.ptr.i = getelementptr i32, ptr addrspace(200) %Base, i64 %i.011
+  store i32 16843009, ptr addrspace(200) %add.ptr.i, align 4
 
-  store i8 42, i8 addrspace(200)* %MayAlias
+  store i8 42, ptr addrspace(200) %MayAlias
   %inc = add nsw i64 %i.011, 1
   %exitcond = icmp eq i64 %inc, %Size
   br i1 %exitcond, label %for.end, label %for.body
@@ -143,7 +143,7 @@ for.end:                                          ; preds = %entry
 }
 
 ; Make sure the first store in the loop is turned into a memset.
-define void @test4(i8 addrspace(200)* %Base) nounwind ssp {
+define void @test4(ptr addrspace(200) %Base) nounwind ssp {
 ; CHECK-LABEL: define void @test4
 ; CHECK-SAME: (ptr addrspace(200) [[BASE:%.*]]) addrspace(200) #[[ATTR0]] {
 ; CHECK-NEXT:  bb.nph:
@@ -161,16 +161,16 @@ define void @test4(i8 addrspace(200)* %Base) nounwind ssp {
 ; CHECK-NEXT:    ret void
 ;
 bb.nph:                                           ; preds = %entry
-  %Base100 = getelementptr i8, i8 addrspace(200)* %Base, i64 1000
+  %Base100 = getelementptr i8, ptr addrspace(200) %Base, i64 1000
   br label %for.body
 
 for.body:                                         ; preds = %bb.nph, %for.body
   %indvar = phi i64 [ 0, %bb.nph ], [ %indvar.next, %for.body ]
-  %I.0.014 = getelementptr i8, i8 addrspace(200)* %Base, i64 %indvar
-  store i8 0, i8 addrspace(200)* %I.0.014, align 1
+  %I.0.014 = getelementptr i8, ptr addrspace(200) %Base, i64 %indvar
+  store i8 0, ptr addrspace(200) %I.0.014, align 1
 
   ;; Store beyond the range memset, should be safe to promote.
-  store i8 42, i8 addrspace(200)* %Base100
+  store i8 42, ptr addrspace(200) %Base100
 
   %indvar.next = add i64 %indvar, 1
   %exitcond = icmp eq i64 %indvar.next, 100
@@ -181,7 +181,7 @@ for.end:                                          ; preds = %for.body, %entry
 }
 
 ; This can't be promoted: the memset is a store of a loop variant value.
-define void @test5(i8 addrspace(200)* %Base, i64 %Size) nounwind ssp {
+define void @test5(ptr addrspace(200) %Base, i64 %Size) nounwind ssp {
 ; CHECK-LABEL: define void @test5
 ; CHECK-SAME: (ptr addrspace(200) [[BASE:%.*]], i64 [[SIZE:%.*]]) addrspace(200) #[[ATTR0]] {
 ; CHECK-NEXT:  bb.nph:
@@ -202,10 +202,10 @@ bb.nph:                                           ; preds = %entry
 
 for.body:                                         ; preds = %bb.nph, %for.body
   %indvar = phi i64 [ 0, %bb.nph ], [ %indvar.next, %for.body ]
-  %I.0.014 = getelementptr i8, i8 addrspace(200)* %Base, i64 %indvar
+  %I.0.014 = getelementptr i8, ptr addrspace(200) %Base, i64 %indvar
 
   %V = trunc i64 %indvar to i8
-  store i8 %V, i8 addrspace(200)* %I.0.014, align 1
+  store i8 %V, ptr addrspace(200) %I.0.014, align 1
   %indvar.next = add i64 %indvar, 1
   %exitcond = icmp eq i64 %indvar.next, %Size
   br i1 %exitcond, label %for.end, label %for.body
@@ -242,10 +242,10 @@ bb.nph:
 
 for.body:                                         ; preds = %bb.nph, %for.body
   %indvar = phi i64 [ 0, %bb.nph ], [ %indvar.next, %for.body ]
-  %I.0.014 = getelementptr i8, i8 addrspace(200)* %Base, i64 %indvar
-  %DestI = getelementptr i8, i8 addrspace(200)* %Dest, i64 %indvar
-  %V = load i8, i8 addrspace(200)* %I.0.014, align 1
-  store i8 %V, i8 addrspace(200)* %DestI, align 1
+  %I.0.014 = getelementptr i8, ptr addrspace(200) %Base, i64 %indvar
+  %DestI = getelementptr i8, ptr addrspace(200) %Dest, i64 %indvar
+  %V = load i8, ptr addrspace(200) %I.0.014, align 1
+  store i8 %V, ptr addrspace(200) %DestI, align 1
   %indvar.next = add i64 %indvar, 1
   %exitcond = icmp eq i64 %indvar.next, %Size
   br i1 %exitcond, label %for.end, label %for.body
@@ -257,7 +257,7 @@ for.end:                                          ; preds = %for.body, %entry
 
 ; This is a loop that was rotated but where the blocks weren't merged.  This
 ; shouldn't perturb us.
-define void @test7(i8 addrspace(200)* %Base, i64 %Size) nounwind ssp {
+define void @test7(ptr addrspace(200) %Base, i64 %Size) nounwind ssp {
 ; CHECK-LABEL: define void @test7
 ; CHECK-SAME: (ptr addrspace(200) [[BASE:%.*]], i64 [[SIZE:%.*]]) addrspace(200) #[[ATTR0]] {
 ; CHECK-NEXT:  bb.nph:
@@ -281,8 +281,8 @@ for.body:                                         ; preds = %bb.nph, %for.body
   %indvar = phi i64 [ 0, %bb.nph ], [ %indvar.next, %for.body.cont ]
   br label %for.body.cont
 for.body.cont:
-  %I.0.014 = getelementptr i8, i8 addrspace(200)* %Base, i64 %indvar
-  store i8 0, i8 addrspace(200)* %I.0.014, align 1
+  %I.0.014 = getelementptr i8, ptr addrspace(200) %Base, i64 %indvar
+  store i8 0, ptr addrspace(200) %I.0.014, align 1
   %indvar.next = add i64 %indvar, 1
   %exitcond = icmp eq i64 %indvar.next, %Size
   br i1 %exitcond, label %for.end, label %for.body
@@ -292,7 +292,7 @@ for.end:                                          ; preds = %for.body, %entry
 }
 
 ; This is a loop should not be transformed, it only executes one iteration.
-define void @test8(i64* %Ptr, i64 %Size) nounwind ssp {
+define void @test8(ptr %Ptr, i64 %Size) nounwind ssp {
 ; CHECK-LABEL: define void @test8
 ; CHECK-SAME: (ptr [[PTR:%.*]], i64 [[SIZE:%.*]]) addrspace(200) #[[ATTR0]] {
 ; CHECK-NEXT:  bb.nph:
@@ -312,8 +312,8 @@ bb.nph:                                           ; preds = %entry
 
 for.body:                                         ; preds = %bb.nph, %for.body
   %indvar = phi i64 [ 0, %bb.nph ], [ %indvar.next, %for.body ]
-  %PI = getelementptr i64, i64* %Ptr, i64 %indvar
-  store i64 0, i64 *%PI
+  %PI = getelementptr i64, ptr %Ptr, i64 %indvar
+  store i64 0, ptr %PI
   %indvar.next = add i64 %indvar, 1
   %exitcond = icmp eq i64 %indvar.next, 1
   br i1 %exitcond, label %for.end, label %for.body
@@ -322,7 +322,7 @@ for.end:                                          ; preds = %for.body, %entry
   ret void
 }
 
-declare i8 addrspace(200)* @external(i8 addrspace(200)*)
+declare ptr addrspace(200) @external(ptr addrspace(200))
 
 ;; This cannot be transformed into a memcpy, because the read-from location is
 ;; mutated by the loop.
@@ -351,18 +351,18 @@ bb.nph:
   %Base = alloca i8, i32 10000, align 1, addrspace(200)
   %Dest = alloca i8, i32 10000, align 1, addrspace(200)
 
-  %BaseAlias = call i8 addrspace(200)* @external(i8 addrspace(200)* %Base)
+  %BaseAlias = call ptr addrspace(200) @external(ptr addrspace(200) %Base)
   br label %for.body
 
 for.body:                                         ; preds = %bb.nph, %for.body
   %indvar = phi i64 [ 0, %bb.nph ], [ %indvar.next, %for.body ]
-  %I.0.014 = getelementptr i8, i8 addrspace(200)* %Base, i64 %indvar
-  %DestI = getelementptr i8, i8 addrspace(200)* %Dest, i64 %indvar
-  %V = load i8, i8 addrspace(200)* %I.0.014, align 1
-  store i8 %V, i8 addrspace(200)* %DestI, align 1
+  %I.0.014 = getelementptr i8, ptr addrspace(200) %Base, i64 %indvar
+  %DestI = getelementptr i8, ptr addrspace(200) %Dest, i64 %indvar
+  %V = load i8, ptr addrspace(200) %I.0.014, align 1
+  store i8 %V, ptr addrspace(200) %DestI, align 1
 
   ;; This store can clobber the input.
-  store i8 4, i8 addrspace(200)* %BaseAlias
+  store i8 4, ptr addrspace(200) %BaseAlias
 
   %indvar.next = add i64 %indvar, 1
   %exitcond = icmp eq i64 %indvar.next, %Size
@@ -373,7 +373,7 @@ for.end:                                          ; preds = %for.body, %entry
 }
 
 ; Two dimensional nested loop should be promoted to one big memset.
-define void @test10(i8 addrspace(200)* %X) nounwind ssp {
+define void @test10(ptr addrspace(200) %X) nounwind ssp {
 ; CHECK-LABEL: define void @test10
 ; CHECK-SAME: (ptr addrspace(200) [[X:%.*]]) addrspace(200) #[[ATTR0]] {
 ; CHECK-NEXT:  entry:
@@ -414,8 +414,8 @@ for.body5:                                        ; preds = %for.body5, %bb.nph
   %mul = mul nsw i32 %i.04, 100
   %add = add nsw i32 %j.02, %mul
   %idxprom = sext i32 %add to i64
-  %arrayidx = getelementptr inbounds i8, i8 addrspace(200)* %X, i64 %idxprom
-  store i8 0, i8 addrspace(200)* %arrayidx, align 1
+  %arrayidx = getelementptr inbounds i8, ptr addrspace(200) %X, i64 %idxprom
+  store i8 0, ptr addrspace(200) %arrayidx, align 1
   %inc = add nsw i32 %j.02, 1
   %cmp4 = icmp eq i32 %inc, 100
   br i1 %cmp4, label %for.inc10, label %for.body5
@@ -430,7 +430,7 @@ for.end13:                                        ; preds = %for.inc10
 }
 
 ; Store of null should turn into memset of zero.
-define void @test12(i32 addrspace(200)* addrspace(200)* nocapture %P) nounwind ssp {
+define void @test12(ptr addrspace(200) nocapture %P) nounwind ssp {
 ; CHECK-LABEL: define void @test12
 ; CHECK-SAME: (ptr addrspace(200) nocapture [[P:%.*]]) addrspace(200) #[[ATTR0]] {
 ; CHECK-NEXT:  entry:
@@ -450,8 +450,8 @@ entry:
 
 for.body:                                         ; preds = %entry, %for.body
   %indvar = phi i64 [ 0, %entry ], [ %indvar.next, %for.body ]
-  %arrayidx = getelementptr i32 addrspace(200)*, i32 addrspace(200)* addrspace(200)* %P, i64 %indvar
-  store i32 addrspace(200)* null, i32 addrspace(200)* addrspace(200)* %arrayidx, align 4
+  %arrayidx = getelementptr ptr addrspace(200), ptr addrspace(200) %P, i64 %indvar
+  store ptr addrspace(200) null, ptr addrspace(200) %arrayidx, align 4
   %indvar.next = add i64 %indvar, 1
   %exitcond = icmp eq i64 %indvar.next, 10000
   br i1 %exitcond, label %for.end, label %for.body
@@ -493,23 +493,23 @@ for.body:                                         ; preds = %for.inc, %for.body.
   %tmp5 = phi i32 [ %inc, %for.body ], [ 0, %entry ]
   %add = add nsw i32 %tmp5, 4
   %idxprom = sext i32 %add to i64
-  %arrayidx = getelementptr inbounds [7 x i32], [7 x i32] addrspace(200)* @g_50, i32 0, i64 %idxprom
-  %tmp2 = load i32, i32 addrspace(200)* %arrayidx, align 4
+  %arrayidx = getelementptr inbounds [7 x i32], ptr addrspace(200) @g_50, i32 0, i64 %idxprom
+  %tmp2 = load i32, ptr addrspace(200) %arrayidx, align 4
   %add4 = add nsw i32 %tmp5, 5
   %idxprom5 = sext i32 %add4 to i64
-  %arrayidx6 = getelementptr inbounds [7 x i32], [7 x i32] addrspace(200)* @g_50, i32 0, i64 %idxprom5
-  store i32 %tmp2, i32 addrspace(200)* %arrayidx6, align 4
+  %arrayidx6 = getelementptr inbounds [7 x i32], ptr addrspace(200) @g_50, i32 0, i64 %idxprom5
+  store i32 %tmp2, ptr addrspace(200) %arrayidx6, align 4
   %inc = add nsw i32 %tmp5, 1
   %cmp = icmp slt i32 %inc, 2
   br i1 %cmp, label %for.body, label %for.end
 
 for.end:                                          ; preds = %for.inc
-  %tmp8 = load i32, i32 addrspace(200)* getelementptr inbounds ([7 x i32], [7 x i32] addrspace(200)* @g_50, i32 0, i64 6), align 4
+  %tmp8 = load i32, ptr addrspace(200) getelementptr inbounds ([7 x i32], ptr addrspace(200) @g_50, i32 0, i64 6), align 4
   ret i32 %tmp8
 
 }
 
-define void @PR14241(i32 addrspace(200)* %s, i64 %size) {
+define void @PR14241(ptr addrspace(200) %s, i64 %size) {
 ; Ensure that we don't form a memcpy for strided loops. Briefly, when we taught
 ; LoopIdiom about memmove and strided loops, this got miscompiled into a memcpy
 ; instead of a memmove.;
@@ -530,7 +530,6 @@ define void @PR14241(i32 addrspace(200)* %s, i64 %size) {
 ; CHECK-NEXT:    [[PHI_PTR:%.*]] = phi ptr addrspace(200) [ [[S]], [[ENTRY:%.*]] ], [ [[NEXT_PTR:%.*]], [[WHILE_BODY]] ]
 ; CHECK-NEXT:    [[SRC_PTR:%.*]] = getelementptr inbounds i32, ptr addrspace(200) [[PHI_PTR]], i64 1
 ; CHECK-NEXT:    [[VAL:%.*]] = load i32, ptr addrspace(200) [[SRC_PTR]], align 4
-; CHECK-NEXT:    [[DST_PTR:%.*]] = getelementptr inbounds i32, ptr addrspace(200) [[PHI_PTR]], i64 0
 ; CHECK-NEXT:    [[NEXT_PTR]] = getelementptr inbounds i32, ptr addrspace(200) [[PHI_PTR]], i64 1
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp eq ptr addrspace(200) [[NEXT_PTR]], [[END_PTR]]
 ; CHECK-NEXT:    br i1 [[CMP]], label [[EXIT:%.*]], label [[WHILE_BODY]]
@@ -540,16 +539,15 @@ define void @PR14241(i32 addrspace(200)* %s, i64 %size) {
 
 entry:
   %end.idx = add i64 %size, -1
-  %end.ptr = getelementptr inbounds i32, i32 addrspace(200)* %s, i64 %end.idx
+  %end.ptr = getelementptr inbounds i32, ptr addrspace(200) %s, i64 %end.idx
   br label %while.body
 while.body:
-  %phi.ptr = phi i32 addrspace(200)* [ %s, %entry ], [ %next.ptr, %while.body ]
-  %src.ptr = getelementptr inbounds i32, i32 addrspace(200)* %phi.ptr, i64 1
-  %val = load i32, i32 addrspace(200)* %src.ptr, align 4
-  %dst.ptr = getelementptr inbounds i32, i32 addrspace(200)* %phi.ptr, i64 0
-  store i32 %val, i32 addrspace(200)* %dst.ptr, align 4
-  %next.ptr = getelementptr inbounds i32, i32 addrspace(200)* %phi.ptr, i64 1
-  %cmp = icmp eq i32 addrspace(200)* %next.ptr, %end.ptr
+  %phi.ptr = phi ptr addrspace(200) [ %s, %entry ], [ %next.ptr, %while.body ]
+  %src.ptr = getelementptr inbounds i32, ptr addrspace(200) %phi.ptr, i64 1
+  %val = load i32, ptr addrspace(200) %src.ptr, align 4
+  store i32 %val, ptr addrspace(200) %phi.ptr, align 4
+  %next.ptr = getelementptr inbounds i32, ptr addrspace(200) %phi.ptr, i64 1
+  %cmp = icmp eq ptr addrspace(200) %next.ptr, %end.ptr
   br i1 %cmp, label %exit, label %while.body
 
 exit:
@@ -557,7 +555,7 @@ exit:
 }
 
 ; Recognize loops with a negative stride.
-define void @test15(i32 addrspace(200)* nocapture %f) {
+define void @test15(ptr addrspace(200) nocapture %f) {
 ; CHECK-LABEL: define void @test15
 ; CHECK-SAME: (ptr addrspace(200) nocapture [[F:%.*]]) addrspace(200) {
 ; CHECK-NEXT:  entry:
@@ -577,8 +575,8 @@ entry:
 
 for.body:
   %indvars.iv = phi i64 [ 65536, %entry ], [ %indvars.iv.next, %for.body ]
-  %arrayidx = getelementptr inbounds i32, i32 addrspace(200)* %f, i64 %indvars.iv
-  store i32 0, i32 addrspace(200)* %arrayidx, align 4
+  %arrayidx = getelementptr inbounds i32, ptr addrspace(200) %f, i64 %indvars.iv
+  store i32 0, ptr addrspace(200) %arrayidx, align 4
   %indvars.iv.next = add nsw i64 %indvars.iv, -1
   %cmp = icmp sgt i64 %indvars.iv, 0
   br i1 %cmp, label %for.body, label %for.cond.cleanup
@@ -589,7 +587,7 @@ for.cond.cleanup:
 
 ; Loop with a negative stride.  Verify an aliasing write to f[65536] prevents
 ; the creation of a memset.
-define void @test16(i32 addrspace(200)* nocapture %f) {
+define void @test16(ptr addrspace(200) nocapture %f) {
 ; CHECK-LABEL: define void @test16
 ; CHECK-SAME: (ptr addrspace(200) nocapture [[F:%.*]]) addrspace(200) {
 ; CHECK-NEXT:  entry:
@@ -607,14 +605,14 @@ define void @test16(i32 addrspace(200)* nocapture %f) {
 ; CHECK-NEXT:    ret void
 ;
 entry:
-  %arrayidx1 = getelementptr inbounds i32, i32 addrspace(200)* %f, i64 65536
+  %arrayidx1 = getelementptr inbounds i32, ptr addrspace(200) %f, i64 65536
   br label %for.body
 
 for.body:                                         ; preds = %entry, %for.body
   %indvars.iv = phi i64 [ 65536, %entry ], [ %indvars.iv.next, %for.body ]
-  %arrayidx = getelementptr inbounds i32, i32 addrspace(200)* %f, i64 %indvars.iv
-  store i32 0, i32 addrspace(200)* %arrayidx, align 4
-  store i32 1, i32 addrspace(200)* %arrayidx1, align 4
+  %arrayidx = getelementptr inbounds i32, ptr addrspace(200) %f, i64 %indvars.iv
+  store i32 0, ptr addrspace(200) %arrayidx, align 4
+  store i32 1, ptr addrspace(200) %arrayidx1, align 4
   %indvars.iv.next = add nsw i64 %indvars.iv, -1
   %cmp = icmp sgt i64 %indvars.iv, 0
   br i1 %cmp, label %for.body, label %for.cond.cleanup
@@ -624,14 +622,13 @@ for.cond.cleanup:                                 ; preds = %for.body
 }
 
 ; Handle memcpy-able loops with negative stride.
-define noalias i32 addrspace(200)* @test17(i32 addrspace(200)* nocapture readonly %a, i32 %c) {
+define noalias ptr addrspace(200) @test17(ptr addrspace(200) nocapture readonly %a, i32 %c) {
 ; CHECK-LABEL: define noalias ptr addrspace(200) @test17
 ; CHECK-SAME: (ptr addrspace(200) nocapture readonly [[A:%.*]], i32 [[C:%.*]]) addrspace(200) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[CONV:%.*]] = sext i32 [[C]] to i64
 ; CHECK-NEXT:    [[MUL:%.*]] = shl nsw i64 [[CONV]], 2
 ; CHECK-NEXT:    [[CALL:%.*]] = tail call noalias ptr addrspace(200) @malloc(i64 [[MUL]])
-; CHECK-NEXT:    [[TMP0:%.*]] = bitcast ptr addrspace(200) [[CALL]] to ptr addrspace(200)
 ; CHECK-NEXT:    [[TOBOOL_9:%.*]] = icmp eq i32 [[C]], 0
 ; CHECK-NEXT:    br i1 [[TOBOOL_9]], label [[WHILE_END:%.*]], label [[WHILE_BODY_PREHEADER:%.*]]
 ; CHECK:       while.body.preheader:
@@ -653,19 +650,18 @@ define noalias i32 addrspace(200)* @test17(i32 addrspace(200)* nocapture readonl
 ; CHECK-NEXT:    [[IDXPROM:%.*]] = sext i32 [[DEC10]] to i64
 ; CHECK-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i32, ptr addrspace(200) [[A]], i64 [[IDXPROM]]
 ; CHECK-NEXT:    [[TMP9:%.*]] = load i32, ptr addrspace(200) [[ARRAYIDX]], align 4
-; CHECK-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i32, ptr addrspace(200) [[TMP0]], i64 [[IDXPROM]]
+; CHECK-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i32, ptr addrspace(200) [[CALL]], i64 [[IDXPROM]]
 ; CHECK-NEXT:    [[TOBOOL:%.*]] = icmp eq i32 [[DEC10]], 0
 ; CHECK-NEXT:    br i1 [[TOBOOL]], label [[WHILE_END_LOOPEXIT:%.*]], label [[WHILE_BODY]]
 ; CHECK:       while.end.loopexit:
 ; CHECK-NEXT:    br label [[WHILE_END]]
 ; CHECK:       while.end:
-; CHECK-NEXT:    ret ptr addrspace(200) [[TMP0]]
+; CHECK-NEXT:    ret ptr addrspace(200) [[CALL]]
 ;
 entry:
   %conv = sext i32 %c to i64
   %mul = shl nsw i64 %conv, 2
-  %call = tail call noalias i8 addrspace(200)* @malloc(i64 %mul)
-  %0 = bitcast i8 addrspace(200)* %call to i32 addrspace(200)*
+  %call = tail call noalias ptr addrspace(200) @malloc(i64 %mul)
   %tobool.9 = icmp eq i32 %c, 0
   br i1 %tobool.9, label %while.end, label %while.body.preheader
 
@@ -676,10 +672,10 @@ while.body:                                       ; preds = %while.body.preheade
   %dec10.in = phi i32 [ %dec10, %while.body ], [ %c, %while.body.preheader ]
   %dec10 = add nsw i32 %dec10.in, -1
   %idxprom = sext i32 %dec10 to i64
-  %arrayidx = getelementptr inbounds i32, i32 addrspace(200)* %a, i64 %idxprom
-  %1 = load i32, i32 addrspace(200)* %arrayidx, align 4
-  %arrayidx2 = getelementptr inbounds i32, i32 addrspace(200)* %0, i64 %idxprom
-  store i32 %1, i32 addrspace(200)* %arrayidx2, align 4
+  %arrayidx = getelementptr inbounds i32, ptr addrspace(200) %a, i64 %idxprom
+  %0 = load i32, ptr addrspace(200) %arrayidx, align 4
+  %arrayidx2 = getelementptr inbounds i32, ptr addrspace(200) %call, i64 %idxprom
+  store i32 %0, ptr addrspace(200) %arrayidx2, align 4
   %tobool = icmp eq i32 %dec10, 0
   br i1 %tobool, label %while.end.loopexit, label %while.body
 
@@ -687,10 +683,10 @@ while.end.loopexit:                               ; preds = %while.body
   br label %while.end
 
 while.end:                                        ; preds = %while.end.loopexit, %entry
-  ret i32 addrspace(200)* %0
+  ret ptr addrspace(200) %call
 }
 
-declare noalias i8 addrspace(200)* @malloc(i64)
+declare noalias ptr addrspace(200) @malloc(i64)
 
 ; Handle memcpy-able loops with negative stride.
 ; void test18(unsigned *__restrict__ a, unsigned *__restrict__ b) {
@@ -698,7 +694,7 @@ declare noalias i8 addrspace(200)* @malloc(i64)
 ;     a[i] = b[i];
 ;   }
 ; }
-define void @test18(i32 addrspace(200)* noalias nocapture %a, i32 addrspace(200)* noalias nocapture readonly %b) #0 {
+define void @test18(ptr addrspace(200) noalias nocapture %a, ptr addrspace(200) noalias nocapture readonly %b) #0 {
 ; CHECK-LABEL: define void @test18
 ; CHECK-SAME: (ptr addrspace(200) noalias nocapture [[A:%.*]], ptr addrspace(200) noalias nocapture readonly [[B:%.*]]) addrspace(200) {
 ; CHECK-NEXT:  entry:
@@ -720,10 +716,10 @@ entry:
 
 for.body:                                         ; preds = %entry, %for.body
   %indvars.iv = phi i64 [ 2047, %entry ], [ %indvars.iv.next, %for.body ]
-  %arrayidx = getelementptr inbounds i32, i32 addrspace(200)* %b, i64 %indvars.iv
-  %0 = load i32, i32 addrspace(200)* %arrayidx, align 4
-  %arrayidx2 = getelementptr inbounds i32, i32 addrspace(200)* %a, i64 %indvars.iv
-  store i32 %0, i32 addrspace(200)* %arrayidx2, align 4
+  %arrayidx = getelementptr inbounds i32, ptr addrspace(200) %b, i64 %indvars.iv
+  %0 = load i32, ptr addrspace(200) %arrayidx, align 4
+  %arrayidx2 = getelementptr inbounds i32, ptr addrspace(200) %a, i64 %indvars.iv
+  store i32 %0, ptr addrspace(200) %arrayidx2, align 4
   %indvars.iv.next = add nsw i64 %indvars.iv, -1
   %cmp = icmp sgt i64 %indvars.iv, 0
   br i1 %cmp, label %for.body, label %for.cond.cleanup
@@ -733,7 +729,7 @@ for.cond.cleanup:                                 ; preds = %for.body
 }
 
 ; Two dimensional nested loop with negative stride should be promoted to one big memset.
-define void @test19(i8 addrspace(200)* nocapture %X) {
+define void @test19(ptr addrspace(200) nocapture %X) {
 ; CHECK-LABEL: define void @test19
 ; CHECK-SAME: (ptr addrspace(200) nocapture [[X:%.*]]) addrspace(200) {
 ; CHECK-NEXT:  entry:
@@ -775,8 +771,8 @@ for.body3:                                        ; preds = %for.cond1.preheader
   %j.05 = phi i32 [ 99, %for.cond1.preheader ], [ %dec, %for.body3 ]
   %add = add nsw i32 %j.05, %mul
   %idxprom = sext i32 %add to i64
-  %arrayidx = getelementptr inbounds i8, i8 addrspace(200)* %X, i64 %idxprom
-  store i8 0, i8 addrspace(200)* %arrayidx, align 1
+  %arrayidx = getelementptr inbounds i8, ptr addrspace(200) %X, i64 %idxprom
+  store i8 0, ptr addrspace(200) %arrayidx, align 1
   %dec = add nsw i32 %j.05, -1
   %cmp2 = icmp sgt i32 %j.05, 0
   br i1 %cmp2, label %for.body3, label %for.inc4

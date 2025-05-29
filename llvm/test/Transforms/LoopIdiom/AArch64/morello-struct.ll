@@ -13,7 +13,7 @@ target triple = "aarch64"
 ;    f[i].b = 0;
 ;  }
 ;}
-define void @bar1(%struct.foo addrspace(200)* %f, i32 %n) nounwind ssp {
+define void @bar1(ptr addrspace(200) %f, i32 %n) nounwind ssp {
 ; CHECK-LABEL: define void @bar1
 ; CHECK-SAME: (ptr addrspace(200) [[F:%.*]], i32 [[N:%.*]]) addrspace(200) #[[ATTR0:[0-9]+]] {
 ; CHECK-NEXT:  entry:
@@ -46,10 +46,10 @@ for.body.preheader:                               ; preds = %entry
 
 for.body:                                         ; preds = %for.body.preheader, %for.body
   %indvars.iv = phi i64 [ 0, %for.body.preheader ], [ %indvars.iv.next, %for.body ]
-  %a = getelementptr inbounds %struct.foo, %struct.foo addrspace(200)* %f, i64 %indvars.iv, i32 0
-  store i32 0, i32 addrspace(200)* %a, align 4
-  %b = getelementptr inbounds %struct.foo, %struct.foo addrspace(200)* %f, i64 %indvars.iv, i32 1
-  store i32 0, i32 addrspace(200)* %b, align 4
+  %a = getelementptr inbounds %struct.foo, ptr addrspace(200) %f, i64 %indvars.iv, i32 0
+  store i32 0, ptr addrspace(200) %a, align 4
+  %b = getelementptr inbounds %struct.foo, ptr addrspace(200) %f, i64 %indvars.iv, i32 1
+  store i32 0, ptr addrspace(200) %b, align 4
   %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
   %lftr.wideiv = trunc i64 %indvars.iv.next to i32
   %exitcond = icmp ne i32 %lftr.wideiv, %n
@@ -68,7 +68,7 @@ for.end:                                          ; preds = %for.end.loopexit, %
 ;    f[i].a = 0;
 ;  }
 ;}
-define void @bar2(%struct.foo addrspace(200)* %f, i32 %n) nounwind ssp {
+define void @bar2(ptr addrspace(200) %f, i32 %n) nounwind ssp {
 ; CHECK-LABEL: define void @bar2
 ; CHECK-SAME: (ptr addrspace(200) [[F:%.*]], i32 [[N:%.*]]) addrspace(200) #[[ATTR0]] {
 ; CHECK-NEXT:  entry:
@@ -101,10 +101,10 @@ for.body.preheader:                               ; preds = %entry
 
 for.body:                                         ; preds = %for.body.preheader, %for.body
   %indvars.iv = phi i64 [ 0, %for.body.preheader ], [ %indvars.iv.next, %for.body ]
-  %b = getelementptr inbounds %struct.foo, %struct.foo addrspace(200)* %f, i64 %indvars.iv, i32 1
-  store i32 0, i32 addrspace(200)* %b, align 4
-  %a = getelementptr inbounds %struct.foo, %struct.foo addrspace(200)* %f, i64 %indvars.iv, i32 0
-  store i32 0, i32 addrspace(200)* %a, align 4
+  %b = getelementptr inbounds %struct.foo, ptr addrspace(200) %f, i64 %indvars.iv, i32 1
+  store i32 0, ptr addrspace(200) %b, align 4
+  %a = getelementptr inbounds %struct.foo, ptr addrspace(200) %f, i64 %indvars.iv, i32 0
+  store i32 0, ptr addrspace(200) %a, align 4
   %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
   %lftr.wideiv = trunc i64 %indvars.iv.next to i32
   %exitcond = icmp ne i32 %lftr.wideiv, %n
@@ -123,7 +123,7 @@ for.end:                                          ; preds = %for.end.loopexit, %
 ;    f[i].b = 0;
 ;  }
 ;}
-define void @bar3(%struct.foo addrspace(200)* nocapture %f, i32 %n) nounwind ssp {
+define void @bar3(ptr addrspace(200) nocapture %f, i32 %n) nounwind ssp {
 ; CHECK-LABEL: define void @bar3
 ; CHECK-SAME: (ptr addrspace(200) nocapture [[F:%.*]], i32 [[N:%.*]]) addrspace(200) #[[ATTR0]] {
 ; CHECK-NEXT:  entry:
@@ -163,10 +163,10 @@ for.body.preheader:                               ; preds = %entry
 
 for.body:                                         ; preds = %for.body.preheader, %for.body
   %indvars.iv = phi i64 [ %0, %for.body.preheader ], [ %indvars.iv.next, %for.body ]
-  %a = getelementptr inbounds %struct.foo, %struct.foo addrspace(200)* %f, i64 %indvars.iv, i32 0
-  store i32 0, i32 addrspace(200)* %a, align 4
-  %b = getelementptr inbounds %struct.foo, %struct.foo addrspace(200)* %f, i64 %indvars.iv, i32 1
-  store i32 0, i32 addrspace(200)* %b, align 4
+  %a = getelementptr inbounds %struct.foo, ptr addrspace(200) %f, i64 %indvars.iv, i32 0
+  store i32 0, ptr addrspace(200) %a, align 4
+  %b = getelementptr inbounds %struct.foo, ptr addrspace(200) %f, i64 %indvars.iv, i32 1
+  store i32 0, ptr addrspace(200) %b, align 4
   %1 = trunc i64 %indvars.iv to i32
   %dec = add i32 %1, -1
   %cmp = icmp eq i32 %dec, 0
@@ -186,7 +186,7 @@ for.end:                                          ; preds = %for.end.loopexit, %
 ;    f[i].b = 1;
 ;  }
 ;}
-define void @bar4(%struct.foo addrspace(200)* nocapture %f, i32 %n) nounwind ssp {
+define void @bar4(ptr addrspace(200) nocapture %f, i32 %n) nounwind ssp {
 ; CHECK-LABEL: define void @bar4
 ; CHECK-SAME: (ptr addrspace(200) nocapture [[F:%.*]], i32 [[N:%.*]]) addrspace(200) #[[ATTR0]] {
 ; CHECK-NEXT:  entry:
@@ -218,10 +218,10 @@ for.body.preheader:                               ; preds = %entry
 
 for.body:                                         ; preds = %for.body.preheader, %for.body
   %indvars.iv = phi i64 [ 0, %for.body.preheader ], [ %indvars.iv.next, %for.body ]
-  %a = getelementptr inbounds %struct.foo, %struct.foo addrspace(200)* %f, i64 %indvars.iv, i32 0
-  store i32 0, i32 addrspace(200)* %a, align 4
-  %b = getelementptr inbounds %struct.foo, %struct.foo addrspace(200)* %f, i64 %indvars.iv, i32 1
-  store i32 1, i32 addrspace(200)* %b, align 4
+  %a = getelementptr inbounds %struct.foo, ptr addrspace(200) %f, i64 %indvars.iv, i32 0
+  store i32 0, ptr addrspace(200) %a, align 4
+  %b = getelementptr inbounds %struct.foo, ptr addrspace(200) %f, i64 %indvars.iv, i32 1
+  store i32 1, ptr addrspace(200) %b, align 4
   %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
   %lftr.wideiv = trunc i64 %indvars.iv.next to i32
   %exitcond = icmp ne i32 %lftr.wideiv, %n
@@ -240,7 +240,7 @@ for.end:                                          ; preds = %for.end.loopexit, %
 ;    f[i].b = 0;
 ;  }
 ;}
-define void @bar5(%struct.foo1* nocapture %f, i32 %n) nounwind ssp {
+define void @bar5(ptr nocapture %f, i32 %n) nounwind ssp {
 ; CHECK-LABEL: define void @bar5
 ; CHECK-SAME: (ptr nocapture [[F:%.*]], i32 [[N:%.*]]) addrspace(200) #[[ATTR0]] {
 ; CHECK-NEXT:  entry:
@@ -272,10 +272,10 @@ for.body.preheader:                               ; preds = %entry
 
 for.body:                                         ; preds = %for.body.preheader, %for.body
   %indvars.iv = phi i64 [ 0, %for.body.preheader ], [ %indvars.iv.next, %for.body ]
-  %a = getelementptr inbounds %struct.foo1, %struct.foo1* %f, i64 %indvars.iv, i32 0
-  store i32 0, i32* %a, align 4
-  %b = getelementptr inbounds %struct.foo1, %struct.foo1* %f, i64 %indvars.iv, i32 1
-  store i32 0, i32* %b, align 4
+  %a = getelementptr inbounds %struct.foo1, ptr %f, i64 %indvars.iv, i32 0
+  store i32 0, ptr %a, align 4
+  %b = getelementptr inbounds %struct.foo1, ptr %f, i64 %indvars.iv, i32 1
+  store i32 0, ptr %b, align 4
   %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
   %lftr.wideiv = trunc i64 %indvars.iv.next to i32
   %exitcond = icmp ne i32 %lftr.wideiv, %n
@@ -295,7 +295,7 @@ for.end:                                          ; preds = %for.end.loopexit, %
 ;    f[i].c = 0;
 ;  }
 ;}
-define void @bar6(%struct.foo2* nocapture %f, i32 %n) nounwind ssp {
+define void @bar6(ptr nocapture %f, i32 %n) nounwind ssp {
 ; CHECK-LABEL: define void @bar6
 ; CHECK-SAME: (ptr nocapture [[F:%.*]], i32 [[N:%.*]]) addrspace(200) #[[ATTR0]] {
 ; CHECK-NEXT:  entry:
@@ -329,12 +329,12 @@ for.body.preheader:                               ; preds = %entry
 
 for.body:                                         ; preds = %for.body.preheader, %for.body
   %indvars.iv = phi i64 [ 0, %for.body.preheader ], [ %indvars.iv.next, %for.body ]
-  %a = getelementptr inbounds %struct.foo2, %struct.foo2* %f, i64 %indvars.iv, i32 0
-  store i32 0, i32* %a, align 4
-  %b = getelementptr inbounds %struct.foo2, %struct.foo2* %f, i64 %indvars.iv, i32 1
-  store i16 0, i16* %b, align 4
-  %c = getelementptr inbounds %struct.foo2, %struct.foo2* %f, i64 %indvars.iv, i32 2
-  store i16 0, i16* %c, align 2
+  %a = getelementptr inbounds %struct.foo2, ptr %f, i64 %indvars.iv, i32 0
+  store i32 0, ptr %a, align 4
+  %b = getelementptr inbounds %struct.foo2, ptr %f, i64 %indvars.iv, i32 1
+  store i16 0, ptr %b, align 4
+  %c = getelementptr inbounds %struct.foo2, ptr %f, i64 %indvars.iv, i32 2
+  store i16 0, ptr %c, align 2
   %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
   %lftr.wideiv = trunc i64 %indvars.iv.next to i32
   %exitcond = icmp ne i32 %lftr.wideiv, %n
