@@ -1340,13 +1340,13 @@ INSTANTIATE_TEST_SUITE_P(
                              AArch64::AEK_SSBS,
                          "8.2-A"),
         ARMCPUTestParams("rainier", "armv8.2-a", "crypto-neon-fp-armv8",
-                 AArch64::AEK_CRC | AArch64::AEK_AES |
-                     AArch64::AEK_SHA2 | AArch64::AEK_DOTPROD |
-                     AArch64::AEK_FP | AArch64::AEK_FP16 |
-                     AArch64::AEK_LSE | AArch64::AEK_PROFILE |
-                     AArch64::AEK_RAS | AArch64::AEK_RCPC |
-                     AArch64::AEK_RDM | AArch64::AEK_SIMD |
-                     AArch64::AEK_SSBS | AArch64::AEK_MORELLO,
+                         AArch64::AEK_CRC | AArch64::AEK_AES |
+                             AArch64::AEK_SHA2 | AArch64::AEK_DOTPROD |
+                             AArch64::AEK_FP | AArch64::AEK_FP16 |
+                             AArch64::AEK_LSE | AArch64::AEK_PROFILE |
+                             AArch64::AEK_RAS | AArch64::AEK_RCPC |
+                             AArch64::AEK_RDM | AArch64::AEK_SIMD |
+                             AArch64::AEK_SSBS | AArch64::AEK_MORELLO,
                  "8.2-A"),
         ARMCPUTestParams(
             "neoverse-n2", "armv8.5-a", "crypto-neon-fp-armv8",
@@ -1757,6 +1757,11 @@ TEST(TargetParserTest, AArch64ArchPartialOrder) {
   EXPECT_TRUE(AArch64::ARMV9_2A.implies(AArch64::ARMV8_7A));
   EXPECT_TRUE(AArch64::ARMV9_3A.implies(AArch64::ARMV8_8A));
   EXPECT_TRUE(AArch64::ARMV9_4A.implies(AArch64::ARMV8_9A));
+
+  // Morello implies 8.2, but nothing else implies Morello:
+  EXPECT_TRUE(AArch64::Morello.implies(AArch64::ARMV8_2A));
+  EXPECT_FALSE(AArch64::Morello.implies(AArch64::ARMV8_3A));
+  EXPECT_FALSE(AArch64::ARMV8_3A.implies(AArch64::Morello));
 }
 
 TEST(TargetParserTest, AArch64ArchExtFeature) {

@@ -286,13 +286,20 @@ struct ArchInfo {
   bool operator!=(const ArchInfo &Other) const {
     return this->Name != Other.Name;
   }
+  // Check version number first to avoid string comparison
+  bool isMorello() const {
+    return Version.getMajor() == 8 && Version.getMinor() == 2 &&
+           Name == "morello";
+  }
 
   // Defines the following partial order, indicating when an architecture is
   // a superset of another:
   //
   //     v9.4a > v9.3a > v9.3a > v9.3a > v9a;
   //       v       v       v       v       v
-  //     v8.9a > v8.8a > v8.7a > v8.6a > v8.5a > v8.4a > ... > v8a;
+  //     v8.9a > v8.8a > v8.7a > v8.6a > v8.5a > v8.4a > ... > v8.1a > v8a;
+  //                                                             ^
+  //                                                 morello > v8.2a
   //
   // v8r has no relation to anything. This is used to determine which
   // features to enable for a given architecture. See
@@ -301,9 +308,11 @@ struct ArchInfo {
     if (this->Profile != Other.Profile)
       return false; // ARMV8R
     if (this->Version.getMajor() == Other.Version.getMajor()) {
-      return this->Version > Other.Version;
+      return (this->Version > Other.Version && !Other.isMorello()) ||
+             (Version == Other.Version && isMorello() && !Other.isMorello());
     }
-    if (this->Version.getMajor() == 9 && Other.Version.getMajor() == 8) {
+    if (this->Version.getMajor() == 9 && Other.Version.getMajor() == 8 &&
+        !Other.isMorello()) {
       assert(this->Version.getMinor() && Other.Version.getMinor() &&
              "AArch64::ArchInfo should have a minor version.");
       return this->Version.getMinor().value_or(0) + 5 >=
@@ -323,7 +332,7 @@ struct ArchInfo {
 inline constexpr ArchInfo ARMV8A    = { VersionTuple{8, 0}, AProfile, "armv8-a", "+v8a", (AArch64::AEK_FP | AArch64::AEK_SIMD), };
 inline constexpr ArchInfo ARMV8_1A  = { VersionTuple{8, 1}, AProfile, "armv8.1-a", "+v8.1a", (ARMV8A.DefaultExts | AArch64::AEK_CRC | AArch64::AEK_LSE | AArch64::AEK_RDM)};
 inline constexpr ArchInfo ARMV8_2A  = { VersionTuple{8, 2}, AProfile, "armv8.2-a", "+v8.2a", (ARMV8_1A.DefaultExts | AArch64::AEK_RAS)};
-inline constexpr ArchInfo Morello   = { VersionTuple{8, 2}, AProfile, "morello", "+morello", (ARMV8_2A.DefaultExts | AArch64::AEK_CRYPTO | AArch64::AEK_FP | AArch64::AEK_SIMD | AArch64::AEK_DOTPROD | AArch64::AEK_FP16 | AArch64::AEK_PROFILE | AArch64::AEK_RCPC | AArch64::AEK_SSBS | AArch64::AEK_MORELLO)};
+inline constexpr ArchInfo Morello   = { VersionTuple{8, 2}, AProfile, "morello", "+morello", (ARMV8_2A.DefaultExts | AArch64::AEK_AES | AArch64::AEK_SHA2 | AArch64::AEK_DOTPROD | AArch64::AEK_FP16 | AArch64::AEK_PROFILE | AArch64::AEK_RCPC | AArch64::AEK_SSBS | AArch64::AEK_MORELLO)};
 inline constexpr ArchInfo ARMV8_3A  = { VersionTuple{8, 3}, AProfile, "armv8.3-a", "+v8.3a", (ARMV8_2A.DefaultExts | AArch64::AEK_RCPC)};
 inline constexpr ArchInfo ARMV8_4A  = { VersionTuple{8, 4}, AProfile, "armv8.4-a", "+v8.4a", (ARMV8_3A.DefaultExts | AArch64::AEK_DOTPROD)};
 inline constexpr ArchInfo ARMV8_5A  = { VersionTuple{8, 5}, AProfile, "armv8.5-a", "+v8.5a", (ARMV8_4A.DefaultExts)};
@@ -446,9 +455,9 @@ inline constexpr CpuInfo CpuInfos[] = {
       AArch64::AEK_FP16 | AArch64::AEK_PROFILE | AArch64::AEK_RCPC |
       AArch64::AEK_SSBS)},
     {"rainier", ARMV8_2A,
-     (AArch64::AEK_DOTPROD | AArch64::AEK_FP16 | AArch64::AEK_PROFILE |
-      AArch64::AEK_RAS | AArch64::AEK_RCPC | AArch64::AEK_SSBS |
-      AArch64::AEK_MORELLO)},
+     (AArch64::AEK_AES | AArch64::AEK_SHA2 | AArch64::AEK_DOTPROD |
+      AArch64::AEK_FP16 | AArch64::AEK_PROFILE | AArch64::AEK_RCPC |
+      AArch64::AEK_SSBS | AArch64::AEK_MORELLO)},
     {"neoverse-n2", ARMV8_5A,
      (AArch64::AEK_AES | AArch64::AEK_SHA2 | AArch64::AEK_SHA3 |
       AArch64::AEK_SM4 | AArch64::AEK_BF16 | AArch64::AEK_DOTPROD |
@@ -562,7 +571,7 @@ struct CpuAlias {
 
 inline constexpr CpuAlias CpuAliases[] = {{"grace", "neoverse-v2"}};
 
-bool getExtensionFeatures(uint64_t Extensions,
+bool  getExtensionFeatures(uint64_t Extensions,
                           std::vector<StringRef> &Features);
 
 StringRef getArchExtFeature(StringRef ArchExt);

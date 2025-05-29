@@ -94,6 +94,14 @@ void nosimd() {}
 __attribute__((target("no-v9.3a")))
 void minusarch() {}
 
+// CHECK-LABEL: @arch_morello() #[[#MORELLO_ARCH_NUM:]]
+__attribute__((target("arch=morello")))
+void arch_morello() {}
+
+// CHECK-LABEL: @cpu_rainier() #[[#RAINIER_CPU_NUM:]]
+__attribute__((target("cpu=rainier")))
+void cpu_rainier() {}
+
 // CHECK: attributes #0 = { {{.*}} "target-features"="+crc,+fp-armv8,+lse,+neon,+ras,+rdm,+v8.1a,+v8.2a,+v8a" }
 // CHECK: attributes #1 = { {{.*}} "target-features"="+crc,+fp-armv8,+fullfp16,+lse,+neon,+ras,+rdm,+sve,+v8.1a,+v8.2a,+v8a" }
 // CHECK: attributes #2 = { {{.*}} "target-features"="+crc,+fp-armv8,+fullfp16,+lse,+neon,+ras,+rdm,+sve,+sve2,+v8.1a,+v8.2a,+v8a" }
@@ -113,3 +121,5 @@ void minusarch() {}
 // CHECK: attributes #16 = { {{.*}} "branch-target-enforcement"="true" {{.*}} "target-features"="+aes,+bf16,+crc,+dotprod,+fp-armv8,+fullfp16,+i8mm,+lse,+neon,+ras,+rcpc,+rdm,+sha2,+spe,+ssbs,+sve,+sve2,+v8.1a,+v8.2a,+v8.3a,+v8.4a,+v8.5a,+v8.6a,+v8a" "tune-cpu"="cortex-a710" }
 // CHECK: attributes #17 = { {{.*}} "target-features"="-neon" }
 // CHECK: attributes #18 = { {{.*}} "target-features"="-v9.3a" }
+// CHECK: attributes #[[#MORELLO_ARCH_NUM]] = { {{.*}} "target-features"="+aes,+crc,+dotprod,+fp-armv8,+fullfp16,+lse,+morello,+neon,+ras,+rcpc,+rdm,+sha2,+spe,+ssbs,+v8.1a,+v8.2a,+v8a" }
+// CHECK: attributes #[[#RAINIER_CPU_NUM]] = { {{.*}} "target-features"="+aes,+crc,+dotprod,+fp-armv8,+fullfp16,+lse,+morello,+neon,+ras,+rcpc,+rdm,+sha2,+spe,+ssbs,+v8.1a,+v8.2a,+v8a" }

@@ -224,6 +224,11 @@ getAArch64ArchFeaturesFromMarch(const Driver &D, StringRef March,
   if (!ArchInfo)
     return false;
   Features.push_back(ArchInfo->ArchFeature);
+  if (ArchInfo->isMorello()) {
+    // Until we merge 13e977d1738261487d8157918f14497517d75821, the cc1as code
+    // path will not infer the v8.2a feature for -march=morellos
+    Features.push_back(llvm::AArch64::ARMV8_2A.ArchFeature);
+  }
 
   // Enable SVE2 by default on Armv9-A.
   // It can still be disabled if +nosve2 is present.
@@ -562,6 +567,7 @@ void aarch64::getAArch64TargetFeatures(const Driver &D,
     if (*I == "+v8a")   V8Version = 0;
     else if (*I == "+v8.1a") V8Version = 1;
     else if (*I == "+v8.2a") V8Version = 2;
+    else if (*I == "+morello") V8Version = 2;
     else if (*I == "+v8.3a") V8Version = 3;
     else if (*I == "+v8.4a") V8Version = 4;
     else if (*I == "+v8.5a") V8Version = 5;
