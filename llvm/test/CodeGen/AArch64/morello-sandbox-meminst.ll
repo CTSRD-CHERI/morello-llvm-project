@@ -10,42 +10,42 @@ target triple = "aarch64-none--elf"
 @blob = common addrspace(200) global %struct.x zeroinitializer, align 4
 @blob2 = common addrspace(200) global %struct.x zeroinitializer, align 4
 
-declare void @llvm.memset.p200i8.i64(i8 addrspace(200)* nocapture, i8, i64, i1) addrspace(200)
-declare void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* nocapture, i8 addrspace(200)* nocapture readonly, i64, i1) addrspace(200)
-declare void @llvm.memmove.p200i8.p200i8.i64(i8 addrspace(200)* nocapture, i8 addrspace(200)* nocapture readonly, i64, i1) addrspace(200)
+declare void @llvm.memset.p200.i64(ptr addrspace(200) nocapture, i8, i64, i1) addrspace(200)
+declare void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) nocapture, ptr addrspace(200) nocapture readonly, i64, i1) addrspace(200)
+declare void @llvm.memmove.p200.p200.i64(ptr addrspace(200) nocapture, ptr addrspace(200) nocapture readonly, i64, i1) addrspace(200)
 
 ; ALL-LABEL: checkMemInst
 define void @checkMemInst() {
 entry:
-  call void @llvm.memset.p200i8.i64(i8 addrspace(200)* bitcast (%struct.x addrspace(200)* @blob to i8 addrspace(200)*), i8 0, i64 40, i1 false)
-  call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* bitcast (%struct.x addrspace(200)* @blob2 to i8 addrspace(200)*), i8 addrspace(200)* bitcast (%struct.x addrspace(200)* @blob to i8 addrspace(200)*), i64 40, i1 false) no_preserve_cheri_tags
+  call void @llvm.memset.p200.i64(ptr addrspace(200) @blob, i8 0, i64 40, i1 false)
+  call void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) @blob2, ptr addrspace(200) @blob, i64 40, i1 false) no_preserve_cheri_tags
 
-  tail call void @llvm.memmove.p200i8.p200i8.i64(i8 addrspace(200)* bitcast (%struct.x addrspace(200)* @blob2 to i8 addrspace(200)*), i8 addrspace(200)* bitcast (%struct.x addrspace(200)* @blob to i8 addrspace(200)*), i64 40, i1 false) no_preserve_cheri_tags
+  tail call void @llvm.memmove.p200.p200.i64(ptr addrspace(200) @blob2, ptr addrspace(200) @blob, i64 40, i1 false) no_preserve_cheri_tags
   ret void
 ; ALL-NOT: bl	memset
 ; ALL-NOT: bl	memcpy
 ; ALL-NOT: bl	memmove
 }
 
-declare i8 addrspace(200)* @memset(i8 addrspace(200)*, i32, i64) addrspace(200)
-declare i8 addrspace(200)* @memcpy(i8 addrspace(200)*, i8 addrspace(200)*, i64) addrspace(200)
-declare i8 addrspace(200)* @mempcpy(i8 addrspace(200)*, i8 addrspace(200)*, i64) addrspace(200)
-declare i8 addrspace(200)* @memmove(i8 addrspace(200)*, i8 addrspace(200)*, i64) addrspace(200)
+declare ptr addrspace(200) @memset(ptr addrspace(200), i32, i64) addrspace(200)
+declare ptr addrspace(200) @memcpy(ptr addrspace(200), ptr addrspace(200), i64) addrspace(200)
+declare ptr addrspace(200) @mempcpy(ptr addrspace(200), ptr addrspace(200), i64) addrspace(200)
+declare ptr addrspace(200) @memmove(ptr addrspace(200), ptr addrspace(200), i64) addrspace(200)
 
 ; ALL-LABEL: testMemset
-define i8 addrspace(200)* @testMemset(i8 addrspace(200)* %p, i64 %n) {
+define ptr addrspace(200) @testMemset(ptr addrspace(200) %p, i64 %n) {
 entry:
-  %call = tail call i8 addrspace(200)* @memset(i8 addrspace(200)* %p, i32 0, i64 %n)
-  ret i8 addrspace(200)* %call
+  %call = tail call ptr addrspace(200) @memset(ptr addrspace(200) %p, i32 0, i64 %n)
+  ret ptr addrspace(200) %call
 ; CFUN: b	memset_c
 ; NOCFUN-NOT:   memset_c
 ; NOCFUN: b	memset
 }
 
 ; ALL-LABEL: testMemset2
-define void @testMemset2(i8 addrspace(200)* %p, i64 %n) {
+define void @testMemset2(ptr addrspace(200) %p, i64 %n) {
 entry:
-  %call = tail call i8 addrspace(200)* @memset(i8 addrspace(200)* %p, i32 0, i64 %n)
+  %call = tail call ptr addrspace(200) @memset(ptr addrspace(200) %p, i32 0, i64 %n)
   ret void
 ; CFUN: b	memset_c
 ; NOCFUN-NOT:   memset_c
@@ -53,19 +53,19 @@ entry:
 }
 
 ; ALL-LABEL: testMemcpy
-define i8 addrspace(200)* @testMemcpy(i8 addrspace(200)* %d, i8 addrspace(200)* %s, i64 %n) {
+define ptr addrspace(200) @testMemcpy(ptr addrspace(200) %d, ptr addrspace(200) %s, i64 %n) {
 entry:
-  %call = tail call i8 addrspace(200)* @memcpy(i8 addrspace(200)* %d, i8 addrspace(200)* %s, i64 %n)
-  ret i8 addrspace(200)* %call
+  %call = tail call ptr addrspace(200) @memcpy(ptr addrspace(200) %d, ptr addrspace(200) %s, i64 %n)
+  ret ptr addrspace(200) %call
 ; CFUN: b	memcpy_c
 ; NOCFUN-NOT:   memcpy_c
 ; NOCFUN: b	memcpy
 }
 
 ; ALL-LABEL: testMemcpy2
-define void @testMemcpy2(i8 addrspace(200)* %d, i8 addrspace(200)* %s, i64 %n) {
+define void @testMemcpy2(ptr addrspace(200) %d, ptr addrspace(200) %s, i64 %n) {
 entry:
-  %call = tail call i8 addrspace(200)* @memcpy(i8 addrspace(200)* %d, i8 addrspace(200)* %s, i64 %n)
+  %call = tail call ptr addrspace(200) @memcpy(ptr addrspace(200) %d, ptr addrspace(200) %s, i64 %n)
   ret void
 ; CFUN: b	memcpy_c
 ; NOCFUN-NOT:   memcpy_c
@@ -73,17 +73,17 @@ entry:
 }
 
 ; ALL-LABEL: testMempcpy
-define i8 addrspace(200)* @testMempcpy(i8 addrspace(200)* %d, i8 addrspace(200)* %s, i64 %n) {
+define ptr addrspace(200) @testMempcpy(ptr addrspace(200) %d, ptr addrspace(200) %s, i64 %n) {
 entry:
-  %call = tail call i8 addrspace(200)* @mempcpy(i8 addrspace(200)* %d, i8 addrspace(200)* %s, i64 %n)
-  ret i8 addrspace(200)* %call
+  %call = tail call ptr addrspace(200) @mempcpy(ptr addrspace(200) %d, ptr addrspace(200) %s, i64 %n)
+  ret ptr addrspace(200) %call
 ; CFUN: b	mempcpy_c
 }
 
 ; ALL-LABEL: testMempcpy2
-define void @testMempcpy2(i8 addrspace(200)* %d, i8 addrspace(200)* %s, i64 %n) {
+define void @testMempcpy2(ptr addrspace(200) %d, ptr addrspace(200) %s, i64 %n) {
 entry:
-  %call = tail call i8 addrspace(200)* @mempcpy(i8 addrspace(200)* %d, i8 addrspace(200)* %s, i64 %n)
+  %call = tail call ptr addrspace(200) @mempcpy(ptr addrspace(200) %d, ptr addrspace(200) %s, i64 %n)
   ret void
 ; CFUN: b	mempcpy_c
 ; NOCFUN-NOT:   mempcpy_c
@@ -91,19 +91,19 @@ entry:
 }
 
 ; ALL-LABEL: testMemmove
-define i8 addrspace(200)* @testMemmove(i8 addrspace(200)* %d, i8 addrspace(200)* %s, i64 %n) {
+define ptr addrspace(200) @testMemmove(ptr addrspace(200) %d, ptr addrspace(200) %s, i64 %n) {
 entry:
-  %call = tail call i8 addrspace(200)* @memmove(i8 addrspace(200)* %d, i8 addrspace(200)* %s, i64 %n)
-  ret i8 addrspace(200)* %call
+  %call = tail call ptr addrspace(200) @memmove(ptr addrspace(200) %d, ptr addrspace(200) %s, i64 %n)
+  ret ptr addrspace(200) %call
 ; CFUN: b	memmove_c
 ; NOCFUN-NOT:	memmove_c
 ; NOCFUN: b	memmove
 }
 
 ; ALL-LABEL: testMemmove2
-define void @testMemmove2(i8 addrspace(200)* %d, i8 addrspace(200)* %s, i64 %n) {
+define void @testMemmove2(ptr addrspace(200) %d, ptr addrspace(200) %s, i64 %n) {
 entry:
-  %call = tail call i8 addrspace(200)* @memmove(i8 addrspace(200)* %d, i8 addrspace(200)* %s, i64 %n)
+  %call = tail call ptr addrspace(200) @memmove(ptr addrspace(200) %d, ptr addrspace(200) %s, i64 %n)
   ret void
 ; CFUN: b	memmove_c
 ; NOCFUN-NOT:   memmove_c
@@ -111,48 +111,48 @@ entry:
 }
 
 ; ALL-LABEL: checkMemSetIntrinsic
-define void @checkMemSetIntrinsic(i8 addrspace(200) *%in) {
+define void @checkMemSetIntrinsic(ptr addrspace(200) %in) {
 entry:
 ; ALL: movi v0.2d, #0000000000000000
 ; ALL-DAG: str xzr, [c0, #32]
 ; ALL-DAG: stp q0, q0, [c0]
-  call void @llvm.memset.p200i8.i64(i8 addrspace(200)* align 16 %in, i8 0, i64 40, i1 false)
+  call void @llvm.memset.p200.i64(ptr addrspace(200) align 16 %in, i8 0, i64 40, i1 false)
   ret void
 }
 
 ; ALL-LABEL: checkMemCpyIntrinsic
-define void @checkMemCpyIntrinsic(i8 addrspace(200) *%in, i8 addrspace(200) *%out) {
+define void @checkMemCpyIntrinsic(ptr addrspace(200) %in, ptr addrspace(200) %out) {
 ; ALL-DAG:	ldr	x[[REG:[0-9]+]], [c0, #32]
 ; ALL-DAG:	str	x[[REG]], [c1, #32]
 ; ALL-DAG:	ldp	c[[REG1:[0-9]+]], c[[REG2:[0-9]+]], [c0, #0]
 ; ALL-DAG:	stp	c[[REG1]], c[[REG2]], [c1, #0]
-  call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* align 16 %out, i8 addrspace(200)* align 16 %in, i64 40, i1 false)
+  call void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) align 16 %out, ptr addrspace(200) align 16 %in, i64 40, i1 false)
   ret void
 }
 
 ; ALL-LABEL: checkMemMoveIntrinsic
-define void @checkMemMoveIntrinsic(i8 addrspace(200) *%in, i8 addrspace(200) *%out) {
+define void @checkMemMoveIntrinsic(ptr addrspace(200) %in, ptr addrspace(200) %out) {
 ; ALL-DAG:    ldr	x[[REG3:[0-9]+]], [c0, #32]
 ; ALL-DAG:	ldp	c[[REG1:[0-9]+]], c[[REG2:[0-9]+]], [c0, #0]
 ; ALL-DAG:	str	x[[REG3]], [c1, #32]
 ; ALL-DAG:	stp	c[[REG1:[0-9]+]], c[[REG2:[0-9]+]], [c1, #0]
-  tail call void @llvm.memmove.p200i8.p200i8.i64(i8 addrspace(200)* align 16 %out, i8 addrspace(200)* align 16 %in, i64 40, i1 false)
+  tail call void @llvm.memmove.p200.p200.i64(ptr addrspace(200) align 16 %out, ptr addrspace(200) align 16 %in, i64 40, i1 false)
   ret void
 }
 
 ; ALL-LABEL: checkMemMoveIntrinsic_inline
-define void @checkMemMoveIntrinsic_inline(i8 addrspace(200) *%in, i8 addrspace(200) *%out) {
+define void @checkMemMoveIntrinsic_inline(ptr addrspace(200) %in, ptr addrspace(200) %out) {
 ; ALL-DAG:	ldp q[[REG1:[0-9]+]], q[[REG2:[0-9]+]], [c0]
 ; ALL-DAG:	stp q[[REG1]], q[[REG2]], [c1]
-  tail call void @llvm.memmove.p200i8.p200i8.i64(i8 addrspace(200)* align 8 %out, i8 addrspace(200)* align 8 %in, i64 32, i1 false) no_preserve_cheri_tags
+  tail call void @llvm.memmove.p200.p200.i64(ptr addrspace(200) align 8 %out, ptr addrspace(200) align 8 %in, i64 32, i1 false) no_preserve_cheri_tags
   ret void
 }
 
 ; ALL-LABEL: checkMemMoveIntrinsic_inline_cap
-define void @checkMemMoveIntrinsic_inline_cap(i8 addrspace(200) *%in, i8 addrspace(200) *%out) {
+define void @checkMemMoveIntrinsic_inline_cap(ptr addrspace(200) %in, ptr addrspace(200) %out) {
 ; CFUN: b memmove_c
 ; NOCFUN-NOT: memmove_c
 ; NOCFUN: b memmove
-  tail call void @llvm.memmove.p200i8.p200i8.i64(i8 addrspace(200)* align 8 %out, i8 addrspace(200)* align 8 %in, i64 40, i1 false)
+  tail call void @llvm.memmove.p200.p200.i64(ptr addrspace(200) align 8 %out, ptr addrspace(200) align 8 %in, i64 40, i1 false)
   ret void
 }

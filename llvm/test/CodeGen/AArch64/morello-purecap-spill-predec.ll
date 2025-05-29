@@ -18,10 +18,10 @@ entry:
   %conv = sitofp i32 %p1 to double
   %call = tail call double @sqrt(double -2.500000e-01) #4
   %conv1 = fptosi double %call to i32
-  %0 = load i32, i32 addrspace(200)* @c, align 4
+  %0 = load i32, ptr addrspace(200) @c, align 4
   %conv3 = sitofp i32 %0 to double
   %call4 = tail call double @copysign(double %conv3, double %conv) #5
-  store double %call4, double addrspace(200)* @a, align 8
+  store double %call4, ptr addrspace(200) @a, align 8
   %div = fdiv double 0.000000e+00, %call4
   %call6 = tail call i32 (...) @CMPLX(double %div) #4
   %conv7 = sitofp i32 %call6 to double

@@ -17,12 +17,12 @@ $_Z5test0INSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEEEvv = 
 
 define void @_Z5test0INSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEEEvv() local_unnamed_addr addrspace(200) comdat {
 _ZNSt3__112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEED2Ev.exit189:
-  call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* null, i8 addrspace(200)* getelementptr inbounds ([6 x i8], [6 x i8] addrspace(200)* @.str.1, i64 0, i64 0), i64 5, i32 1, i1 false) #0
-  %arrayidx.i.i.i420 = getelementptr inbounds %"struct.std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >::__short.14.29.74.89.119.134.179.224.299.314.329.374.434.509.644.779.794.809.824.839.927", %"struct.std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >::__short.14.29.74.89.119.134.179.224.299.314.329.374.434.509.644.779.794.809.824.839.927" addrspace(200)* undef, i64 0, i32 1, i64 0
-  call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* %arrayidx.i.i.i420, i8 addrspace(200)* getelementptr inbounds ([21 x i8], [21 x i8] addrspace(200)* @.str.3, i64 0, i64 0), i64 20, i32 1, i1 false) #0
+  call void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) null, ptr addrspace(200) @.str.1, i64 5, i32 1, i1 false) #0
+  %arrayidx.i.i.i420 = getelementptr inbounds %"struct.std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >::__short.14.29.74.89.119.134.179.224.299.314.329.374.434.509.644.779.794.809.824.839.927", ptr addrspace(200) undef, i64 0, i32 1, i64 0
+  call void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) %arrayidx.i.i.i420, ptr addrspace(200) @.str.3, i64 20, i32 1, i1 false) #0
   ret void
 }
 
-declare void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* nocapture writeonly, i8 addrspace(200)* nocapture readonly, i64, i32, i1) addrspace(200)
+declare void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) nocapture writeonly, ptr addrspace(200) nocapture readonly, i64, i32, i1) addrspace(200)
 
 attributes #0 = { "must-preserve-cheri-tags" }

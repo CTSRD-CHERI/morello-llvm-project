@@ -18,7 +18,7 @@
 
 ; No model specified
 
-define i32 addrspace(200)* @f1() nounwind {
+define ptr addrspace(200) @f1() nounwind {
 ; PIC-LABEL: f1:
 ; PIC:       .Lfunc_begin0:
 ; PIC-NEXT:  // %bb.0: // %entry
@@ -46,13 +46,13 @@ define i32 addrspace(200)* @f1() nounwind {
 ; NOPIC-NEXT:    and x30, x30, #0xfffffffffffffffe
 ; NOPIC-NEXT:    ret x30
 entry:
-  ret i32 addrspace(200)* @unspecified
+  ret ptr addrspace(200) @unspecified
 }
 
 
 ; localdynamic specified
 
-define i32 addrspace(200)* @f2() nounwind {
+define ptr addrspace(200) @f2() nounwind {
 ; PIC-LABEL: f2:
 ; PIC:       .Lfunc_begin1:
 ; PIC-NEXT:  // %bb.0: // %entry
@@ -80,13 +80,13 @@ define i32 addrspace(200)* @f2() nounwind {
 ; NOPIC-NEXT:    and x30, x30, #0xfffffffffffffffe
 ; NOPIC-NEXT:    ret x30
 entry:
-  ret i32 addrspace(200)* @ld
+  ret ptr addrspace(200) @ld
 }
 
 
 ; initialexec specified
 
-define i32 addrspace(200)* @f3() nounwind {
+define ptr addrspace(200) @f3() nounwind {
 ; CHECK-LABEL: f3:
 ; CHECK:       .Lfunc_begin2:
 ; CHECK-NEXT:  // %bb.0: // %entry
@@ -99,13 +99,13 @@ define i32 addrspace(200)* @f3() nounwind {
 ; CHECK-NEXT:    and x30, x30, #0xfffffffffffffffe
 ; CHECK-NEXT:    ret x30
 entry:
-  ret i32 addrspace(200)* @ie
+  ret ptr addrspace(200) @ie
 }
 
 
 ; localexec specified
 
-define i32 addrspace(200)* @f4() nounwind {
+define ptr addrspace(200) @f4() nounwind {
 ; CHECK-LABEL: f4:
 ; CHECK:       .Lfunc_begin3:
 ; CHECK-NEXT:  // %bb.0: // %entry
@@ -118,5 +118,5 @@ define i32 addrspace(200)* @f4() nounwind {
 ; CHECK-NEXT:    and x30, x30, #0xfffffffffffffffe
 ; CHECK-NEXT:    ret x30
 entry:
-  ret i32 addrspace(200)* @le
+  ret ptr addrspace(200) @le
 }

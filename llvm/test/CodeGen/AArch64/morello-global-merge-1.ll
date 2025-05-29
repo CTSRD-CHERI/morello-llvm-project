@@ -8,8 +8,8 @@
 @n = internal addrspace(200) global i32 0, align 4
 
 define void @f1(i32 %a1, i32 %a2) {
-  store i32 %a1, i32 addrspace(200)* @m, align 4
-  store i32 %a2, i32 addrspace(200)* @n, align 4
+  store i32 %a1, ptr addrspace(200) @m, align 4
+  store i32 %a2, ptr addrspace(200) @n, align 4
   ret void
 }
 

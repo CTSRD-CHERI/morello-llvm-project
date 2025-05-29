@@ -4,7 +4,7 @@
 target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128-A200-P200-G200"
 target triple = "aarch64-none-unknown-elf"
 
-define i32 @foo(i32 %x, i32 %y, i32 %z, i32 %u, i32 %v, i32 %w, i32 %t1, i32 %t2, i32 %t3, i32 addrspace(200)* %t4) addrspace(200) {
+define i32 @foo(i32 %x, i32 %y, i32 %z, i32 %u, i32 %v, i32 %w, i32 %t1, i32 %t2, i32 %t3, ptr addrspace(200) %t4) addrspace(200) {
 ; CHECK-LABEL: foo:
 ; CHECK:       .Lfunc_begin0:
 ; CHECK-NEXT:    .cfi_startproc
@@ -27,16 +27,16 @@ define i32 @foo(i32 %x, i32 %y, i32 %z, i32 %u, i32 %v, i32 %w, i32 %t1, i32 %t2
 ; CHECK-NEXT:    ret c30
 entry:
   %call = call i32 @bar(i32 %t3)
-  %call1 = call i32 @baz(i32 addrspace(200)* %t4)
+  %call1 = call i32 @baz(ptr addrspace(200) %t4)
   %add = add nsw i32 %call1, %call
   ret i32 %add
 }
 
 declare i32 @bar(i32) addrspace(200)
 
-declare i32 @baz(i32 addrspace(200)*) addrspace(200)
+declare i32 @baz(ptr addrspace(200)) addrspace(200)
 
-define i32 @baf(i32 %x, i32 %y, i32 %z, i32 %u, i32 %v, i32 %w, i32 %t1, i32 %t2, i32 %t3, i32 addrspace(200)* %t4, ...) addrspace(200) {
+define i32 @baf(i32 %x, i32 %y, i32 %z, i32 %u, i32 %v, i32 %w, i32 %t1, i32 %t2, i32 %t3, ptr addrspace(200) %t4, ...) addrspace(200) {
 ; CHECK-LABEL: baf:
 ; CHECK:       .Lfunc_begin1:
 ; CHECK-NEXT:    .cfi_startproc
@@ -69,26 +69,25 @@ define i32 @baf(i32 %x, i32 %y, i32 %z, i32 %u, i32 %v, i32 %w, i32 %t1, i32 %t2
 ; CHECK-NEXT:    add csp, csp, #80
 ; CHECK-NEXT:    ret c30
 entry:
-  %va = alloca i8 addrspace(200)*, align 16, addrspace(200)
-  %0 = bitcast i8 addrspace(200)* addrspace(200)* %va to i8 addrspace(200)*
-  call void @llvm.lifetime.start.p200i8(i64 16, i8 addrspace(200)* nonnull %0)
-  call void @llvm.va_start.p200i8(i8 addrspace(200)* nonnull %0)
-  %1 = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %va, align 16
-  call void @try(i8 addrspace(200)* %1)
+  %va = alloca ptr addrspace(200), align 16, addrspace(200)
+  call void @llvm.lifetime.start.p200(i64 16, ptr addrspace(200) nonnull %va)
+  call void @llvm.va_start.p200(ptr addrspace(200) nonnull %va)
+  %0 = load ptr addrspace(200), ptr addrspace(200) %va, align 16
+  call void @try(ptr addrspace(200) %0)
   %call = call i32 @bar(i32 %t3)
-  %call2 = call i32 @baz(i32 addrspace(200)* %t4)
+  %call2 = call i32 @baz(ptr addrspace(200) %t4)
   %add = add nsw i32 %call2, %call
-  call void @llvm.lifetime.end.p200i8(i64 16, i8 addrspace(200)* nonnull %0)
+  call void @llvm.lifetime.end.p200(i64 16, ptr addrspace(200) nonnull %va)
   ret i32 %add
 }
 
-declare void @llvm.lifetime.start.p200i8(i64 immarg, i8 addrspace(200)* nocapture) addrspace(200)
+declare void @llvm.lifetime.start.p200(i64 immarg, ptr addrspace(200) nocapture) addrspace(200)
 
-declare void @llvm.va_start.p200i8(i8 addrspace(200)*) addrspace(200)
+declare void @llvm.va_start.p200(ptr addrspace(200)) addrspace(200)
 
-declare void @try(i8 addrspace(200)*) local_unnamed_addr addrspace(200)
+declare void @try(ptr addrspace(200)) local_unnamed_addr addrspace(200)
 
-declare void @llvm.lifetime.end.p200i8(i64 immarg, i8 addrspace(200)* nocapture) addrspace(200)
+declare void @llvm.lifetime.end.p200(i64 immarg, ptr addrspace(200) nocapture) addrspace(200)
 
 define i32 @bb([4 x float] %f1.coerce, [4 x float] %f2.coerce, [4 x float] %f3.coerce, ...) addrspace(200) {
 ; CHECK-LABEL: bb:
@@ -117,7 +116,7 @@ define i32 @bb([4 x float] %f1.coerce, [4 x float] %f2.coerce, [4 x float] %f3.c
 ; CHECK-NEXT:    add csp, csp, #32
 ; CHECK-NEXT:    ret c30
 entry:
-  %va = alloca i8 addrspace(200)*, align 16, addrspace(200)
+  %va = alloca ptr addrspace(200), align 16, addrspace(200)
   %f2.coerce.fca.3.extract = extractvalue [4 x float] %f2.coerce, 3
   %f3.coerce.fca.0.extract = extractvalue [4 x float] %f3.coerce, 0
   %f3.coerce.fca.1.extract = extractvalue [4 x float] %f3.coerce, 1
@@ -125,18 +124,16 @@ entry:
   %add = fadd float %f3.coerce.fca.0.extract, %f3.coerce.fca.1.extract
   %add3 = fadd float %f3.coerce.fca.3.extract, %add
   %add5 = fadd float %f2.coerce.fca.3.extract, %add3
-  %0 = bitcast i8 addrspace(200)* addrspace(200)* %va to i8 addrspace(200)*
-  call void @llvm.lifetime.start.p200i8(i64 16, i8 addrspace(200)* nonnull %0)
-  call void @llvm.va_start.p200i8(i8 addrspace(200)* nonnull %0)
-  %stack = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %va, align 16
-  %1 = bitcast i8 addrspace(200)* %stack to double addrspace(200)*
-  %new_stack = getelementptr inbounds i8, i8 addrspace(200)* %stack, i64 16
-  store i8 addrspace(200)* %new_stack, i8 addrspace(200)* addrspace(200)* %va, align 16
-  %2 = load double, double addrspace(200)* %1, align 16
-  %conv = fptrunc double %2 to float
+  call void @llvm.lifetime.start.p200(i64 16, ptr addrspace(200) nonnull %va)
+  call void @llvm.va_start.p200(ptr addrspace(200) nonnull %va)
+  %stack = load ptr addrspace(200), ptr addrspace(200) %va, align 16
+  %new_stack = getelementptr inbounds i8, ptr addrspace(200) %stack, i64 16
+  store ptr addrspace(200) %new_stack, ptr addrspace(200) %va, align 16
+  %0 = load double, ptr addrspace(200) %stack, align 16
+  %conv = fptrunc double %0 to float
   %add7 = fadd float %add5, %conv
   %conv8 = fptosi float %add7 to i32
-  call void @llvm.lifetime.end.p200i8(i64 16, i8 addrspace(200)* nonnull %0)
+  call void @llvm.lifetime.end.p200(i64 16, ptr addrspace(200) nonnull %va)
   ret i32 %conv8
 }
 
@@ -187,13 +184,13 @@ define i32 @biz() local_unnamed_addr addrspace(200) {
 ; CHECK-NEXT:    add csp, csp, #112
 ; CHECK-NEXT:    ret c30
 entry:
-  %call = call i32 (i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 addrspace(200)*, ...) @fiz(i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 addrspace(200)* null, i32 1, i32 1)
-  %call1 = call i32 (i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 addrspace(200)*, ...) @fiz(i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 addrspace(200)* null)
+  %call = call i32 (i32, i32, i32, i32, i32, i32, i32, i32, i32, ptr addrspace(200), ...) @fiz(i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, ptr addrspace(200) null, i32 1, i32 1)
+  %call1 = call i32 (i32, i32, i32, i32, i32, i32, i32, i32, i32, ptr addrspace(200), ...) @fiz(i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, ptr addrspace(200) null)
   %add = add nsw i32 %call1, %call
   ret i32 %add
 }
 
-declare i32 @fiz(i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 addrspace(200)*, ...) addrspace(200)
+declare i32 @fiz(i32, i32, i32, i32, i32, i32, i32, i32, i32, ptr addrspace(200), ...) addrspace(200)
 
 define i32 @f(i32 %0, i32 %1, i32 %2, i32 %3, i32 %4, i32 %5, i32 %6, i32 %7, i32 %8, ...) local_unnamed_addr addrspace(200) #0 {
 ; CHECK-LABEL: f:
@@ -214,22 +211,20 @@ define i32 @f(i32 %0, i32 %1, i32 %2, i32 %3, i32 %4, i32 %5, i32 %6, i32 %7, i3
 ; CHECK-NEXT:    add w0, w9, w8
 ; CHECK-NEXT:    add csp, csp, #32
 ; CHECK-NEXT:    ret c30
-  %10 = alloca i8 addrspace(200)*, align 16, addrspace(200)
-  %11 = bitcast i8 addrspace(200)* addrspace(200)* %10 to i8 addrspace(200)*
-  call void @llvm.lifetime.start.p200i8(i64 16, i8 addrspace(200)* nonnull %11) #3
-  call void @llvm.va_start.p200i8(i8 addrspace(200)* nonnull %11)
-  %12 = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %10, align 16
-  %13 = bitcast i8 addrspace(200)* %12 to i32 addrspace(200)*
-  %14 = getelementptr inbounds i8, i8 addrspace(200)* %12, i64 16
-  store i8 addrspace(200)* %14, i8 addrspace(200)* addrspace(200)* %10, align 16
-  %15 = load i32, i32 addrspace(200)* %13, align 16
-  call void @llvm.va_end.p200i8(i8 addrspace(200)* %11)
-  %16 = add nsw i32 %15, %8
-  call void @llvm.lifetime.end.p200i8(i64 16, i8 addrspace(200)* nonnull %11) #3
-  ret i32 %16
+  %10 = alloca ptr addrspace(200), align 16, addrspace(200)
+  call void @llvm.lifetime.start.p200(i64 16, ptr addrspace(200) nonnull %10) #3
+  call void @llvm.va_start.p200(ptr addrspace(200) nonnull %10)
+  %11 = load ptr addrspace(200), ptr addrspace(200) %10, align 16
+  %12 = getelementptr inbounds i8, ptr addrspace(200) %11, i64 16
+  store ptr addrspace(200) %12, ptr addrspace(200) %10, align 16
+  %13 = load i32, ptr addrspace(200) %11, align 16
+  call void @llvm.va_end.p200(ptr addrspace(200) %10)
+  %14 = add nsw i32 %13, %8
+  call void @llvm.lifetime.end.p200(i64 16, ptr addrspace(200) nonnull %10) #3
+  ret i32 %14
 }
 
-declare void @llvm.va_end.p200i8(i8 addrspace(200)*) addrspace(200)
+declare void @llvm.va_end.p200(ptr addrspace(200)) addrspace(200)
 
 declare void @tail_callee(i32 %0, i32 %1, i32 %2, i32 %3, i32 %4, i32 %5, i32 %6, i32 %7, i32 %8)
 

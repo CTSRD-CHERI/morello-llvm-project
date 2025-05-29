@@ -1,7 +1,7 @@
 ; RUN: llc -mtriple=arm64 -mattr=+morello,+c64  -target-abi purecap -o - %s | FileCheck --check-prefix=CHECK --check-prefix=C64 %s
 ; RUN: llc -mtriple=arm64 -mattr=+morello -o - %s | FileCheck --check-prefix=CHECK --check-prefix=A64 %s
 
-define chericcallcc i32 @bar(i8 addrspace(200) * %ddc,  i8 addrspace(200) * %pcc, i32 %num, i32 %a, i32 %b, i32 %c) {
+define chericcallcc i32 @bar(ptr addrspace(200) %ddc,  ptr addrspace(200) %pcc, i32 %num, i32 %a, i32 %b, i32 %c) {
 ; CHECK-LABEL:bar:
 ; CHECK: add w0, w1, w0
 ; CHECK-DAG: mov x1, xzr
@@ -25,7 +25,7 @@ entry:
   ret i32 %add
 }
 
-define chericcallcc double @barf(i8 addrspace(200) * %ddc,  i8 addrspace(200) * %pcc, i32 %num, double %a, double %b, double %c) {
+define chericcallcc double @barf(ptr addrspace(200) %ddc,  ptr addrspace(200) %pcc, i32 %num, double %a, double %b, double %c) {
 ; CHECK-LABEL:barf:
 ; CHECK-DAG: mov x0, xzr
 ; CHECK-DAG: mov x1, xzr
@@ -52,7 +52,7 @@ entry:
 @c = external global i32, align 4
 @d = external global double, align 8
 
-define void @foo(i8 addrspace(200) * %ddc, i8 addrspace(200) * %pcc, i32 %num, i32 %a, double %b) {
+define void @foo(ptr addrspace(200) %ddc, ptr addrspace(200) %pcc, i32 %num, i32 %a, double %b) {
 ; CHECK-LABEL:foo:
 
 ; C64: stp     d9, d8, [csp, #-[[#FRAME_SIZE:]]]!
@@ -114,13 +114,13 @@ define void @foo(i8 addrspace(200) * %ddc, i8 addrspace(200) * %pcc, i32 %num, i
 ; A64-NEXT: ldp     d9, d8, [sp], #{{[0-9]+}}
 
 entry:
-  %0 = load i32, i32* @c, align 4
-  %call = tail call chericcallcc i32 @bar(i8 addrspace(200) *%ddc, i8 addrspace(200) * %pcc, i32 %num, i32 %a, i32 %0, i32 1)
+  %0 = load i32, ptr @c, align 4
+  %call = tail call chericcallcc i32 @bar(ptr addrspace(200) %ddc, ptr addrspace(200) %pcc, i32 %num, i32 %a, i32 %0, i32 1)
   %add = add nsw i32 %call, %0
-  store i32 %add, i32* @c, align 4
-  %1 = load double, double* @d, align 8
-  %call1 = tail call chericcallcc double @barf(i8 addrspace(200) *%ddc, i8 addrspace(200) * %pcc, i32 %num, double %b, double %b, double %1)
+  store i32 %add, ptr @c, align 4
+  %1 = load double, ptr @d, align 8
+  %call1 = tail call chericcallcc double @barf(ptr addrspace(200) %ddc, ptr addrspace(200) %pcc, i32 %num, double %b, double %b, double %1)
   %add2 = fadd double %1, %call1
-  store double %add2, double* @d, align 8
+  store double %add2, ptr @d, align 8
   ret void
 }

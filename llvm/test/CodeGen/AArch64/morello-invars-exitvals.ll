@@ -9,7 +9,7 @@ target triple = "aarch64-none--elf"
 
 ; CHECK-LABEL:foo
 ; CHECK-NOT: inttoptr
-define void @foo(i8 addrspace(200)* %line) addrspace(200) {
+define void @foo(ptr addrspace(200) %line) addrspace(200) {
 entry:
   switch i64 undef, label %if.end25 [
     i64 0, label %if.then4
@@ -100,12 +100,12 @@ sw.bb232:
   br label %land.rhs
 
 land.rhs: 
-  %incdec.ptr2372955 = phi i8 addrspace(200)* [ undef, %sw.bb232 ], [ %incdec.ptr237, %do.body236.backedge ]
+  %incdec.ptr2372955 = phi ptr addrspace(200) [ undef, %sw.bb232 ], [ %incdec.ptr237, %do.body236.backedge ]
   br label %do.body236.backedge
 
 do.body236.backedge:
-  %incdec.ptr237 = getelementptr i8, i8 addrspace(200)* %incdec.ptr2372955, i64 -1
-  %cmp239 = icmp ugt i8 addrspace(200)* %incdec.ptr237, %line
+  %incdec.ptr237 = getelementptr i8, ptr addrspace(200) %incdec.ptr2372955, i64 -1
+  %cmp239 = icmp ugt ptr addrspace(200) %incdec.ptr237, %line
   br i1 %cmp239, label %land.rhs, label %while.cond223.backedge.loopexit3010
 
 sw.bb285:
@@ -127,7 +127,7 @@ while.cond223.backedge.loopexit3010:
   br label %while.cond223.backedge
 
 while.cond223.backedge:
-  %p.1.be = phi i8 addrspace(200)* [ %line, %while.body226 ], [ %incdec.ptr237, %while.cond223.backedge.loopexit3010 ]
+  %p.1.be = phi ptr addrspace(200) [ %line, %while.body226 ], [ %incdec.ptr237, %while.cond223.backedge.loopexit3010 ]
   unreachable
 
 sw.bb397:

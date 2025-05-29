@@ -6,23 +6,23 @@
 target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128-A200-P200-G200"
 target triple = "aarch64-unknown-freebsd14.0"
 
-define void @hoge.1(i1 %cond, i1 %cond2, i8 addrspace(200)* %arg, i64 %arg2) local_unnamed_addr addrspace(200) {
+define void @hoge.1(i1 %cond, i1 %cond2, ptr addrspace(200) %arg, i64 %arg2) local_unnamed_addr addrspace(200) {
 ; CHECK-LABEL: 'hoge.1'
 ; CHECK-NEXT:  Classifying expressions for: @hoge.1
-; CHECK-NEXT:    %tmp = phi i8 addrspace(200)* [ %tmp3, %bb1 ], [ %arg, %bb ]
+; CHECK-NEXT:    %tmp = phi ptr addrspace(200) [ %tmp3, %bb1 ], [ %arg, %bb ]
 ; CHECK-NEXT:    --> {%arg,+,1}<%bb1> U: full-set S: full-set Exits: <<Unknown>> LoopDispositions: { %bb1: Computable }
-; CHECK-NEXT:    %tmp3 = getelementptr i8, i8 addrspace(200)* %tmp, i64 1
+; CHECK-NEXT:    %tmp3 = getelementptr i8, ptr addrspace(200) %tmp, i64 1
 ; CHECK-NEXT:    --> {(1 + %arg),+,1}<%bb1> U: full-set S: full-set Exits: <<Unknown>> LoopDispositions: { %bb1: Computable }
 ; CHECK-NEXT:    %tmp6 = select i1 %tmp5, i1 true, i1 %cond2
 ; CHECK-NEXT:    --> (true + ((true + %tmp5) umin_seq (true + %cond2))) U: full-set S: full-set
-; CHECK-NEXT:    %tmp17 = phi i8 addrspace(200)* [ %tmp18, %bb13 ], [ null, %bb4 ]
-; CHECK-NEXT:    --> {null,+,1}<%bb13> U: [0,-1) S: [0,-1) Exits: (-1 + (1 umax {(ptrtoint i8 addrspace(200)* %arg to i64),+,1}<%bb1>) + null) LoopDispositions: { %bb13: Computable }
-; CHECK-NEXT:    %tmp18 = getelementptr i8, i8 addrspace(200)* %tmp17, i64 1
-; CHECK-NEXT:    --> {(1 + null)<nuw><nsw>,+,1}<%bb13> U: [1,0) S: [1,0) Exits: ((1 umax {(ptrtoint i8 addrspace(200)* %arg to i64),+,1}<%bb1>) + null) LoopDispositions: { %bb13: Computable }
+; CHECK-NEXT:    %tmp17 = phi ptr addrspace(200) [ %tmp18, %bb13 ], [ null, %bb4 ]
+; CHECK-NEXT:    --> {null,+,1}<%bb13> U: [0,-1) S: [0,-1) Exits: (-1 + (1 umax {(ptrtoint ptr addrspace(200) %arg to i64),+,1}<%bb1>) + null) LoopDispositions: { %bb13: Computable }
+; CHECK-NEXT:    %tmp18 = getelementptr i8, ptr addrspace(200) %tmp17, i64 1
+; CHECK-NEXT:    --> {(1 + null)<nuw><nsw>,+,1}<%bb13> U: [1,0) S: [1,0) Exits: ((1 umax {(ptrtoint ptr addrspace(200) %arg to i64),+,1}<%bb1>) + null) LoopDispositions: { %bb13: Computable }
 ; CHECK-NEXT:  Determining loop execution counts for: @hoge.1
-; CHECK-NEXT:  Loop %bb13: backedge-taken count is (-1 + (1 umax {(ptrtoint i8 addrspace(200)* %arg to i64),+,1}<%bb1>))
+; CHECK-NEXT:  Loop %bb13: backedge-taken count is (-1 + (1 umax {(ptrtoint ptr addrspace(200) %arg to i64),+,1}<%bb1>))
 ; CHECK-NEXT:  Loop %bb13: max backedge-taken count is -2
-; CHECK-NEXT:  Loop %bb13: Predicated backedge-taken count is (-1 + (1 umax {(ptrtoint i8 addrspace(200)* %arg to i64),+,1}<%bb1>))
+; CHECK-NEXT:  Loop %bb13: Predicated backedge-taken count is (-1 + (1 umax {(ptrtoint ptr addrspace(200) %arg to i64),+,1}<%bb1>))
 ; CHECK-NEXT:   Predicates:
 ; CHECK:       Loop %bb13: Trip multiple is 1
 ; CHECK-NEXT:  Loop %bb1: Unpredictable backedge-taken count.
@@ -33,8 +33,8 @@ bb:
   br label %bb1
 
 bb1:
-  %tmp = phi i8 addrspace(200)* [ %tmp3, %bb1 ], [ %arg, %bb ]
-  %tmp3 = getelementptr i8, i8 addrspace(200)* %tmp, i64 1
+  %tmp = phi ptr addrspace(200) [ %tmp3, %bb1 ], [ %arg, %bb ]
+  %tmp3 = getelementptr i8, ptr addrspace(200) %tmp, i64 1
   br i1 %cond, label %bb4, label %bb1
 
 bb4:
@@ -46,9 +46,9 @@ bb8:
   unreachable
 
 bb13:
-  %tmp17 = phi i8 addrspace(200)* [ %tmp18, %bb13 ], [ null, %bb4 ]
-  %tmp18 = getelementptr i8, i8 addrspace(200)* %tmp17, i64 1
-  %tmp19 = icmp ult i8 addrspace(200)* %tmp18, %tmp
+  %tmp17 = phi ptr addrspace(200) [ %tmp18, %bb13 ], [ null, %bb4 ]
+  %tmp18 = getelementptr i8, ptr addrspace(200) %tmp17, i64 1
+  %tmp19 = icmp ult ptr addrspace(200) %tmp18, %tmp
   br i1 %tmp19, label %bb13, label %bb16.loopexit
 
 bb16.loopexit:

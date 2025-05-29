@@ -19,8 +19,8 @@ define void @foo() local_unnamed_addr addrspace(200) align 2 {
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    b .LBB0_3
 entry:
-  %bound0165 = icmp ugt i8 addrspace(200)* undef, undef
-  %bound1166 = icmp ugt i8 addrspace(200)* undef, undef
+  %bound0165 = icmp ugt ptr addrspace(200) undef, undef
+  %bound1166 = icmp ugt ptr addrspace(200) undef, undef
   %found.conflict167 = and i1 %bound0165, %bound1166
   %i = or i1 undef, %found.conflict167
   br i1 %i, label %for.body21, label %vector.ph

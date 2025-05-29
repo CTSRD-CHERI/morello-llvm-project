@@ -19,16 +19,14 @@ entry:
 ; PCS16: scbnds c{{.*}}, c{{.*}}, x[[REG]]
 
   %ss1 = alloca [1048577 x i32], align 4, addrspace(200)
-  %0 = bitcast [1048577 x i32] addrspace(200)* %ss1 to i8 addrspace(200)*
-  call void @llvm.memset.p200i8.i64(i8 addrspace(200)* nonnull %0, i8 0, i64 4194308, i32 4, i1 false)
-  %arraydecay = getelementptr inbounds [1048577 x i32], [1048577 x i32] addrspace(200)* %ss1, i64 0, i64 0
-  %call = call i32 @g(i32 addrspace(200)* nonnull %arraydecay)
+  call void @llvm.memset.p200.i64(ptr addrspace(200) nonnull %ss1, i8 0, i64 4194308, i32 4, i1 false)
+  %call = call i32 @g(ptr addrspace(200) nonnull %ss1)
   ret i32 %call
 }
 
-declare void @llvm.memset.p200i8.i64(i8 addrspace(200)* nocapture writeonly, i8, i64, i32, i1) addrspace(200) #1
+declare void @llvm.memset.p200.i64(ptr addrspace(200) nocapture writeonly, i8, i64, i32, i1) addrspace(200) #1
 
-declare i32 @g(i32 addrspace(200)*) local_unnamed_addr addrspace(200) #2
+declare i32 @g(ptr addrspace(200)) local_unnamed_addr addrspace(200) #2
 
 
 ; CHECK-LABEL: fun2
@@ -44,9 +42,7 @@ entry:
 ; PCS32: scbnds c{{.*}}, c{{.*}}, x[[REG]]
 
   %s1 = alloca [8388608 x i32], align 4, addrspace(200)
-  %0 = bitcast [8388608 x i32] addrspace(200)* %s1 to i8 addrspace(200)*
-  %arraydecay = getelementptr inbounds [8388608 x i32], [8388608 x i32] addrspace(200)* %s1, i64 0, i64 0
-  %call = call i32 @g(i32 addrspace(200)* nonnull %arraydecay)
+  %call = call i32 @g(ptr addrspace(200) nonnull %s1)
   ret i32 %call
 }
 

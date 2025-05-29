@@ -12,8 +12,8 @@
 define i32 @foo() addrspace(200) {
 entry:
   %retval = alloca i32, align 4, addrspace(200)
-  store i32 0, i32 addrspace(200)* %retval, align 4
-  %0 = load i8, i8 addrspace(200)* getelementptr inbounds ([65535 x i8], [65535 x i8] addrspace(200)* @arr3, i64 0, i64 0), align 1
+  store i32 0, ptr addrspace(200) %retval, align 4
+  %0 = load i8, ptr addrspace(200) @arr3, align 1
   %conv = zext i8 %0 to i32
   ret i32 %conv
 }

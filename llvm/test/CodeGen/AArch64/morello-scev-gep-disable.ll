@@ -5,7 +5,7 @@ target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:12
 target triple = "arm64"
 
 ; Function Attrs: norecurse nounwind
-define void @foo(i32 addrspace(200)* nocapture %a, i32 %n, i32 %k) local_unnamed_addr {
+define void @foo(ptr addrspace(200) nocapture %a, i32 %n, i32 %k) local_unnamed_addr {
 ; CHECK-LABLE: @foo
 entry:
   %cmp5 = icmp sgt i32 %n, 0
@@ -22,13 +22,13 @@ for.cond.cleanup:                                 ; preds = %for.body, %entry
 for.body:                                         ; preds = %for.body, %for.body.preheader
   %indvars.iv = phi i64 [ 0, %for.body.preheader ], [ %indvars.iv.next, %for.body ]
   %1 = mul nsw i64 %indvars.iv, %0
-  %arrayidx = getelementptr inbounds i32, i32 addrspace(200)* %a, i64 %indvars.iv
+  %arrayidx = getelementptr inbounds i32, ptr addrspace(200) %a, i64 %indvars.iv
 ; FATPTR_ENABLED: %arrayidx = getelementptr 
 ; FATPTR_ENABLED-NEXT: -->  {%a,+,4}<nuw><%for.body>
 ; FATPTR_DISABLED: %arrayidx = getelementptr 
 ; FATPTR_DISABLED-NEXT: -->  %arrayidx U:
   %2 = trunc i64 %1 to i32
-  store i32 %2, i32 addrspace(200)* %arrayidx, align 4
+  store i32 %2, ptr addrspace(200) %arrayidx, align 4
   %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
   %exitcond = icmp eq i64 %indvars.iv.next, %wide.trip.count
   br i1 %exitcond, label %for.cond.cleanup, label %for.body

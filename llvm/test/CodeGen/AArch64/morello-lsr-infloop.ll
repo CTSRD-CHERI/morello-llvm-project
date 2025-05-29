@@ -4,7 +4,7 @@
 target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128-A200-P200-G200"
 target triple = "aarch64-unknown-freebsd14.0"
 
-declare i64 @llvm.cheri.cap.diff.i64(i8 addrspace(200)*, i8 addrspace(200)*) addrspace(200)
+declare i64 @llvm.cheri.cap.diff.i64(ptr addrspace(200), ptr addrspace(200)) addrspace(200)
 
 ; The SCEV expander will try to expand the following capability expression:
 ;   {({(13 + undef),+,1}<nw><%while.body164.i> + %0),+,8}<nuw><%while.cond.i1588.i>
@@ -16,11 +16,11 @@ define hidden void @foo() local_unnamed_addr addrspace(200) {
 ; CHECK-NEXT:    br label [[WHILE_BODY164_I:%.*]]
 ; CHECK:       while.body164.i:
 ; CHECK-NEXT:    [[LSR_IV:%.*]] = phi i64 [ [[LSR_IV_NEXT:%.*]], [[CLEANUP19_THREAD_I1595_I:%.*]] ], [ 5, [[ENTRY:%.*]] ]
-; CHECK-NEXT:    [[IP_11815_I:%.*]] = phi i8 addrspace(200)* [ [[INCDEC_PTR_I:%.*]], [[CLEANUP19_THREAD_I1595_I]] ], [ undef, [[ENTRY]] ]
-; CHECK-NEXT:    [[INCDEC_PTR_I]] = getelementptr inbounds i8, i8 addrspace(200)* [[IP_11815_I]], i64 1
-; CHECK-NEXT:    [[ADD_PTR241_I:%.*]] = getelementptr inbounds i8, i8 addrspace(200)* [[IP_11815_I]], i64 5
-; CHECK-NEXT:    [[TMP0:%.*]] = tail call i64 @llvm.cheri.cap.diff.i64(i8 addrspace(200)* nonnull undef, i8 addrspace(200)* nonnull [[ADD_PTR241_I]])
-; CHECK-NEXT:    [[ADD_PTR4_I1244_I:%.*]] = getelementptr inbounds i8, i8 addrspace(200)* [[ADD_PTR241_I]], i64 [[TMP0]]
+; CHECK-NEXT:    [[IP_11815_I:%.*]] = phi ptr addrspace(200) [ [[INCDEC_PTR_I:%.*]], [[CLEANUP19_THREAD_I1595_I]] ], [ undef, [[ENTRY]] ]
+; CHECK-NEXT:    [[INCDEC_PTR_I]] = getelementptr inbounds i8, ptr addrspace(200) [[IP_11815_I]], i64 1
+; CHECK-NEXT:    [[ADD_PTR241_I:%.*]] = getelementptr inbounds i8, ptr addrspace(200) [[IP_11815_I]], i64 5
+; CHECK-NEXT:    [[TMP0:%.*]] = tail call i64 @llvm.cheri.cap.diff.i64(ptr addrspace(200) nonnull undef, ptr addrspace(200) nonnull [[ADD_PTR241_I]])
+; CHECK-NEXT:    [[ADD_PTR4_I1244_I:%.*]] = getelementptr inbounds i8, ptr addrspace(200) [[ADD_PTR241_I]], i64 [[TMP0]]
 ; CHECK-NEXT:    [[TMP1:%.*]] = add i64 [[TMP0]], [[LSR_IV]]
 ; CHECK-NEXT:    br label [[WHILE_COND_I1588_I:%.*]]
 ; CHECK:       while.cond.i1588.i:
@@ -31,7 +31,7 @@ define hidden void @foo() local_unnamed_addr addrspace(200) {
 ; CHECK-NEXT:    [[TMP2:%.*]] = tail call i64 @llvm.cttz.i64(i64 undef, i1 true)
 ; CHECK-NEXT:    [[TMP3:%.*]] = lshr i64 [[TMP2]], 3
 ; CHECK-NEXT:    [[TMP4:%.*]] = add i64 [[LSR_IV_NEXT2]], [[TMP3]]
-; CHECK-NEXT:    [[TMP5:%.*]] = tail call i64 @llvm.cheri.cap.diff.i64(i8 addrspace(200)* nonnull undef, i8 addrspace(200)* nonnull [[ADD_PTR4_I1244_I]])
+; CHECK-NEXT:    [[TMP5:%.*]] = tail call i64 @llvm.cheri.cap.diff.i64(ptr addrspace(200) nonnull undef, ptr addrspace(200) nonnull [[ADD_PTR4_I1244_I]])
 ; CHECK-NEXT:    [[LSR_IV_NEXT]] = add i64 [[LSR_IV]], 1
 ; CHECK-NEXT:    br label [[WHILE_BODY164_I]]
 ;
@@ -39,23 +39,23 @@ entry:
   br label %while.body164.i
 
 while.body164.i:
-  %ip.11815.i = phi i8 addrspace(200)* [ %incdec.ptr.i, %cleanup19.thread.i1595.i ], [ undef, %entry ]
-  %incdec.ptr.i = getelementptr inbounds i8, i8 addrspace(200)* %ip.11815.i, i64 1
-  %add.ptr241.i = getelementptr inbounds i8, i8 addrspace(200)* %ip.11815.i, i64 5
-  %0 = tail call i64 @llvm.cheri.cap.diff.i64(i8 addrspace(200)* nonnull undef, i8 addrspace(200)* nonnull %add.ptr241.i)
-  %add.ptr4.i1244.i = getelementptr inbounds i8, i8 addrspace(200)* %add.ptr241.i, i64 %0
+  %ip.11815.i = phi ptr addrspace(200) [ %incdec.ptr.i, %cleanup19.thread.i1595.i ], [ undef, %entry ]
+  %incdec.ptr.i = getelementptr inbounds i8, ptr addrspace(200) %ip.11815.i, i64 1
+  %add.ptr241.i = getelementptr inbounds i8, ptr addrspace(200) %ip.11815.i, i64 5
+  %0 = tail call i64 @llvm.cheri.cap.diff.i64(ptr addrspace(200) nonnull undef, ptr addrspace(200) nonnull %add.ptr241.i)
+  %add.ptr4.i1244.i = getelementptr inbounds i8, ptr addrspace(200) %add.ptr241.i, i64 %0
   br label %while.cond.i1588.i
 
 while.cond.i1588.i:
-  %pIn.pn.i1584.i = phi i8 addrspace(200)* [ %pIn.addr.0.i1585.i, %while.cond.i1588.i ], [ %add.ptr4.i1244.i, %while.body164.i ]
-  %pIn.addr.0.i1585.i = getelementptr inbounds i8, i8 addrspace(200)* %pIn.pn.i1584.i, i64 8
+  %pIn.pn.i1584.i = phi ptr addrspace(200) [ %pIn.addr.0.i1585.i, %while.cond.i1588.i ], [ %add.ptr4.i1244.i, %while.body164.i ]
+  %pIn.addr.0.i1585.i = getelementptr inbounds i8, ptr addrspace(200) %pIn.pn.i1584.i, i64 8
   br i1 undef, label %while.cond.i1588.i, label %cleanup19.thread.i1595.i
 
 cleanup19.thread.i1595.i:
   %1 = tail call i64 @llvm.cttz.i64(i64 undef, i1 true)
   %2 = lshr i64 %1, 3
-  %add.ptr18.i1594.i = getelementptr inbounds i8, i8 addrspace(200)* %pIn.addr.0.i1585.i, i64 %2
-  %3 = tail call i64 @llvm.cheri.cap.diff.i64(i8 addrspace(200)* nonnull %add.ptr18.i1594.i, i8 addrspace(200)* nonnull %add.ptr4.i1244.i)
+  %add.ptr18.i1594.i = getelementptr inbounds i8, ptr addrspace(200) %pIn.addr.0.i1585.i, i64 %2
+  %3 = tail call i64 @llvm.cheri.cap.diff.i64(ptr addrspace(200) nonnull %add.ptr18.i1594.i, ptr addrspace(200) nonnull %add.ptr4.i1244.i)
   br label %while.body164.i
 }
 

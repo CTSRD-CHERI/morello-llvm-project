@@ -4,12 +4,12 @@
 ; CHECK: ldursh w{{[0-9+]}}, [c0, #0]
 ; CHECK: ldursh w{{[0-9+]}}, [c0, #2]
 
-define <2 x i32> @fun(<2 x i16> addrspace(200)* %in) {
+define <2 x i32> @fun(ptr addrspace(200) %in) {
 entry:
   br i1 undef, label %if.end, label %if.then
 
 if.then:                                          ; preds = %entry
-  %0 = load <2 x i16>, <2 x i16> addrspace(200)* %in, align 2
+  %0 = load <2 x i16>, ptr addrspace(200) %in, align 2
   %1 = sext <2 x i16> %0 to <2 x i32>
   %2 = sub nsw <2 x i32> zeroinitializer, %1
   %3 = extractelement <2 x i32> %2, i32 0

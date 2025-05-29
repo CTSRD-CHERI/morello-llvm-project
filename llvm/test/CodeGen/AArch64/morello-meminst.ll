@@ -4,14 +4,14 @@
 
 target triple = "aarch64-none--elf"
 
-declare void @llvm.memset.p200i8.i64(i8 addrspace(200)* nocapture, i8, i64,  i1)
-declare void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* nocapture, i8 addrspace(200)* nocapture readonly, i64, i1)
-declare void @llvm.memmove.p200i8.p200i8.i64(i8 addrspace(200)* nocapture, i8 addrspace(200)* nocapture readonly, i64, i1)
+declare void @llvm.memset.p200.i64(ptr addrspace(200) nocapture, i8, i64,  i1)
+declare void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) nocapture, ptr addrspace(200) nocapture readonly, i64, i1)
+declare void @llvm.memmove.p200.p200.i64(ptr addrspace(200) nocapture, ptr addrspace(200) nocapture readonly, i64, i1)
 
 ; ALL-LABEL: testMemset
-define void @testMemset(i8 addrspace(200)* %p, i64 %n) {
+define void @testMemset(ptr addrspace(200) %p, i64 %n) {
 entry:
-  tail call void @llvm.memset.p200i8.i64(i8 addrspace(200)* %p, i8 0, i64 %n, i1 0)
+  tail call void @llvm.memset.p200.i64(ptr addrspace(200) %p, i8 0, i64 %n, i1 0)
   ret void
 ; CFUN: b	memset_c
 ; NOCFUN-NOT:   memset_c
@@ -19,9 +19,9 @@ entry:
 }
 
 ; ALL-LABEL: testMemcpy
-define void @testMemcpy(i8 addrspace(200)* %d, i8 addrspace(200)* %s, i64 %n) {
+define void @testMemcpy(ptr addrspace(200) %d, ptr addrspace(200) %s, i64 %n) {
 entry:
-  tail call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* %d, i8 addrspace(200)* %s, i64 %n, i1 0)
+  tail call void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) %d, ptr addrspace(200) %s, i64 %n, i1 0)
   ret void
 ; CFUN: b	memcpy_c
 ; NOCFUN-NOT:   memcpy_c
@@ -29,9 +29,9 @@ entry:
 }
 
 ; ALL-LABEL: testMemmove
-define void @testMemmove(i8 addrspace(200)* %d, i8 addrspace(200)* %s, i64 %n) {
+define void @testMemmove(ptr addrspace(200) %d, ptr addrspace(200) %s, i64 %n) {
 entry:
-  tail call void @llvm.memmove.p200i8.p200i8.i64(i8 addrspace(200)* %d, i8 addrspace(200)* %s, i64 %n, i1 0)
+  tail call void @llvm.memmove.p200.p200.i64(ptr addrspace(200) %d, ptr addrspace(200) %s, i64 %n, i1 0)
   ret void
 ; CFUN: b	memmove_c
 ; NOCFUN-NOT:	memmove_c

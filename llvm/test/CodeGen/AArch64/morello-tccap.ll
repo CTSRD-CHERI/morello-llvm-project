@@ -24,12 +24,11 @@ entry:
 ; CHECK-NOT: br cfp
 ; CHECK-NOT: br clr
 ; CHECK: br c{{.*}}
-  %call = tail call i8 addrspace(200)* bitcast (i8 addrspace(200)* (...) addrspace(200)* @bar to i8 addrspace(200)* () addrspace(200)*)()
-  tail call void bitcast (void (...) addrspace(200)* @baz to void () addrspace(200)*)()
-  %0 = bitcast i8 addrspace(200)* %call to void () addrspace(200)*
-  tail call void %0()
+  %call = tail call ptr addrspace(200) bitcast (ptr addrspace(200) (...) addrspace(200)* @bar to ptr addrspace(200) () addrspace(200)*)()
+  tail call void @baz()
+  tail call void %call()
   ret void
 }
 
-declare i8 addrspace(200)* @bar(...) local_unnamed_addr addrspace(200)
+declare ptr addrspace(200) @bar(...) local_unnamed_addr addrspace(200)
 declare void @baz(...) local_unnamed_addr addrspace(200)

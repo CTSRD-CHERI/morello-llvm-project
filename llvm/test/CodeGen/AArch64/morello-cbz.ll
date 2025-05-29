@@ -3,13 +3,13 @@
 
 declare i32 @foo(...)
 declare i32 @bar(...)
-declare i32 addrspace(200)* @baz()
+declare ptr addrspace(200) @baz()
 
 ; CHECK-LABEL: testCBZ:
 ; CHECK: cbz
-define i32 @testCBZ(i32 addrspace(200)* %a, i32 addrspace(200)* %b) {
+define i32 @testCBZ(ptr addrspace(200) %a, ptr addrspace(200) %b) {
 entry:
-  %cmp = icmp eq i32 addrspace(200)* %a, null
+  %cmp = icmp eq ptr addrspace(200) %a, null
   br i1 %cmp, label %cond.true, label %cond.false
 
 cond.true:
@@ -32,8 +32,8 @@ entry:
   br label %cond.true
 
 cond.true:
-  %call = tail call i32 addrspace(200)* @baz()
-  %cmp = icmp ne i32 addrspace(200)* %call, null
+  %call = tail call ptr addrspace(200) @baz()
+  %cmp = icmp ne ptr addrspace(200) %call, null
   br i1 %cmp, label %cond.true, label %cond.false
 
 cond.false:

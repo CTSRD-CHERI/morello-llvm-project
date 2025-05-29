@@ -4,7 +4,7 @@
 ; in c9/c10 and first i64 argument in x11.
 
 ; CHECK-LABEL: test_i64
-define chericcallcc void @test_i64(i8 addrspace(200)* %a1, i8 addrspace(200)* %a2, i64 %foo, i8 addrspace(200)* %a3, i64 %bar) {
+define chericcallcc void @test_i64(ptr addrspace(200) %a1, ptr addrspace(200) %a2, i64 %foo, ptr addrspace(200) %a3, i64 %bar) {
 ; CHECK: mov	x[[TMP:[0-9]+]], x11
 ; CHECK: mov	 x11, x1
 ; CHECK: mov	 x1, x[[TMP]]
@@ -27,12 +27,12 @@ define chericcallcc void @test_i64(i8 addrspace(200)* %a1, i8 addrspace(200)* %a
 ; CHECK-DAG: fmov d5, xzr
 ; CHECK-DAG: fmov d6, xzr
 ; CHECK-DAG: fmov d7, xzr
-  tail call chericcallcc void @b_i64(i8 addrspace(200)* %a3, i8 addrspace(200)* %a1, i64 %bar, i8 addrspace(200)* %a2, i64 %foo)
+  tail call chericcallcc void @b_i64(ptr addrspace(200) %a3, ptr addrspace(200) %a1, i64 %bar, ptr addrspace(200) %a2, i64 %foo)
   ret void
 }
 
 ; CHECK-LABEL: test_sret_fat
-define void @test_sret_fat(i8 addrspace(200) *%sr, i8 addrspace(200)* %a1, i64 %foo, i8 addrspace(200)* %a2, i8 addrspace(200)* %a3, i64 %bar) {
+define void @test_sret_fat(ptr addrspace(200) %sr, ptr addrspace(200) %a1, i64 %foo, ptr addrspace(200) %a2, ptr addrspace(200) %a3, i64 %bar) {
 ; CHECK-NOT: mov x8, xzr
 ; CHECK: mov c8, c0
 ; CHECK: mov x11, x5
@@ -54,12 +54,12 @@ define void @test_sret_fat(i8 addrspace(200) *%sr, i8 addrspace(200)* %a1, i64 %
 ; CHECK-DAG: fmov d5, xzr
 ; CHECK-DAG: fmov d6, xzr
 ; CHECK-DAG: fmov d7, xzr
-  tail call chericcallcc void @b_sret(i8 addrspace(200)* sret(i8) %sr, i8 addrspace(200)* %a3, i8 addrspace(200)* %a2, i64 %bar, i8 addrspace(200)* %a1, i64 %foo)
+  tail call chericcallcc void @b_sret(ptr addrspace(200) sret(i8) %sr, ptr addrspace(200) %a3, ptr addrspace(200) %a2, i64 %bar, ptr addrspace(200) %a1, i64 %foo)
   ret void
 }
 
 ; CHECK-LABEL: test_sret_i64
-define chericcallcc void @test_sret_i64(i8 *%sr, i8 addrspace(200)* %a1, i64 %foo, i8 addrspace(200)* %a2, i8 addrspace(200)* %a3, i64 %bar) {
+define chericcallcc void @test_sret_i64(ptr %sr, ptr addrspace(200) %a1, i64 %foo, ptr addrspace(200) %a2, ptr addrspace(200) %a3, i64 %bar) {
 ; CHECK: mov    x[[TMP:[0-9]+]], x0
 ; CHECK: mov    c0, c9
 ; CHECK: mov    x8, x11
@@ -80,12 +80,12 @@ define chericcallcc void @test_sret_i64(i8 *%sr, i8 addrspace(200)* %a1, i64 %fo
 ; CHECK-DAG: fmov d5, xzr
 ; CHECK-DAG: fmov d6, xzr
 ; CHECK-DAG: fmov d7, xzr
-  tail call chericcallcc void @b_sret_i64(i8* sret(i8) %sr, i8 addrspace(200)* %a3, i8 addrspace(200)* %a2, i64 %bar, i8 addrspace(200)* %a1, i64 %foo)
+  tail call chericcallcc void @b_sret_i64(ptr sret(i8) %sr, ptr addrspace(200) %a3, ptr addrspace(200) %a2, i64 %bar, ptr addrspace(200) %a1, i64 %foo)
   ret void
 }
 
 ; CHECK-LABEL: test_i32
-define chericcallcc void @test_i32(i8 addrspace(200)* %a1, i8 addrspace(200)* %a2, i32 %foo, i8 addrspace(200)* %a3, i32 %bar) {
+define chericcallcc void @test_i32(ptr addrspace(200) %a1, ptr addrspace(200) %a2, i32 %foo, ptr addrspace(200) %a3, i32 %bar) {
 ; CHECK: mov	w8, w11
 ; CHECK: mov	w11, w1
 ; CHECK: mov	w1, w8
@@ -108,11 +108,11 @@ define chericcallcc void @test_i32(i8 addrspace(200)* %a1, i8 addrspace(200)* %a
 ; CHECK-DAG: fmov d5, xzr
 ; CHECK-DAG: fmov d6, xzr
 ; CHECK-DAG: fmov d7, xzr
-  tail call chericcallcc void @b_i32(i8 addrspace(200)* %a3, i8 addrspace(200)* %a1, i32 %bar, i8 addrspace(200)* %a2, i32 %foo)
+  tail call chericcallcc void @b_i32(ptr addrspace(200) %a3, ptr addrspace(200) %a1, i32 %bar, ptr addrspace(200) %a2, i32 %foo)
   ret void
 }
 
-declare chericcallcc void @b_i64(i8 addrspace(200)*, i8 addrspace(200)*, i64, i8 addrspace(200)*, i64)
-declare chericcallcc void @b_i32(i8 addrspace(200)*, i8 addrspace(200)*, i32, i8 addrspace(200)*, i32)
-declare chericcallcc void @b_sret(i8 addrspace(200)* sret(i8), i8 addrspace(200)*, i8 addrspace(200)*, i64, i8 addrspace(200)*, i64)
-declare chericcallcc void @b_sret_i64(i8* sret(i8), i8 addrspace(200)*, i8 addrspace(200)*, i64, i8 addrspace(200)*, i64)
+declare chericcallcc void @b_i64(ptr addrspace(200), ptr addrspace(200), i64, ptr addrspace(200), i64)
+declare chericcallcc void @b_i32(ptr addrspace(200), ptr addrspace(200), i32, ptr addrspace(200), i32)
+declare chericcallcc void @b_sret(ptr addrspace(200) sret(i8), ptr addrspace(200), ptr addrspace(200), i64, ptr addrspace(200), i64)
+declare chericcallcc void @b_sret_i64(ptr sret(i8), ptr addrspace(200), ptr addrspace(200), i64, ptr addrspace(200), i64)

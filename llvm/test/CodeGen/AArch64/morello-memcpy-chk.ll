@@ -8,21 +8,21 @@ target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:12
 ; CFUN: b memcpy_c
 ; NOCFUN-NOT: memcpy_c
 ; NOCFUN: b memcpy
-define void @bar(i8 addrspace(200)* %dst, i8 addrspace(200)* %src, i32 %size) addrspace(200) {
+define void @bar(ptr addrspace(200) %dst, ptr addrspace(200) %src, i32 %size) addrspace(200) {
 entry:
   %conv.i = zext i32 %size to i64
-  %0 = tail call i64 @llvm.objectsize.i64.p200i8(i8 addrspace(200)* %dst, i1 false)
-  %call.i = tail call i8 addrspace(200)* @__memcpy_chk(i8 addrspace(200)* %dst, i8 addrspace(200)* %src, i64 %conv.i, i64 %0) #0
+  %0 = tail call i64 @llvm.objectsize.i64.p200(ptr addrspace(200) %dst, i1 false)
+  %call.i = tail call ptr addrspace(200) @__memcpy_chk(ptr addrspace(200) %dst, ptr addrspace(200) %src, i64 %conv.i, i64 %0) #0
   ret void
 }
 
 ; ALL-LABEL: baz
-define void @baz(i8 addrspace(200)* %dst, i8 addrspace(200)* %src) addrspace(200) {
+define void @baz(ptr addrspace(200) %dst, ptr addrspace(200) %src) addrspace(200) {
 entry:
 ; CFUN: b memcpy_c
 ; NOCFUN-NOT: memcpy_c
 ; NOCFUN: b memcpy
-  %call.i = tail call i8 addrspace(200)* @__memcpy_chk(i8 addrspace(200)* %dst, i8 addrspace(200)* %src, i64 32, i64 32) #0
+  %call.i = tail call ptr addrspace(200) @__memcpy_chk(ptr addrspace(200) %dst, ptr addrspace(200) %src, i64 32, i64 32) #0
   ret void
 }
 
@@ -30,9 +30,9 @@ entry:
 ; CFUN: b memcpy_c
 ; NOCFUN-NOT: memcpy_c
 ; NOCFUN: b memcpy
-define void @foo(i8 addrspace(200)* %dst, i8 addrspace(200)* %src, i32 %size) addrspace(200) {
+define void @foo(ptr addrspace(200) %dst, ptr addrspace(200) %src, i32 %size) addrspace(200) {
 entry:
-  %call.i = tail call i8 addrspace(200)* @__memcpy_chk(i8 addrspace(200)* %dst, i8 addrspace(200)* %src, i64 32, i64 32) #0
+  %call.i = tail call ptr addrspace(200) @__memcpy_chk(ptr addrspace(200) %dst, ptr addrspace(200) %src, i64 32, i64 32) #0
   ret void
 }
 
@@ -40,21 +40,21 @@ entry:
 ; CFUN: b memmove_c
 ; NOCFUN-NOT: memmove_c
 ; NOCFUN: b memmove
-define void @barmove(i8 addrspace(200)* %dst, i8 addrspace(200)* %src, i32 %size) addrspace(200) {
+define void @barmove(ptr addrspace(200) %dst, ptr addrspace(200) %src, i32 %size) addrspace(200) {
 entry:
   %conv.i = zext i32 %size to i64
-  %0 = tail call i64 @llvm.objectsize.i64.p200i8(i8 addrspace(200)* %dst, i1 false)
-  %call.i = tail call i8 addrspace(200)* @__memmove_chk(i8 addrspace(200)* %dst, i8 addrspace(200)* %src, i64 %conv.i, i64 %0) #0
+  %0 = tail call i64 @llvm.objectsize.i64.p200(ptr addrspace(200) %dst, i1 false)
+  %call.i = tail call ptr addrspace(200) @__memmove_chk(ptr addrspace(200) %dst, ptr addrspace(200) %src, i64 %conv.i, i64 %0) #0
   ret void
 }
 
 ; ALL-LABEL: bazmove
-define void @bazmove(i8 addrspace(200)* %dst, i8 addrspace(200)* %src) addrspace(200) {
+define void @bazmove(ptr addrspace(200) %dst, ptr addrspace(200) %src) addrspace(200) {
 entry:
 ; CFUN: b memmove_c
 ; NOCFUN-NOT: memmove_c
 ; NOCFUN: b memmove
-  %call.i = tail call i8 addrspace(200)* @__memmove_chk(i8 addrspace(200)* %dst, i8 addrspace(200)* %src, i64 32, i64 32) #0
+  %call.i = tail call ptr addrspace(200) @__memmove_chk(ptr addrspace(200) %dst, ptr addrspace(200) %src, i64 32, i64 32) #0
   ret void
 }
 
@@ -62,14 +62,14 @@ entry:
 ; CFUN: b memmove_c
 ; NOCFUN-NOT: memmove_c
 ; NOCFUN: b memmove
-define void @foomove(i8 addrspace(200)* %dst, i8 addrspace(200)* %src, i32 %size) addrspace(200) {
+define void @foomove(ptr addrspace(200) %dst, ptr addrspace(200) %src, i32 %size) addrspace(200) {
 entry:
-  %call.i = tail call i8 addrspace(200)* @__memmove_chk(i8 addrspace(200)* %dst, i8 addrspace(200)* %src, i64 32, i64 32) #0
+  %call.i = tail call ptr addrspace(200) @__memmove_chk(ptr addrspace(200) %dst, ptr addrspace(200) %src, i64 32, i64 32) #0
   ret void
 }
 
-declare i8 addrspace(200)* @__memcpy_chk(i8 addrspace(200)*, i8 addrspace(200)*, i64, i64) addrspace(200)
-declare i8 addrspace(200)* @__memmove_chk(i8 addrspace(200)*, i8 addrspace(200)*, i64, i64) addrspace(200)
-declare i64 @llvm.objectsize.i64.p200i8(i8 addrspace(200)*, i1) addrspace(200)
+declare ptr addrspace(200) @__memcpy_chk(ptr addrspace(200), ptr addrspace(200), i64, i64) addrspace(200)
+declare ptr addrspace(200) @__memmove_chk(ptr addrspace(200), ptr addrspace(200), i64, i64) addrspace(200)
+declare i64 @llvm.objectsize.i64.p200(ptr addrspace(200), i1) addrspace(200)
 
 attributes #0 = { must_preserve_cheri_tags }

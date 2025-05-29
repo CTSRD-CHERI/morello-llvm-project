@@ -15,12 +15,12 @@ define void @pluto() local_unnamed_addr addrspace(200) align 2 {
 ; CHECK-NEXT:    br label [[BB1:%.*]]
 ; CHECK:       bb1:
 ; CHECK-NEXT:    [[LSR_IV:%.*]] = phi i64 [ 0, [[BB1_PREHEADER]] ], [ [[LSR_IV_NEXT:%.*]], [[BB1]] ]
-; CHECK-NEXT:    [[TMP2:%.*]] = load i32, i32 addrspace(200)* undef, align 16
+; CHECK-NEXT:    [[TMP2:%.*]] = load i32, ptr addrspace(200) undef, align 16
 ; CHECK-NEXT:    [[TMP3:%.*]] = zext i32 [[TMP2]] to i64
-; CHECK-NEXT:    [[TMP5:%.*]] = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* undef, align 16
+; CHECK-NEXT:    [[TMP5:%.*]] = load ptr addrspace(200), ptr addrspace(200) undef, align 16
 ; CHECK-NEXT:    [[TMP0:%.*]] = add i64 [[LSR_IV]], [[TMP3]]
-; CHECK-NEXT:    [[SCEVGEP:%.*]] = getelementptr i8, i8 addrspace(200)* [[TMP5]], i64 [[TMP0]]
-; CHECK-NEXT:    [[TMP8:%.*]] = load i8, i8 addrspace(200)* [[SCEVGEP]], align 1
+; CHECK-NEXT:    [[SCEVGEP:%.*]] = getelementptr i8, ptr addrspace(200) [[TMP5]], i64 [[TMP0]]
+; CHECK-NEXT:    [[TMP8:%.*]] = load i8, ptr addrspace(200) [[SCEVGEP]], align 1
 ; CHECK-NEXT:    [[LSR_IV_NEXT]] = add i64 [[LSR_IV]], -1
 ; CHECK-NEXT:    br label [[BB1]]
 ; CHECK:       bb10:
@@ -31,13 +31,13 @@ bb:
 
 bb1:
   %tmp = phi i64 [ %tmp9, %bb1 ], [ undef, %bb ]
-  %tmp2 = load i32, i32 addrspace(200)* undef, align 16
+  %tmp2 = load i32, ptr addrspace(200) undef, align 16
   %tmp3 = zext i32 %tmp2 to i64
   %tmp4 = add nsw i64 %tmp, %tmp3
-  %tmp5 = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* undef, align 16
+  %tmp5 = load ptr addrspace(200), ptr addrspace(200) undef, align 16
   %tmp6 = sub nsw i64 %tmp4, undef
-  %tmp7 = getelementptr inbounds i8, i8 addrspace(200)* %tmp5, i64 %tmp6
-  %tmp8 = load i8, i8 addrspace(200)* %tmp7, align 1
+  %tmp7 = getelementptr inbounds i8, ptr addrspace(200) %tmp5, i64 %tmp6
+  %tmp8 = load i8, ptr addrspace(200) %tmp7, align 1
   %tmp9 = add nsw i64 %tmp, -1
   br label %bb1
 

@@ -39,19 +39,18 @@ target triple = "aarch64-none-unknown-elf"
 %struct.s2 = type { %struct.s1, %struct.s1 }
 %struct.s1 = type { i64, i64 }
 
-define void @foo(%struct.s2 addrspace(200)* sret(%struct.s2) %agg.result, i64 %x, i64 %y) addrspace(200) {
+define void @foo(ptr addrspace(200) sret(%struct.s2) %agg.result, i64 %x, i64 %y) addrspace(200) {
 entry:
   %add = add i64 %x, 1
-  %x1 = getelementptr inbounds %struct.s2, %struct.s2 addrspace(200)* %agg.result, i64 0, i32 0, i32 0
-  store i64 %add, i64 addrspace(200)* %x1, align 8
+  store i64 %add, ptr addrspace(200) %agg.result, align 8
   %add2 = add i64 %y, 1
-  %y4 = getelementptr inbounds %struct.s2, %struct.s2 addrspace(200)* %agg.result, i64 0, i32 0, i32 1
-  store i64 %add2, i64 addrspace(200)* %y4, align 8
+  %y4 = getelementptr inbounds %struct.s2, ptr addrspace(200) %agg.result, i64 0, i32 0, i32 1
+  store i64 %add2, ptr addrspace(200) %y4, align 8
   %sub = add i64 %x, -1
-  %x5 = getelementptr inbounds %struct.s2, %struct.s2 addrspace(200)* %agg.result, i64 0, i32 1, i32 0
-  store i64 %sub, i64 addrspace(200)* %x5, align 8
+  %x5 = getelementptr inbounds %struct.s2, ptr addrspace(200) %agg.result, i64 0, i32 1, i32 0
+  store i64 %sub, ptr addrspace(200) %x5, align 8
   %sub6 = add i64 %y, -1
-  %y8 = getelementptr inbounds %struct.s2, %struct.s2 addrspace(200)* %agg.result, i64 0, i32 1, i32 1
-  store i64 %sub6, i64 addrspace(200)* %y8, align 8
+  %y8 = getelementptr inbounds %struct.s2, ptr addrspace(200) %agg.result, i64 0, i32 1, i32 1
+  store i64 %sub6, ptr addrspace(200) %y8, align 8
   ret void
 }

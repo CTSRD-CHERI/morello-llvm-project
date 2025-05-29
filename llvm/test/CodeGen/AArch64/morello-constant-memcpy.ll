@@ -7,10 +7,10 @@
 ; CHECK: strb wzr, [c0, #4]
 ; CHECK: movk w[[REG]], #25697, lsl #16
 ; CHECK: str w8, [c0]
-define void @fun(i8 addrspace(200)* nocapture %tt) {
+define void @fun(ptr addrspace(200) nocapture %tt) {
 entry:
-  tail call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* %tt, i8 addrspace(200)* getelementptr inbounds ([5 x i8], [5 x i8] addrspace(200)* @.str, i64 0, i64 0), i64 5, i32 1, i1 false)
+  tail call void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) %tt, ptr addrspace(200) @.str, i64 5, i32 1, i1 false)
   ret void
 }
 
-declare void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* nocapture writeonly, i8 addrspace(200)* nocapture readonly, i64, i32, i1)
+declare void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) nocapture writeonly, ptr addrspace(200) nocapture readonly, i64, i32, i1)

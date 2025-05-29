@@ -6,11 +6,11 @@
 
 ; Spilling an X pair to the stack was faulting because we were using
 ; the A64 opcode (STPXi).
-define linkonce_odr hidden i128 @foo(i128 addrspace(200) *%in, i128 %in2, i128 %in3) addrspace(200) {
+define linkonce_odr hidden i128 @foo(ptr addrspace(200) %in, i128 %in2, i128 %in3) addrspace(200) {
 entry:
   br label %loop
 loop:
-  %0 = cmpxchg i128 addrspace(200)* %in, i128 %in2, i128 %in3 monotonic monotonic, align 16
+  %0 = cmpxchg ptr addrspace(200) %in, i128 %in2, i128 %in3 monotonic monotonic, align 16
   %1 = extractvalue { i128, i1 } %0, 0
   %2 = extractvalue { i128, i1 } %0, 1
   br i1 %2, label %done, label %loop

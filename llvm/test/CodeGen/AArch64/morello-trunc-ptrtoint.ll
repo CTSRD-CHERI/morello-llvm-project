@@ -2,7 +2,7 @@
 ; RUN: llc -mtriple=aarch64-none-elf < %s -mattr=+c64,+morello -target-abi purecap | FileCheck %s
 
 @a = addrspace(200) global i32 0, align 4
-@b = addrspace(200) constant i64 ptrtoint (i32 addrspace(200)* @a to i64), align 8
+@b = addrspace(200) constant i64 ptrtoint (ptr addrspace(200) @a to i64), align 8
 
 define i32 @f() addrspace(200) #0 {
 ; CHECK-LABEL: f:
@@ -15,5 +15,5 @@ define i32 @f() addrspace(200) #0 {
 ; CHECK-NEXT:    // kill: def $w0 killed $w0 killed $x0
 ; CHECK-NEXT:    ret c30
 entry:
-  ret i32 ptrtoint (i32 addrspace(200)* @a to i32)
+  ret i32 ptrtoint (ptr addrspace(200) @a to i32)
 }

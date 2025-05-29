@@ -9,24 +9,23 @@ target triple = "aarch64-none-unknown-elf"
 ; expression for a cheri capability which needs to use a call to
 ; llvm.cheri.cap.address.get.i64.
 
-define i32 @foo(i32 addrspace(200)* %a) addrspace(200) {
+define i32 @foo(ptr addrspace(200) %a) addrspace(200) {
 ; CHECK-LABEL: @foo(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[A_ADDR:%.*]] = alloca i32 addrspace(200)*, align 16, addrspace(200)
+; CHECK-NEXT:    [[A_ADDR:%.*]] = alloca ptr addrspace(200), align 16, addrspace(200)
 ; CHECK-NEXT:    [[SUM:%.*]] = alloca i32, align 4, addrspace(200)
-; CHECK-NEXT:    [[I:%.*]] = alloca i32 addrspace(200)*, align 16, addrspace(200)
-; CHECK-NEXT:    store i32 addrspace(200)* [[A:%.*]], i32 addrspace(200)* addrspace(200)* [[A_ADDR]], align 16
-; CHECK-NEXT:    [[TMP0:%.*]] = load i32 addrspace(200)*, i32 addrspace(200)* addrspace(200)* [[A_ADDR]], align 16
-; CHECK-NEXT:    [[TMP1:%.*]] = bitcast i32 addrspace(200)* [[TMP0]] to i8 addrspace(200)*
-; CHECK-NEXT:    [[TMP2:%.*]] = call i64 @llvm.cheri.cap.address.get.i64(i8 addrspace(200)* [[TMP1]])
-; CHECK-NEXT:    [[SUM_PROMOTED:%.*]] = load i32, i32 addrspace(200)* [[SUM]], align 4
+; CHECK-NEXT:    [[I:%.*]] = alloca ptr addrspace(200), align 16, addrspace(200)
+; CHECK-NEXT:    store ptr addrspace(200) [[A:%.*]], ptr addrspace(200) [[A_ADDR]], align 16
+; CHECK-NEXT:    [[TMP0:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[A_ADDR]], align 16
+; CHECK-NEXT:    [[TMP2:%.*]] = call i64 @llvm.cheri.cap.address.get.i64(ptr addrspace(200) [[TMP0]])
+; CHECK-NEXT:    [[SUM_PROMOTED:%.*]] = load i32, ptr addrspace(200) [[SUM]], align 4
 ; CHECK-NEXT:    [[UMAX:%.*]] = call i64 @llvm.umax.i64(i64 [[TMP2]], i64 44)
 ; CHECK-NEXT:    [[TMP3:%.*]] = add i64 [[UMAX]], -41
 ; CHECK-NEXT:    [[TMP4:%.*]] = lshr i64 [[TMP3]], 2
 ; CHECK-NEXT:    [[TMP5:%.*]] = trunc i64 [[TMP4]] to i32
 ; CHECK-NEXT:    [[TMP6:%.*]] = shl nuw i64 [[TMP4]], 2
 ; CHECK-NEXT:    [[TMP7:%.*]] = add i64 [[TMP6]], 44
-; CHECK-NEXT:    [[UGLYGEP:%.*]] = getelementptr i8, i8 addrspace(200)* null, i64 [[TMP7]]
+; CHECK-NEXT:    [[UGLYGEP:%.*]] = getelementptr i8, ptr addrspace(200) null, i64 [[TMP7]]
 ; CHECK-NEXT:    br label [[FOR_COND:%.*]]
 ; CHECK:       for.cond:
 ; CHECK-NEXT:    br i1 false, label [[FOR_BODY:%.*]], label [[FOR_END:%.*]]
@@ -36,25 +35,24 @@ define i32 @foo(i32 addrspace(200)* %a) addrspace(200) {
 ; CHECK-NEXT:    br label [[FOR_COND]]
 ; CHECK:       for.end:
 ; CHECK-NEXT:    [[TMP8:%.*]] = add i32 [[SUM_PROMOTED]], [[TMP5]]
-; CHECK-NEXT:    [[UGLYGEP1:%.*]] = bitcast i8 addrspace(200)* [[UGLYGEP]] to i32 addrspace(200)*
-; CHECK-NEXT:    store i32 addrspace(200)* [[UGLYGEP1]], i32 addrspace(200)* addrspace(200)* [[I]], align 16
-; CHECK-NEXT:    store i32 [[TMP8]], i32 addrspace(200)* [[SUM]], align 4
-; CHECK-NEXT:    [[TMP9:%.*]] = load i32, i32 addrspace(200)* [[SUM]], align 4
+; CHECK-NEXT:    store ptr addrspace(200) [[UGLYGEP]], ptr addrspace(200) [[I]], align 16
+; CHECK-NEXT:    store i32 [[TMP8]], ptr addrspace(200) [[SUM]], align 4
+; CHECK-NEXT:    [[TMP9:%.*]] = load i32, ptr addrspace(200) [[SUM]], align 4
 ; CHECK-NEXT:    ret i32 [[TMP9]]
 ;
 entry:
-  %a.addr = alloca i32 addrspace(200)*, align 16, addrspace(200)
+  %a.addr = alloca ptr addrspace(200), align 16, addrspace(200)
   %sum = alloca i32, align 4, addrspace(200)
-  %i = alloca i32 addrspace(200)*, align 16, addrspace(200)
-  store i32 addrspace(200)* %a, i32 addrspace(200)* addrspace(200)* %a.addr, align 16
-  %0 = load i32 addrspace(200)*, i32 addrspace(200)* addrspace(200)* %a.addr, align 16
-  %sum.promoted = load i32, i32 addrspace(200)* %sum, align 4
+  %i = alloca ptr addrspace(200), align 16, addrspace(200)
+  store ptr addrspace(200) %a, ptr addrspace(200) %a.addr, align 16
+  %0 = load ptr addrspace(200), ptr addrspace(200) %a.addr, align 16
+  %sum.promoted = load i32, ptr addrspace(200) %sum, align 4
   br label %for.cond
 
 for.cond:                                         ; preds = %for.inc, %entry
   %inc1 = phi i32 [ %sum.promoted, %entry ], [ %inc, %for.inc ]
-  %storemerge = phi i32 addrspace(200)* [ bitcast (i8 addrspace(200)* getelementptr (i8, i8 addrspace(200)* null, i64 44) to i32 addrspace(200)*), %entry ], [ %incdec.ptr, %for.inc ]
-  %cmp = icmp ult i32 addrspace(200)* %storemerge, %0
+  %storemerge = phi ptr addrspace(200) [ getelementptr (i8, ptr addrspace(200) null, i64 44), %entry ], [ %incdec.ptr, %for.inc ]
+  %cmp = icmp ult ptr addrspace(200) %storemerge, %0
   br i1 %cmp, label %for.body, label %for.end
 
 for.body:                                         ; preds = %for.cond
@@ -62,14 +60,14 @@ for.body:                                         ; preds = %for.cond
   br label %for.inc
 
 for.inc:                                          ; preds = %for.body
-  %incdec.ptr = getelementptr inbounds i32, i32 addrspace(200)* %storemerge, i64 1
+  %incdec.ptr = getelementptr inbounds i32, ptr addrspace(200) %storemerge, i64 1
   br label %for.cond
 
 for.end:                                          ; preds = %for.cond
   %inc1.lcssa = phi i32 [ %inc1, %for.cond ]
-  %storemerge.lcssa = phi i32 addrspace(200)* [ %storemerge, %for.cond ]
-  store i32 addrspace(200)* %storemerge.lcssa, i32 addrspace(200)* addrspace(200)* %i, align 16
-  store i32 %inc1.lcssa, i32 addrspace(200)* %sum, align 4
-  %1 = load i32, i32 addrspace(200)* %sum, align 4
+  %storemerge.lcssa = phi ptr addrspace(200) [ %storemerge, %for.cond ]
+  store ptr addrspace(200) %storemerge.lcssa, ptr addrspace(200) %i, align 16
+  store i32 %inc1.lcssa, ptr addrspace(200) %sum, align 4
+  %1 = load i32, ptr addrspace(200) %sum, align 4
   ret i32 %1
 }

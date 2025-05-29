@@ -16,18 +16,18 @@ target triple = "aarch64-none-unknown-elf"
 %"struct.std::__1::__compressed_pair_elem.6.23.303.583.723.1003.1143.1283.1703.2123.3103.4923.5063.5203.5343.5483.5763.5903.7284" = type { %"struct.std::__1::basic_string<wchar_t, std::__1::char_traits<wchar_t>, std::__1::allocator<wchar_t> >::__rep.22.302.582.722.1002.1142.1282.1702.2122.3102.4922.5062.5202.5342.5482.5762.5902.7283" }
 %"struct.std::__1::basic_string<wchar_t, std::__1::char_traits<wchar_t>, std::__1::allocator<wchar_t> >::__rep.22.302.582.722.1002.1142.1282.1702.2122.3102.4922.5062.5202.5342.5482.5762.5902.7283" = type { %union.anon.7.21.301.581.721.1001.1141.1281.1701.2121.3101.4921.5061.5201.5341.5481.5761.5901.7282 }
 %union.anon.7.21.301.581.721.1001.1141.1281.1701.2121.3101.4921.5061.5201.5341.5481.5761.5901.7282 = type { %"struct.std::__1::basic_string<wchar_t, std::__1::char_traits<wchar_t>, std::__1::allocator<wchar_t> >::__long.20.300.580.720.1000.1140.1280.1700.2120.3100.4920.5060.5200.5340.5480.5760.5900.7281" }
-%"struct.std::__1::basic_string<wchar_t, std::__1::char_traits<wchar_t>, std::__1::allocator<wchar_t> >::__long.20.300.580.720.1000.1140.1280.1700.2120.3100.4920.5060.5200.5340.5480.5760.5900.7281" = type { i64, i64, i32 addrspace(200)* }
+%"struct.std::__1::basic_string<wchar_t, std::__1::char_traits<wchar_t>, std::__1::allocator<wchar_t> >::__long.20.300.580.720.1000.1140.1280.1700.2120.3100.4920.5060.5200.5340.5480.5760.5900.7281" = type { i64, i64, ptr addrspace(200) }
 
 $_ZNKSt3__17num_getIwNS_19istreambuf_iteratorIwNS_11char_traitsIwEEEEE6do_getES4_S4_QRNS_8ios_baseEQRjQRb = comdat any
 
 @_ZNSt3__15ctypeIwE2idE = external dso_local addrspace(200) global { %"struct.std::__1::once_flag.0.280.560.700.980.1120.1260.1680.2100.3080.4900.5040.5180.5320.5460.5740.5880.7280", i32 }, align 8
 
 ; Function Attrs: argmemonly nounwind
-declare void @llvm.lifetime.end.p200i8(i64, i8 addrspace(200)* nocapture) addrspace(200) #0
+declare void @llvm.lifetime.end.p200(i64, ptr addrspace(200) nocapture) addrspace(200) #0
 
 declare dso_local i32 @__gxx_personality_v0(...) addrspace(200)
 
-define dso_local void @_ZNKSt3__17num_getIwNS_19istreambuf_iteratorIwNS_11char_traitsIwEEEEE6do_getES4_S4_QRNS_8ios_baseEQRjQRb() unnamed_addr addrspace(200) #1 comdat align 2 personality i8 addrspace(200)* bitcast (i32 (...) addrspace(200)* @__gxx_personality_v0 to i8 addrspace(200)*) {
+define dso_local void @_ZNKSt3__17num_getIwNS_19istreambuf_iteratorIwNS_11char_traitsIwEEEEE6do_getES4_S4_QRNS_8ios_baseEQRjQRb() unnamed_addr addrspace(200) #1 comdat align 2 personality ptr addrspace(200) @__gxx_personality_v0 {
 entry:
   %__names = alloca [2 x %"class.std::__1::basic_string.4.25.305.585.725.1005.1145.1285.1705.2125.3105.4925.5065.5205.5345.5485.5765.5905.7286"], align 16, addrspace(200)
   invoke void @_ZNKSt3__16locale9use_facetEQRNS0_2idE()
@@ -41,17 +41,16 @@ invoke.cont28:                                    ; preds = %invoke.cont
   unreachable
 
 lpad:                                             ; preds = %entry
-  %0 = landingpad { i8 addrspace(200)*, i32 }
+  %0 = landingpad { ptr addrspace(200), i32 }
           cleanup
-  resume { i8 addrspace(200)*, i32 } undef
+  resume { ptr addrspace(200), i32 } undef
 
 lpad27:                                           ; preds = %invoke.cont
-  %1 = landingpad { i8 addrspace(200)*, i32 }
+  %1 = landingpad { ptr addrspace(200), i32 }
           cleanup
-  %arraydestroy.element40 = getelementptr inbounds [2 x %"class.std::__1::basic_string.4.25.305.585.725.1005.1145.1285.1705.2125.3105.4925.5065.5205.5345.5485.5765.5905.7286"], [2 x %"class.std::__1::basic_string.4.25.305.585.725.1005.1145.1285.1705.2125.3105.4925.5065.5205.5345.5485.5765.5905.7286"] addrspace(200)* %__names, i64 0, i64 1
-  %__size_.i.i = bitcast %"class.std::__1::basic_string.4.25.305.585.725.1005.1145.1285.1705.2125.3105.4925.5065.5205.5345.5485.5765.5905.7286" addrspace(200)* %arraydestroy.element40 to i8 addrspace(200)*
-  %2 = load i8, i8 addrspace(200)* %__size_.i.i, align 16, !tbaa !1
-  call void @llvm.lifetime.end.p200i8(i64 64, i8 addrspace(200)* null) #2
+  %arraydestroy.element40 = getelementptr inbounds [2 x %"class.std::__1::basic_string.4.25.305.585.725.1005.1145.1285.1705.2125.3105.4925.5065.5205.5345.5485.5765.5905.7286"], ptr addrspace(200) %__names, i64 0, i64 1
+  %2 = load i8, ptr addrspace(200) %arraydestroy.element40, align 16, !tbaa !1
+  call void @llvm.lifetime.end.p200(i64 64, ptr addrspace(200) null) #2
   unreachable
 }
 

@@ -40,11 +40,11 @@ define i32 @test_generaldynamic() {
 ; NOPIC-NEXT:    scbnds c0, c0, x8
 ; NOPIC-NEXT:    ldr w0, [c0]
 ; NOPIC-NEXT:    ret c30
-  %val = load i32, i32 addrspace(200)* @general_dynamic_var
+  %val = load i32, ptr addrspace(200) @general_dynamic_var
   ret i32 %val
 }
 
-define i32 addrspace(200)* @test_generaldynamic_addr() {
+define ptr addrspace(200) @test_generaldynamic_addr() {
 ; PIC-LABEL: test_generaldynamic_addr:
 ; PIC:       .Lfunc_begin1:
 ; PIC-NEXT:    .cfi_startproc
@@ -73,7 +73,7 @@ define i32 addrspace(200)* @test_generaldynamic_addr() {
 ; NOPIC-NEXT:    add c0, c1, x0, uxtx
 ; NOPIC-NEXT:    scbnds c0, c0, x8
 ; NOPIC-NEXT:    ret c30
-  ret i32 addrspace(200)* @general_dynamic_var
+  ret ptr addrspace(200) @general_dynamic_var
 
 }
 
@@ -116,11 +116,11 @@ define i32 @test_localdynamic() {
 ; NOPIC-NEXT:    scbnds c0, c0, x8
 ; NOPIC-NEXT:    ldr w0, [c0]
 ; NOPIC-NEXT:    ret c30
-  %val = load i32, i32 addrspace(200)* @local_dynamic_var
+  %val = load i32, ptr addrspace(200) @local_dynamic_var
   ret i32 %val
 }
 
-define i32 addrspace(200)* @test_localdynamic_addr() {
+define ptr addrspace(200) @test_localdynamic_addr() {
 ; PIC-LABEL: test_localdynamic_addr:
 ; PIC:       .Lfunc_begin3:
 ; PIC-NEXT:    .cfi_startproc
@@ -154,7 +154,7 @@ define i32 addrspace(200)* @test_localdynamic_addr() {
 ; NOPIC-NEXT:    add c0, c1, x0, uxtx
 ; NOPIC-NEXT:    scbnds c0, c0, x8
 ; NOPIC-NEXT:    ret c30
- ret i32 addrspace(200)* @local_dynamic_var
+ ret ptr addrspace(200) @local_dynamic_var
 }
 
 @local_dynamic_var2 = external thread_local(localdynamic) addrspace(200) global i32
@@ -209,8 +209,8 @@ define i32 @test_localdynamic_deduplicate() {
 ; NOPIC-NEXT:    ldr w9, [c1]
 ; NOPIC-NEXT:    add w0, w8, w9
 ; NOPIC-NEXT:    ret c30
-  %val = load i32, i32 addrspace(200)* @local_dynamic_var
-  %val2 = load i32, i32 addrspace(200)* @local_dynamic_var2
+  %val = load i32, ptr addrspace(200) @local_dynamic_var
+  %val2 = load i32, ptr addrspace(200) @local_dynamic_var2
 
   %sum = add i32 %val, %val2
   ret i32 %sum

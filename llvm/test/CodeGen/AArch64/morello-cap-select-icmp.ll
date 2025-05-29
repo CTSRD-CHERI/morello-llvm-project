@@ -8,12 +8,12 @@ target triple = "aarch64-none-unknown-elf"
 ; the possilbly different metadata from %yy.
 
 ; CHECK-LABEL: foo
-; CHECK: %cmp = icmp eq i8 addrspace(200)* %xx, %yy
-; CHECK: %yy.xx = select i1 %cmp, i8 addrspace(200)* %yy, i8 addrspace(200)* %xx
-; CHECK: ret i8 addrspace(200)* %yy.xx
-define dso_local i8 addrspace(200)* @foo(i8 addrspace(200)* %xx, i8 addrspace(200)* %yy) {
+; CHECK: %cmp = icmp eq ptr addrspace(200) %xx, %yy
+; CHECK: %yy.xx = select i1 %cmp, ptr addrspace(200) %yy, ptr addrspace(200) %xx
+; CHECK: ret ptr addrspace(200) %yy.xx
+define dso_local ptr addrspace(200) @foo(ptr addrspace(200) %xx, ptr addrspace(200) %yy) {
 entry:
-  %cmp = icmp eq i8 addrspace(200)* %xx, %yy
-  %yy.xx = select i1 %cmp, i8 addrspace(200)* %yy, i8 addrspace(200)* %xx
-  ret i8 addrspace(200)* %yy.xx
+  %cmp = icmp eq ptr addrspace(200) %xx, %yy
+  %yy.xx = select i1 %cmp, ptr addrspace(200) %yy, ptr addrspace(200) %xx
+  ret ptr addrspace(200) %yy.xx
 }

@@ -6,9 +6,9 @@ target triple = "aarch64-none--elf"
 $g = comdat any
 
 @i = addrspace(200) global i32 1, align 4
-@j = addrspace(200) global i32 addrspace(200)* @i, align 16
-@f = addrspace(200) global void (...) addrspace(200)* bitcast (void () addrspace(200)* @foo to void (...) addrspace(200)*), align 16
-@g = addrspace(200) global void (...) addrspace(200)* bitcast (void () addrspace(200)* @foo to void (...) addrspace(200)*), align 16, comdat
+@j = addrspace(200) global ptr addrspace(200) @i, align 16
+@f = addrspace(200) global ptr addrspace(200) @foo, align 16
+@g = addrspace(200) global ptr addrspace(200) @foo, align 16, comdat
 
 ; Function Attrs: nounwind readnone
 define void @foo() addrspace(200) {

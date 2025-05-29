@@ -7,8 +7,8 @@
 ; CHECK: ldur xzr, [c{{[0-9]+}}, #-8]
 ; CHECK: ret
 define void @t1_cap() {
-  %incdec.ptr = getelementptr inbounds i64, i64 addrspace(200)* @object1, i64 -1
-  %tmp = load volatile i64, i64 addrspace(200)* %incdec.ptr, align 8
+  %incdec.ptr = getelementptr inbounds i64, ptr addrspace(200) @object1, i64 -1
+  %tmp = load volatile i64, ptr addrspace(200) %incdec.ptr, align 8
   ret void
 }
 
@@ -18,8 +18,8 @@ define void @t1_cap() {
 ; CHECK: [[ADDREG]]]
 ; CHECK: ret
 define void @t2_imm_cap() {
-  %incdec.ptr = getelementptr inbounds i64, i64 addrspace(200)* @object1, i64 -33
-  %tmp = load volatile i64, i64 addrspace(200)* %incdec.ptr, align 8
+  %incdec.ptr = getelementptr inbounds i64, ptr addrspace(200) @object1, i64 -33
+  %tmp = load volatile i64, ptr addrspace(200) %incdec.ptr, align 8
   ret void
 }
 
@@ -27,8 +27,8 @@ define void @t2_imm_cap() {
 ; CHECK: ldr xzr, [c{{[0-9]+}}, #32760]
 ; CHECK: ret
 define void @t3_cap() {
-  %incdec.ptr = getelementptr inbounds i64, i64 addrspace(200)* @object1, i64 4095
-  %tmp = load volatile i64, i64 addrspace(200)* %incdec.ptr, align 8
+  %incdec.ptr = getelementptr inbounds i64, ptr addrspace(200) @object1, i64 4095
+  %tmp = load volatile i64, ptr addrspace(200) %incdec.ptr, align 8
   ret void
 }
 
@@ -36,8 +36,8 @@ define void @t3_cap() {
 ; CHECK: mov     w[[OFFSET:[0-9]+]], #32768
 ; CHECK: ldr             xzr, [c0, x[[OFFSET]]]
 define void @t3_cap_cadd() {
-  %incdec.ptr = getelementptr inbounds i64, i64 addrspace(200)* @object1, i64 4096
-  %tmp = load volatile i64, i64 addrspace(200)* %incdec.ptr, align 8
+  %incdec.ptr = getelementptr inbounds i64, ptr addrspace(200) @object1, i64 4096
+  %tmp = load volatile i64, ptr addrspace(200) %incdec.ptr, align 8
   ret void
 }
 
@@ -46,8 +46,8 @@ define void @t3_cap_cadd() {
 ; CHECK: ldr xzr, [c{{[0-9]+}}, x[[NUM]]]
 ; CHECK: ret
 define void @t4_cap() {
-  %incdec.ptr = getelementptr inbounds i64, i64 addrspace(200)* @object1, i64 4097
-  %tmp = load volatile i64, i64 addrspace(200)* %incdec.ptr, align 8
+  %incdec.ptr = getelementptr inbounds i64, ptr addrspace(200) @object1, i64 4097
+  %tmp = load volatile i64, ptr addrspace(200) %incdec.ptr, align 8
   ret void
 }
 
@@ -56,8 +56,8 @@ define void @t4_cap() {
 ; CHECK: ldr xzr, [c{{[0-9]+}}, x{{[0-9]+}}, lsl #3]
 ; CHECK: ret
 define void @t5_cap(i64 %a) {
-  %incdec.ptr = getelementptr inbounds i64, i64 addrspace(200)* @object1, i64 %a
-  %tmp = load volatile i64, i64 addrspace(200)* %incdec.ptr, align 8
+  %incdec.ptr = getelementptr inbounds i64, ptr addrspace(200) @object1, i64 %a
+  %tmp = load volatile i64, ptr addrspace(200) %incdec.ptr, align 8
   ret void
 }
 
@@ -68,17 +68,17 @@ define void @t5_cap(i64 %a) {
 ; CHECK: ldr xzr, [c0, x[[NUM]]]
 ; CHECK: ret
 define void @t6_cap(i64 %a) {
-  %tmp1 = getelementptr inbounds i64, i64 addrspace(200)* @object1, i64 %a
-  %incdec.ptr = getelementptr inbounds i64, i64 addrspace(200)* %tmp1, i64 4097
-  %tmp = load volatile i64, i64 addrspace(200)* %incdec.ptr, align 8
+  %tmp1 = getelementptr inbounds i64, ptr addrspace(200) @object1, i64 %a
+  %incdec.ptr = getelementptr inbounds i64, ptr addrspace(200) %tmp1, i64 4097
+  %tmp = load volatile i64, ptr addrspace(200) %incdec.ptr, align 8
   ret void
 }
 
 ; CHECK-LABEL: LoadCapabilityRegisterFromCapWithScaledOffset
-define i8 addrspace(200)* @LoadCapabilityRegisterFromCapWithScaledOffset(i8 addrspace(200)* addrspace(200)* %foo, i32 %offset) {
+define ptr addrspace(200) @LoadCapabilityRegisterFromCapWithScaledOffset(ptr addrspace(200) %foo, i32 %offset) {
 entry:
 ; CHECK: ldr c0, [c0, w1, sxtw #4]
-  %ptr = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %foo, i32 %offset
-  %0 = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %ptr, align 16
-  ret i8 addrspace(200)* %0
+  %ptr = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %foo, i32 %offset
+  %0 = load ptr addrspace(200), ptr addrspace(200) %ptr, align 16
+  ret ptr addrspace(200) %0
 }

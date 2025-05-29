@@ -4,12 +4,12 @@
 target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128-A200-P200-G200"
 target triple = "aarch64-none-unknown-elf"
 
-@_ZTIi = external addrspace(200) constant i8 addrspace(200)*
+@_ZTIi = external addrspace(200) constant ptr addrspace(200)
 
 ; Since c28 needs to be restored in landing pads we need to save it even
 ; if we don't have non-local calls.
 
-define noundef i32 @_Z3barv() local_unnamed_addr addrspace(200) personality i8 addrspace(200)* bitcast (i32 (...) addrspace(200)* @__gxx_personality_v0 to i8 addrspace(200)*) {
+define noundef i32 @_Z3barv() local_unnamed_addr addrspace(200) personality ptr addrspace(200) @__gxx_personality_v0 {
 ; CHECK-LABEL: _Z3barv:
 ; CHECK:       .L_Z3barv$eh_alias:
 ; CHECK-NEXT:  .Lfunc_begin0:
@@ -45,16 +45,16 @@ entry:
           to label %return unwind label %lpad
 
 lpad:
-  %0 = landingpad { i8 addrspace(200)*, i32 }
-          catch i8 addrspace(200)* bitcast (i8 addrspace(200)* addrspace(200)* @_ZTIi to i8 addrspace(200)*)
-  %1 = extractvalue { i8 addrspace(200)*, i32 } %0, 1
-  %2 = tail call i32 @llvm.eh.typeid.for(i8* addrspacecast (i8 addrspace(200)* bitcast (i8 addrspace(200)* addrspace(200)* @_ZTIi to i8 addrspace(200)*) to i8*))
+  %0 = landingpad { ptr addrspace(200), i32 }
+          catch ptr addrspace(200) @_ZTIi
+  %1 = extractvalue { ptr addrspace(200), i32 } %0, 1
+  %2 = tail call i32 @llvm.eh.typeid.for(ptr addrspacecast (ptr addrspace(200) @_ZTIi to ptr))
   %matches = icmp eq i32 %1, %2
   br i1 %matches, label %catch, label %eh.resume
 
 catch:
-  %3 = extractvalue { i8 addrspace(200)*, i32 } %0, 0
-  %4 = tail call i8 addrspace(200)* @__cxa_begin_catch(i8 addrspace(200)* %3)
+  %3 = extractvalue { ptr addrspace(200), i32 } %0, 0
+  %4 = tail call ptr addrspace(200) @__cxa_begin_catch(ptr addrspace(200) %3)
   tail call void @__cxa_end_catch()
   br label %return
 
@@ -63,7 +63,7 @@ return:
   ret i32 %retval.0
 
 eh.resume:
-  resume { i8 addrspace(200)*, i32 } %0
+  resume { ptr addrspace(200), i32 } %0
 }
 
 define internal fastcc void @_ZL3foov() unnamed_addr addrspace(200) {
@@ -88,22 +88,21 @@ define internal fastcc void @_ZL3foov() unnamed_addr addrspace(200) {
 ; CHECK-NEXT:    bl __cxa_throw
 ; CHECK-NEXT:    mov c28, c19
 entry:
-  %exception = tail call i8 addrspace(200)* @__cxa_allocate_exception(i64 4)
-  %0 = bitcast i8 addrspace(200)* %exception to i32 addrspace(200)*
-  store i32 20, i32 addrspace(200)* %0, align 16
-  tail call void @__cxa_throw(i8 addrspace(200)* %exception, i8 addrspace(200)* bitcast (i8 addrspace(200)* addrspace(200)* @_ZTIi to i8 addrspace(200)*), i8 addrspace(200)* null)
+  %exception = tail call ptr addrspace(200) @__cxa_allocate_exception(i64 4)
+  store i32 20, ptr addrspace(200) %exception, align 16
+  tail call void @__cxa_throw(ptr addrspace(200) %exception, ptr addrspace(200) @_ZTIi, ptr addrspace(200) null)
   unreachable
 }
 
 declare i32 @__gxx_personality_v0(...) addrspace(200)
 
 ; Function Attrs: nofree nosync nounwind readnone
-declare i32 @llvm.eh.typeid.for(i8*) addrspace(200)
+declare i32 @llvm.eh.typeid.for(ptr) addrspace(200)
 
-declare i8 addrspace(200)* @__cxa_begin_catch(i8 addrspace(200)*) local_unnamed_addr addrspace(200)
+declare ptr addrspace(200) @__cxa_begin_catch(ptr addrspace(200)) local_unnamed_addr addrspace(200)
 
 declare void @__cxa_end_catch() local_unnamed_addr addrspace(200)
 
-declare i8 addrspace(200)* @__cxa_allocate_exception(i64) local_unnamed_addr addrspace(200)
+declare ptr addrspace(200) @__cxa_allocate_exception(i64) local_unnamed_addr addrspace(200)
 
-declare void @__cxa_throw(i8 addrspace(200)*, i8 addrspace(200)*, i8 addrspace(200)*) local_unnamed_addr addrspace(200)
+declare void @__cxa_throw(ptr addrspace(200), ptr addrspace(200), ptr addrspace(200)) local_unnamed_addr addrspace(200)

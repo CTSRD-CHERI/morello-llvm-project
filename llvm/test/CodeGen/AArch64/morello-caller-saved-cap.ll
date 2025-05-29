@@ -2,7 +2,7 @@
 
 ; Capabilities are caller-saved.
 
-declare void @bar(i8 addrspace(200)* %x)
+declare void @bar(ptr addrspace(200) %x)
 declare void @baz()
 
 ; CHECK-LABEL: foo
@@ -16,8 +16,8 @@ declare void @baz()
 ; CHECK:    add sp, sp, #32
 ; CHECK:    ret
 
-define void @foo(i8 addrspace(200)* %x) {
+define void @foo(ptr addrspace(200) %x) {
   call void @baz()
-  call void @bar(i8 addrspace(200)* %x)
+  call void @bar(ptr addrspace(200) %x)
   ret void
 }

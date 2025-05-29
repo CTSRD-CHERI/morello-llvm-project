@@ -27,7 +27,7 @@ target triple = "aarch64-none-unknown-elf"
 @x18 = internal addrspace(200) global i32 0, align 4
 @x19 = internal addrspace(200) global i32 0, align 4
 
-define i32 @getvals(i8 addrspace(200)* addrspace(200)* nocapture %a) local_unnamed_addr addrspace(200)  {
+define i32 @getvals(ptr addrspace(200) nocapture %a) local_unnamed_addr addrspace(200)  {
 ; CHECK-LABEL: getvals:
 ; CHECK:       .Lfunc_begin0:
 ; CHECK-NEXT:    .cfi_startproc
@@ -196,45 +196,45 @@ define i32 @getvals(i8 addrspace(200)* addrspace(200)* nocapture %a) local_unnam
 ; MERGEOPT-NEXT:    stp c5, c6, [c0, #288]
 ; MERGEOPT-NEXT:    ret c30
 entry:
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x0 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %a, align 16
-  %arrayidx1 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 1
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x1 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx1, align 16
-  %arrayidx2 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 2
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x2 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx2, align 16
-  %arrayidx3 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 3
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x3 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx3, align 16
-  %arrayidx4 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 4
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x4 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx4, align 16
-  %arrayidx5 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 5
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x5 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx5, align 16
-  %arrayidx6 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 6
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x6 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx6, align 16
-  %arrayidx7 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 7
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x7 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx7, align 16
-  %arrayidx8 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 8
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x8 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx8, align 16
-  %arrayidx9 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 9
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x9 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx9, align 16
-  %arrayidx10 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 10
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x10 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx10, align 16
-  %arrayidx11 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 11
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x11 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx11, align 16
-  %arrayidx12 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 12
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x12 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx12, align 16
-  %arrayidx13 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 13
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x13 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx13, align 16
-  %arrayidx14 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 14
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x14 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx14, align 16
-  %arrayidx15 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 15
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x15 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx15, align 16
-  %arrayidx16 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 16
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x16 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx16, align 16
-  %arrayidx17 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 17
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x17 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx17, align 16
-  %arrayidx18 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 18
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x18 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx18, align 16
-  %arrayidx19 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 19
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x19 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx19, align 16
+  store ptr addrspace(200) @x0, ptr addrspace(200) %a, align 16
+  %arrayidx1 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 1
+  store ptr addrspace(200) @x1, ptr addrspace(200) %arrayidx1, align 16
+  %arrayidx2 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 2
+  store ptr addrspace(200) @x2, ptr addrspace(200) %arrayidx2, align 16
+  %arrayidx3 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 3
+  store ptr addrspace(200) @x3, ptr addrspace(200) %arrayidx3, align 16
+  %arrayidx4 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 4
+  store ptr addrspace(200) @x4, ptr addrspace(200) %arrayidx4, align 16
+  %arrayidx5 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 5
+  store ptr addrspace(200) @x5, ptr addrspace(200) %arrayidx5, align 16
+  %arrayidx6 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 6
+  store ptr addrspace(200) @x6, ptr addrspace(200) %arrayidx6, align 16
+  %arrayidx7 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 7
+  store ptr addrspace(200) @x7, ptr addrspace(200) %arrayidx7, align 16
+  %arrayidx8 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 8
+  store ptr addrspace(200) @x8, ptr addrspace(200) %arrayidx8, align 16
+  %arrayidx9 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 9
+  store ptr addrspace(200) @x9, ptr addrspace(200) %arrayidx9, align 16
+  %arrayidx10 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 10
+  store ptr addrspace(200) @x10, ptr addrspace(200) %arrayidx10, align 16
+  %arrayidx11 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 11
+  store ptr addrspace(200) @x11, ptr addrspace(200) %arrayidx11, align 16
+  %arrayidx12 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 12
+  store ptr addrspace(200) @x12, ptr addrspace(200) %arrayidx12, align 16
+  %arrayidx13 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 13
+  store ptr addrspace(200) @x13, ptr addrspace(200) %arrayidx13, align 16
+  %arrayidx14 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 14
+  store ptr addrspace(200) @x14, ptr addrspace(200) %arrayidx14, align 16
+  %arrayidx15 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 15
+  store ptr addrspace(200) @x15, ptr addrspace(200) %arrayidx15, align 16
+  %arrayidx16 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 16
+  store ptr addrspace(200) @x16, ptr addrspace(200) %arrayidx16, align 16
+  %arrayidx17 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 17
+  store ptr addrspace(200) @x17, ptr addrspace(200) %arrayidx17, align 16
+  %arrayidx18 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 18
+  store ptr addrspace(200) @x18, ptr addrspace(200) %arrayidx18, align 16
+  %arrayidx19 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 19
+  store ptr addrspace(200) @x19, ptr addrspace(200) %arrayidx19, align 16
   ret i32 undef
 }
 
@@ -276,13 +276,13 @@ define i32 @bazz() local_unnamed_addr addrspace(200) {
 ; MERGEOPT-NEXT:    add w0, w9, w8
 ; MERGEOPT-NEXT:    ret c30
 entry:
-  %0 = load i32, i32 addrspace(200)* @x1, align 4
-  %1 = load i32, i32 addrspace(200)* @x19, align 4
+  %0 = load i32, ptr addrspace(200) @x1, align 4
+  %1 = load i32, ptr addrspace(200) @x19, align 4
   %add = add nsw i32 %1, %0
   ret i32 %add
 }
 
-define nonnull i32 addrspace(200)* @getx0() local_unnamed_addr addrspace(200) {
+define nonnull ptr addrspace(200) @getx0() local_unnamed_addr addrspace(200) {
 ; CHECK-LABEL: getx0:
 ; CHECK:       .Lfunc_begin2:
 ; CHECK-NEXT:    .cfi_startproc
@@ -307,10 +307,10 @@ define nonnull i32 addrspace(200)* @getx0() local_unnamed_addr addrspace(200) {
 ; MERGEOPT-NEXT:    ldr c0, [c0, :lo12:.L__cap_merged_table+16]
 ; MERGEOPT-NEXT:    ret c30
 entry:
-  ret i32 addrspace(200)* @x0
+  ret ptr addrspace(200) @x0
 }
 
-define nonnull i32 addrspace(200)* @getx1() local_unnamed_addr addrspace(200) {
+define nonnull ptr addrspace(200) @getx1() local_unnamed_addr addrspace(200) {
 ; CHECK-LABEL: getx1:
 ; CHECK:       .Lfunc_begin3:
 ; CHECK-NEXT:    .cfi_startproc
@@ -335,7 +335,7 @@ define nonnull i32 addrspace(200)* @getx1() local_unnamed_addr addrspace(200) {
 ; MERGEOPT-NEXT:    ldr c0, [c0, :lo12:.L__cap_merged_table+32]
 ; MERGEOPT-NEXT:    ret c30
 entry:
-  ret i32 addrspace(200)* @x1
+  ret ptr addrspace(200) @x1
 }
 
 define i32 @foo() local_unnamed_addr addrspace(200) {
@@ -376,8 +376,8 @@ define i32 @foo() local_unnamed_addr addrspace(200) {
 ; MERGEOPT-NEXT:    add w0, w9, w8
 ; MERGEOPT-NEXT:    ret c30
 entry:
-  %0 = load i32, i32 addrspace(200)* @x19, align 4
-  %1 = load i32, i32 addrspace(200)* @x1, align 4
+  %0 = load i32, ptr addrspace(200) @x19, align 4
+  %1 = load i32, ptr addrspace(200) @x1, align 4
   %add = add nsw i32 %1, %0
   ret i32 %add
 }
@@ -420,8 +420,8 @@ define i32 @foo1() local_unnamed_addr addrspace(200) {
 ; MERGEOPT-NEXT:    add w0, w9, w8
 ; MERGEOPT-NEXT:    ret c30
 entry:
-  %0 = load i32, i32 addrspace(200)* @x0, align 4
-  %1 = load i32, i32 addrspace(200)* @x19, align 4
+  %0 = load i32, ptr addrspace(200) @x0, align 4
+  %1 = load i32, ptr addrspace(200) @x19, align 4
   %add = add nsw i32 %1, %0
   ret i32 %add
 }
@@ -474,10 +474,10 @@ define i32 @bat() local_unnamed_addr addrspace(200) {
 ; MERGEOPT-NEXT:    add w0, w8, w10
 ; MERGEOPT-NEXT:    ret c30
 entry:
-  %0 = load i32, i32 addrspace(200)* @x0, align 4
-  %1 = load i32, i32 addrspace(200)* @x19, align 4
+  %0 = load i32, ptr addrspace(200) @x0, align 4
+  %1 = load i32, ptr addrspace(200) @x19, align 4
   %add = add nsw i32 %1, %0
-  %2 = load i32, i32 addrspace(200)* @x8, align 4
+  %2 = load i32, ptr addrspace(200) @x8, align 4
   %add1 = add nsw i32 %add, %2
   ret i32 %add1
 }
@@ -530,10 +530,10 @@ define i32 @bif() local_unnamed_addr addrspace(200) {
 ; MERGEOPT-NEXT:    add w0, w8, w10
 ; MERGEOPT-NEXT:    ret c30
 entry:
-  %0 = load i32, i32 addrspace(200)* @x19, align 4
-  %1 = load i32, i32 addrspace(200)* @x7, align 4
+  %0 = load i32, ptr addrspace(200) @x19, align 4
+  %1 = load i32, ptr addrspace(200) @x7, align 4
   %add = add nsw i32 %1, %0
-  %2 = load i32, i32 addrspace(200)* @x0, align 4
+  %2 = load i32, ptr addrspace(200) @x0, align 4
   %add1 = add nsw i32 %add, %2
   ret i32 %add1
 }

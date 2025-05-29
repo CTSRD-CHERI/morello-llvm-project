@@ -35,12 +35,12 @@
 ; CHECK-NEXT: .Lfunc_end0:
 ; CHECK-NEXT: 	.size	_ZdlPv, .Lfunc_end0-.Lfunc_begin0
 
-define dso_local void @_ZdlPv(i8 addrspace(200)* %ptr) local_unnamed_addr nounwind {
+define dso_local void @_ZdlPv(ptr addrspace(200) %ptr) local_unnamed_addr nounwind {
 entry:
   ret void
 }
 
-define void @test(i8 addrspace(200)* %ptr) nounwind {
+define void @test(ptr addrspace(200) %ptr) nounwind {
 ; CHECK-LABEL: test:
 ; CHECK-NEXT:  .Lfunc_begin1:
 ; CHECK-NEXT:  // %bb.0:
@@ -51,6 +51,6 @@ define void @test(i8 addrspace(200)* %ptr) nounwind {
 ; CHECK-NEXT:  .Lfunc_end1:
 ; CHECK-NEXT:   .size	test, .Lfunc_end1-.Lfunc_begin1
 entry:
-  call void @_ZdlPv(i8 addrspace(200)* %ptr)
+  call void @_ZdlPv(ptr addrspace(200) %ptr)
   ret void
 }

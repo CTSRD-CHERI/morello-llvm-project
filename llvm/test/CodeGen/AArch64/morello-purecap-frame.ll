@@ -6,7 +6,7 @@ target triple = "aarch64-none-unknown-elf"
 
 ; PCS16-LABEL: foo
 ; PCS32-LABEL: foo
-define dso_local void @foo(i8 addrspace(200)* nocapture readnone %bb, i8 addrspace(200)* %cc) local_unnamed_addr addrspace(200) #0 {
+define dso_local void @foo(ptr addrspace(200) nocapture readnone %bb, ptr addrspace(200) %cc) local_unnamed_addr addrspace(200) #0 {
 entry:
   call void asm sideeffect "", "~{x19},~{x20},~{x21},~{x22},~{x23},~{x24},~{x25},~{x26},~{x27},~{x28},~{d8},~{d9},~{d10},~{d11},~{d12},~{d13},~{d14},~{d15}"() nounwind
   ret void
@@ -82,13 +82,13 @@ entry:
 ; PCS32-NEXT:   ldp	c29, c30, [csp, #64]    // 32-byte Folded Reload
 ; PCS32-NEXT:   ldr	d14, [csp]              // 8-byte Folded Reload
 ; PCS32-NEXT:   add	csp, csp, #256
-define dso_local void @bar(i8 addrspace(200)* nocapture readnone %bb, i8 addrspace(200)* %cc) local_unnamed_addr addrspace(200) #0 {
+define dso_local void @bar(ptr addrspace(200) nocapture readnone %bb, ptr addrspace(200) %cc) local_unnamed_addr addrspace(200) #0 {
 entry:
   %a = alloca [300 x i32], align 4, addrspace(200)
   call void asm sideeffect "", "~{x19},~{x20},~{x21},~{x22},~{x23},~{x24},~{x25},~{x26},~{x27},~{x28},~{d8},~{d9},~{d10},~{d11},~{d12},~{d13},~{d14}"() nounwind
-  call void @baz([300 x i32] addrspace(200)* %a)
-  call void @baz([300 x i32] addrspace(200)* %a)
+  call void @baz(ptr addrspace(200) %a)
+  call void @baz(ptr addrspace(200) %a)
   ret void
 }
 
-declare void @baz([300 x i32] addrspace(200)*) addrspace(200)
+declare void @baz(ptr addrspace(200)) addrspace(200)

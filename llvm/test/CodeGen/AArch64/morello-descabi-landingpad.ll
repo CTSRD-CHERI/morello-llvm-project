@@ -4,9 +4,9 @@
 target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128-A200-P200-G200"
 target triple = "aarch64-none-unknown-elf"
 
-@_ZTIi = external addrspace(200) constant i8 addrspace(200)*
+@_ZTIi = external addrspace(200) constant ptr addrspace(200)
 
-define noundef i32 @foo() addrspace(200) #0 personality i8 addrspace(200)* bitcast (i32 (...) addrspace(200)* @__gxx_personality_v0 to i8 addrspace(200)*) {
+define noundef i32 @foo() addrspace(200) #0 personality ptr addrspace(200) @__gxx_personality_v0 {
 ; CHECK-LABEL: foo:
 ; CHECK:       .Lfoo$eh_alias:
 ; CHECK-NEXT:  .Lfunc_begin0:
@@ -54,69 +54,67 @@ define noundef i32 @foo() addrspace(200) #0 personality i8 addrspace(200)* bitca
 ; CHECK-NEXT:    ret c30
 entry:
   %retval = alloca i32, align 4, addrspace(200)
-  %exn.slot = alloca i8 addrspace(200)*, align 16, addrspace(200)
+  %exn.slot = alloca ptr addrspace(200), align 16, addrspace(200)
   %ehselector.slot = alloca i32, align 4, addrspace(200)
   %e = alloca i32, align 4, addrspace(200)
-  store i32 0, i32 addrspace(200)* %retval, align 4
-  %exception = call i8 addrspace(200)* @__cxa_allocate_exception(i64 4) #2
-  %0 = bitcast i8 addrspace(200)* %exception to i32 addrspace(200)*
-  store i32 20, i32 addrspace(200)* %0, align 16
-  invoke void @__cxa_throw(i8 addrspace(200)* %exception, i8 addrspace(200)* bitcast (i8 addrspace(200)* addrspace(200)* @_ZTIi to i8 addrspace(200)*), i8 addrspace(200)* null) #3
+  store i32 0, ptr addrspace(200) %retval, align 4
+  %exception = call ptr addrspace(200) @__cxa_allocate_exception(i64 4) #2
+  store i32 20, ptr addrspace(200) %exception, align 16
+  invoke void @__cxa_throw(ptr addrspace(200) %exception, ptr addrspace(200) @_ZTIi, ptr addrspace(200) null) #3
           to label %unreachable unwind label %lpad
 
 lpad:                                             ; preds = %entry
-  %1 = landingpad { i8 addrspace(200)*, i32 }
-          catch i8 addrspace(200)* bitcast (i8 addrspace(200)* addrspace(200)* @_ZTIi to i8 addrspace(200)*)
-  %2 = extractvalue { i8 addrspace(200)*, i32 } %1, 0
-  store i8 addrspace(200)* %2, i8 addrspace(200)* addrspace(200)* %exn.slot, align 16
-  %3 = extractvalue { i8 addrspace(200)*, i32 } %1, 1
-  store i32 %3, i32 addrspace(200)* %ehselector.slot, align 4
+  %0 = landingpad { ptr addrspace(200), i32 }
+          catch ptr addrspace(200) @_ZTIi
+  %1 = extractvalue { ptr addrspace(200), i32 } %0, 0
+  store ptr addrspace(200) %1, ptr addrspace(200) %exn.slot, align 16
+  %2 = extractvalue { ptr addrspace(200), i32 } %0, 1
+  store i32 %2, ptr addrspace(200) %ehselector.slot, align 4
   br label %catch.dispatch
 
 catch.dispatch:                                   ; preds = %lpad
-  %sel = load i32, i32 addrspace(200)* %ehselector.slot, align 4
-  %4 = call i32 @llvm.eh.typeid.for(i8* addrspacecast (i8 addrspace(200)* bitcast (i8 addrspace(200)* addrspace(200)* @_ZTIi to i8 addrspace(200)*) to i8*)) #2
-  %matches = icmp eq i32 %sel, %4
+  %sel = load i32, ptr addrspace(200) %ehselector.slot, align 4
+  %3 = call i32 @llvm.eh.typeid.for(ptr addrspacecast (ptr addrspace(200) @_ZTIi to ptr)) #2
+  %matches = icmp eq i32 %sel, %3
   br i1 %matches, label %catch, label %eh.resume
 
 catch:                                            ; preds = %catch.dispatch
-  %exn = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %exn.slot, align 16
-  %5 = call i8 addrspace(200)* @__cxa_begin_catch(i8 addrspace(200)* %exn) #2
-  %6 = bitcast i8 addrspace(200)* %5 to i32 addrspace(200)*
-  %7 = load i32, i32 addrspace(200)* %6, align 4
-  store i32 %7, i32 addrspace(200)* %e, align 4
-  store i32 42, i32 addrspace(200)* %retval, align 4
+  %exn = load ptr addrspace(200), ptr addrspace(200) %exn.slot, align 16
+  %4 = call ptr addrspace(200) @__cxa_begin_catch(ptr addrspace(200) %exn) #2
+  %5 = load i32, ptr addrspace(200) %4, align 4
+  store i32 %5, ptr addrspace(200) %e, align 4
+  store i32 42, ptr addrspace(200) %retval, align 4
   call void @__cxa_end_catch() #2
   br label %return
 
 try.cont:                                         ; No predecessors!
-  store i32 0, i32 addrspace(200)* %retval, align 4
+  store i32 0, ptr addrspace(200) %retval, align 4
   br label %return
 
 return:                                           ; preds = %try.cont, %catch
-  %8 = load i32, i32 addrspace(200)* %retval, align 4
-  ret i32 %8
+  %6 = load i32, ptr addrspace(200) %retval, align 4
+  ret i32 %6
 
 eh.resume:                                        ; preds = %catch.dispatch
-  %exn1 = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %exn.slot, align 16
-  %sel2 = load i32, i32 addrspace(200)* %ehselector.slot, align 4
-  %lpad.val = insertvalue { i8 addrspace(200)*, i32 } undef, i8 addrspace(200)* %exn1, 0
-  %lpad.val3 = insertvalue { i8 addrspace(200)*, i32 } %lpad.val, i32 %sel2, 1
-  resume { i8 addrspace(200)*, i32 } %lpad.val3
+  %exn1 = load ptr addrspace(200), ptr addrspace(200) %exn.slot, align 16
+  %sel2 = load i32, ptr addrspace(200) %ehselector.slot, align 4
+  %lpad.val = insertvalue { ptr addrspace(200), i32 } undef, ptr addrspace(200) %exn1, 0
+  %lpad.val3 = insertvalue { ptr addrspace(200), i32 } %lpad.val, i32 %sel2, 1
+  resume { ptr addrspace(200), i32 } %lpad.val3
 
 unreachable:                                      ; preds = %entry
   unreachable
 }
 
-declare i8 addrspace(200)* @__cxa_allocate_exception(i64) addrspace(200)
+declare ptr addrspace(200) @__cxa_allocate_exception(i64) addrspace(200)
 
-declare void @__cxa_throw(i8 addrspace(200)*, i8 addrspace(200)*, i8 addrspace(200)*) addrspace(200)
+declare void @__cxa_throw(ptr addrspace(200), ptr addrspace(200), ptr addrspace(200)) addrspace(200)
 
 declare i32 @__gxx_personality_v0(...) addrspace(200)
 
 ; Function Attrs: nounwind readnone
-declare i32 @llvm.eh.typeid.for(i8*) addrspace(200) #1
+declare i32 @llvm.eh.typeid.for(ptr) addrspace(200) #1
 
-declare i8 addrspace(200)* @__cxa_begin_catch(i8 addrspace(200)*) addrspace(200)
+declare ptr addrspace(200) @__cxa_begin_catch(ptr addrspace(200)) addrspace(200)
 
 declare void @__cxa_end_catch() addrspace(200)

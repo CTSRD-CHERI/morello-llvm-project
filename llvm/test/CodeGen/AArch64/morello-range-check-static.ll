@@ -7,11 +7,11 @@ target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:12
 @example_object = internal addrspace(200) global %struct.example zeroinitializer, align 4
 
 ; CHECK-LABEL: static_bounds
-define %struct.example addrspace(200)* @static_bounds() {
+define ptr addrspace(200) @static_bounds() {
 entry:
 ; CHECK:      adrp x[[ADDR:[0-9]+]], .LCPI0_0
 ; CHECK-NEXT: ldr c0, [x[[ADDR]], :lo12:.LCPI0_0]
-  ret %struct.example addrspace(200)* @example_object
+  ret ptr addrspace(200) @example_object
 }
 
 ; CHECK-LABEL: alloca_cast_bounds
@@ -21,10 +21,9 @@ entry:
 ; CHECK: scbnds c0, c0, x[[SIZE]]
 
   %a = alloca [300 x i32], align 4
-  %0 = bitcast [300 x i32] * %a to i8*
-  %1 = addrspacecast i8 *%0 to i8 addrspace(200)*
-  call void @bar(i8 addrspace(200)* %1)
+  %0 = addrspacecast ptr %a to ptr addrspace(200)
+  call void @bar(ptr addrspace(200) %0)
   ret void
 }
 
-declare void @bar(i8 addrspace(200)*)
+declare void @bar(ptr addrspace(200))

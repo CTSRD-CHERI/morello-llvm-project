@@ -7,7 +7,7 @@
 ; one of the pairs is undef since SelectionDAG::FoldConstantArithmetic assumed that both arguments
 ; have the same value type.
 
-define <4 x i8 addrspace(200)*> @vec_gep_with_poison_offsets_first_pair(i8 addrspace(200)* %ptr) nounwind {
+define <4 x ptr addrspace(200)> @vec_gep_with_poison_offsets_first_pair(ptr addrspace(200) %ptr) nounwind {
 ; AARCH64-LABEL: vec_gep_with_poison_offsets_first_pair:
 ; AARCH64:       // %bb.0: // %bb
 ; AARCH64-NEXT:    adrp x8, .LCPI0_0
@@ -23,11 +23,11 @@ define <4 x i8 addrspace(200)*> @vec_gep_with_poison_offsets_first_pair(i8 addrs
 ; PURECAP-NEXT:    add c3, c0, #2
 ; PURECAP-NEXT:    ret c30
 bb:
-  %gep = getelementptr i8, i8 addrspace(200)* %ptr, <4 x i64> <i64 poison, i64 poison, i64 1, i64 2>
-  ret <4 x i8 addrspace(200)*> %gep
+  %gep = getelementptr i8, ptr addrspace(200) %ptr, <4 x i64> <i64 poison, i64 poison, i64 1, i64 2>
+  ret <4 x ptr addrspace(200)> %gep
 }
 
-define <4 x i8 addrspace(200)*> @vec_gep_with_poison_offsets_second_pair(i8 addrspace(200)* %ptr) nounwind {
+define <4 x ptr addrspace(200)> @vec_gep_with_poison_offsets_second_pair(ptr addrspace(200) %ptr) nounwind {
 ; AARCH64-LABEL: vec_gep_with_poison_offsets_second_pair:
 ; AARCH64:       // %bb.0: // %bb
 ; AARCH64-NEXT:    adrp x8, .LCPI1_0
@@ -44,11 +44,11 @@ define <4 x i8 addrspace(200)*> @vec_gep_with_poison_offsets_second_pair(i8 addr
 ; PURECAP-NEXT:    mov c0, c2
 ; PURECAP-NEXT:    ret c30
 bb:
-  %gep = getelementptr i8, i8 addrspace(200)* %ptr, <4 x i64> <i64 1, i64 2, i64 poison, i64 poison>
-  ret <4 x i8 addrspace(200)*> %gep
+  %gep = getelementptr i8, ptr addrspace(200) %ptr, <4 x i64> <i64 1, i64 2, i64 poison, i64 poison>
+  ret <4 x ptr addrspace(200)> %gep
 }
 
-define <4 x i8 addrspace(200)*> @vec_gep_with_poison_bases_first_pair(i8 addrspace(200)* %ptr) nounwind {
+define <4 x ptr addrspace(200)> @vec_gep_with_poison_bases_first_pair(ptr addrspace(200) %ptr) nounwind {
 ; AARCH64-LABEL: vec_gep_with_poison_bases_first_pair:
 ; AARCH64:       // %bb.0: // %bb
 ; AARCH64-NEXT:    mov w8, #123
@@ -63,11 +63,11 @@ define <4 x i8 addrspace(200)*> @vec_gep_with_poison_bases_first_pair(i8 addrspa
 ; PURECAP-NEXT:    mov c3, c2
 ; PURECAP-NEXT:    ret c30
 bb:
-  %gep = getelementptr i8, <4 x i8 addrspace(200)*> <i8 addrspace(200)* poison, i8 addrspace(200)* poison, i8 addrspace(200)* null, i8 addrspace(200)* null>, i64 123
-  ret <4 x i8 addrspace(200)*> %gep
+  %gep = getelementptr i8, <4 x ptr addrspace(200)> <ptr addrspace(200) poison, ptr addrspace(200) poison, ptr addrspace(200) null, ptr addrspace(200) null>, i64 123
+  ret <4 x ptr addrspace(200)> %gep
 }
 
-define <4 x i8 addrspace(200)*> @vec_gep_with_null_base(i8 addrspace(200)* %ptr) nounwind {
+define <4 x ptr addrspace(200)> @vec_gep_with_null_base(ptr addrspace(200) %ptr) nounwind {
 ; AARCH64-LABEL: vec_gep_with_null_base:
 ; AARCH64:       // %bb.0: // %bb
 ; AARCH64-NEXT:    mov w8, #123
@@ -85,11 +85,11 @@ define <4 x i8 addrspace(200)*> @vec_gep_with_null_base(i8 addrspace(200)* %ptr)
 ; PURECAP-NEXT:    mov c3, c0
 ; PURECAP-NEXT:    ret c30
 bb:
-  %gep = getelementptr i8, <4 x i8 addrspace(200)*> <i8 addrspace(200)* null, i8 addrspace(200)* null, i8 addrspace(200)* null, i8 addrspace(200)* null>, i64 123
-  ret <4 x i8 addrspace(200)*> %gep
+  %gep = getelementptr i8, <4 x ptr addrspace(200)> <ptr addrspace(200) null, ptr addrspace(200) null, ptr addrspace(200) null, ptr addrspace(200) null>, i64 123
+  ret <4 x ptr addrspace(200)> %gep
 }
 
-define <4 x i8 addrspace(200)*> @vec_gep_with_vec_offsets(i8 addrspace(200)* %ptr) nounwind {
+define <4 x ptr addrspace(200)> @vec_gep_with_vec_offsets(ptr addrspace(200) %ptr) nounwind {
 ; AARCH64-LABEL: vec_gep_with_vec_offsets:
 ; AARCH64:       // %bb.0: // %bb
 ; AARCH64-NEXT:    adrp x8, .LCPI4_0
@@ -111,8 +111,8 @@ define <4 x i8 addrspace(200)*> @vec_gep_with_vec_offsets(i8 addrspace(200)* %pt
 ; PURECAP-NEXT:    mov c0, c4
 ; PURECAP-NEXT:    ret c30
 bb:
-  %vec1 = insertelement <4 x i8 addrspace(200)*> <i8 addrspace(200)* null, i8 addrspace(200)* null, i8 addrspace(200)* null, i8 addrspace(200)* null>, i8 addrspace(200)* %ptr, i32 2
-  %vec2 = insertelement <4 x i8 addrspace(200)*> %vec1, i8 addrspace(200)* %ptr, i32 3
-  %gep = getelementptr i8, <4 x i8 addrspace(200)*> %vec2, <4 x i64> <i64 1, i64 2, i64 3, i64 4>
-  ret <4 x i8 addrspace(200)*> %gep
+  %vec1 = insertelement <4 x ptr addrspace(200)> <ptr addrspace(200) null, ptr addrspace(200) null, ptr addrspace(200) null, ptr addrspace(200) null>, ptr addrspace(200) %ptr, i32 2
+  %vec2 = insertelement <4 x ptr addrspace(200)> %vec1, ptr addrspace(200) %ptr, i32 3
+  %gep = getelementptr i8, <4 x ptr addrspace(200)> %vec2, <4 x i64> <i64 1, i64 2, i64 3, i64 4>
+  ret <4 x ptr addrspace(200)> %gep
 }

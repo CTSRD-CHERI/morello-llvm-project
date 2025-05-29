@@ -22,7 +22,7 @@ target datalayout = "e-m:e-i64:64-i128:128-n32:64-S128-pf200:128:128:128:64-A200
 define i32 @test_generaldynamic() {
 ; CHECK-LABEL: test_generaldynamic:
 
-  %val = load i32, i32 addrspace(200)* @general_dynamic_var
+  %val = load i32, ptr addrspace(200) @general_dynamic_var
   ret i32 %val
 
 ; CHECK: mrs c2, CTPIDR_EL0
@@ -40,10 +40,10 @@ define i32 @test_generaldynamic() {
 ; CHECK-RELOC: R_MORELLO_TLSDESC_CALL
 }
 
-define i32 addrspace(200)* @test_generaldynamic_addr() {
+define ptr addrspace(200) @test_generaldynamic_addr() {
 ; CHECK-LABEL: test_generaldynamic_addr:
 
-  ret i32 addrspace(200)* @general_dynamic_var
+  ret ptr addrspace(200) @general_dynamic_var
 
 ; CHECK: mrs c2, CTPIDR_EL0
 ; CHECK: adrp c0, :tlsdesc:general_dynamic_var
@@ -66,7 +66,7 @@ define i32 @test_localdynamic() {
 ; CHECK-LABEL: test_localdynamic:
 ; CHECK-ASM-LABEL: <test_localdynamic>:
 
-  %val = load i32, i32 addrspace(200)* @local_dynamic_var
+  %val = load i32, ptr addrspace(200) @local_dynamic_var
   ret i32 %val
 
 ; CHECK: mrs c2, CTPIDR_EL0
@@ -91,7 +91,7 @@ define i32 @test_localdynamic() {
 ; CHECK-ASM-NEXT: blr c1
 }
 
-define i32 addrspace(200)* @test_localdynamic_addr() {
+define ptr addrspace(200) @test_localdynamic_addr() {
 ; CHECK-LABEL: test_localdynamic_addr:
 ; CHECK: mrs c2, CTPIDR_EL0
 ; CHECK: adrp c0, :tlsdesc:local_dynamic_var
@@ -100,7 +100,7 @@ define i32 addrspace(200)* @test_localdynamic_addr() {
 ; CHECK-NEXT: nop
 ; CHECK-NEXT: .tlsdesccall local_dynamic_var
 ; CHECK-NEXT: blr c1
- ret i32 addrspace(200)* @local_dynamic_var
+ ret ptr addrspace(200) @local_dynamic_var
 
 ; CHECK-RELOC: R_MORELLO_TLSDESC_ADR_PAGE20
 ; CHECK-RELOC: R_MORELLO_TLSDESC_LD128_LO12
@@ -116,8 +116,8 @@ define i32 addrspace(200)* @test_localdynamic_addr() {
 define i32 @test_localdynamic_deduplicate() {
 ; CHECK-LABEL: test_localdynamic_deduplicate:
 
-  %val = load i32, i32 addrspace(200)* @local_dynamic_var
-  %val2 = load i32, i32 addrspace(200)* @local_dynamic_var2
+  %val = load i32, ptr addrspace(200) @local_dynamic_var
+  %val2 = load i32, ptr addrspace(200) @local_dynamic_var2
 
   %sum = add i32 %val, %val2
   ret i32 %sum

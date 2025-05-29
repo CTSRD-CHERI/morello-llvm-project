@@ -16,39 +16,35 @@ entry:
 ; CHECK: scbnds
   %a = alloca [300 x i32], align 4, addrspace(200)
   %b = alloca [200 x i32], align 4, addrspace(200)
-  %0 = bitcast [300 x i32] addrspace(200)* %a to i8 addrspace(200)*
-  call void @llvm.lifetime.start.p200i8(i64 1200, i8 addrspace(200)* nonnull %0)
-  %1 = bitcast [200 x i32] addrspace(200)* %b to i8 addrspace(200)*
-  call void @llvm.lifetime.start.p200i8(i64 800, i8 addrspace(200)* nonnull %1)
+  call void @llvm.lifetime.start.p200(i64 1200, ptr addrspace(200) nonnull %a)
+  call void @llvm.lifetime.start.p200(i64 800, ptr addrspace(200) nonnull %b)
   %cmp4 = icmp sgt i32 %n, 0
   br i1 %cmp4, label %for.body.lr.ph, label %for.cond.cleanup
 
 for.body.lr.ph:
-  %arraydecay = getelementptr inbounds [200 x i32], [200 x i32] addrspace(200)* %b, i64 0, i64 0
   br label %for.body
 
 for.cond.cleanup:
-  %arraydecay1 = getelementptr inbounds [300 x i32], [300 x i32] addrspace(200)* %a, i64 0, i64 0
-  call void @foo(i32 addrspace(200)* nonnull %arraydecay1)
-  call void @llvm.lifetime.end.p200i8(i64 800, i8 addrspace(200)* nonnull %1)
-  call void @llvm.lifetime.end.p200i8(i64 1200, i8 addrspace(200)* nonnull %0)
+  call void @foo(ptr addrspace(200) nonnull %a)
+  call void @llvm.lifetime.end.p200(i64 800, ptr addrspace(200) nonnull %b)
+  call void @llvm.lifetime.end.p200(i64 1200, ptr addrspace(200) nonnull %a)
   ret void
 
 for.body:
   %i.05 = phi i32 [ 0, %for.body.lr.ph ], [ %inc, %for.body ]
-  call void @bar(i32 addrspace(200)* nonnull %arraydecay)
+  call void @bar(ptr addrspace(200) nonnull %b)
   %inc = add nuw nsw i32 %i.05, 1
   %exitcond = icmp eq i32 %inc, %n
   br i1 %exitcond, label %for.cond.cleanup, label %for.body
 }
 
-declare void @llvm.lifetime.start.p200i8(i64, i8 addrspace(200)* nocapture) addrspace(200)
+declare void @llvm.lifetime.start.p200(i64, ptr addrspace(200) nocapture) addrspace(200)
 
-declare void @bar(i32 addrspace(200)*) addrspace(200)
+declare void @bar(ptr addrspace(200)) addrspace(200)
 
-declare void @llvm.lifetime.end.p200i8(i64, i8 addrspace(200)* nocapture) addrspace(200)
+declare void @llvm.lifetime.end.p200(i64, ptr addrspace(200) nocapture) addrspace(200)
 
-declare void @foo(i32 addrspace(200)*) addrspace(200)
+declare void @foo(ptr addrspace(200)) addrspace(200)
 
 ; CHECK-LABEL: fun1
 ; CHECK: scbnds
@@ -59,16 +55,12 @@ define void @fun1(i32 %n) addrspace(200) {
 entry:
   %a = alloca [300 x i32], align 4, addrspace(200)
   %b = alloca [200 x i32], align 4, addrspace(200)
-  %0 = bitcast [300 x i32] addrspace(200)* %a to i8 addrspace(200)*
-  call void @llvm.lifetime.start.p200i8(i64 1200, i8 addrspace(200)* nonnull %0)
-  %1 = bitcast [200 x i32] addrspace(200)* %b to i8 addrspace(200)*
-  call void @llvm.lifetime.start.p200i8(i64 800, i8 addrspace(200)* nonnull %1)
-  %arraydecay = getelementptr inbounds [200 x i32], [200 x i32] addrspace(200)* %b, i64 0, i64 0
-  call void @bar(i32 addrspace(200)* nonnull %arraydecay)
-  %arraydecay1 = getelementptr inbounds [300 x i32], [300 x i32] addrspace(200)* %a, i64 0, i64 0
-  call void @foo(i32 addrspace(200)* nonnull %arraydecay1)
-  call void @llvm.lifetime.end.p200i8(i64 800, i8 addrspace(200)* nonnull %1)
-  call void @llvm.lifetime.end.p200i8(i64 1200, i8 addrspace(200)* nonnull %0)
+  call void @llvm.lifetime.start.p200(i64 1200, ptr addrspace(200) nonnull %a)
+  call void @llvm.lifetime.start.p200(i64 800, ptr addrspace(200) nonnull %b)
+  call void @bar(ptr addrspace(200) nonnull %b)
+  call void @foo(ptr addrspace(200) nonnull %a)
+  call void @llvm.lifetime.end.p200(i64 800, ptr addrspace(200) nonnull %b)
+  call void @llvm.lifetime.end.p200(i64 1200, ptr addrspace(200) nonnull %a)
   ret void
 }
 
@@ -84,31 +76,25 @@ entry:
   %a = alloca [300 x i32], align 4, addrspace(200)
   %b = alloca [200 x i32], align 4, addrspace(200)
   %c = alloca [400 x i32], align 4, addrspace(200)
-  %0 = bitcast [300 x i32] addrspace(200)* %a to i8 addrspace(200)*
-  call void @llvm.lifetime.start.p200i8(i64 1200, i8 addrspace(200)* nonnull %0)
-  %1 = bitcast [200 x i32] addrspace(200)* %b to i8 addrspace(200)*
-  call void @llvm.lifetime.start.p200i8(i64 800, i8 addrspace(200)* nonnull %1)
-  %2 = bitcast [400 x i32] addrspace(200)* %c to i8 addrspace(200)*
-  call void @llvm.lifetime.start.p200i8(i64 1600, i8 addrspace(200)* nonnull %2)
+  call void @llvm.lifetime.start.p200(i64 1200, ptr addrspace(200) nonnull %a)
+  call void @llvm.lifetime.start.p200(i64 800, ptr addrspace(200) nonnull %b)
+  call void @llvm.lifetime.start.p200(i64 1600, ptr addrspace(200) nonnull %c)
   %cmp = icmp sgt i32 %n, 3
   br i1 %cmp, label %if.then, label %if.else
 
 if.then:
-  %arraydecay = getelementptr inbounds [200 x i32], [200 x i32] addrspace(200)* %b, i64 0, i64 0
-  call void @bar(i32 addrspace(200)* nonnull %arraydecay)
+  call void @bar(ptr addrspace(200) nonnull %b)
   br label %if.end
 
 if.else:
-  %arraydecay1 = getelementptr inbounds [300 x i32], [300 x i32] addrspace(200)* %a, i64 0, i64 0
-  call void @foo(i32 addrspace(200)* nonnull %arraydecay1)
+  call void @foo(ptr addrspace(200) nonnull %a)
   br label %if.end
 
 if.end:
-  %arraydecay2 = getelementptr inbounds [400 x i32], [400 x i32] addrspace(200)* %c, i64 0, i64 0
-  call void @foo(i32 addrspace(200)* nonnull %arraydecay2)
-  call void @llvm.lifetime.end.p200i8(i64 1600, i8 addrspace(200)* nonnull %2)
-  call void @llvm.lifetime.end.p200i8(i64 800, i8 addrspace(200)* nonnull %1)
-  call void @llvm.lifetime.end.p200i8(i64 1200, i8 addrspace(200)* nonnull %0)
+  call void @foo(ptr addrspace(200) nonnull %c)
+  call void @llvm.lifetime.end.p200(i64 1600, ptr addrspace(200) nonnull %c)
+  call void @llvm.lifetime.end.p200(i64 800, ptr addrspace(200) nonnull %b)
+  call void @llvm.lifetime.end.p200(i64 1200, ptr addrspace(200) nonnull %a)
   ret void
 }
 
@@ -119,13 +105,12 @@ if.end:
 define void @test4(i1 %in, i1 %in2) addrspace(200) {
 entry:
   %0 = alloca i8, i64 undef, align 16, addrspace(200)
-  %1 = bitcast i8 addrspace(200)* %0 to float addrspace(200)* addrspace(200)*
   br i1 %in, label %cleanup, label %for.body26.us
 
 for.body26.us:
   %indvars.iv = phi i64 [ %indvars.iv.next, %for.body26.us ], [ 0, %entry ]
-  %arrayidx28.us = getelementptr inbounds float addrspace(200)*, float addrspace(200)* addrspace(200)* %1, i64 %indvars.iv
-  %2 = load float addrspace(200)*, float addrspace(200)* addrspace(200)* %arrayidx28.us, align 16
+  %arrayidx28.us = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %0, i64 %indvars.iv
+  %1 = load ptr addrspace(200), ptr addrspace(200) %arrayidx28.us, align 16
   %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
   br i1 %in2, label %for.body26.us, label %cleanup
 

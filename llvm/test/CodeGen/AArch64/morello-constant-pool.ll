@@ -14,6 +14,6 @@ entry:
   ret fp128 0xL00000000000000000000000000000000
 }
 
-declare extern_weak void @bar(i8 addrspace(200)*)
-declare i8 addrspace(200)* @llvm.cheri.pcc.get()
-declare i8 addrspace(200)* @llvm.cheri.cap.from.pointer(i8 addrspace(200)*, i64)
+declare extern_weak void @bar(ptr addrspace(200))
+declare ptr addrspace(200) @llvm.cheri.pcc.get()
+declare ptr addrspace(200) @llvm.cheri.cap.from.pointer(ptr addrspace(200), i64)

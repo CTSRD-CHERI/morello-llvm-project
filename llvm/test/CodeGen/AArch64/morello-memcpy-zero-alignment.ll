@@ -1,17 +1,15 @@
 ; RUN: llc -mtriple=arm64 -mattr=+morello %s -o - | FileCheck %s
 
-%struct.B = type { i8 addrspace(200)* }
+%struct.B = type { ptr addrspace(200) }
 
 ; CHECK-LABEL: testFun
 ; CHECK: ldr	c0, [x0, #0]
 ; CHECK: str	c0, [sp, #0]
-define void @testFun(%struct.B* nocapture readonly %b) {
+define void @testFun(ptr nocapture readonly %b) {
 entry:
   %b2 = alloca %struct.B, align 16
-  %0 = bitcast %struct.B* %b2 to i8*
-  %1 = bitcast %struct.B* %b to i8*
-  call void @llvm.memcpy.p0i8.p0i8.i64(i8* nonnull %0, i8* %1, i64 16, i32 16, i1 false)
-  call void @H(%struct.B* nonnull %b2)
+  call void @llvm.memcpy.p0.p0.i64(ptr nonnull %b2, ptr %b, i64 16, i32 16, i1 false)
+  call void @H(ptr nonnull %b2)
   ret void
 }
 
@@ -31,16 +29,13 @@ entry:
 ; CHECK-DAG:	str	x{{.*}}, [sp, #16]
 ; CHECK-DAG:	str	c{{.*}}, [sp, #0]
 
-define void @nonMultiple1(%struct.D* %rhs) {
+define void @nonMultiple1(ptr %rhs) {
  entry:
    %aset = alloca %struct.C, align 16
    %bset = alloca %struct.C, align 16
-   %0 = bitcast %struct.C* %aset to i8*
-   %1 = bitcast %struct.C* %bset to i8*
    br i1 undef, label %land.lhs.true53, label %if.end66
  
  land.lhs.true53:                                  ; preds = %entry
-   %digits60 = getelementptr inbounds %struct.D, %struct.D* %rhs, i64 0, i32 0
    br label %if.end81
  
  if.end66:                                         ; preds = %entry
@@ -48,11 +43,11 @@ define void @nonMultiple1(%struct.D* %rhs) {
    br i1 %cmp74, label %if.then76, label %if.end81
  
  if.then76:                                        ; preds = %if.end66
-   call void @llvm.memcpy.p0i8.p0i8.i64(i8* nonnull align 16 %0, i8* align 16 null, i64 28, i32 4, i1 false)
+   call void @llvm.memcpy.p0.p0.i64(ptr nonnull align 16 %aset, ptr align 16 null, i64 28, i32 4, i1 false)
    ret void
  
  if.end81:                                         ; preds = %if.end66, %land.lhs.true53
-   call void @llvm.memcpy.p0i8.p0i8.i64(i8* nonnull align 16 %1, i8* nonnull align 16 %0, i64 28, i32 4, i1 false)
+   call void @llvm.memcpy.p0.p0.i64(ptr nonnull align 16 %bset, ptr nonnull align 16 %aset, i64 28, i32 4, i1 false)
    ret void
  }
 
@@ -60,16 +55,13 @@ define void @nonMultiple1(%struct.D* %rhs) {
 ; stack objects in order to allow memcpy inlining.
 ; CHECK-LABEL: nonMultiple2
 ; CHECK: bl memcpy
-define void @nonMultiple2(%struct.D* %rhs) {
+define void @nonMultiple2(ptr %rhs) {
  entry:
    %aset = alloca %struct.C, align 4
    %bset = alloca %struct.C, align 4
-   %0 = bitcast %struct.C* %aset to i8*
-   %1 = bitcast %struct.C* %bset to i8*
    br i1 undef, label %land.lhs.true53, label %if.end66
 
  land.lhs.true53:                                  ; preds = %entry
-   %digits60 = getelementptr inbounds %struct.D, %struct.D* %rhs, i64 0, i32 0
    br label %if.end81
 
  if.end66:                                         ; preds = %entry
@@ -77,13 +69,13 @@ define void @nonMultiple2(%struct.D* %rhs) {
    br i1 %cmp74, label %if.then76, label %if.end81
 
  if.then76:                                        ; preds = %if.end66
-   call void @llvm.memcpy.p0i8.p0i8.i64(i8* nonnull %0, i8* null, i64 28, i32 4, i1 false)
+   call void @llvm.memcpy.p0.p0.i64(ptr nonnull %aset, ptr null, i64 28, i32 4, i1 false)
    ret void
 
  if.end81:                                         ; preds = %if.end66, %land.lhs.true53
-   call void @llvm.memcpy.p0i8.p0i8.i64(i8* nonnull %1, i8* nonnull %0, i64 28, i32 4, i1 false)
+   call void @llvm.memcpy.p0.p0.i64(ptr nonnull %bset, ptr nonnull %aset, i64 28, i32 4, i1 false)
    ret void
  }
 
-declare void @llvm.memcpy.p0i8.p0i8.i64(i8* nocapture writeonly, i8* nocapture readonly, i64, i32, i1)
-declare void @H(%struct.B*)
+declare void @llvm.memcpy.p0.p0.i64(ptr nocapture writeonly, ptr nocapture readonly, i64, i32, i1)
+declare void @H(ptr)

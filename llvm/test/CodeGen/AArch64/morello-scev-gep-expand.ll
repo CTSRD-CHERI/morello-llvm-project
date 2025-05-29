@@ -8,8 +8,8 @@ target triple = "aarch64-none-unknown-elf"
 ; We can't use two GEPs for capabilities because we don't want to take the
 ; pointer out of bounds.
 
-%struct.widget = type <{ %struct.baz, %struct.widget addrspace(200)*, %struct.baz addrspace(200)*, i8, [15 x i8] }>
-%struct.baz = type { %struct.widget addrspace(200)* }
+%struct.widget = type <{ %struct.baz, ptr addrspace(200), ptr addrspace(200), i8, [15 x i8] }>
+%struct.baz = type { ptr addrspace(200) }
 %struct.snork = type { [10 x %struct.spam] }
 %struct.spam = type { [8 x %struct.zot] }
 %struct.zot = type { i32, [8 x %struct.wombat] }
@@ -24,16 +24,13 @@ define void @wombat() local_unnamed_addr addrspace(200) {
 ; CHECK:       bb2:
 ; CHECK-NEXT:    ret void
 ; CHECK:       bb3:
-; CHECK-NEXT:    [[LSR_IV:%.*]] = phi [[STRUCT_WIDGET:%.*]] addrspace(200)* [ undef, [[BB3_PREHEADER]] ], [ [[TMP0:%.*]], [[BB3]] ]
-; CHECK-NEXT:    [[LSR_IV1:%.*]] = bitcast [[STRUCT_WIDGET]] addrspace(200)* [[LSR_IV]] to i8 addrspace(200)*
-; CHECK-NEXT:    [[TMPLD:%.*]] = load i8, i8 addrspace(200)* [[LSR_IV1]], align 1
-; CHECK-NEXT:    [[UGLYGEP:%.*]] = getelementptr i8, i8 addrspace(200)* [[LSR_IV1]], i64 33
-; CHECK-NEXT:    [[TMP0]] = bitcast i8 addrspace(200)* [[UGLYGEP]] to [[STRUCT_WIDGET]] addrspace(200)*
+; CHECK-NEXT:    [[LSR_IV:%.*]] = phi ptr addrspace(200) [ undef, [[BB3_PREHEADER]] ], [ [[TMP0:%.*]], [[BB3]] ]
+; CHECK-NEXT:    [[TMPLD:%.*]] = load i8, ptr addrspace(200) [[LSR_IV]], align 1
+; CHECK-NEXT:    [[UGLYGEP:%.*]] = getelementptr i8, ptr addrspace(200) [[LSR_IV]], i64 33
 ; CHECK-NEXT:    br label [[BB3]]
 ;
 bb:
-  %tmp = getelementptr inbounds %struct.widget, %struct.widget addrspace(200)* undef, i64 0, i32 4, i64 7
-  %tmp1 = bitcast i8 addrspace(200)* %tmp to %struct.snork addrspace(200)*
+  %tmp = getelementptr inbounds %struct.widget, ptr addrspace(200) undef, i64 0, i32 4, i64 7
   br i1 undef, label %bb2, label %bb3
 
 bb2:                                              ; preds = %bb
@@ -41,8 +38,8 @@ bb2:                                              ; preds = %bb
 
 bb3:                                              ; preds = %bb3, %bb
   %tmp4 = phi i64 [ %tmp7, %bb3 ], [ 0, %bb ]
-  %tmp5 = getelementptr inbounds %struct.snork, %struct.snork addrspace(200)* %tmp1, i64 0, i32 0, i64 undef, i32 0, i64 undef, i32 1, i64 %tmp4, i32 1
-  %tmpld = load i8, i8 addrspace(200)* %tmp5, align 1
+  %tmp5 = getelementptr inbounds %struct.snork, ptr addrspace(200) %tmp, i64 0, i32 0, i64 undef, i32 0, i64 undef, i32 1, i64 %tmp4, i32 1
+  %tmpld = load i8, ptr addrspace(200) %tmp5, align 1
   %tmp7 = add nuw nsw i64 %tmp4, 1
   br label %bb3
 }

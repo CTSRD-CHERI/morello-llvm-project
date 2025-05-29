@@ -5,7 +5,7 @@ target triple = "aarch64-none-unknown-elf"
 
 ; CHECK-LABEL: foo:
 ; CHECK: br x0
-define i32 @foo(i32 () addrspace(200)* nocapture %arg) local_unnamed_addr addrspace(200) {
+define i32 @foo(ptr addrspace(200) nocapture %arg) local_unnamed_addr addrspace(200) {
 entry:
   %call = tail call i32 %arg()
   ret i32 %call
@@ -23,7 +23,7 @@ entry:
 ; CHECK:      blr x0
 ; CHECK:      and x30, x30, #0xfffffffffffffffe
 ; CHECK-NEXT: ret x30
-define i32 @bat(i32 () addrspace(200)* nocapture %arg) local_unnamed_addr addrspace(200) {
+define i32 @bat(ptr addrspace(200) nocapture %arg) local_unnamed_addr addrspace(200) {
 entry:
   %call = tail call i32 %arg() #3
   %add = add nsw i32 %call, 1

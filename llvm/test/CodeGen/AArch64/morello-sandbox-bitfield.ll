@@ -16,7 +16,7 @@ target triple = "aarch64-none--elf"
 ; CHECK-LABEL: get_value
 define i16 @get_value() addrspace(200) {
 entry:
-  %bf.load = load i80, i80 addrspace(200)* bitcast (%struct.Data addrspace(200)* @data to i80 addrspace(200)*), align 4
+  %bf.load = load i80, ptr addrspace(200) @data, align 4
   %bf.lshr = lshr i80 %bf.load, 64
   %bf.cast = trunc i80 %bf.lshr to i32
   %conv = trunc i32 %bf.cast to i16
@@ -33,7 +33,7 @@ entry:
 ; CHECK-LABEL: put_value
 define void @put_value(i80 %v) addrspace(200) {
 entry:
-  store i80 %v, i80 addrspace(200)* bitcast (%struct.Data addrspace(200)* @data to i80 addrspace(200)*), align 4
+  store i80 %v, ptr addrspace(200) @data, align 4
   ret void
 
 ; CHECK:      adrp	{{x|c}}[[PTR:[0-9]+]], :got:data

@@ -7,7 +7,7 @@ target triple = "aarch64-none--elf"
 $_Z3fooIiET_S0_ = comdat any
 
 @test = addrspace(200) global i32 0, align 4
-@llvm.global_ctors = appending addrspace(200) global [1 x { i32, void () addrspace(200)*, i8 addrspace(200)* }] [{ i32, void () addrspace(200)*, i8 addrspace(200)* } { i32 65535, void () addrspace(200)* @_GLOBAL__sub_I_unnamed.cpp, i8 addrspace(200)* null }]
+@llvm.global_ctors = appending addrspace(200) global [1 x { i32, ptr addrspace(200), ptr addrspace(200) }] [{ i32, ptr addrspace(200), ptr addrspace(200) } { i32 65535, ptr addrspace(200) @_GLOBAL__sub_I_unnamed.cpp, ptr addrspace(200) null }]
 
 define internal void @__cxx_global_var_init() addrspace(200) {
 ; CHECK-LABEL: __cxx_global_var_init:
@@ -27,12 +27,12 @@ define internal void @__cxx_global_var_init() addrspace(200) {
 ; CHECK-NEXT:    ldr c30, [csp], #16 // 16-byte Folded Reload
 ; CHECK-NEXT:    ret c30
 entry:
-  %call = call i32 @_Z3barQPFiiE(i32 (i32) addrspace(200)* @_Z3fooIiET_S0_)
-  store volatile i32 %call, i32 addrspace(200)* @test, align 4
+  %call = call i32 @_Z3barQPFiiE(ptr addrspace(200) @_Z3fooIiET_S0_)
+  store volatile i32 %call, ptr addrspace(200) @test, align 4
   ret void
 }
 
-declare i32 @_Z3barQPFiiE(i32 (i32) addrspace(200)*) addrspace(200)
+declare i32 @_Z3barQPFiiE(ptr addrspace(200)) addrspace(200)
 
 define internal i32 @_Z3fooIiET_S0_(i32 %val) addrspace(200) comdat {
 ; CHECK-LABEL: _Z3fooIiET_S0_:
@@ -46,8 +46,8 @@ define internal i32 @_Z3fooIiET_S0_(i32 %val) addrspace(200) comdat {
 ; CHECK-NEXT:    ret c30
 entry:
   %val.addr = alloca i32, align 4, addrspace(200)
-  store i32 %val, i32 addrspace(200)* %val.addr, align 4
-  %0 = load i32, i32 addrspace(200)* %val.addr, align 4
+  store i32 %val, ptr addrspace(200) %val.addr, align 4
+  %0 = load i32, ptr addrspace(200) %val.addr, align 4
   ret i32 %0
 }
 

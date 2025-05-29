@@ -6,7 +6,7 @@ target triple = "aarch64-none-unknown-elf"
 @aa = addrspace(200) global i32 0, align 4
 
 ; CHECK-LABEL: foo:
-define i8 addrspace(200)* @foo(i32 %max) local_unnamed_addr addrspace(200) {
+define ptr addrspace(200) @foo(i32 %max) local_unnamed_addr addrspace(200) {
 entry:
 ; CHECK:  mov c28, c29
 ; CHECK-NEXT: sub csp, csp, #208
@@ -27,20 +27,20 @@ entry:
 ; CHECK-NEXT: add csp, csp, #208
 ; CHECK-NEXT: ret c30
 
-  %call = tail call i32 bitcast (i32 (...) addrspace(200)* @bar to i32 () addrspace(200)*)()
-  %call1 = tail call i32 bitcast (i32 (...) addrspace(200)* @bar to i32 () addrspace(200)*)()
-  %call2 = tail call i32 bitcast (i32 (...) addrspace(200)* @bar to i32 () addrspace(200)*)()
-  %call3 = tail call i32 bitcast (i32 (...) addrspace(200)* @bar to i32 () addrspace(200)*)()
-  %call4 = tail call i32 bitcast (i32 (...) addrspace(200)* @bar to i32 () addrspace(200)*)()
-  %call5 = tail call i32 bitcast (i32 (...) addrspace(200)* @bar to i32 () addrspace(200)*)()
-  %call6 = tail call i32 bitcast (i32 (...) addrspace(200)* @bar to i32 () addrspace(200)*)()
-  %call17 = tail call i32 bitcast (i32 (...) addrspace(200)* @bar to i32 () addrspace(200)*)()
-  %call18 = tail call i32 bitcast (i32 (...) addrspace(200)* @bar to i32 () addrspace(200)*)()
+  %call = tail call i32 @bar()
+  %call1 = tail call i32 @bar()
+  %call2 = tail call i32 @bar()
+  %call3 = tail call i32 @bar()
+  %call4 = tail call i32 @bar()
+  %call5 = tail call i32 @bar()
+  %call6 = tail call i32 @bar()
+  %call17 = tail call i32 @bar()
+  %call18 = tail call i32 @bar()
   %cmp24 = icmp sgt i32 %max, 0
   br i1 %cmp24, label %for.body, label %entry.for.cond.cleanup_crit_edge
 
 entry.for.cond.cleanup_crit_edge:
-  %.pre = load i32, i32 addrspace(200)* @aa, align 4
+  %.pre = load i32, ptr addrspace(200) @aa, align 4
   br label %for.cond.cleanup
 
 for.cond.cleanup:
@@ -54,14 +54,14 @@ for.cond.cleanup:
   %add14 = add i32 %add13, %call17
   %add15 = add i32 %add14, %call18
   %add16 = add i32 %add15, %0
-  store i32 %add16, i32 addrspace(200)* @aa, align 4
-  ret i8 addrspace(200)* bitcast (i32 addrspace(200)* @aa to i8 addrspace(200)*)
+  store i32 %add16, ptr addrspace(200) @aa, align 4
+  ret ptr addrspace(200) @aa
 
 for.body:
   %i.025 = phi i32 [ %inc, %for.body ], [ 0, %entry ]
-  %call7 = tail call i32 bitcast (i32 (...) addrspace(200)* @baz to i32 () addrspace(200)*)()
-  %call8 = tail call i32 bitcast (i32 (...) addrspace(200)* @biz to i32 (i32 addrspace(200)*) addrspace(200)*)(i32 addrspace(200)* nonnull @aa)
-  store i32 4, i32 addrspace(200)* @aa, align 4
+  %call7 = tail call i32 @baz()
+  %call8 = tail call i32 @biz(ptr addrspace(200) nonnull @aa)
+  store i32 4, ptr addrspace(200) @aa, align 4
   %inc = add nuw nsw i32 %i.025, 1
   %exitcond = icmp eq i32 %inc, %max
   br i1 %exitcond, label %for.cond.cleanup, label %for.body
@@ -80,10 +80,9 @@ declare i32 @biz(...) local_unnamed_addr addrspace(200)
 ; CHECK: mov	c[[BRCAP:[0-9]+]], c0
 ; CHECK: ldpblr c29, [c[[BRCAP]]]
 ; CHECK-NEXT: mov  c28, c[[SAVECAP]]
-define i32 @indirect(i8 addrspace(200)* nocapture %a) local_unnamed_addr addrspace(200) {
+define i32 @indirect(ptr addrspace(200) nocapture %a) local_unnamed_addr addrspace(200) {
 entry:
-  %0 = bitcast i8 addrspace(200)* %a to void (i32) addrspace(200)*
-  tail call void %0(i32 10)
+  tail call void %a(i32 10)
   ret i32 0
 }
 
@@ -94,10 +93,9 @@ entry:
 ; CHECK: mov	c[[BRCAP:[0-9]+]], c0
 ; CHECK: ldpblr c29, [c[[BRCAP]]]
 ; CHECK-NEXT: mov  c28, c[[SAVECAP]]
-define i32 @tc_indirect(i8 addrspace(200)* nocapture %a) local_unnamed_addr addrspace(200) {
+define i32 @tc_indirect(ptr addrspace(200) nocapture %a) local_unnamed_addr addrspace(200) {
 entry:
-  %0 = bitcast i8 addrspace(200)* %a to i32 (i32) addrspace(200)*
-  %call = tail call i32 %0(i32 10)
+  %call = tail call i32 %a(i32 10)
   ret i32 %call
 }
 

@@ -35,7 +35,7 @@ entry:
 declare i32 @callee(i32, ...) local_unnamed_addr addrspace(200) #0
 
 ; Function Attrs: nounwind
-define i32 @caller_test_struct(i32 %x, [2 x float] %y.coerce, i32 %z, { i8 addrspace(200)*, i64 } %u.coerce) local_unnamed_addr addrspace(200) #0 {
+define i32 @caller_test_struct(i32 %x, [2 x float] %y.coerce, i32 %z, { ptr addrspace(200), i64 } %u.coerce) local_unnamed_addr addrspace(200) #0 {
 ; CHECK-LABEL: caller_test_struct:
 ; CHECK:       .Lfunc_begin1:
 ; CHECK-NEXT:  // %bb.0: // %entry
@@ -56,11 +56,11 @@ define i32 @caller_test_struct(i32 %x, [2 x float] %y.coerce, i32 %z, { i8 addrs
 ; CHECK-NEXT:    add csp, csp, #96
 ; CHECK-NEXT:    ret c30
 entry:
-  %call = tail call i32 (i32, ...) @callee(i32 3, i32 %x, [2 x float] %y.coerce, i32 %z, { i8 addrspace(200)*, i64 } %u.coerce) #0
+  %call = tail call i32 (i32, ...) @callee(i32 3, i32 %x, [2 x float] %y.coerce, i32 %z, { ptr addrspace(200), i64 } %u.coerce) #0
   ret i32 %call
 }
 
-define i32 @caller_test_inmem_struct(%struct.inmem addrspace(200)* nocapture readonly %x) local_unnamed_addr addrspace(200) #0 {
+define i32 @caller_test_inmem_struct(ptr addrspace(200) nocapture readonly %x) local_unnamed_addr addrspace(200) #0 {
 ; CHECK-LABEL: caller_test_inmem_struct:
 ; CHECK:       .Lfunc_begin2:
 ; CHECK-NEXT:  // %bb.0: // %entry
@@ -80,12 +80,10 @@ define i32 @caller_test_inmem_struct(%struct.inmem addrspace(200)* nocapture rea
 ; CHECK-NEXT:    ret c30
 entry:
   %byval-temp = alloca %struct.inmem, align 4, addrspace(200)
-  %0 = bitcast %struct.inmem addrspace(200)* %byval-temp to i8 addrspace(200)*
-  call void @llvm.lifetime.start.p200i8(i64 32, i8 addrspace(200)* nonnull %0) #0
-  %1 = bitcast %struct.inmem addrspace(200)* %x to i8 addrspace(200)*
-  call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* nonnull align 4 dereferenceable(32) %0, i8 addrspace(200)* nonnull align 4 dereferenceable(32) %1, i64 32, i1 false) no_preserve_cheri_tags
-  %call = call i32 (i32, ...) @callee(i32 1, %struct.inmem addrspace(200)* nonnull %byval-temp) #0
-  call void @llvm.lifetime.end.p200i8(i64 32, i8 addrspace(200)* nonnull %0) #0
+  call void @llvm.lifetime.start.p200(i64 32, ptr addrspace(200) nonnull %byval-temp) #0
+  call void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) nonnull align 4 dereferenceable(32) %byval-temp, ptr addrspace(200) nonnull align 4 dereferenceable(32) %x, i64 32, i1 false) no_preserve_cheri_tags
+  %call = call i32 (i32, ...) @callee(i32 1, ptr addrspace(200) nonnull %byval-temp) #0
+  call void @llvm.lifetime.end.p200(i64 32, ptr addrspace(200) nonnull %byval-temp) #0
   ret i32 %call
 }
 
@@ -101,11 +99,11 @@ entry:
   ret i32 %call
 }
 
-declare void @llvm.lifetime.start.p200i8(i64 immarg, i8 addrspace(200)* nocapture) addrspace(200) #0
+declare void @llvm.lifetime.start.p200(i64 immarg, ptr addrspace(200) nocapture) addrspace(200) #0
 
-declare void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* noalias nocapture writeonly, i8 addrspace(200)* noalias nocapture readonly, i64, i1 immarg) addrspace(200) #0
+declare void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) noalias nocapture writeonly, ptr addrspace(200) noalias nocapture readonly, i64, i1 immarg) addrspace(200) #0
 
-declare void @llvm.lifetime.end.p200i8(i64 immarg, i8 addrspace(200)* nocapture) addrspace(200) #0
+declare void @llvm.lifetime.end.p200(i64 immarg, ptr addrspace(200) nocapture) addrspace(200) #0
 
 define void @callee_test_scalars(i32 %count, ...) local_unnamed_addr addrspace(200) #0 {
 ; CHECK-LABEL: callee_test_scalars:
@@ -127,26 +125,23 @@ define void @callee_test_scalars(i32 %count, ...) local_unnamed_addr addrspace(2
 ; CHECK-NEXT:    add csp, csp, #48
 ; CHECK-NEXT:    ret c30
 entry:
-  %args = alloca i8 addrspace(200)*, align 16, addrspace(200)
-  %0 = bitcast i8 addrspace(200)* addrspace(200)* %args to i8 addrspace(200)*
-  call void @llvm.lifetime.start.p200i8(i64 16, i8 addrspace(200)* nonnull %0) #0
-  call void @llvm.va_start.p200i8(i8 addrspace(200)* nonnull %0)
-  %stack = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %args, align 16
-  %1 = bitcast i8 addrspace(200)* %stack to double addrspace(200)*
-  %new_stack = getelementptr inbounds i8, i8 addrspace(200)* %stack, i64 16
-  store i8 addrspace(200)* %new_stack, i8 addrspace(200)* addrspace(200)* %args, align 16
-  %2 = load double, double addrspace(200)* %1, align 16
-  %3 = bitcast i8 addrspace(200)* %new_stack to float addrspace(200)*
-  %new_stack4 = getelementptr inbounds i8, i8 addrspace(200)* %stack, i64 32
-  store i8 addrspace(200)* %new_stack4, i8 addrspace(200)* addrspace(200)* %args, align 16
-  %4 = load float, float addrspace(200)* %3, align 16
-  call void @llvm.va_end.p200i8(i8 addrspace(200)* nonnull %0)
-  call void @call1(double %2, float %4) #3
-  call void @llvm.lifetime.end.p200i8(i64 16, i8 addrspace(200)* nonnull %0) #0
+  %args = alloca ptr addrspace(200), align 16, addrspace(200)
+  call void @llvm.lifetime.start.p200(i64 16, ptr addrspace(200) nonnull %args) #0
+  call void @llvm.va_start.p200(ptr addrspace(200) nonnull %args)
+  %stack = load ptr addrspace(200), ptr addrspace(200) %args, align 16
+  %new_stack = getelementptr inbounds i8, ptr addrspace(200) %stack, i64 16
+  store ptr addrspace(200) %new_stack, ptr addrspace(200) %args, align 16
+  %0 = load double, ptr addrspace(200) %stack, align 16
+  %new_stack4 = getelementptr inbounds i8, ptr addrspace(200) %stack, i64 32
+  store ptr addrspace(200) %new_stack4, ptr addrspace(200) %args, align 16
+  %1 = load float, ptr addrspace(200) %new_stack, align 16
+  call void @llvm.va_end.p200(ptr addrspace(200) nonnull %args)
+  call void @call1(double %0, float %1) #3
+  call void @llvm.lifetime.end.p200(i64 16, ptr addrspace(200) nonnull %args) #0
   ret void
 }
 
-define i8 addrspace(200)* @test_vacopy(i32 %count, ...) local_unnamed_addr addrspace(200) #0 {
+define ptr addrspace(200) @test_vacopy(i32 %count, ...) local_unnamed_addr addrspace(200) #0 {
 ; CHECK-LABEL: test_vacopy:
 ; CHECK:       .Lfunc_begin5:
 ; CHECK-NEXT:  // %bb.0: // %entry
@@ -161,23 +156,21 @@ define i8 addrspace(200)* @test_vacopy(i32 %count, ...) local_unnamed_addr addrs
 ; CHECK-NEXT:    str c9, [c1, #0]
 ; CHECK-NEXT:    ret c30
 entry:
-  %retval = alloca i8 addrspace(200)*, align 16, addrspace(200)
-  %args = alloca i8 addrspace(200)*, align 16, addrspace(200)
-  %0 = bitcast i8 addrspace(200)* addrspace(200)* %args to i8 addrspace(200)*
-  call void @llvm.lifetime.start.p200i8(i64 16, i8 addrspace(200)* nonnull %0) #0
-  call void @llvm.va_start.p200i8(i8 addrspace(200)* nonnull %0)
-  %1 = bitcast i8 addrspace(200)* addrspace(200)* %retval to i8 addrspace(200)*
-  call void @llvm.va_copy.p200i8.p200i8(i8 addrspace(200)* nonnull %1, i8 addrspace(200)* nonnull %0)
-  call void @llvm.lifetime.end.p200i8(i64 16, i8 addrspace(200)* nonnull %0) #0
-  %2 = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %retval, align 16
-  ret i8 addrspace(200)* %2
+  %retval = alloca ptr addrspace(200), align 16, addrspace(200)
+  %args = alloca ptr addrspace(200), align 16, addrspace(200)
+  call void @llvm.lifetime.start.p200(i64 16, ptr addrspace(200) nonnull %args) #0
+  call void @llvm.va_start.p200(ptr addrspace(200) nonnull %args)
+  call void @llvm.va_copy.p200.p200(ptr addrspace(200) nonnull %retval, ptr addrspace(200) nonnull %args)
+  call void @llvm.lifetime.end.p200(i64 16, ptr addrspace(200) nonnull %args) #0
+  %0 = load ptr addrspace(200), ptr addrspace(200) %retval, align 16
+  ret ptr addrspace(200) %0
 }
 
-declare void @llvm.va_copy.p200i8.p200i8(i8 addrspace(200)*, i8 addrspace(200)*) addrspace(200) #0
+declare void @llvm.va_copy.p200.p200(ptr addrspace(200), ptr addrspace(200)) addrspace(200) #0
 
-declare void @llvm.va_start.p200i8(i8 addrspace(200)*) addrspace(200) #0
+declare void @llvm.va_start.p200(ptr addrspace(200)) addrspace(200) #0
 
-declare void @llvm.va_end.p200i8(i8 addrspace(200)*) addrspace(200) #0
+declare void @llvm.va_end.p200(ptr addrspace(200)) addrspace(200) #0
 
 declare void @call1(double, float) local_unnamed_addr addrspace(200) #0
 

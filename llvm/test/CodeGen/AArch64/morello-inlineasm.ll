@@ -4,7 +4,7 @@
 target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
 target triple = "aarch64-none-unknown-elf"
 
-define dso_local i32 @foo(i32 addrspace(200)* %p) local_unnamed_addr {
+define dso_local i32 @foo(ptr addrspace(200) %p) local_unnamed_addr {
 ; CHECK-LABEL: foo:
 ; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    //APP
@@ -12,11 +12,11 @@ define dso_local i32 @foo(i32 addrspace(200)* %p) local_unnamed_addr {
 ; CHECK-NEXT:    //NO_APP
 ; CHECK-NEXT:    ret
 entry:
-  %0 = tail call i32 asm sideeffect "ldr ${0:w}, $1", "=r,*Q"(i32 addrspace(200)* elementtype(i32) %p)
+  %0 = tail call i32 asm sideeffect "ldr ${0:w}, $1", "=r,*Q"(ptr addrspace(200) elementtype(i32) %p)
   ret i32 %0
 }
 
-define dso_local i32 @bar(i32 addrspace(200)* %p) local_unnamed_addr {
+define dso_local i32 @bar(ptr addrspace(200) %p) local_unnamed_addr {
 ; CHECK-LABEL: bar:
 ; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    //APP
@@ -24,7 +24,7 @@ define dso_local i32 @bar(i32 addrspace(200)* %p) local_unnamed_addr {
 ; CHECK-NEXT:    //NO_APP
 ; CHECK-NEXT:    ret
 entry:
-  %0 = tail call i32 asm sideeffect "ldr ${0:w}, $1", "=r,*m"(i32 addrspace(200)* elementtype(i32) %p)
+  %0 = tail call i32 asm sideeffect "ldr ${0:w}, $1", "=r,*m"(ptr addrspace(200) elementtype(i32) %p)
   ret i32 %0
 }
 

@@ -3,7 +3,7 @@
 
 @var = addrspace(200) global i128 0
 
-define i128 @val_compare_and_swap(i128 addrspace(200)* %p, i128 %oldval, i128 %newval) {
+define i128 @val_compare_and_swap(ptr addrspace(200) %p, i128 %oldval, i128 %newval) {
 ; CHECK-LABEL: val_compare_and_swap:
 ; CHECK:       .Lfunc_begin0:
 ; CHECK-NEXT:    .cfi_startproc
@@ -25,12 +25,12 @@ define i128 @val_compare_and_swap(i128 addrspace(200)* %p, i128 %oldval, i128 %n
 ; CHECK-NEXT:  .LBB0_4:
 ; CHECK-NEXT:    mov x0, x8
 ; CHECK-NEXT:    ret c30
-  %pair = cmpxchg i128 addrspace(200) * %p, i128 %oldval, i128 %newval acquire acquire
+  %pair = cmpxchg ptr addrspace(200) %p, i128 %oldval, i128 %newval acquire acquire
   %val = extractvalue { i128, i1 } %pair, 0
   ret i128 %val
 }
 
-define void @fetch_and_nand(i128 addrspace(200) * %p, i128 %bits) {
+define void @fetch_and_nand(ptr addrspace(200) %p, i128 %bits) {
 ; CHECK-LABEL: fetch_and_nand:
 ; CHECK:       .Lfunc_begin1:
 ; CHECK-NEXT:    .cfi_startproc
@@ -50,12 +50,12 @@ define void @fetch_and_nand(i128 addrspace(200) * %p, i128 %bits) {
 ; CHECK-NEXT:    stp x9, x8, [c0]
 ; CHECK-NEXT:    ret c30
 
-  %val = atomicrmw nand i128 addrspace(200) * %p, i128 %bits release
-  store i128 %val, i128 addrspace(200) * @var, align 16
+  %val = atomicrmw nand ptr addrspace(200) %p, i128 %bits release
+  store i128 %val, ptr addrspace(200) @var, align 16
   ret void
 }
 
-define void @fetch_and_or(i128 addrspace(200) * %p, i128 %bits) {
+define void @fetch_and_or(ptr addrspace(200) %p, i128 %bits) {
 ; CHECK-LABEL: fetch_and_or:
 ; CHECK:       .Lfunc_begin2:
 ; CHECK-NEXT:    .cfi_startproc
@@ -73,12 +73,12 @@ define void @fetch_and_or(i128 addrspace(200) * %p, i128 %bits) {
 ; CHECK-NEXT:    stp x9, x8, [c0]
 ; CHECK-NEXT:    ret c30
 
-  %val = atomicrmw or i128 addrspace(200) * %p, i128 %bits seq_cst
-  store i128 %val, i128 addrspace(200) * @var, align 16
+  %val = atomicrmw or ptr addrspace(200) %p, i128 %bits seq_cst
+  store i128 %val, ptr addrspace(200) @var, align 16
   ret void
 }
 
-define void @fetch_and_add(i128 addrspace(200) * %p, i128 %bits) {
+define void @fetch_and_add(ptr addrspace(200) %p, i128 %bits) {
 ; CHECK-LABEL: fetch_and_add:
 ; CHECK:       .Lfunc_begin3:
 ; CHECK-NEXT:    .cfi_startproc
@@ -96,12 +96,12 @@ define void @fetch_and_add(i128 addrspace(200) * %p, i128 %bits) {
 ; CHECK-NEXT:    stp x9, x8, [c0]
 ; CHECK-NEXT:    ret c30
 
-  %val = atomicrmw add i128 addrspace(200) * %p, i128 %bits seq_cst
-  store i128 %val, i128 addrspace(200) * @var, align 16
+  %val = atomicrmw add ptr addrspace(200) %p, i128 %bits seq_cst
+  store i128 %val, ptr addrspace(200) @var, align 16
   ret void
 }
 
-define void @fetch_and_sub(i128 addrspace(200) * %p, i128 %bits) {
+define void @fetch_and_sub(ptr addrspace(200) %p, i128 %bits) {
 ; CHECK-LABEL: fetch_and_sub:
 ; CHECK:       .Lfunc_begin4:
 ; CHECK-NEXT:    .cfi_startproc
@@ -119,12 +119,12 @@ define void @fetch_and_sub(i128 addrspace(200) * %p, i128 %bits) {
 ; CHECK-NEXT:    stp x9, x8, [c0]
 ; CHECK-NEXT:    ret c30
 
-  %val = atomicrmw sub i128 addrspace(200) * %p, i128 %bits seq_cst
-  store i128 %val, i128 addrspace(200) * @var, align 16
+  %val = atomicrmw sub ptr addrspace(200) %p, i128 %bits seq_cst
+  store i128 %val, ptr addrspace(200) @var, align 16
   ret void
 }
 
-define void @fetch_and_min(i128 addrspace(200) * %p, i128 %bits) {
+define void @fetch_and_min(ptr addrspace(200) %p, i128 %bits) {
 ; CHECK-LABEL: fetch_and_min:
 ; CHECK:       .Lfunc_begin5:
 ; CHECK-NEXT:    .cfi_startproc
@@ -148,12 +148,12 @@ define void @fetch_and_min(i128 addrspace(200) * %p, i128 %bits) {
 ; CHECK-NEXT:    stp x9, x8, [c0]
 ; CHECK-NEXT:    ret c30
 
-  %val = atomicrmw min i128 addrspace(200) * %p, i128 %bits seq_cst
-  store i128 %val, i128 addrspace(200) * @var, align 16
+  %val = atomicrmw min ptr addrspace(200) %p, i128 %bits seq_cst
+  store i128 %val, ptr addrspace(200) @var, align 16
   ret void
 }
 
-define void @fetch_and_max(i128 addrspace(200) * %p, i128 %bits) {
+define void @fetch_and_max(ptr addrspace(200) %p, i128 %bits) {
 ; CHECK-LABEL: fetch_and_max:
 ; CHECK:       .Lfunc_begin6:
 ; CHECK-NEXT:    .cfi_startproc
@@ -177,12 +177,12 @@ define void @fetch_and_max(i128 addrspace(200) * %p, i128 %bits) {
 ; CHECK-NEXT:    stp x9, x8, [c0]
 ; CHECK-NEXT:    ret c30
 
-  %val = atomicrmw max i128 addrspace(200) * %p, i128 %bits seq_cst
-  store i128 %val, i128 addrspace(200) * @var, align 16
+  %val = atomicrmw max ptr addrspace(200) %p, i128 %bits seq_cst
+  store i128 %val, ptr addrspace(200) @var, align 16
   ret void
 }
 
-define void @fetch_and_umin(i128 addrspace(200) * %p, i128 %bits) {
+define void @fetch_and_umin(ptr addrspace(200) %p, i128 %bits) {
 ; CHECK-LABEL: fetch_and_umin:
 ; CHECK:       .Lfunc_begin7:
 ; CHECK-NEXT:    .cfi_startproc
@@ -206,12 +206,12 @@ define void @fetch_and_umin(i128 addrspace(200) * %p, i128 %bits) {
 ; CHECK-NEXT:    stp x9, x8, [c0]
 ; CHECK-NEXT:    ret c30
 
-  %val = atomicrmw umin i128 addrspace(200) * %p, i128 %bits seq_cst
-  store i128 %val, i128 addrspace(200) * @var, align 16
+  %val = atomicrmw umin ptr addrspace(200) %p, i128 %bits seq_cst
+  store i128 %val, ptr addrspace(200) @var, align 16
   ret void
 }
 
-define void @fetch_and_umax(i128 addrspace(200) * %p, i128 %bits) {
+define void @fetch_and_umax(ptr addrspace(200) %p, i128 %bits) {
 ; CHECK-LABEL: fetch_and_umax:
 ; CHECK:       .Lfunc_begin8:
 ; CHECK-NEXT:    .cfi_startproc
@@ -235,12 +235,12 @@ define void @fetch_and_umax(i128 addrspace(200) * %p, i128 %bits) {
 ; CHECK-NEXT:    stp x9, x8, [c0]
 ; CHECK-NEXT:    ret c30
 
-  %val = atomicrmw umax i128 addrspace(200) * %p, i128 %bits seq_cst
-  store i128 %val, i128 addrspace(200) * @var, align 16
+  %val = atomicrmw umax ptr addrspace(200) %p, i128 %bits seq_cst
+  store i128 %val, ptr addrspace(200) @var, align 16
   ret void
 }
 
-define i128 @atomic_load_seq_cst(i128 addrspace(200) * %p) {
+define i128 @atomic_load_seq_cst(ptr addrspace(200) %p) {
 ; CHECK-LABEL: atomic_load_seq_cst:
 ; CHECK:       .Lfunc_begin9:
 ; CHECK-NEXT:    .cfi_startproc
@@ -253,11 +253,11 @@ define i128 @atomic_load_seq_cst(i128 addrspace(200) * %p) {
 ; CHECK-NEXT:    cbnz w8, .LBB9_1
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    ret c30
-   %r = load atomic i128, i128 addrspace(200) * %p seq_cst, align 16
+   %r = load atomic i128, ptr addrspace(200) %p seq_cst, align 16
    ret i128 %r
 }
 
-define i128 @atomic_load_relaxed(i64, i64, i128 addrspace(200) * %p) {
+define i128 @atomic_load_relaxed(i64, i64, ptr addrspace(200) %p) {
 ; CHECK-LABEL: atomic_load_relaxed:
 ; CHECK:       .Lfunc_begin10:
 ; CHECK-NEXT:    .cfi_startproc
@@ -269,11 +269,11 @@ define i128 @atomic_load_relaxed(i64, i64, i128 addrspace(200) * %p) {
 ; CHECK-NEXT:    cbnz w8, .LBB10_1
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    ret c30
-   %r = load atomic i128, i128 addrspace(200) * %p monotonic, align 16
+   %r = load atomic i128, ptr addrspace(200) %p monotonic, align 16
    ret i128 %r
 }
 
-define void @atomic_store_seq_cst(i128 %in, i128 addrspace(200) * %p) {
+define void @atomic_store_seq_cst(i128 %in, ptr addrspace(200) %p) {
 ; CHECK-LABEL: atomic_store_seq_cst:
 ; CHECK:       .Lfunc_begin11:
 ; CHECK-NEXT:    .cfi_startproc
@@ -285,11 +285,11 @@ define void @atomic_store_seq_cst(i128 %in, i128 addrspace(200) * %p) {
 ; CHECK-NEXT:    cbnz w8, .LBB11_1
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    ret c30
-   store atomic i128 %in, i128 addrspace(200) * %p seq_cst, align 16
+   store atomic i128 %in, ptr addrspace(200) %p seq_cst, align 16
    ret void
 }
 
-define void @atomic_store_release(i128 %in, i128 addrspace(200) * %p) {
+define void @atomic_store_release(i128 %in, ptr addrspace(200) %p) {
 ; CHECK-LABEL: atomic_store_release:
 ; CHECK:       .Lfunc_begin12:
 ; CHECK-NEXT:    .cfi_startproc
@@ -301,11 +301,11 @@ define void @atomic_store_release(i128 %in, i128 addrspace(200) * %p) {
 ; CHECK-NEXT:    cbnz w8, .LBB12_1
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    ret c30
-   store atomic i128 %in, i128 addrspace(200) * %p release, align 16
+   store atomic i128 %in, ptr addrspace(200) %p release, align 16
    ret void
 }
 
-define void @atomic_store_relaxed(i128 %in, i128 addrspace(200) * %p) {
+define void @atomic_store_relaxed(i128 %in, ptr addrspace(200) %p) {
 ; CHECK-LABEL: atomic_store_relaxed:
 ; CHECK:       .Lfunc_begin13:
 ; CHECK-NEXT:    .cfi_startproc
@@ -317,6 +317,6 @@ define void @atomic_store_relaxed(i128 %in, i128 addrspace(200) * %p) {
 ; CHECK-NEXT:    cbnz w8, .LBB13_1
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
 ; CHECK-NEXT:    ret c30
-   store atomic i128 %in, i128 addrspace(200) * %p unordered, align 16
+   store atomic i128 %in, ptr addrspace(200) %p unordered, align 16
    ret void
 }

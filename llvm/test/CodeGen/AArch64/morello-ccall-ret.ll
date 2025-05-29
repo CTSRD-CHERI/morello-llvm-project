@@ -25,7 +25,7 @@ entry:
   ret i32 1
 }
 
-%struct.cheri_object = type { i8 addrspace(200)*, i8 addrspace(200)* }
+%struct.cheri_object = type { ptr addrspace(200), ptr addrspace(200) }
 @other = common local_unnamed_addr addrspace(200) global %struct.cheri_object zeroinitializer, align 16
 @__cheri_method.cls.foo = linkonce_odr addrspace(200) global i64 0, section ".CHERI_CALLER"
 @cls = common local_unnamed_addr addrspace(200) global %struct.cheri_object zeroinitializer, align 16
@@ -53,13 +53,13 @@ entry:
 ; CHECK-DAG: fmov d6, xzr
 ; CHECK-DAG: fmov d7, xzr
 ; CHECK: bl cheri_invoke
-  %0 = load i64, i64 addrspace(200)* @__cheri_method.cls.foo, align 8
-  %.unpack = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* getelementptr inbounds (%struct.cheri_object, %struct.cheri_object addrspace(200)* @other, i64 0, i32 0), align 16
-  %1 = insertvalue [2 x i8 addrspace(200)*] undef, i8 addrspace(200)* %.unpack, 0
-  %.unpack3 = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* getelementptr inbounds (%struct.cheri_object, %struct.cheri_object addrspace(200)* @other, i64 0, i32 1), align 16
-  %2 = insertvalue [2 x i8 addrspace(200)*] %1, i8 addrspace(200)* %.unpack3, 1
-  tail call chericcallcc void @cheri_invoke([2 x i8 addrspace(200)*] %2, i64 %0, i32 %a, i32 %b)
+  %0 = load i64, ptr addrspace(200) @__cheri_method.cls.foo, align 8
+  %.unpack = load ptr addrspace(200), ptr addrspace(200) @other, align 16
+  %1 = insertvalue [2 x ptr addrspace(200)] undef, ptr addrspace(200) %.unpack, 0
+  %.unpack3 = load ptr addrspace(200), ptr addrspace(200) getelementptr inbounds (%struct.cheri_object, ptr addrspace(200) @other, i64 0, i32 1), align 16
+  %2 = insertvalue [2 x ptr addrspace(200)] %1, ptr addrspace(200) %.unpack3, 1
+  tail call chericcallcc void @cheri_invoke([2 x ptr addrspace(200)] %2, i64 %0, i32 %a, i32 %b)
   ret void
 }
 
-declare void @cheri_invoke([2 x i8 addrspace(200)*], i64, i32, i32) addrspace(200)
+declare void @cheri_invoke([2 x ptr addrspace(200)], i64, i32, i32) addrspace(200)

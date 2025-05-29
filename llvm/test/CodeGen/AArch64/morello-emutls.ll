@@ -4,7 +4,7 @@
 
 ; Use my_emutls_get_address like __emutls_get_address.
 @my_emutls_v_xyz = external addrspace(200) global i8, align 4
-declare i8 addrspace(200)* @my_emutls_get_address(i8 addrspace(200)*)
+declare ptr addrspace(200) @my_emutls_get_address(ptr addrspace(200))
 
 define i32 @my_get_xyz() {
 ; CHECK-LABEL: my_get_xyz:
@@ -15,10 +15,9 @@ define i32 @my_get_xyz() {
 ; CHECK-NEXT:   ldr c30, [csp], #16
 
 entry:
-  %call = call i8 addrspace(200)* @my_emutls_get_address(i8 addrspace(200) *@my_emutls_v_xyz)
-  %0 = bitcast i8 addrspace(200)* %call to i32 addrspace(200)*
-  %1 = load i32, i32 addrspace(200)* %0, align 4
-  ret i32 %1
+  %call = call ptr addrspace(200) @my_emutls_get_address(ptr addrspace(200) @my_emutls_v_xyz)
+  %0 = load i32, ptr addrspace(200) %call, align 4
+  ret i32 %0
 }
 
 @i1 = thread_local addrspace(200) global i32 15
@@ -37,11 +36,11 @@ define i32 @f1() {
 ; CHECK-NEXT:   ldr c30, [csp], #16
 
 entry:
-  %tmp1 = load i32, i32 addrspace(200)* @i1
+  %tmp1 = load i32, ptr addrspace(200) @i1
   ret i32 %tmp1
 }
 
-define i32 addrspace(200)* @f2() {
+define ptr addrspace(200) @f2() {
 ; CHECK-LABEL: f2:
 ; CHECK:        adrp c[[ADDR:[0-9]+]], :got:__emutls_v.i1
 ; CHECK-NEXT:   ldr c0, [c[[ADDR]], :got_lo12:__emutls_v.i1]
@@ -49,7 +48,7 @@ define i32 addrspace(200)* @f2() {
 ; CHECK-NEXT:   ldr c30, [csp], #16
 
 entry:
-  ret i32 addrspace(200)* @i1
+  ret ptr addrspace(200) @i1
 }
 
 ; CHECK-LABEL: .LCPI3_0
@@ -64,14 +63,14 @@ define i32 @f5() nounwind {
 ; CHECK-NEXT:   ldr c30, [csp], #16
 
 entry:
-  %tmp1 = load i32, i32 addrspace(200)* @i3
+  %tmp1 = load i32, ptr addrspace(200) @i3
   ret i32 %tmp1
 }
 
 ; CHECK-LABEL: .LCPI4_0
 ; CHECK-NEXT: .chericap __emutls_v.i3
 
-define i32 addrspace(200)* @f6() {
+define ptr addrspace(200) @f6() {
 ; CHECK-LABEL: f6:
 ; CHECK:        adrp c[[ADDR:[0-9]+]], .LCPI4_0
 ; CHECK-NEXT:   ldr c0, [c[[ADDR]], :lo12:.LCPI4_0]
@@ -79,7 +78,7 @@ define i32 addrspace(200)* @f6() {
 ; CHECK-NEXT:   ldr c30, [csp], #16
 
 entry:
-  ret i32 addrspace(200)* @i3
+  ret ptr addrspace(200) @i3
 }
 
 ; Simple test of comdat __thread variables.
@@ -104,9 +103,9 @@ define i32 @_Z7getIntXv() {
 ; CHECK:        str {{.*}}, [c1]
 
 entry:
-  %0 = load i32, i32 addrspace(200)* @_ZN1AIiE1xE, align 4
+  %0 = load i32, ptr addrspace(200) @_ZN1AIiE1xE, align 4
   %inc = add nsw i32 %0, 1
-  store i32 %inc, i32 addrspace(200)* @_ZN1AIiE1xE, align 4
+  store i32 %inc, ptr addrspace(200) @_ZN1AIiE1xE, align 4
   ret i32 %0
 }
 
@@ -121,9 +120,9 @@ define float @_Z9getFloatXv() {
 ; CHECK:        str {{.*}}, [c0]
 
 entry:
-  %0 = load float, float addrspace(200)* @_ZN1AIfE1xE, align 4
+  %0 = load float, ptr addrspace(200) @_ZN1AIfE1xE, align 4
   %inc = fadd float %0, 1.000000e+00
-  store float %inc, float addrspace(200)* @_ZN1AIfE1xE, align 4
+  store float %inc, ptr addrspace(200) @_ZN1AIfE1xE, align 4
   ret float %0
 }
 

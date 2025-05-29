@@ -12,14 +12,14 @@ entry:
   %shr = lshr i32 %u, 10
   %and = and i32 %shr, 63
   %idxprom = zext i32 %and to i64
-  %arrayidx = getelementptr inbounds [8 x [64 x i32]], [8 x [64 x i32]] addrspace(200)* @gv, i64 0, i64 2, i64 %idxprom
-  %0 = load i32, i32 addrspace(200)* %arrayidx, align 4
+  %arrayidx = getelementptr inbounds [8 x [64 x i32]], ptr addrspace(200) @gv, i64 0, i64 2, i64 %idxprom
+  %0 = load i32, ptr addrspace(200) %arrayidx, align 4
   %xor = xor i32 %0, %x
   %shr1 = lshr i32 %v, 10
   %and2 = and i32 %shr1, 63
   %idxprom3 = zext i32 %and2 to i64
-  %arrayidx4 = getelementptr inbounds [8 x [64 x i32]], [8 x [64 x i32]] addrspace(200)* @gv, i64 0, i64 2, i64 %idxprom3
-  %1 = load i32, i32 addrspace(200)* %arrayidx4, align 4
+  %arrayidx4 = getelementptr inbounds [8 x [64 x i32]], ptr addrspace(200) @gv, i64 0, i64 2, i64 %idxprom3
+  %1 = load i32, ptr addrspace(200) %arrayidx4, align 4
   %xor5 = xor i32 %xor, %1
   ret i32 %xor5
 }

@@ -11,7 +11,7 @@ target triple = "aarch64-none--elf"
 @unused = internal local_unnamed_addr addrspace(200) global [20 x i32] zeroinitializer, align 4
 @used_constoff = internal local_unnamed_addr addrspace(200) global [20 x i32] zeroinitializer, align 4
 
-define dso_local i8 addrspace(200)* @bar0(i32 %x, i32 %y) local_unnamed_addr addrspace(200) #0 {
+define dso_local ptr addrspace(200) @bar0(i32 %x, i32 %y) local_unnamed_addr addrspace(200) #0 {
 ; CHECK-LABEL: bar0:
 ; CHECK:       .Lfunc_begin0:
 ; CHECK-NEXT:  // %bb.0: // %entry
@@ -28,14 +28,14 @@ define dso_local i8 addrspace(200)* @bar0(i32 %x, i32 %y) local_unnamed_addr add
 ; CHECK-NEXT:    ret c30
 entry:
   %idxprom = sext i32 %x to i64
-  %arrayidx = getelementptr inbounds [20 x i32], [20 x i32] addrspace(200)* @a, i64 0, i64 %idxprom
-  %0 = load i32, i32 addrspace(200)* %arrayidx, align 4, !tbaa !2
+  %arrayidx = getelementptr inbounds [20 x i32], ptr addrspace(200) @a, i64 0, i64 %idxprom
+  %0 = load i32, ptr addrspace(200) %arrayidx, align 4, !tbaa !2
   %inc = add nsw i32 %0, 1
-  store i32 %inc, i32 addrspace(200)* %arrayidx, align 4, !tbaa !2
-  ret i8 addrspace(200)* bitcast (i8 addrspace(200)* (i32, i32) addrspace(200)* @baz to i8 addrspace(200)*)
+  store i32 %inc, ptr addrspace(200) %arrayidx, align 4, !tbaa !2
+  ret ptr addrspace(200) (i32, i32) addrspace(200)* @baz
 }
 
-define internal i8 addrspace(200)* @baz(i32 %x, i32 %y) addrspace(200) #0 {
+define internal ptr addrspace(200) @baz(i32 %x, i32 %y) addrspace(200) #0 {
 ; CHECK-LABEL: baz:
 ; CHECK:       .Lfunc_begin1:
 ; CHECK-NEXT:  // %bb.0: // %entry
@@ -52,14 +52,14 @@ define internal i8 addrspace(200)* @baz(i32 %x, i32 %y) addrspace(200) #0 {
 ; CHECK-NEXT:    ret c30
 entry:
   %idxprom.i = sext i32 %x to i64
-  %arrayidx.i = getelementptr inbounds [20 x i32], [20 x i32] addrspace(200)* @a, i64 0, i64 %idxprom.i
-  %0 = load i32, i32 addrspace(200)* %arrayidx.i, align 4, !tbaa !2
+  %arrayidx.i = getelementptr inbounds [20 x i32], ptr addrspace(200) @a, i64 0, i64 %idxprom.i
+  %0 = load i32, ptr addrspace(200) %arrayidx.i, align 4, !tbaa !2
   %inc.i = add nsw i32 %0, 1
-  store i32 %inc.i, i32 addrspace(200)* %arrayidx.i, align 4, !tbaa !2
-  ret i8 addrspace(200)* bitcast (i8 addrspace(200)* (i32, i32) addrspace(200)* @baz to i8 addrspace(200)*)
+  store i32 %inc.i, ptr addrspace(200) %arrayidx.i, align 4, !tbaa !2
+  ret ptr addrspace(200) (i32, i32) addrspace(200)* @baz
 }
 
-define dso_local i8 addrspace(200)* @bar1(i32 %x, i32 %y) local_unnamed_addr addrspace(200) #0 {
+define dso_local ptr addrspace(200) @bar1(i32 %x, i32 %y) local_unnamed_addr addrspace(200) #0 {
 ; CHECK-LABEL: bar1:
 ; CHECK:       .Lfunc_begin2:
 ; CHECK-NEXT:  // %bb.0: // %entry
@@ -76,11 +76,11 @@ define dso_local i8 addrspace(200)* @bar1(i32 %x, i32 %y) local_unnamed_addr add
 ; CHECK-NEXT:    ret c30
 entry:
   %idxprom = sext i32 %y to i64
-  %arrayidx = getelementptr inbounds [20 x i32], [20 x i32] addrspace(200)* @a, i64 0, i64 %idxprom
-  %0 = load i32, i32 addrspace(200)* %arrayidx, align 4, !tbaa !2
+  %arrayidx = getelementptr inbounds [20 x i32], ptr addrspace(200) @a, i64 0, i64 %idxprom
+  %0 = load i32, ptr addrspace(200) %arrayidx, align 4, !tbaa !2
   %add = add nsw i32 %0, 2
-  store i32 %add, i32 addrspace(200)* %arrayidx, align 4, !tbaa !2
-  ret i8 addrspace(200)* bitcast (i8 addrspace(200)* (i32, i32) addrspace(200)* @baz to i8 addrspace(200)*)
+  store i32 %add, ptr addrspace(200) %arrayidx, align 4, !tbaa !2
+  ret ptr addrspace(200) (i32, i32) addrspace(200)* @baz
 }
 
 define dso_local void  @coff(i32 %x, i32 %y) local_unnamed_addr addrspace(200) #0 {
@@ -95,9 +95,9 @@ define dso_local void  @coff(i32 %x, i32 %y) local_unnamed_addr addrspace(200) #
 ; CHECK-NEXT:    ret c30
 entry:
   %idxprom = sext i32 %y to i64
-  %0 = load i32, i32 addrspace(200)* getelementptr inbounds ([20 x i32], [20 x i32] addrspace(200)* @used_constoff, i64 0, i64 1)
+  %0 = load i32, ptr addrspace(200) getelementptr inbounds ([20 x i32], ptr addrspace(200) @used_constoff, i64 0, i64 1)
   %add = add nsw i32 %0, 2
-  store i32 %add, i32 addrspace(200)* getelementptr inbounds ([20 x i32], [20 x i32] addrspace(200)* @used_constoff, i64 0, i64 1)
+  store i32 %add, ptr addrspace(200) getelementptr inbounds ([20 x i32], ptr addrspace(200) @used_constoff, i64 0, i64 1)
   ret void
 }
 
@@ -110,7 +110,7 @@ define dso_local i32 @fun() local_unnamed_addr addrspace(200) #1 {
 ; CHECK-NEXT:    ldr w0, [c0]
 ; CHECK-NEXT:    ret c30
 entry:
-  %0 = load i32, i32 addrspace(200)* getelementptr inbounds ([20 x i32], [20 x i32] addrspace(200)* @a, i64 0, i64 0), align 4, !tbaa !2
+  %0 = load i32, ptr addrspace(200) @a, align 4, !tbaa !2
   ret i32 %0
 }
 

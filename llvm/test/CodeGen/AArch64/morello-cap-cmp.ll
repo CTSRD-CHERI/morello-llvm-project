@@ -5,9 +5,9 @@ declare i32 @foo(...)
 declare i32 @bar(...)
 
 ; CHECK-LABEL: testCmp:
-define i32 @testCmp(i32 addrspace(200)* %a, i32 addrspace(200)* %b) {
+define i32 @testCmp(ptr addrspace(200) %a, ptr addrspace(200) %b) {
 entry:
-  %cmp = icmp ult i32 addrspace(200)* %a, %b
+  %cmp = icmp ult ptr addrspace(200) %a, %b
   br i1 %cmp, label %cond.true, label %cond.false
 
 cond.true:
@@ -25,9 +25,9 @@ cond.end:
 }
 
 ; CHECK-LABEL: testCmpZero:
-define i32 @testCmpZero(i32 addrspace(200)* %a) {
+define i32 @testCmpZero(ptr addrspace(200) %a) {
 entry:
-  %cmp = icmp ult i32 addrspace(200)* %a, null
+  %cmp = icmp ult ptr addrspace(200) %a, null
   br i1 %cmp, label %cond.true, label %cond.false
 
 cond.true:

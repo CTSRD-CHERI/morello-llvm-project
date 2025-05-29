@@ -5,13 +5,13 @@ target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:12
 target triple = "aarch64-unknown-linux-android"
 
 %struct.widget = type { %struct.baz, %struct.snork, [8 x %struct.snork], [8 x %struct.snork], i32, [12 x i8] }
-%struct.baz = type <{ i32 (...) addrspace(200)* addrspace(200)*, i32, float }>
+%struct.baz = type <{ ptr addrspace(200), i32, float }>
 %struct.snork = type { float, float }
 %struct.spam = type { float, %struct.snork, float }
 
 ; When scalarizing a PTRADD make sure we can handle scalar offsets.
 
-define hidden float @zot(%struct.widget addrspace(200)* nocapture readonly %arg, %struct.spam addrspace(200)* nocapture %arg1) unnamed_addr addrspace(200) align 2 {
+define hidden float @zot(ptr addrspace(200) nocapture readonly %arg, ptr addrspace(200) nocapture %arg1) unnamed_addr addrspace(200) align 2 {
 ; CHECK-LABEL: zot:
 ; CHECK:       .Lfunc_begin0:
 ; CHECK-NEXT:    .cfi_startproc
@@ -19,8 +19,8 @@ define hidden float @zot(%struct.widget addrspace(200)* nocapture readonly %arg,
 ; CHECK-NEXT:    ldr s0, [c0, #32]
 ; CHECK-NEXT:    ret c30
 bb:
-  %tmp8 = getelementptr inbounds %struct.widget, %struct.widget addrspace(200)* %arg, i64 0, i32 2, <4 x i64> <i64 0, i64 0, i64 0, i64 0>, i32 0
-  %tmp9 = extractelement <4 x float addrspace(200)*> %tmp8, i32 3
-  %tmp10 = load float, float addrspace(200)* %tmp9, align 4
+  %tmp8 = getelementptr inbounds %struct.widget, ptr addrspace(200) %arg, i64 0, i32 2, <4 x i64> <i64 0, i64 0, i64 0, i64 0>, i32 0
+  %tmp9 = extractelement <4 x ptr addrspace(200)> %tmp8, i32 3
+  %tmp10 = load float, ptr addrspace(200) %tmp9, align 4
   ret float %tmp10
 }

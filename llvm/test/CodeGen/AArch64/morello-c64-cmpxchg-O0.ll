@@ -3,7 +3,7 @@
 
 ; Test the i128 cmpxchg here. We don't support the alternate base at this moment.
 
-define { i128, i1 } @test_cmpxchg_128(i128 addrspace(200)* %addr, i128 %desired, i128 %new) nounwind {
+define { i128, i1 } @test_cmpxchg_128(ptr addrspace(200) %addr, i128 %desired, i128 %new) nounwind {
 ; CHECK-LABEL: test_cmpxchg_128:
 ; CHECK:       .Lfunc_begin0:
 ; CHECK-NEXT:  // %bb.0:
@@ -30,6 +30,6 @@ define { i128, i1 } @test_cmpxchg_128(i128 addrspace(200)* %addr, i128 %desired,
 ; CHECK-NEXT:    subs x8, x8, #0
 ; CHECK-NEXT:    cset w2, eq
 ; CHECK-NEXT:    ret c30
-  %res = cmpxchg i128 addrspace(200)* %addr, i128 %desired, i128 %new seq_cst monotonic
+  %res = cmpxchg ptr addrspace(200) %addr, i128 %desired, i128 %new seq_cst monotonic
   ret { i128, i1 } %res
 }

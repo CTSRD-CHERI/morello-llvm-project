@@ -4,11 +4,11 @@
 target datalayout = "e-m:e-i64:64-i128:128-n32:64-S128-pf200:128:128:128:64-A200-P200-G200"
 
 declare void @foo() addrspace(200)
-declare i32 @bar(i64 addrspace(200)*, i32 addrspace(200)*, i16 addrspace(200)*, i8 addrspace(200)*, double addrspace(200)*, float addrspace(200)*) addrspace(200)
+declare i32 @bar(ptr addrspace(200), ptr addrspace(200), ptr addrspace(200), ptr addrspace(200), ptr addrspace(200), ptr addrspace(200)) addrspace(200)
 declare i32 @baz(i64, i32, i16, i8, double, float) addrspace(200)
 
 ; CHECK-LABEL: testStackVars
-define i32 @testStackVars(i32 %argc, i8 addrspace(200)* addrspace(200)* %argv) addrspace(200) {
+define i32 @testStackVars(i32 %argc, ptr addrspace(200) %argv) addrspace(200) {
 entry:
   %long = alloca i64, align 8, addrspace(200)
   %int = alloca i32, align 4, addrspace(200)
@@ -17,19 +17,19 @@ entry:
   %double = alloca double, align 8, addrspace(200)
   %float = alloca float, align 4, addrspace(200)
   call void @foo()
-  store i64 0, i64 addrspace(200)* %long, align 8
-  store i32 0, i32 addrspace(200)* %int, align 4
-  store i16 0, i16 addrspace(200)* %short, align 2
-  store i8 0, i8 addrspace(200)* %byte
-  store double 0.0, double addrspace(200)* %double, align 8
-  store float 0.0, float addrspace(200)* %float, align 4
-  %rv1 = call i32 @bar(i64 addrspace(200)* %long, i32 addrspace(200)* %int, i16 addrspace(200)* %short, i8 addrspace(200)* %byte, double addrspace(200)* %double, float addrspace(200)* %float)
-  %ll = load i64, i64 addrspace(200)* %long, align 8
-  %li = load i32, i32 addrspace(200)* %int, align 4
-  %lh = load i16, i16 addrspace(200)* %short, align 2
-  %lb = load i8, i8 addrspace(200)* %byte
-  %ld = load double, double addrspace(200)* %double, align 8
-  %lf = load float, float addrspace(200)* %float, align 4
+  store i64 0, ptr addrspace(200) %long, align 8
+  store i32 0, ptr addrspace(200) %int, align 4
+  store i16 0, ptr addrspace(200) %short, align 2
+  store i8 0, ptr addrspace(200) %byte
+  store double 0.0, ptr addrspace(200) %double, align 8
+  store float 0.0, ptr addrspace(200) %float, align 4
+  %rv1 = call i32 @bar(ptr addrspace(200) %long, ptr addrspace(200) %int, ptr addrspace(200) %short, ptr addrspace(200) %byte, ptr addrspace(200) %double, ptr addrspace(200) %float)
+  %ll = load i64, ptr addrspace(200) %long, align 8
+  %li = load i32, ptr addrspace(200) %int, align 4
+  %lh = load i16, ptr addrspace(200) %short, align 2
+  %lb = load i8, ptr addrspace(200) %byte
+  %ld = load double, ptr addrspace(200) %double, align 8
+  %lf = load float, ptr addrspace(200) %float, align 4
   %rv2 = call i32 @baz(i64 %ll, i32 %li, i16 %lh, i8 %lb, double %ld, float %lf)
   %rv = add i32 %rv1, %rv2
   ret i32 %rv

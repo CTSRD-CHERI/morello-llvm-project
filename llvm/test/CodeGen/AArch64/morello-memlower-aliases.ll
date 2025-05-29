@@ -4,29 +4,29 @@
 target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128-A200-P200-G200"
 target triple = "aarch64-none--elf"
 
-@memset_c = alias i8 addrspace(200)* (i8 addrspace(200)*, i32, i64), i8 addrspace(200)* (i8 addrspace(200)*, i32, i64) addrspace(200)* @memset
-@memcpy_c = alias i8 addrspace(200)* (i8 addrspace(200)*, i8 addrspace(200)*, i64), i8 addrspace(200)* (i8 addrspace(200)*, i8 addrspace(200)*, i64) addrspace(200)* @memcpy
-@mempcpy_c = alias i8 addrspace(200)* (i8 addrspace(200)*, i8 addrspace(200)*, i64), i8 addrspace(200)* (i8 addrspace(200)*, i8 addrspace(200)*, i64) addrspace(200)* @mempcpy
-@memmove_c = alias i8 addrspace(200)* (i8 addrspace(200)*, i8 addrspace(200)*, i64), i8 addrspace(200)* (i8 addrspace(200)*, i8 addrspace(200)*, i64) addrspace(200)* @memmove
+@memset_c = alias ptr addrspace(200) (ptr addrspace(200), i32, i64), ptr addrspace(200) (ptr addrspace(200), i32, i64) addrspace(200)* @memset
+@memcpy_c = alias ptr addrspace(200) (ptr addrspace(200), ptr addrspace(200), i64), ptr addrspace(200) (ptr addrspace(200), ptr addrspace(200), i64) addrspace(200)* @memcpy
+@mempcpy_c = alias ptr addrspace(200) (ptr addrspace(200), ptr addrspace(200), i64), ptr addrspace(200) (ptr addrspace(200), ptr addrspace(200), i64) addrspace(200)* @mempcpy
+@memmove_c = alias ptr addrspace(200) (ptr addrspace(200), ptr addrspace(200), i64), ptr addrspace(200) (ptr addrspace(200), ptr addrspace(200), i64) addrspace(200)* @memmove
 
-define i8 addrspace(200)* @memset(i8 addrspace(200)* readnone returned %a, i32 %b, i64 %c) addrspace(200) #0 {
+define ptr addrspace(200) @memset(ptr addrspace(200) readnone returned %a, i32 %b, i64 %c) addrspace(200) #0 {
 entry:
-  ret i8 addrspace(200)* %a
+  ret ptr addrspace(200) %a
 }
 
-define i8 addrspace(200)* @memcpy(i8 addrspace(200)* readnone returned %a, i8 addrspace(200)* nocapture readnone %b, i64 %c) addrspace(200) #0 {
+define ptr addrspace(200) @memcpy(ptr addrspace(200) readnone returned %a, ptr addrspace(200) nocapture readnone %b, i64 %c) addrspace(200) #0 {
 entry:
-  ret i8 addrspace(200)* %a
+  ret ptr addrspace(200) %a
 }
 
-define i8 addrspace(200)* @mempcpy(i8 addrspace(200)* readnone returned %a, i8 addrspace(200)* nocapture readnone %b, i64 %c) addrspace(200) #0 {
+define ptr addrspace(200) @mempcpy(ptr addrspace(200) readnone returned %a, ptr addrspace(200) nocapture readnone %b, i64 %c) addrspace(200) #0 {
 entry:
-  ret i8 addrspace(200)* %a
+  ret ptr addrspace(200) %a
 }
 
-define i8 addrspace(200)* @memmove(i8 addrspace(200)* readnone returned %a, i8 addrspace(200)* nocapture readnone %b, i64 %c) addrspace(200) #0 {
+define ptr addrspace(200) @memmove(ptr addrspace(200) readnone returned %a, ptr addrspace(200) nocapture readnone %b, i64 %c) addrspace(200) #0 {
 entry:
-  ret i8 addrspace(200)* %a
+  ret ptr addrspace(200) %a
 }
 
 attributes #0 = { norecurse nounwind readnone "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "min-legal-vector-width"="0" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "unsafe-fp-math"="false" "use-soft-float"="false" }

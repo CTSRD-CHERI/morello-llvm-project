@@ -16,8 +16,8 @@ for.cond42.preheader:
 
 for.body45:
   %indvars.iv = phi i64 [ 0, %for.cond42.preheader ], [ %indvars.iv.next, %for.body45 ]
-  %arrayidx66 = getelementptr inbounds float, float addrspace(200)* null, i64 %indvars.iv
-  %0 = load float, float addrspace(200)* %arrayidx66, align 4
+  %arrayidx66 = getelementptr inbounds float, ptr addrspace(200) null, i64 %indvars.iv
+  %0 = load float, ptr addrspace(200) %arrayidx66, align 4
   %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
   br i1 undef, label %for.end, label %for.body45
 

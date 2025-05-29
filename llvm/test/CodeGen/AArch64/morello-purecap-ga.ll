@@ -8,7 +8,7 @@ target triple = "aarch64-none-unknown-elf"
 @x1 = internal addrspace(200) global [200 x i32] zeroinitializer, align 4
 @x2 = internal addrspace(200) global [200 x i32] zeroinitializer, align 4
 
-define i32 @getvals(i8 addrspace(200)* addrspace(200)* nocapture %a) local_unnamed_addr addrspace(200) {
+define i32 @getvals(ptr addrspace(200) nocapture %a) local_unnamed_addr addrspace(200) {
 ; CHECK-LABEL: getvals:
 ; CHECK:       .Lfunc_begin0:
 ; CHECK-NEXT:    .cfi_startproc
@@ -23,11 +23,11 @@ define i32 @getvals(i8 addrspace(200)* addrspace(200)* nocapture %a) local_unnam
 ; CHECK-NEXT:    str c3, [c0, #32]
 ; CHECK-NEXT:    ret c30
 entry:
-  store i8 addrspace(200)* bitcast (i32 addrspace(200)* @x0 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %a, align 16
-  %arrayidx1 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 1
-  store i8 addrspace(200)* bitcast ([200 x i32] addrspace(200)* @x1 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx1, align 16
-  %arrayidx2 = getelementptr inbounds i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %a, i64 2
-  store i8 addrspace(200)* bitcast ([200 x i32] addrspace(200)* @x2 to i8 addrspace(200)*), i8 addrspace(200)* addrspace(200)* %arrayidx2, align 16
+  store ptr addrspace(200) @x0, ptr addrspace(200) %a, align 16
+  %arrayidx1 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 1
+  store ptr addrspace(200) @x1, ptr addrspace(200) %arrayidx1, align 16
+  %arrayidx2 = getelementptr inbounds ptr addrspace(200), ptr addrspace(200) %a, i64 2
+  store ptr addrspace(200) @x2, ptr addrspace(200) %arrayidx2, align 16
   ret i32 undef
 }
 
@@ -69,20 +69,20 @@ define void @foo(i32 %a) local_unnamed_addr addrspace(200) {
 ; CHECK-NEXT:    ldp c30, c21, [csp], #64 // 32-byte Folded Reload
 ; CHECK-NEXT:    ret c30
 entry:
-  %call9 = tail call i32 bitcast (i32 (...) addrspace(200)* @g to i32 () addrspace(200)*)()
+  %call9 = tail call i32 @g()
   %cmp10 = icmp sgt i32 %call9, 0
   br i1 %cmp10, label %for.body, label %for.end
 
 for.body:
   %indvars.iv = phi i64 [ %indvars.iv.next, %for.body ], [ 0, %entry ]
-  %arrayidx = getelementptr inbounds [200 x i32], [200 x i32] addrspace(200)* @x1, i64 0, i64 %indvars.iv
-  %0 = load i32, i32 addrspace(200)* %arrayidx, align 4
+  %arrayidx = getelementptr inbounds [200 x i32], ptr addrspace(200) @x1, i64 0, i64 %indvars.iv
+  %0 = load i32, ptr addrspace(200) %arrayidx, align 4
   %inc = add nsw i32 %0, 1
-  store i32 %inc, i32 addrspace(200)* %arrayidx, align 4
-  %arrayidx2 = getelementptr inbounds [200 x i32], [200 x i32] addrspace(200)* @x2, i64 0, i64 %indvars.iv
-  store i32 %0, i32 addrspace(200)* %arrayidx2, align 4
+  store i32 %inc, ptr addrspace(200) %arrayidx, align 4
+  %arrayidx2 = getelementptr inbounds [200 x i32], ptr addrspace(200) @x2, i64 0, i64 %indvars.iv
+  store i32 %0, ptr addrspace(200) %arrayidx2, align 4
   %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
-  %call = tail call i32 bitcast (i32 (...) addrspace(200)* @g to i32 () addrspace(200)*)()
+  %call = tail call i32 @g()
   %1 = sext i32 %call to i64
   %cmp = icmp slt i64 %indvars.iv.next, %1
   br i1 %cmp, label %for.body, label %for.end
@@ -91,7 +91,7 @@ for.end:
   ret void
 }
 
-define void @bar(i32 addrspace(200)* %end) local_unnamed_addr addrspace(200) {
+define void @bar(ptr addrspace(200) %end) local_unnamed_addr addrspace(200) {
 ; CHECK-LABEL: bar:
 ; CHECK:       .Lfunc_begin2:
 ; CHECK-NEXT:    .cfi_startproc
@@ -119,21 +119,21 @@ define void @bar(i32 addrspace(200)* %end) local_unnamed_addr addrspace(200) {
 ; CHECK-NEXT:    ldp c30, c19, [csp], #32 // 32-byte Folded Reload
 ; CHECK-NEXT:    ret c30
 entry:
-  %call9 = tail call i32 bitcast (i32 (...) addrspace(200)* @g to i32 () addrspace(200)*)()
+  %call9 = tail call i32 @g()
   %cmp10 = icmp sgt i32 %call9, 0
   br i1 %cmp10, label %for.body, label %for.end
 
 for.body:
-  %indvars.iv = phi i32 addrspace(200)* [ %indvars.iv.next, %for.body ], [ getelementptr inbounds ([200 x i32], [200 x i32] addrspace(200)* @x1, i64 0, i64 0), %entry ]
-  %indvars.iv2 = phi i32 addrspace(200)* [ %indvars.iv2.next, %for.body ], [ getelementptr inbounds ([200 x i32], [200 x i32] addrspace(200)* @x2, i64 0, i64 0), %entry ]
+  %indvars.iv = phi ptr addrspace(200) [ %indvars.iv.next, %for.body ], [ @x1, %entry ]
+  %indvars.iv2 = phi ptr addrspace(200) [ %indvars.iv2.next, %for.body ], [ @x2, %entry ]
 
-  %0 = load i32, i32 addrspace(200)* %indvars.iv, align 4
-  store i32 %0, i32 addrspace(200)* %indvars.iv2, align 4
+  %0 = load i32, ptr addrspace(200) %indvars.iv, align 4
+  store i32 %0, ptr addrspace(200) %indvars.iv2, align 4
 
-  %indvars.iv.next = getelementptr inbounds i32 , i32 addrspace(200)*  %indvars.iv, i32 1
-  %indvars.iv2.next = getelementptr inbounds i32, i32 addrspace(200)*  %indvars.iv2, i32 1
+  %indvars.iv.next = getelementptr inbounds i32 , ptr addrspace(200)  %indvars.iv, i32 1
+  %indvars.iv2.next = getelementptr inbounds i32, ptr addrspace(200)  %indvars.iv2, i32 1
 
-  %cmp = icmp eq i32 addrspace(200)* %indvars.iv.next, %end
+  %cmp = icmp eq ptr addrspace(200) %indvars.iv.next, %end
   br i1 %cmp, label %for.body, label %for.end
 
 for.end:
@@ -142,7 +142,7 @@ for.end:
 
 ; If we only use one global in the function load from the captable directly
 ; instead of using the merged global.
-define i32 addrspace(200)* @baz() local_unnamed_addr addrspace(200) {
+define ptr addrspace(200) @baz() local_unnamed_addr addrspace(200) {
 ; CHECK-LABEL: baz:
 ; CHECK:       .Lfunc_begin3:
 ; CHECK-NEXT:    .cfi_startproc
@@ -150,7 +150,7 @@ define i32 addrspace(200)* @baz() local_unnamed_addr addrspace(200) {
 ; CHECK-NEXT:    adrp c0, .L__cap_merged_table+32
 ; CHECK-NEXT:    ldr c0, [c0, :lo12:.L__cap_merged_table+32]
 ; CHECK-NEXT:    ret c30
-  ret i32 addrspace(200)* getelementptr inbounds ([200 x i32], [200 x i32] addrspace(200)* @x1, i64 0, i64 0)
+  ret ptr addrspace(200) @x1
 }
 
 ; Same as above, even if we are doing a safe memory operation.
@@ -163,7 +163,7 @@ define void @bif() local_unnamed_addr addrspace(200) {
 ; CHECK-NEXT:    ldr c0, [c0, :lo12:.L__cap_merged_table+32]
 ; CHECK-NEXT:    str wzr, [c0]
 ; CHECK-NEXT:    ret c30
-  store i32 0, i32 addrspace(200)* getelementptr inbounds ([200 x i32], [200 x i32] addrspace(200)* @x1, i64 0, i64 0)
+  store i32 0, ptr addrspace(200) @x1
   ret void
 }
 
@@ -182,8 +182,8 @@ define void @goo() local_unnamed_addr addrspace(200) {
 ; CHECK-NEXT:    str w8, [c1, #804]
 ; CHECK-NEXT:    ret c30
 entry:
-  store i32 3, i32 addrspace(200)* getelementptr inbounds ([200 x i32], [200 x i32] addrspace(200)* @x1, i64 1, i64 1), align 4
-  store i32 3, i32 addrspace(200)* getelementptr inbounds ([200 x i32], [200 x i32] addrspace(200)* @x2, i64 1, i64 1), align 4
+  store i32 3, ptr addrspace(200) getelementptr inbounds ([200 x i32], ptr addrspace(200) @x1, i64 1, i64 1), align 4
+  store i32 3, ptr addrspace(200) getelementptr inbounds ([200 x i32], ptr addrspace(200) @x2, i64 1, i64 1), align 4
   ret void
 }
 
@@ -202,8 +202,8 @@ define void @bat() local_unnamed_addr addrspace(200) {
 ; CHECK-NEXT:    str w8, [c1, #804]
 ; CHECK-NEXT:    ret c30
 entry:
-  store i32 3, i32 addrspace(200)* getelementptr inbounds ([200 x i32], [200 x i32] addrspace(200)* @x1, i64 1, i64 1), align 4
-  store i32 3, i32 addrspace(200)* getelementptr inbounds ([200 x i32], [200 x i32] addrspace(200)* @x2, i64 0, i64 0), align 4
+  store i32 3, ptr addrspace(200) getelementptr inbounds ([200 x i32], ptr addrspace(200) @x1, i64 1, i64 1), align 4
+  store i32 3, ptr addrspace(200) @x2, align 4
   ret void
 }
 

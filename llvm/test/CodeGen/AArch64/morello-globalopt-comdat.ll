@@ -7,8 +7,8 @@ $bar = comdat any
 @bar = internal addrspace(200) global i32 0, comdat, align 4
 
 define i32 @baz() {
-  %1 = load i32, i32 addrspace(200) *@foo
-  %2 = load i32, i32 addrspace(200) *@bar
+  %1 = load i32, ptr addrspace(200) @foo
+  %2 = load i32, ptr addrspace(200) @bar
   %3 = add i32 %1, %2
   ret i32 %3
 }

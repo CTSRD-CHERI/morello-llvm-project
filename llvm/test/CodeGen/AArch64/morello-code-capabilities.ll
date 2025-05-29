@@ -7,7 +7,7 @@
 
 target triple = "aarch64-none--elf"
 
-define dso_local i8 addrspace(200)* @fun1() addrspace(200) nounwind {
+define dso_local ptr addrspace(200) @fun1() addrspace(200) nounwind {
 ; CHECK-LABEL: fun1:
 ; CHECK:       .Lfunc_begin0:
 ; CHECK-NEXT:  // %bb.0: // %entry
@@ -16,10 +16,10 @@ define dso_local i8 addrspace(200)* @fun1() addrspace(200) nounwind {
 ; CHECK-NEXT:    seal c0, c0, rb
 ; CHECK-NEXT:    ret c30
 entry:
-  ret i8 addrspace(200) * bitcast (i8 addrspace(200)* () addrspace(200)* @fun1 to i8 addrspace(200)*)
+  ret ptr addrspace(200) () addrspace(200)* @fun1
 }
 
-define i8 addrspace(200)* @fun2() addrspace(200) nounwind {
+define ptr addrspace(200) @fun2() addrspace(200) nounwind {
 ; CHECK-LABEL: fun2:
 ; CHECK:       .Lfunc_begin1:
 ; CHECK-NEXT:  // %bb.0: // %entry
@@ -32,7 +32,7 @@ define i8 addrspace(200)* @fun2() addrspace(200) nounwind {
 entry:
   br label %newb
 newb:
-  ret i8 addrspace(200)* blockaddress(@fun2, %newb)
+  ret ptr addrspace(200) blockaddress(@fun2, %newb)
 }
 
 define i64 @blockaddress_in_global() addrspace(200) nounwind {
@@ -52,7 +52,7 @@ define i64 @blockaddress_in_global() addrspace(200) nounwind {
 ; CHECK-NEXT:    mov w0, #3 // =0x3
 ; CHECK-NEXT:    ret c30
 entry:
-  %0 = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* @addrof_label_in_global, align 16
+  %0 = load ptr addrspace(200), ptr addrspace(200) @addrof_label_in_global, align 16
   br label %indirectgoto
 
 label1:                                           ; preds = %indirectgoto
@@ -62,17 +62,17 @@ label2:                                           ; preds = %indirectgoto
   ret i64 3
 
 indirectgoto:                                     ; preds = %entry
-  %indirect.goto.dest = phi i8 addrspace(200)* [ %0, %entry ]
-  indirectbr i8 addrspace(200)* %indirect.goto.dest, [label %label1, label %label2]
+  %indirect.goto.dest = phi ptr addrspace(200) [ %0, %entry ]
+  indirectbr ptr addrspace(200) %indirect.goto.dest, [label %label1, label %label2]
 }
 
 ; Manual checks from here on:
 ; UTC_ARGS: --disable
-@addrof_label_in_global = addrspace(200) global i8 addrspace(200)* blockaddress(@blockaddress_in_global, %label1), align 16
+@addrof_label_in_global = addrspace(200) global ptr addrspace(200) blockaddress(@blockaddress_in_global, %label1), align 16
 ; CHECK-LABEL: addrof_label_in_global:
 ; CHECK-NEXT:  .chericap .Lblockaddress_in_global$local+((.Ltmp1+1)-.Lblockaddress_in_global$local)
 ; CHECK-NEXT:  .size addrof_label_in_global, 16
-@addrof_label_in_global_2 = addrspace(200) global i8 addrspace(200)* blockaddress(@blockaddress_in_global, %label2), align 16
+@addrof_label_in_global_2 = addrspace(200) global ptr addrspace(200) blockaddress(@blockaddress_in_global, %label2), align 16
 ; CHECK-LABEL: addrof_label_in_global_2:
 ; CHECK-NEXT:  .chericap .Lblockaddress_in_global$local+((.Ltmp2+1)-.Lblockaddress_in_global$local)
 ; CHECK-NEXT:  .size addrof_label_in_global_2, 16

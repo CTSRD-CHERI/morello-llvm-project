@@ -30,11 +30,11 @@ define void @foo() local_unnamed_addr addrspace(200) align 2 {
 ; CHECK-NEXT:  .LBB0_4: // %for.body21.preheader180
 ; CHECK-NEXT:    ret c30
 entry:
-  %0 = icmp ugt <4 x i8 addrspace(200)*> zeroinitializer, undef
-  %1 = insertelement <2 x i8 addrspace(200)*> poison, i8 addrspace(200)* null, i32 0
-  %2 = insertelement <2 x i8 addrspace(200)*> %1, i8 addrspace(200)* undef, i32 1
-  %shuffle179 = shufflevector <2 x i8 addrspace(200)*> %2, <2 x i8 addrspace(200)*> poison, <4 x i32> <i32 0, i32 0, i32 0, i32 1>
-  %3 = icmp ugt <4 x i8 addrspace(200)*> %shuffle179, undef
+  %0 = icmp ugt <4 x ptr addrspace(200)> zeroinitializer, undef
+  %1 = insertelement <2 x ptr addrspace(200)> poison, ptr addrspace(200) null, i32 0
+  %2 = insertelement <2 x ptr addrspace(200)> %1, ptr addrspace(200) undef, i32 1
+  %shuffle179 = shufflevector <2 x ptr addrspace(200)> %2, <2 x ptr addrspace(200)> poison, <4 x i32> <i32 0, i32 0, i32 0, i32 1>
+  %3 = icmp ugt <4 x ptr addrspace(200)> %shuffle179, undef
   %4 = and <4 x i1> %0, %3
   %5 = bitcast <4 x i1> %4 to i4
   %6 = icmp ne i4 %5, 0

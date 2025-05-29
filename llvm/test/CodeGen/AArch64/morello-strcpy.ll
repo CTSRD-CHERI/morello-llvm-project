@@ -6,11 +6,11 @@ target triple = "aarch64-none--elf"
 @.str = private unnamed_addr addrspace(200) constant [5 x i8] c"dsad\00", align 1
 
 ; CHECK-LABEL: fun
-define void @fun(i8 addrspace(200)* %tt) addrspace(200) {
+define void @fun(ptr addrspace(200) %tt) addrspace(200) {
 entry:
 ; CHECK: llvm.memcpy.p200i8.p200i8.i64
-  %call = call i8 addrspace(200)* @strcpy(i8 addrspace(200)* %tt, i8 addrspace(200)* getelementptr inbounds ([5 x i8], [5 x i8] addrspace(200)* @.str, i32 0, i32 0))
+  %call = call ptr addrspace(200) @strcpy(ptr addrspace(200) %tt, ptr addrspace(200) @.str)
   ret void
 }
 
-declare i8 addrspace(200)* @strcpy(i8 addrspace(200)*, i8 addrspace(200)*) addrspace(200)
+declare ptr addrspace(200) @strcpy(ptr addrspace(200), ptr addrspace(200)) addrspace(200)

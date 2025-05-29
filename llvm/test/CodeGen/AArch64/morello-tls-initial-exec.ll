@@ -16,11 +16,11 @@ define i32 @test_initial_exec() addrspace(200) {
 ; CHECK-NEXT:    scbnds c0, c0, x8
 ; CHECK-NEXT:    ldr w0, [c0]
 ; CHECK-NEXT:    ret c30
-  %val = load i32, i32 addrspace(200)* @initial_exec_var
+  %val = load i32, ptr addrspace(200) @initial_exec_var
   ret i32 %val
 }
 
-define i32 addrspace(200)* @test_initial_exec_addr() addrspace(200) {
+define ptr addrspace(200) @test_initial_exec_addr() addrspace(200) {
 ; CHECK-LABEL: test_initial_exec_addr:
 ; CHECK:       .Lfunc_begin1:
 ; CHECK-NEXT:    .cfi_startproc
@@ -32,5 +32,5 @@ define i32 addrspace(200)* @test_initial_exec_addr() addrspace(200) {
 ; CHECK-NEXT:    add c0, c1, x0, uxtx
 ; CHECK-NEXT:    scbnds c0, c0, x8
 ; CHECK-NEXT:    ret c30
-  ret i32 addrspace(200)* @initial_exec_var
+  ret ptr addrspace(200) @initial_exec_var
 }

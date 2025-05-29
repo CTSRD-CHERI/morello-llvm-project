@@ -71,11 +71,11 @@ define i32 @test_local_exec() addrspace(200) {
 ; CHECK-48-NEXT:    scbnds c0, c0, x9
 ; CHECK-48-NEXT:    ldr w0, [c0]
 ; CHECK-48-NEXT:    ret c30
-  %val = load i32, i32 addrspace(200)* @local_exec_var
+  %val = load i32, ptr addrspace(200) @local_exec_var
   ret i32 %val
 }
 
-define i32 addrspace(200)* @test_local_exec_addr() addrspace(200) {
+define ptr addrspace(200) @test_local_exec_addr() addrspace(200) {
 ; CHECK-12-LABEL: test_local_exec_addr:
 ; CHECK-12:       .Lfunc_begin1:
 ; CHECK-12-NEXT:    .cfi_startproc
@@ -125,5 +125,5 @@ define i32 addrspace(200)* @test_local_exec_addr() addrspace(200) {
 ; CHECK-48-NEXT:    add c0, c0, x8, uxtx
 ; CHECK-48-NEXT:    scbnds c0, c0, x9
 ; CHECK-48-NEXT:    ret c30
-  ret i32 addrspace(200)* @local_exec_var
+  ret ptr addrspace(200) @local_exec_var
 }

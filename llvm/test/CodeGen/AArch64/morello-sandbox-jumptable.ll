@@ -13,7 +13,7 @@
 ; CHECK: cvtp x[[ADDR:[0-9]+]], c[[CAP]]
 ; CHECK: br x[[ADDR]]
 
-define i32 addrspace(200)* @jumpfun(i32 %a) {
+define ptr addrspace(200) @jumpfun(i32 %a) {
 entry:
   switch i32 %a, label %sw.default [
     i32 0, label %sw.bb
@@ -24,33 +24,28 @@ entry:
   ]
 
 sw.bb:
-  %0 = tail call i8 addrspace(200)* @llvm.cheri.cap.offset.set(i8 addrspace(200)* null, i64 3)
-  %1 = bitcast i8 addrspace(200)* %0 to i32 addrspace(200)*
+  %0 = tail call ptr addrspace(200) @llvm.cheri.cap.offset.set(ptr addrspace(200) null, i64 3)
   br label %return
 
 sw.bb.1:
-  %2 = tail call i8 addrspace(200)* @llvm.cheri.cap.offset.set(i8 addrspace(200)* null, i64 2)
-  %3 = bitcast i8 addrspace(200)* %2 to i32 addrspace(200)*
+  %1 = tail call ptr addrspace(200) @llvm.cheri.cap.offset.set(ptr addrspace(200) null, i64 2)
   br label %return
 
 sw.bb.3:
-  %4 = tail call i8 addrspace(200)* @llvm.cheri.cap.offset.set(i8 addrspace(200)* null, i64 16)
-  %5 = bitcast i8 addrspace(200)* %4 to i32 addrspace(200)*
+  %2 = tail call ptr addrspace(200) @llvm.cheri.cap.offset.set(ptr addrspace(200) null, i64 16)
   br label %return
 
 sw.bb.6:
-  %6 = tail call i8 addrspace(200)* @llvm.cheri.cap.offset.set(i8 addrspace(200)* null, i64 60)
-  %7 = bitcast i8 addrspace(200)* %6 to i32 addrspace(200)*
+  %3 = tail call ptr addrspace(200) @llvm.cheri.cap.offset.set(ptr addrspace(200) null, i64 60)
   br label %return
 
 sw.default:
-  %8 = tail call i8 addrspace(200)* @llvm.cheri.cap.offset.set(i8 addrspace(200)* null, i64 1)
-  %9 = bitcast i8 addrspace(200)* %8 to i32 addrspace(200)*
+  %4 = tail call ptr addrspace(200) @llvm.cheri.cap.offset.set(ptr addrspace(200) null, i64 1)
   br label %return
 
 return:
-  %retval.0 = phi i32 addrspace(200)* [ %9, %sw.default ], [ %7, %sw.bb.6 ], [ %5, %sw.bb.3 ], [ %3, %sw.bb.1 ], [ %1, %sw.bb ], [ null, %entry ]
-  ret i32 addrspace(200)* %retval.0
+  %retval.0 = phi ptr addrspace(200) [ %4, %sw.default ], [ %3, %sw.bb.6 ], [ %2, %sw.bb.3 ], [ %1, %sw.bb.1 ], [ %0, %sw.bb ], [ null, %entry ]
+  ret ptr addrspace(200) %retval.0
 }
 ; CHECK-LABEL: .LJTI0_0:
 ; CHECK-NEXT: .byte (.LBB0_2-.LBB0_2)>>2
@@ -67,7 +62,7 @@ return:
 ; CHECK: add c[[CAP:[0-9]+]], c[[BB]], x[[REG]], uxtx #2
 ; CHECK: cvtp x[[ADDR:[0-9]+]], c[[CAP]]
 ; CHECK: br x[[ADDR]]
-define i32 addrspace(200)* @half_jt(i32 %a) {
+define ptr addrspace(200) @half_jt(i32 %a) {
 entry:
   switch i32 %a, label %sw.default [
     i32 0, label %sw.bb
@@ -79,8 +74,7 @@ entry:
   ]
 
 sw.bb:
-  %0 = tail call i8 addrspace(200)* @llvm.cheri.cap.offset.set(i8 addrspace(200)* null, i64 3)
-  %1 = bitcast i8 addrspace(200)* %0 to i32 addrspace(200)*
+  %0 = tail call ptr addrspace(200) @llvm.cheri.cap.offset.set(ptr addrspace(200) null, i64 3)
   br label %return
 
 
@@ -93,23 +87,20 @@ sw.bb.7:
   br label %return
 
 sw.bb.1:
-  %2 = tail call i8 addrspace(200)* @llvm.cheri.cap.offset.set(i8 addrspace(200)* null, i64 2)
-  %3 = bitcast i8 addrspace(200)* %2 to i32 addrspace(200)*
+  %1 = tail call ptr addrspace(200) @llvm.cheri.cap.offset.set(ptr addrspace(200) null, i64 2)
   br label %return
 
 sw.bb.3:
-  %4 = tail call i8 addrspace(200)* @llvm.cheri.cap.offset.set(i8 addrspace(200)* null, i64 16)
-  %5 = bitcast i8 addrspace(200)* %4 to i32 addrspace(200)*
+  %2 = tail call ptr addrspace(200) @llvm.cheri.cap.offset.set(ptr addrspace(200) null, i64 16)
   br label %return
 
 sw.default:
-  %6 = tail call i8 addrspace(200)* @llvm.cheri.cap.offset.set(i8 addrspace(200)* null, i64 1)
-  %7 = bitcast i8 addrspace(200)* %6 to i32 addrspace(200)*
+  %3 = tail call ptr addrspace(200) @llvm.cheri.cap.offset.set(ptr addrspace(200) null, i64 1)
   br label %return
 
 return:
-  %retval.0 = phi i32 addrspace(200)* [ %7, %sw.default ], [ null, %sw.bb.6 ], [ null, %sw.bb.7 ], [ %5, %sw.bb.3 ], [ %3, %sw.bb.1 ], [ %1, %sw.bb ], [ null, %entry ]
-  ret i32 addrspace(200)* %retval.0
+  %retval.0 = phi ptr addrspace(200) [ %3, %sw.default ], [ null, %sw.bb.6 ], [ null, %sw.bb.7 ], [ %2, %sw.bb.3 ], [ %1, %sw.bb.1 ], [ %0, %sw.bb ], [ null, %entry ]
+  ret ptr addrspace(200) %retval.0
 }
 
 ; CHECK-LABEL: .LJTI1_0:
@@ -130,7 +121,7 @@ return:
 ; CHECK: cvtp x[[ADDR:[0-9]+]], c[[CAP]]
 ; CHECK: br x[[ADDR]]
 
-define i32 addrspace(200)* @word_jt(i32 %a) {
+define ptr addrspace(200) @word_jt(i32 %a) {
 entry:
   switch i32 %a, label %sw.default [
     i32 0, label %sw.bb
@@ -142,8 +133,7 @@ entry:
   ]
 
 sw.bb:
-  %0 = tail call i8 addrspace(200)* @llvm.cheri.cap.offset.set(i8 addrspace(200)* null, i64 3)
-  %1 = bitcast i8 addrspace(200)* %0 to i32 addrspace(200)*
+  %0 = tail call ptr addrspace(200) @llvm.cheri.cap.offset.set(ptr addrspace(200) null, i64 3)
   br label %return
 
 
@@ -156,26 +146,23 @@ sw.bb.7:
   br label %return
 
 sw.bb.1:
-  %2 = tail call i8 addrspace(200)* @llvm.cheri.cap.offset.set(i8 addrspace(200)* null, i64 2)
-  %3 = bitcast i8 addrspace(200)* %2 to i32 addrspace(200)*
+  %1 = tail call ptr addrspace(200) @llvm.cheri.cap.offset.set(ptr addrspace(200) null, i64 2)
   br label %return
 
 sw.bb.3:
-  %4 = tail call i8 addrspace(200)* @llvm.cheri.cap.offset.set(i8 addrspace(200)* null, i64 16)
-  %5 = bitcast i8 addrspace(200)* %4 to i32 addrspace(200)*
+  %2 = tail call ptr addrspace(200) @llvm.cheri.cap.offset.set(ptr addrspace(200) null, i64 16)
   br label %return
 
 sw.default:
-  %6 = tail call i8 addrspace(200)* @llvm.cheri.cap.offset.set(i8 addrspace(200)* null, i64 1)
-  %7 = bitcast i8 addrspace(200)* %6 to i32 addrspace(200)*
+  %3 = tail call ptr addrspace(200) @llvm.cheri.cap.offset.set(ptr addrspace(200) null, i64 1)
   br label %return
 
 return:
-  %retval.0 = phi i32 addrspace(200)* [ %7, %sw.default ], [ null, %sw.bb.6 ], [ null, %sw.bb.7 ], [ %5, %sw.bb.3 ], [ %3, %sw.bb.1 ], [ %1, %sw.bb ], [ null, %entry ]
-  ret i32 addrspace(200)* %retval.0
+  %retval.0 = phi ptr addrspace(200) [ %3, %sw.default ], [ null, %sw.bb.6 ], [ null, %sw.bb.7 ], [ %2, %sw.bb.3 ], [ %1, %sw.bb.1 ], [ %0, %sw.bb ], [ null, %entry ]
+  ret ptr addrspace(200) %retval.0
 }
 
-declare i8 addrspace(200)* @llvm.cheri.cap.offset.set(i8 addrspace(200)*, i64)
+declare ptr addrspace(200) @llvm.cheri.cap.offset.set(ptr addrspace(200), i64)
 declare i64 @llvm.aarch64.space(i32, i64)
 
 ; CHECK-LABEL: .LJTI2_0:

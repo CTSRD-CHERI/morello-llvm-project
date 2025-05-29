@@ -4,7 +4,7 @@
 target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128-A200-P200-G200"
 target triple = "aarch64-none-unknown-elf"
 
-define i8 addrspace(200)* @foo(i32 addrspace(200)* readnone %x, i32 addrspace(200)* readnone %y, i32 addrspace(200)* readnone %z, i32 addrspace(200)* readnone %u) local_unnamed_addr addrspace(200) #0 {
+define ptr addrspace(200) @foo(ptr addrspace(200) readnone %x, ptr addrspace(200) readnone %y, ptr addrspace(200) readnone %z, ptr addrspace(200) readnone %u) local_unnamed_addr addrspace(200) #0 {
 ; CHECK-LABEL: foo:
 ; CHECK:       .Lfunc_begin0:
 ; CHECK-NEXT:  // %bb.0: // %entry
@@ -13,12 +13,11 @@ define i8 addrspace(200)* @foo(i32 addrspace(200)* readnone %x, i32 addrspace(20
 ; CHECK-NEXT:    csel c0, c0, c2, ne
 ; CHECK-NEXT:    ret c30
 entry:
-  %cmp.not = icmp ne i32 addrspace(200)* %x, %u
-  %cmp1 = icmp eq i32 addrspace(200)* %y, %z
+  %cmp.not = icmp ne ptr addrspace(200) %x, %u
+  %cmp1 = icmp eq ptr addrspace(200) %y, %z
   %or.cond = select i1 %cmp.not, i1 true, i1 %cmp1
-  %cond = select i1 %or.cond, i32 addrspace(200)* %x, i32 addrspace(200)* %z
-  %0 = bitcast i32 addrspace(200)* %cond to i8 addrspace(200)*
-  ret i8 addrspace(200)* %0
+  %cond = select i1 %or.cond, ptr addrspace(200) %x, ptr addrspace(200) %z
+  ret ptr addrspace(200) %cond
 }
 
 attributes #0 = { nounwind }

@@ -17,11 +17,11 @@ define void @f1(i32 %a1, i32 %a2, i32 %a3) {
 ; CHECK:        str	w1, [c4, #12]
 ; CHECK:        str	w2, [c5]
 
-  %x3 = getelementptr inbounds [100 x i32], [100 x i32] addrspace(200)* @x, i32 0, i64 3
-  %y3 = getelementptr inbounds [100 x i32], [100 x i32] addrspace(200)* @y, i32 0, i64 3
-  store i32 %a1, i32 addrspace(200)* %x3, align 4
-  store i32 %a2, i32 addrspace(200)* %y3, align 4
-  store i32 %a3, i32 addrspace(200)* @z, align 4
+  %x3 = getelementptr inbounds [100 x i32], ptr addrspace(200) @x, i32 0, i64 3
+  %y3 = getelementptr inbounds [100 x i32], ptr addrspace(200) @y, i32 0, i64 3
+  store i32 %a1, ptr addrspace(200) %x3, align 4
+  store i32 %a2, ptr addrspace(200) %y3, align 4
+  store i32 %a3, ptr addrspace(200) @z, align 4
   ret void
 }
 

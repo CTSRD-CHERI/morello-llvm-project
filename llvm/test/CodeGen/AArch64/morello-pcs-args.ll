@@ -111,44 +111,44 @@ entry:
 ;
 ; CHECK-DAG:  strb  [[ADD]],  [c0,  [[OFFSET]]{{]}}
 
-define void @bar(i8 addrspace(200)* %a0, i8 addrspace(200)* %a1, i8 addrspace(200)* %a2, i8 addrspace(200)* %a3, i8 addrspace(200)* %a4, i8 addrspace(200)* %a5, i8 addrspace(200)* %a6, i8 addrspace(200)* %a7, i32 %n) addrspace(200) {
+define void @bar(ptr addrspace(200) %a0, ptr addrspace(200) %a1, ptr addrspace(200) %a2, ptr addrspace(200) %a3, ptr addrspace(200) %a4, ptr addrspace(200) %a5, ptr addrspace(200) %a6, ptr addrspace(200) %a7, i32 %n) addrspace(200) {
 entry:
   %add = add nsw i32 %n, 1
   %idxprom = sext i32 %add to i64
-  %arrayidx = getelementptr inbounds i8, i8 addrspace(200)* %a1, i64 %idxprom
-  %0 = load i8, i8 addrspace(200)* %arrayidx, align 1
+  %arrayidx = getelementptr inbounds i8, ptr addrspace(200) %a1, i64 %idxprom
+  %0 = load i8, ptr addrspace(200) %arrayidx, align 1
   %add1 = add nsw i32 %n, 2
   %idxprom2 = sext i32 %add1 to i64
-  %arrayidx3 = getelementptr inbounds i8, i8 addrspace(200)* %a2, i64 %idxprom2
-  %1 = load i8, i8 addrspace(200)* %arrayidx3, align 1
+  %arrayidx3 = getelementptr inbounds i8, ptr addrspace(200) %a2, i64 %idxprom2
+  %1 = load i8, ptr addrspace(200) %arrayidx3, align 1
   %add5 = add i8 %1, %0
   %add6 = add nsw i32 %n, 3
   %idxprom7 = sext i32 %add6 to i64
-  %arrayidx8 = getelementptr inbounds i8, i8 addrspace(200)* %a3, i64 %idxprom7
-  %2 = load i8, i8 addrspace(200)* %arrayidx8, align 1
+  %arrayidx8 = getelementptr inbounds i8, ptr addrspace(200) %a3, i64 %idxprom7
+  %2 = load i8, ptr addrspace(200) %arrayidx8, align 1
   %add10 = add i8 %add5, %2
   %add11 = add nsw i32 %n, 4
   %idxprom12 = sext i32 %add11 to i64
-  %arrayidx13 = getelementptr inbounds i8, i8 addrspace(200)* %a4, i64 %idxprom12
-  %3 = load i8, i8 addrspace(200)* %arrayidx13, align 1
+  %arrayidx13 = getelementptr inbounds i8, ptr addrspace(200) %a4, i64 %idxprom12
+  %3 = load i8, ptr addrspace(200) %arrayidx13, align 1
   %add15 = add i8 %add10, %3
   %add16 = add nsw i32 %n, 5
   %idxprom17 = sext i32 %add16 to i64
-  %arrayidx18 = getelementptr inbounds i8, i8 addrspace(200)* %a5, i64 %idxprom17
-  %4 = load i8, i8 addrspace(200)* %arrayidx18, align 1
+  %arrayidx18 = getelementptr inbounds i8, ptr addrspace(200) %a5, i64 %idxprom17
+  %4 = load i8, ptr addrspace(200) %arrayidx18, align 1
   %add20 = add i8 %add15, %4
   %add21 = add nsw i32 %n, 6
   %idxprom22 = sext i32 %add21 to i64
-  %arrayidx23 = getelementptr inbounds i8, i8 addrspace(200)* %a6, i64 %idxprom22
-  %5 = load i8, i8 addrspace(200)* %arrayidx23, align 1
+  %arrayidx23 = getelementptr inbounds i8, ptr addrspace(200) %a6, i64 %idxprom22
+  %5 = load i8, ptr addrspace(200) %arrayidx23, align 1
   %add25 = add i8 %add20, %5
   %add26 = add nsw i32 %n, 7
   %idxprom27 = sext i32 %add26 to i64
-  %arrayidx28 = getelementptr inbounds i8, i8 addrspace(200)* %a7, i64 %idxprom27
-  %6 = load i8, i8 addrspace(200)* %arrayidx28, align 1
+  %arrayidx28 = getelementptr inbounds i8, ptr addrspace(200) %a7, i64 %idxprom27
+  %6 = load i8, ptr addrspace(200) %arrayidx28, align 1
   %add30 = add i8 %add25, %6
   %idxprom32 = sext i32 %n to i64
-  %arrayidx33 = getelementptr inbounds i8, i8 addrspace(200)* %a0, i64 %idxprom32
-  store i8 %add30, i8 addrspace(200)* %arrayidx33, align 1
+  %arrayidx33 = getelementptr inbounds i8, ptr addrspace(200) %a0, i64 %idxprom32
+  store i8 %add30, ptr addrspace(200) %arrayidx33, align 1
   ret void
 }

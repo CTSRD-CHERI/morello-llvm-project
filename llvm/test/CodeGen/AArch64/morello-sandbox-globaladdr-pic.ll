@@ -8,7 +8,7 @@
 ; CHECK-LABEL: testGlobalAddress
 define i32 @testGlobalAddress() {
 entry:
-  %l = load i32, i32 addrspace(200)* @v, align 4
+  %l = load i32, ptr addrspace(200) @v, align 4
   ret i32 %l
 ; CHECK:      adrp	c[[H:[0-9]+]], .L__cap_merged_table
 ; CHECK-NEXT: ldr	c[[CB:[0-9]+]], [c[[H]], :lo12:.L__cap_merged_table]
@@ -20,7 +20,7 @@ entry:
 ; CHECK-LABEL: testExternWeakSymbol
 define i8 @testExternWeakSymbol() {
 entry:
-  %0 = load i8,  i8 addrspace(200)* @externWeakSymbol
+  %0 = load i8,  ptr addrspace(200) @externWeakSymbol
   ret i8 %0
 ; CHECK:      adrp	c[[H:[0-9]+]], :got:externWeakSymbol
 ; CHECK: ldr	c[[CB:[0-9]+]], [c[[H]], :got_lo12:externWeakSymbol]
@@ -33,16 +33,16 @@ entry:
 ; CHECK-LABEL: testGlobalAddressCommon
 define i32 @testGlobalAddressCommon() {
 entry:
-  %l = load i32, i32 addrspace(200)* @w, align 4
+  %l = load i32, ptr addrspace(200) @w, align 4
   ret i32 %l
 ; CHECK:      adrp	c[[H:[0-9]+]], :got:w
 ; CHECK-NEXT: ldr	c[[CB:[0-9]+]], [c[[H]], :got_lo12:w]
 }
 
 declare i32 @myfunc(...)
-declare i8 addrspace(200)* @llvm.cheri.pcc.get()
-declare i64 @llvm.cheri.cap.base.get(i8 addrspace(200)*)
-declare i8 addrspace(200)* @llvm.cheri.cap.offset.set(i8 addrspace(200)*, i64)
+declare ptr addrspace(200) @llvm.cheri.pcc.get()
+declare i64 @llvm.cheri.cap.base.get(ptr addrspace(200))
+declare ptr addrspace(200) @llvm.cheri.cap.offset.set(ptr addrspace(200), i64)
 
 ; CHECK: .p2align	4
 ; CHECK: .L__cap_merged_table:

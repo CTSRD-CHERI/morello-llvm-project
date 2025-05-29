@@ -13,10 +13,9 @@ target triple = "aarch64-none-unknown-elf"
 ; CHECK-NEXT: brk #0x1
 define dso_local void @foo() local_unnamed_addr addrspace(200) {
 entry:
-  %0 = getelementptr inbounds [512 x i64], [512 x i64] addrspace(200)* @var, i64 0, <4 x i64> undef
-  %1 = extractelement <4 x i64 addrspace(200)*> %0, i32 0
-  %2 = bitcast i64 addrspace(200)* %1 to <4 x i64> addrspace(200)*
-  store <4 x i64> zeroinitializer, <4 x i64> addrspace(200)* %2, align 8
+  %0 = getelementptr inbounds [512 x i64], ptr addrspace(200) @var, i64 0, <4 x i64> undef
+  %1 = extractelement <4 x ptr addrspace(200)> %0, i32 0
+  store <4 x i64> zeroinitializer, ptr addrspace(200) %1, align 8
   call void @llvm.trap()
   unreachable
 }

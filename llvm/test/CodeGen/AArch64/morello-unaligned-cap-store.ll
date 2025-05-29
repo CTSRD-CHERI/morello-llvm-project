@@ -5,9 +5,8 @@ target triple = "aarch64-none-unknown-elf"
 
 ; CHECK-LABEL: copy
 ; CHECK: bl memcpy
-define i8 addrspace(200)* @copy(i8 addrspace(200)* returned %dst, i8 addrspace(200)* %a) local_unnamed_addr addrspace(200) {
+define ptr addrspace(200) @copy(ptr addrspace(200) returned %dst, ptr addrspace(200) %a) local_unnamed_addr addrspace(200) {
 entry:
-  %a.addr.0..sroa_cast = bitcast i8 addrspace(200)* %dst to i8 addrspace(200)* addrspace(200)*
-  store i8 addrspace(200)* %a, i8 addrspace(200)* addrspace(200)* %a.addr.0..sroa_cast, align 1
-  ret i8 addrspace(200)* %dst
+  store ptr addrspace(200) %a, ptr addrspace(200) %dst, align 1
+  ret ptr addrspace(200) %dst
 }

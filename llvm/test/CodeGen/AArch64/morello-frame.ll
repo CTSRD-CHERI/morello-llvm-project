@@ -1,6 +1,6 @@
 ; RUN: llc -mtriple=arm64 -mattr=+morello -o - %s | FileCheck %s
 
-define dso_local void @func(i8 addrspace(200)* nocapture readnone %bb, i8 addrspace(200)* %cc) local_unnamed_addr addrspace(200) #0 {
+define dso_local void @func(ptr addrspace(200) nocapture readnone %bb, ptr addrspace(200) %cc) local_unnamed_addr addrspace(200) #0 {
 entry:
   call void asm sideeffect "", "~{x19},~{x20},~{x21},~{x22},~{x23},~{x24},~{x25},~{x26},~{x27},~{x28},~{d8},~{d9},~{d10},~{d11},~{d12},~{d13},~{d14},~{d15}"() nounwind
   ret void
@@ -31,7 +31,7 @@ entry:
 
 
 ; CHECK-LABEL: frameWithCapabilityRegisters
-define i32 @frameWithCapabilityRegisters(i32 %argc, i8** %argv) {
+define i32 @frameWithCapabilityRegisters(i32 %argc, ptr %argv) {
 entry:
 ; CHECK: str x30, [sp, #-32]!
 ; CHECK-NEXT: .cfi_def_cfa_offset 32
@@ -41,18 +41,17 @@ entry:
 ; CHECK: ret
 
   %c = alloca i32, align 4
-  %0 = bitcast i32* %c to i8*
-  call void @llvm.lifetime.start(i64 4, i8* %0)
-  %call = call i32 addrspace(200)* @foo(i32* nonnull %c)
-  %1 = load i32, i32 addrspace(200)* %call, align 4
-  %2 = load i8*, i8** %argv, align 8
-  %call1 = call i32 @bar(i8* %2, i32 %1)
-  %add = add nsw i32 %call1, %1
-  call void @llvm.lifetime.end(i64 4, i8* %0)
+  call void @llvm.lifetime.start(i64 4, ptr %c)
+  %call = call ptr addrspace(200) @foo(ptr nonnull %c)
+  %0 = load i32, ptr addrspace(200) %call, align 4
+  %1 = load ptr, ptr %argv, align 8
+  %call1 = call i32 @bar(ptr %1, i32 %0)
+  %add = add nsw i32 %call1, %0
+  call void @llvm.lifetime.end(i64 4, ptr %c)
   ret i32 %add
 }
 
-declare void @llvm.lifetime.start(i64, i8* nocapture)
-declare i32 addrspace(200)* @foo(i32*)
-declare i32 @bar(i8*, i32)
-declare void @llvm.lifetime.end(i64, i8* nocapture)
+declare void @llvm.lifetime.start(i64, ptr nocapture)
+declare ptr addrspace(200) @foo(ptr)
+declare i32 @bar(ptr, i32)
+declare void @llvm.lifetime.end(i64, ptr nocapture)

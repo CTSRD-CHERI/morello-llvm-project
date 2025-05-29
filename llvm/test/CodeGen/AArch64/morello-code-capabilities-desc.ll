@@ -3,7 +3,7 @@
 
 target triple = "aarch64-none--elf"
 
-define i8 addrspace(200)* @fun1() addrspace(200) nounwind {
+define ptr addrspace(200) @fun1() addrspace(200) nounwind {
 ; CHECK-LABEL: fun1:
 ; CHECK:       .Lfunc_begin0:
 ; CHECK-NEXT:  // %bb.0: // %entry
@@ -12,11 +12,11 @@ define i8 addrspace(200)* @fun1() addrspace(200) nounwind {
 ; CHECK-NEXT:    ldr c0, [c0, :got_lo12:fun1]
 ; CHECK-NEXT:    ret c30
 entry:
-  ret i8 addrspace(200) * bitcast (i8 addrspace(200)* () addrspace(200)* @fun1 to i8 addrspace(200)*)
+  ret ptr addrspace(200) () addrspace(200)* @fun1
 }
 
 ; Internal functions are loaded from constant pools.
-define internal i8 addrspace(200)* @fun2() addrspace(200) nounwind {
+define internal ptr addrspace(200) @fun2() addrspace(200) nounwind {
 ; CHECK-LABEL: fun2:
 ; CHECK:       .Lfunc_begin1:
 ; CHECK-NEXT:  // %bb.0: // %entry
@@ -25,5 +25,5 @@ define internal i8 addrspace(200)* @fun2() addrspace(200) nounwind {
 ; CHECK-NEXT:    ldr c0, [c0, :lo12:.LCPI1_0]
 ; CHECK-NEXT:    ret c30
 entry:
-  ret i8 addrspace(200) * bitcast (i8 addrspace(200)* () addrspace(200)* @fun2 to i8 addrspace(200)*)
+  ret ptr addrspace(200) () addrspace(200)* @fun2
 }
