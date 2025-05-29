@@ -86,8 +86,8 @@ def CMOVaddrEXT
       Sched<[WriteAdrAdr]>;
 
 def CAdr : Pseudo<(outs Cap:$dst), (ins adrlabel:$label), []>;
-def CAdrp : Pseudo<(outs Cap:$dst), (ins adrlabel:$label),
-                   [(set Cap:$dst,(AArch64cadrp tglobaladdr:$label))]>;
+def CAdrp : Pseudo<(outs Cap:$dst), (ins adrplabel:$label),
+                   [(set Cap:$dst, (AArch64cadrp tglobaladdr:$label))]>;
 }
 
 let Predicates = [HasC64] in {

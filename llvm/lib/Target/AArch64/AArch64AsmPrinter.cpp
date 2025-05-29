@@ -1474,7 +1474,7 @@ void AArch64AsmPrinter::emitInstruction(const MachineInstr *MI) {
   if (emitPseudoExpansionLowering(*OutStreamer, MI))
     return;
 
-  if (MI->getOpcode() == AArch64::ADRP) {
+  if (MI->getOpcode() == AArch64::ADRP || MI->getOpcode() == AArch64::PADRP) {
     for (auto &Opd : MI->operands()) {
       if (Opd.isSymbol() && StringRef(Opd.getSymbolName()) ==
                                 "swift_async_extendedFramePointerFlags") {

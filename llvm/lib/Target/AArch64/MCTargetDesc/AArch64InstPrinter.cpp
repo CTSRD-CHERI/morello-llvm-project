@@ -2251,7 +2251,7 @@ void AArch64InstPrinter::printAdrAdrpLabel(const MCInst *MI, uint64_t Address,
   // we're running the disassembler), just print the immediate.
   if (Op.isImm()) {
     int64_t Offset = Op.getImm();
-    if (MI->getOpcode() == AArch64::ADRP) {
+    if (MI->getOpcode() == AArch64::ADRP || MI->getOpcode() == AArch64::PADRP) {
       Offset = Offset * 4096;
       Address = Address & -4096;
     }
