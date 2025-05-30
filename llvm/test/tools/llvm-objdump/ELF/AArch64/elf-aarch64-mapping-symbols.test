@@ -1,16 +1,17 @@
 # RUN: llvm-mc -filetype=obj -triple=aarch64-unknown-freebsd %s -o %t
-# RUN: llvm-mc -filetype=obj -triple=aarch64-unknown-freebsd %s -mattr=+morello,+c64 -o %t.morello
+# RUN: llvm-mc -filetype=obj -triple=aarch64-unknown-freebsd %s -mattr=+morello,+c64 -o %t.morello --defsym=C64=1
 # RUN: llvm-objdump --no-print-imm-hex -d %t | FileCheck --check-prefixes=CHECK,CHECK-A64 %s
 # RUN: llvm-objdump --no-print-imm-hex -d --show-all-symbols %t | FileCheck %s --check-prefixes=CHECK,CHECK-A64,ALL
-# RUN: llvm-objdump --no-print-imm-hex -d %t.morello | FileCheck --check-prefixes=CHECK,CHECK-C64 %s
-# RUN: llvm-objdump --no-print-imm-hex -d --show-all-symbols %t.morello | FileCheck %s --check-prefixes=CHECK,CHECK-C64,ALL
+# RUN: llvm-objdump --no-print-imm-hex -d --mattr=+morello %t.morello | FileCheck --check-prefixes=CHECK,CHECK-C64 %s
+# RUN: llvm-objdump --no-print-imm-hex -d --mattr=+morello --show-all-symbols %t.morello | FileCheck %s --check-prefixes=CHECK,CHECK-C64,ALL
 
 
 # CHECK:       Disassembly of section .mysection:
 # CHECK-EMPTY:
-# ALL-NEXT:    <$x.0>:
+# ALL-NEXT:    <${{c|x}}.0>:
 # CHECK-NEXT:  <_start>:
-# CHECK-NEXT:         0:       10000021        adr     x1, 0x4
+# CHECK-A64-NEXT: 0:       10000021        adr     x1, 0x4 <msg>
+# CHECK-C64-NEXT: 0:       10000021        adr     c1, 0x4 <msg>
 # CHECK-EMPTY:
 # ALL-NEXT:    <$d.1>:
 # CHECK-NEXT:  <msg>:
@@ -23,7 +24,8 @@
 # CHECK-EMPTY:
 # CHECK-A64-NEXT: <$x.2>:
 # CHECK-C64-NEXT: <$c.2>:
-# CHECK-NEXT:         0:       90000001        adrp    x1, 0x0
+# CHECK-A64-NEXT: 0:       90000001        adrp    x1, 0x0{{$}}
+# CHECK-C64-NEXT: 0:       90800001        adrp    c1, 0x0{{$}}
 # CHECK-EMPTY:
 # ALL-NEXT:    <$d.3>:
 # CHECK-NEXT:  <mystr>:
@@ -33,12 +35,20 @@
 .section .mysection,"ax",@progbits
 .globl _start
 _start:
+.ifdef C64
+  adr c1,msg
+.else
   adr x1,msg
+.endif
 msg:  .asciz  "Hello, world\n"
 msgend:
 
 .section .myothersection,"ax",@progbits
+.ifdef C64
+  adrp c1,mystr
+.else
   adrp x1,mystr
+.endif
 mystr:
   .ascii "blah"
   .size mystr, 4
