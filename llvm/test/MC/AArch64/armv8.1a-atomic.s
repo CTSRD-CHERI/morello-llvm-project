@@ -164,21 +164,21 @@
 //CHECK-ERROR: error: expected first even register of a consecutive same-size even/odd register pair
 //CHECK-ERROR:  casp x0, x1, x3, x4, [x5]
 //CHECK-ERROR:               ^
-//CHECK-ERROR: error: expected second register in a pair to be a successor of the first
+//CHECK-ERROR: error:  expected second odd register of a consecutive same-size even/odd register pair
 //CHECK-ERROR:  casp x0, x2, x4, x5, [x6]
 //CHECK-ERROR:           ^
-//CHECK-ERROR: error: expected second register in a pair to be a successor of the first
+//CHECK-ERROR: error: expected second odd register of a consecutive same-size even/odd register pair
 //CHECK-ERROR:  casp x0, x1, x2, x4, [x5]
 //CHECK-ERROR:                   ^
-//CHECK-ERROR: error: expected second register to be of the same size as the first in a register pair
+//CHECK-ERROR: error: expected second odd register of a consecutive same-size even/odd register pair
 //CHECK-ERROR:  casp x0, w1, x2, x3, [x5]
 //CHECK-ERROR:           ^
-//CHECK-ERROR: error: expected second register to be of the same size as the first in a register pair
+//CHECK-ERROR: error: expected second odd register of a consecutive same-size even/odd register pair
 //CHECK-ERROR:  casp w0, x1, x2, x3, [x5]
 //CHECK-ERROR:           ^
-//CHECK-ERROR: error: expected second register to be of the same size as the first in a register pair
+//CHECK-ERROR: error: expected second odd register of a consecutive same-size even/odd register pair
 //CHECK-ERROR:  casp w0, x1, w2, w3, [x5]
 //CHECK-ERROR:           ^
-//CHECK-ERROR: error: expected second register pair to be of the same size as the first register pair
+//CHECK-ERROR: error: invalid operand for instruction
 //CHECK-ERROR:  casp x0, x1, w2, w3, [x5]
 //CHECK-ERROR:               ^
