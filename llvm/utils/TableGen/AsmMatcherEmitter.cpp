@@ -3646,19 +3646,21 @@ void AsmMatcherEmitter::run(raw_ostream &OS) {
         "FeatureBitsets[it->RequiredFeaturesIdx];\n";
   OS << "    bool HasRequiredFeatures =\n";
   OS << "      (AvailableFeatures & RequiredFeatures) == RequiredFeatures;\n";
+  OS << "    DEBUG_WITH_TYPE(\"asm-matcher\", dbgs() << \"Trying to match opcode \"\n";
+  OS << "                                          << MII.getName(it->Opcode) << \"\\n\");\n";
   // If we have a mismatch because we're missing one of the features that are
   // ignored for diagnostics purposes, skip this mnemonic.
   OS << "    if (!HasRequiredFeatures &&\n";
-  OS << "        (RequiredFeatures & IgnoreFeatures & ~AvailableFeatures).any())\n";
+  OS << "        (RequiredFeatures & IgnoreFeatures & ~AvailableFeatures).any()) {\n";
+  OS << "      DEBUG_WITH_TYPE(\"asm-matcher\", dbgs() << \"  Skipping mnemonic \"\n";
+  OS << "                       << MII.getName(it->Opcode) << \" due to ignored features\\n\");\n";
   OS << "      continue;\n";
+  OS << "    }\n";
   OS << "    HasNonIgnoredMnemonic = true;\n";
   OS << "    if (!FoundValidMnemonic) {\n";
   OS << "      FirstValidMnemonic = it;\n";
   OS << "      FoundValidMnemonic = true;\n";
   OS << "    }\n";
-  OS << "    DEBUG_WITH_TYPE(\"asm-matcher\", dbgs() << \"Trying to match opcode \"\n";
-  OS << "                                          << MII.getName(it->Opcode) << \"\\n\");\n";
-
   if (ReportMultipleNearMisses) {
     OS << "    // Some state to record ways in which this instruction did not match.\n";
     OS << "    NearMissInfo OperandNearMiss = NearMissInfo::getSuccess();\n";
@@ -3797,11 +3799,10 @@ void AsmMatcherEmitter::run(raw_ostream &OS) {
     OS << "      // mnemonic, keep track of it so we can report loc info.\n";
     OS << "      // If we already had a match that only failed due to a\n";
     OS << "      // target predicate, that diagnostic is preferred.\n";
-    OS << "      if (!HadMatchOtherThanPredicate&&\n";
-    OS << "          (it == FirstValidMnemonic ||\n";
-    OS << "           (ErrorInfo <= ActualIdx && HasRequiredFeatures))) {\n";
-    OS << "        if (ErrorInfo != ActualIdx || Diag "
-          "!= Match_InvalidOperand)\n";
+    OS << "      if (!HadMatchOtherThanPredicate &&\n";
+    OS << "          (it == FirstValidMnemonic || ErrorInfo <= ActualIdx)) {\n";
+    OS << "        if (HasRequiredFeatures && (ErrorInfo != ActualIdx || Diag "
+          "!= Match_InvalidOperand))\n";
     OS << "          RetCode = Diag;\n";
     OS << "        ErrorInfo = ActualIdx;\n";
     OS << "      }\n";
@@ -3827,16 +3828,16 @@ void AsmMatcherEmitter::run(raw_ostream &OS) {
     OS << "      HadMatchOtherThanFeatures = true;\n";
   OS << "      FeatureBitset NewMissingFeatures = RequiredFeatures & "
         "~AvailableFeatures;\n";
-  OS << "      if ((NewMissingFeatures & IgnoreFeatures).any()) {\n";
-  if (!ReportMultipleNearMisses)
-    OS << "        HadMatchOtherThanFeatures = false;\n";
-  OS << "        continue;\n";
-  OS << "      }\n";
   OS << "      DEBUG_WITH_TYPE(\"asm-matcher\", dbgs() << \"Missing target features:\";\n";
   OS << "                      for (unsigned I = 0, E = NewMissingFeatures.size(); I != E; ++I)\n";
   OS << "                        if (NewMissingFeatures[I])\n";
   OS << "                          dbgs() << ' ' << I;\n";
   OS << "                      dbgs() << \"\\n\");\n";
+  OS << "      if ((NewMissingFeatures & IgnoreFeatures).any()) {\n";
+  if (!ReportMultipleNearMisses)
+    OS << "        HadMatchOtherThanFeatures = false;\n";
+  OS << "        continue;\n";
+  OS << "      }\n";
   if (ReportMultipleNearMisses) {
     OS << "      FeaturesNearMiss = NearMissInfo::getMissedFeature(NewMissingFeatures);\n";
   } else {
@@ -3847,7 +3848,6 @@ void AsmMatcherEmitter::run(raw_ostream &OS) {
   }
   OS << "    }\n";
   OS << "\n";
-
   OS << "    Inst.clear();\n\n";
   OS << "    Inst.setOpcode(it->Opcode);\n";
   // Verify the instruction with the target-specific match predicate function.
@@ -3989,8 +3989,10 @@ void AsmMatcherEmitter::run(raw_ostream &OS) {
   OS << "    return Match_Success;\n";
   OS << "  }\n\n";
 
-  OS << "  if (!HasNonIgnoredMnemonic)\n";
+  OS << "  if (!HasNonIgnoredMnemonic) {\n";
+  OS << "    DEBUG_WITH_TYPE(\"asm-matcher\", dbgs() << \"Could not find non-ignored mnemonic\\n\");\n";
   OS << "    return Match_MnemonicFail;\n";
+  OS << "  }\n";
 
   if (ReportMultipleNearMisses) {
     OS << "  // No instruction variants matched exactly.\n";
