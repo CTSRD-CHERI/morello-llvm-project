@@ -12,11 +12,11 @@
 
 let Predicates = [HasMorello, HasC64], DecoderNamespace = "AArch64MorelloC64" in {
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
-  def PAltCapLoadAcq : AltCapLoadAcqFmt<(outs Cap:$Ct), (ins GPR64sp:$Rn), "ldar", "\t$Ct, [$Rn]", []>;
+  def PAltCapLoadAcq : AltCapLoadAcqFmt<(outs Cap:$Ct), (ins GPR64sp0:$Rn), "ldar", "\t$Ct, [$Rn]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
-  def PAltCapStoreRel : AltCapStoreRelFmt<(outs), (ins Cap:$Ct, GPR64sp:$Rn), "stlr", "\t$Ct, [$Rn]", []>;
+  def PAltCapStoreRel : AltCapStoreRelFmt<(outs), (ins Cap:$Ct, GPR64sp0:$Rn), "stlr", "\t$Ct, [$Rn]", []>;
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
-  def PAltLoadByteAcq : AltLoadByteAcqFmt<(outs GPR32:$Rt), (ins GPR64sp:$Rn), "ldarb", "\t$Rt, [$Rn]", []>;
+  def PAltLoadByteAcq : AltLoadByteAcqFmt<(outs GPR32:$Rt), (ins GPR64sp0:$Rn), "ldarb", "\t$Rt, [$Rn]", []>;
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
   def PAltLoadByteImmPre : AltLoadByteImmPreFmt<(outs GPR32:$Rt), (ins GPR64sp:$Rn, uimm9:$imm9), "ldrb", "\t$Rt, [$Rn, $imm9]", []>;
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
@@ -52,7 +52,7 @@ let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
   def PAltLoadSignedWordToDWordImmUnscaled : AltLoadSignedWordToDWordImmUnscaledFmt<(outs GPR64:$Rt), (ins GPR64sp:$Rn, simm9:$imm9), "ldursw", "\t$Rt, [$Rn, $imm9]", []>;
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
-  def PAltLoadWordAcq : AltLoadWordAcqFmt<(outs GPR32:$Rt), (ins GPR64sp:$Rn), "ldar", "\t$Rt, [$Rn]", []>;
+  def PAltLoadWordAcq : AltLoadWordAcqFmt<(outs GPR32:$Rt), (ins GPR64sp0:$Rn), "ldar", "\t$Rt, [$Rn]", []>;
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
   def PAltLoadWordImmPre : AltLoadWordImmPreFmt<(outs GPR32:$Rt), (ins GPR64sp:$Rn, uimm9s4:$imm9), "ldr", "\t$Rt, [$Rn, $imm9]", []>;
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
@@ -62,7 +62,7 @@ let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
   def PAltStoreByteImmUnscaled : AltStoreByteImmUnscaledFmt<(outs), (ins GPR32:$Rt, GPR64sp:$Rn, simm9:$imm9), "sturb", "\t$Rt, [$Rn, $imm9]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
-  def PAltStoreByteRel : AltStoreByteRelFmt<(outs), (ins GPR32:$Rt, GPR64sp:$Rn), "stlrb", "\t$Rt, [$Rn]", []>;
+  def PAltStoreByteRel : AltStoreByteRelFmt<(outs), (ins GPR32:$Rt, GPR64sp0:$Rn), "stlrb", "\t$Rt, [$Rn]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
   def PAltStoreCapImmPre : AltStoreCapImmPreFmt<(outs), (ins Cap:$Ct, GPR64sp:$Rn, uimm9s16:$imm9), "str", "\t$Ct, [$Rn, $imm9]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
@@ -88,7 +88,7 @@ let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
   def PAltStoreWordImmUnscaled : AltStoreWordImmUnscaledFmt<(outs), (ins GPR32:$Rt, GPR64sp:$Rn, simm9:$imm9), "stur", "\t$Rt, [$Rn, $imm9]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
-  def PAltStoreWordRel : AltStoreWordRelFmt<(outs), (ins GPR32:$Rt, GPR64sp:$Rn), "stlr", "\t$Rt, [$Rn]", []>;
+  def PAltStoreWordRel : AltStoreWordRelFmt<(outs), (ins GPR32:$Rt, GPR64sp0:$Rn), "stlr", "\t$Rt, [$Rn]", []>;
 let mayLoad = 1, hasSideEffects = 1, mayStore = 1, Constraints = "$out = $Cs" in
   def PCapCompareSwap : CapCompareSwapFmt<(outs Cap:$out), (ins Cap:$Cs, Cap:$Ct, Capsp:$Rn), "cas", "\t$Cs, $Ct, [$Rn]", []>;
 let mayLoad = 1, hasSideEffects = 1, mayStore = 1, Constraints = "$out = $Cs" in
@@ -98,9 +98,9 @@ let mayLoad = 1, hasSideEffects = 1, mayStore = 1, Constraints = "$out = $Cs" in
 let mayLoad = 1, hasSideEffects = 1, mayStore = 1, Constraints = "$out = $Cs" in
   def PCapCompareSwapRel : CapCompareSwapRelFmt<(outs Cap:$out), (ins Cap:$Cs, Cap:$Ct, Capsp:$Rn), "casl", "\t$Cs, $Ct, [$Rn]", []>;
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
-  def PCapLoadAcq : CapLoadAcqFmt<(outs Cap:$Ct), (ins Capsp:$Rn), "ldar", "\t$Ct, [$Rn]", []>;
+  def PCapLoadAcq : CapLoadAcqFmt<(outs Cap:$Ct), (ins Capsp0:$Rn), "ldar", "\t$Ct, [$Rn]", []>;
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
-  def PCapLoadAcqPR : CapLoadAcqPRFmt<(outs Cap:$Ct), (ins Capsp:$Rn), "ldapr", "\t$Ct, [$Rn]", []>;
+  def PCapLoadAcqPR : CapLoadAcqPRFmt<(outs Cap:$Ct), (ins Capsp0:$Rn), "ldapr", "\t$Ct, [$Rn]", []>;
 let mayLoad = 1, hasSideEffects = 1, mayStore = 1 in
   def PCapLoadEx : CapLoadExFmt<(outs Cap:$Ct), (ins Capsp:$Rn), "ldxr", "\t$Ct, [$Rn]", []>;
 let mayLoad = 1, hasSideEffects = 1, mayStore = 1 in
@@ -152,7 +152,7 @@ let mayLoad = 0, hasSideEffects = 0, mayStore = 1, Constraints = "@earlyclobber 
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
   def PCapStorePairNonTemporal : CapStorePairNonTemporalFmt<(outs), (ins Cap:$Ct, Cap:$Ct2, Capsp:$Rn, simm7s16:$imm7), "stnp", "\t$Ct, $Ct2, [$Rn, $imm7]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
-  def PCapStoreRel : CapStoreRelFmt<(outs), (ins Cap:$Ct, Capsp:$Rn), "stlr", "\t$Ct, [$Rn]", []>;
+  def PCapStoreRel : CapStoreRelFmt<(outs), (ins Cap:$Ct, Capsp0:$Rn), "stlr", "\t$Ct, [$Rn]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
   def PCapStoreTagsPriv : CapStoreTagsPrivFmt<(outs), (ins GPR64:$Rt, Capsp:$Rn), "stct", "\t$Rt, [$Rn]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in

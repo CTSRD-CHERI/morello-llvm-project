@@ -573,12 +573,11 @@ multiclass PStorePairNoAlloc<bits<2> opc, bit V, DAGOperand regtype,
                                                   Capsp:$Rn, 0)>;
 }
 
-// FIXME: should we have a Capsp0?
 let mayLoad = 1, mayStore = 0 in
 class PLoadAcquire<bits<2> sz, bit o2, bit L, bit o1, bit o0,
                   RegisterClass regtype, string asm>
     : LoadStoreExclusiveSimple<sz, o2, L, o1, o0, (outs regtype:$Rt),
-                               (ins Capsp:$Rn), asm, "\t$Rt, [$Rn]">,
+                               (ins Capsp0:$Rn), asm, "\t$Rt, [$Rn]">,
       Sched<[WriteLD]> {
   let DecoderNamespace = "AArch64C64";
 }
@@ -614,7 +613,7 @@ let mayLoad = 0, mayStore = 1 in
 class PStoreRelease<bits<2> sz, bit o2, bit L, bit o1, bit o0,
                     RegisterClass regtype, string asm>
     : LoadStoreExclusiveSimple<sz, o2, L, o1, o0, (outs),
-                               (ins regtype:$Rt, Capsp:$Rn),
+                               (ins regtype:$Rt, Capsp0:$Rn),
                                asm, "\t$Rt, [$Rn]">,
       Sched<[WriteST]> {
   let DecoderNamespace = "AArch64C64";

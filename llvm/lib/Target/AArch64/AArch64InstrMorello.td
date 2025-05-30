@@ -12,11 +12,11 @@
 
 let Predicates = [HasMorello, HasNotC64], DecoderNamespace = "AArch64Morello" in {
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
-  def AltCapLoadAcq : AltCapLoadAcqFmt<(outs Cap:$Ct), (ins Capsp:$Rn), "ldar", "\t$Ct, [$Rn]", []>;
+  def AltCapLoadAcq : AltCapLoadAcqFmt<(outs Cap:$Ct), (ins Capsp0:$Rn), "ldar", "\t$Ct, [$Rn]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
-  def AltCapStoreRel : AltCapStoreRelFmt<(outs), (ins Cap:$Ct, Capsp:$Rn), "stlr", "\t$Ct, [$Rn]", []>;
+  def AltCapStoreRel : AltCapStoreRelFmt<(outs), (ins Cap:$Ct, Capsp0:$Rn), "stlr", "\t$Ct, [$Rn]", []>;
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
-  def AltLoadByteAcq : AltLoadByteAcqFmt<(outs GPR32:$Rt), (ins Capsp:$Rn), "ldarb", "\t$Rt, [$Rn]", []>;
+  def AltLoadByteAcq : AltLoadByteAcqFmt<(outs GPR32:$Rt), (ins Capsp0:$Rn), "ldarb", "\t$Rt, [$Rn]", []>;
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
   def AltLoadByteImmPre : AltLoadByteImmPreFmt<(outs GPR32:$Rt), (ins Capsp:$Rn, uimm9:$imm9), "ldrb", "\t$Rt, [$Rn, $imm9]", []>;
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
@@ -52,7 +52,7 @@ let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
   def AltLoadSignedWordToDWordImmUnscaled : AltLoadSignedWordToDWordImmUnscaledFmt<(outs GPR64:$Rt), (ins Capsp:$Rn, simm9:$imm9), "ldursw", "\t$Rt, [$Rn, $imm9]", []>;
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
-  def AltLoadWordAcq : AltLoadWordAcqFmt<(outs GPR32:$Rt), (ins Capsp:$Rn), "ldar", "\t$Rt, [$Rn]", []>;
+  def AltLoadWordAcq : AltLoadWordAcqFmt<(outs GPR32:$Rt), (ins Capsp0:$Rn), "ldar", "\t$Rt, [$Rn]", []>;
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
   def AltLoadWordImmPre : AltLoadWordImmPreFmt<(outs GPR32:$Rt), (ins Capsp:$Rn, uimm9s4:$imm9), "ldr", "\t$Rt, [$Rn, $imm9]", []>;
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
@@ -62,7 +62,7 @@ let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
   def AltStoreByteImmUnscaled : AltStoreByteImmUnscaledFmt<(outs), (ins GPR32:$Rt, Capsp:$Rn, simm9:$imm9), "sturb", "\t$Rt, [$Rn, $imm9]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
-  def AltStoreByteRel : AltStoreByteRelFmt<(outs), (ins GPR32:$Rt, Capsp:$Rn), "stlrb", "\t$Rt, [$Rn]", []>;
+  def AltStoreByteRel : AltStoreByteRelFmt<(outs), (ins GPR32:$Rt, Capsp0:$Rn), "stlrb", "\t$Rt, [$Rn]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
   def AltStoreCapImmPre : AltStoreCapImmPreFmt<(outs), (ins Cap:$Ct, Capsp:$Rn, uimm9s16:$imm9), "str", "\t$Ct, [$Rn, $imm9]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
@@ -88,7 +88,7 @@ let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
   def AltStoreWordImmUnscaled : AltStoreWordImmUnscaledFmt<(outs), (ins GPR32:$Rt, Capsp:$Rn, simm9:$imm9), "stur", "\t$Rt, [$Rn, $imm9]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
-  def AltStoreWordRel : AltStoreWordRelFmt<(outs), (ins GPR32:$Rt, Capsp:$Rn), "stlr", "\t$Rt, [$Rn]", []>;
+  def AltStoreWordRel : AltStoreWordRelFmt<(outs), (ins GPR32:$Rt, Capsp0:$Rn), "stlr", "\t$Rt, [$Rn]", []>;
 }
 let Predicates = [HasMorello], DecoderNamespace = "AArch64Morello" in {
 def CapAlignDown : CapAlignDownFmt<(outs Capsp:$Cd), (ins Capsp:$Cn, uimm6:$imm6), "alignd", "\t$Cd, $Cn, $imm6", []>;
@@ -169,9 +169,9 @@ let hasSideEffects = 0, isReMaterializable = 1, isAsCheapAsAMove = 1 in
 }
 let Predicates = [HasMorello, HasNotC64], DecoderNamespace = "AArch64Morello" in {
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
-  def CapLoadAcq : CapLoadAcqFmt<(outs Cap:$Ct), (ins GPR64sp:$Rn), "ldar", "\t$Ct, [$Rn]", []>;
+  def CapLoadAcq : CapLoadAcqFmt<(outs Cap:$Ct), (ins GPR64sp0:$Rn), "ldar", "\t$Ct, [$Rn]", []>;
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
-  def CapLoadAcqPR : CapLoadAcqPRFmt<(outs Cap:$Ct), (ins GPR64sp:$Rn), "ldapr", "\t$Ct, [$Rn]", []>;
+  def CapLoadAcqPR : CapLoadAcqPRFmt<(outs Cap:$Ct), (ins GPR64sp0:$Rn), "ldapr", "\t$Ct, [$Rn]", []>;
 }
 let Predicates = [HasMorello], DecoderNamespace = "AArch64Morello" in {
 let isBranch = 1, isBarrier = 1, isIndirectBranch = 1, isTerminator = 1 in
@@ -273,7 +273,7 @@ let mayLoad = 0, hasSideEffects = 0, mayStore = 1, Constraints = "@earlyclobber 
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
   def CapStorePairNonTemporal : CapStorePairNonTemporalFmt<(outs), (ins Cap:$Ct, Cap:$Ct2, GPR64sp:$Rn, simm7s16:$imm7), "stnp", "\t$Ct, $Ct2, [$Rn, $imm7]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
-  def CapStoreRel : CapStoreRelFmt<(outs), (ins Cap:$Ct, GPR64sp:$Rn), "stlr", "\t$Ct, [$Rn]", []>;
+  def CapStoreRel : CapStoreRelFmt<(outs), (ins Cap:$Ct, GPR64sp0:$Rn), "stlr", "\t$Ct, [$Rn]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
   def CapStoreTagsPriv : CapStoreTagsPrivFmt<(outs), (ins GPR64:$Rt, GPR64sp:$Rn), "stct", "\t$Rt, [$Rn]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in

@@ -190,7 +190,7 @@ def GPR64spPlus0Operand : AsmOperandClass {
   let Name = "GPR64sp0";
   let RenderMethod = "addRegOperands";
   let PredicateMethod = "isGPR64<AArch64::GPR64spRegClassID>";
-  let ParserMethod = "tryParseGPR64sp0Operand";
+  let ParserMethod = "tryParseGPRsp0Operand";
 }
 
 def GPR64sp0 : RegisterOperand<GPR64sp> {
@@ -823,6 +823,17 @@ def Cap : RegisterClass<"AArch64", [c128], 128, (add Capcommon, CLR, CZR)> {
 // Cap register class + CLR + CSP
 def Capsp : RegisterClass<"AArch64", [c128], 128, (add Capcommon, CLR, CSP)> {
   let Size = 128;
+}
+
+def CapspPlus0Operand : AsmOperandClass {
+  let Name = "Capsp0";
+  let RenderMethod = "addRegOperands";
+  let PredicateMethod = "isGPR64<AArch64::CapspRegClassID>";
+  let ParserMethod = "tryParseGPRsp0Operand";
+}
+
+def Capsp0 : RegisterOperand<Capsp> {
+  let ParserMatchClass = CapspPlus0Operand;
 }
 
 def Capall : RegisterClass<"AArch64", [c128], 128, (add Capcommon, CLR, CSP, CZR)> {

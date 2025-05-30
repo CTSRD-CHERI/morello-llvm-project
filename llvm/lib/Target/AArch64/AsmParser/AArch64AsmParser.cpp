@@ -281,7 +281,7 @@ private:
   template <bool AddFPZeroAsLiteral>
   ParseStatus tryParseFPImm(OperandVector &Operands);
   ParseStatus tryParseImmWithOptionalShift(OperandVector &Operands);
-  ParseStatus tryParseGPR64sp0Operand(OperandVector &Operands);
+  ParseStatus tryParseGPRsp0Operand(OperandVector &Operands);
   bool tryParseNeonVectorRegister(OperandVector &Operands);
   ParseStatus tryParseVectorIndex(OperandVector &Operands);
   ParseStatus tryParseGPRSeqPair(OperandVector &Operands);
@@ -4890,7 +4890,7 @@ AArch64AsmParser::tryParseC64CapToGPROperand(OperandVector &Operands) {
   return ParseStatus::Success;
 }
 
-ParseStatus AArch64AsmParser::tryParseGPR64sp0Operand(OperandVector &Operands) {
+ParseStatus AArch64AsmParser::tryParseGPRsp0Operand(OperandVector &Operands) {
   SMLoc StartLoc = getLoc();
 
   MCRegister RegNum;
