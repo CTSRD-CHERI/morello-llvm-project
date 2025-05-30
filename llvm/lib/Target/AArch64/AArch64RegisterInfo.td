@@ -692,34 +692,27 @@ def FPR128Op : RegisterOperand<FPR128, "printOperand"> {
 //===----------------------------------------------------------------------===//
 // ARMv8.1a atomic CASP register operands
 
+
 def WSeqPairs : RegisterTuples<[sube32, subo32],
-                               [(rotl GPR32, 0), (rotl GPR32, 1)]>;
+                               [(decimate (rotl GPR32, 0), 2),
+                                (decimate (rotl GPR32, 1), 2)]>;
 def XSeqPairs : RegisterTuples<[sube64, subo64],
-                               [(rotl GPR64, 0), (rotl GPR64, 1)]>;
+                               [(decimate (rotl GPR64, 0), 2),
+                                (decimate (rotl GPR64, 1), 2)]>;
 
 def WSeqPairsClass   : RegisterClass<"AArch64", [untyped], 32,
-                                     (decimate WSeqPairs, 2)>{
+                                     (add WSeqPairs)>{
   let Size = 64;
 }
-def WSeqPairsAllClass   : RegisterClass<"AArch64", [untyped], 32,
-                                        (add WSeqPairs)>{
-  let Size = 64;
-}
-
 def XSeqPairsClass   : RegisterClass<"AArch64", [untyped], 64,
-                                     (decimate XSeqPairs, 2)>{
-  let Size = 128;
-}
-def XSeqPairsAllClass   : RegisterClass<"AArch64", [untyped], 64,
-                                        (add XSeqPairs)>{
+                                     (add XSeqPairs)>{
   let Size = 128;
 }
 
-let RenderMethod = "addRegOperands" in {
+
+let RenderMethod = "addRegOperands", ParserMethod="tryParseGPRSeqPair" in {
   def WSeqPairsAsmOperandClass : AsmOperandClass { let Name = "WSeqPair"; }
   def XSeqPairsAsmOperandClass : AsmOperandClass { let Name = "XSeqPair"; }
-  def WSeqPairsAllAsmOperandClass : AsmOperandClass { let Name = "WSeqPairAll"; }
-  def XSeqPairsAllAsmOperandClass : AsmOperandClass { let Name = "XSeqPairAll"; }
 }
 
 def WSeqPairClassOperand :
@@ -729,14 +722,6 @@ def WSeqPairClassOperand :
 def XSeqPairClassOperand :
     RegisterOperand<XSeqPairsClass, "printGPRSeqPairsClassOperand<64>"> {
   let ParserMatchClass = XSeqPairsAsmOperandClass;
-}
-def WSeqPairAllClassOperand :
-    RegisterOperand<WSeqPairsAllClass, "printGPRSeqPairsClassOperand<32>"> {
-  let ParserMatchClass = WSeqPairsAllAsmOperandClass;
-}
-def XSeqPairAllClassOperand :
-    RegisterOperand<XSeqPairsAllClass, "printGPRSeqPairsClassOperand<64>"> {
-  let ParserMatchClass = XSeqPairsAllAsmOperandClass;
 }
 // Reuse the parsing and register numbers from XSeqPairs, but encoding is different.
 def MrrsMssrPairClassOperand :

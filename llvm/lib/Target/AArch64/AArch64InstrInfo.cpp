@@ -4222,16 +4222,16 @@ void AArch64InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
     return;
   }
 
-  if (AArch64::XSeqPairsAllClassRegClass.contains(DestReg) &&
-      AArch64::XSeqPairsAllClassRegClass.contains(SrcReg)) {
+  if (AArch64::XSeqPairsClassRegClass.contains(DestReg) &&
+      AArch64::XSeqPairsClassRegClass.contains(SrcReg)) {
     static const unsigned Indices[] = {AArch64::sube64, AArch64::subo64};
     copyGPRRegTuple(MBB, I, DL, DestReg, SrcReg, KillSrc, AArch64::ORRXrs,
                     AArch64::XZR, Indices);
     return;
   }
 
-  if (AArch64::WSeqPairsAllClassRegClass.contains(DestReg) &&
-      AArch64::WSeqPairsAllClassRegClass.contains(SrcReg)) {
+  if (AArch64::WSeqPairsClassRegClass.contains(DestReg) &&
+      AArch64::WSeqPairsClassRegClass.contains(SrcReg)) {
     static const unsigned Indices[] = {AArch64::sube32, AArch64::subo32};
     copyGPRRegTuple(MBB, I, DL, DestReg, SrcReg, KillSrc, AArch64::ORRWrs,
                     AArch64::WZR, Indices);
@@ -4459,7 +4459,7 @@ void AArch64InstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
         assert(!isStackPointerRegister(SrcReg));
     } else if (AArch64::FPR64RegClass.hasSubClassEq(RC)) {
       Opc = HasPureCap ? AArch64::ASTRDui : AArch64::STRDui;
-    } else if (AArch64::WSeqPairsAllClassRegClass.hasSubClassEq(RC)) {
+    } else if (AArch64::WSeqPairsClassRegClass.hasSubClassEq(RC)) {
       storeRegPairToStackSlot(getRegisterInfo(), MBB, MBBI,
                               get(HasC64 ? AArch64::ASTPWi : AArch64::STPWi),
                               SrcReg, isKill,
@@ -4481,7 +4481,7 @@ void AArch64InstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
              "Unexpected register store without NEON");
       Opc = HasPureCap ? AArch64::AST1Twov1d : AArch64::ST1Twov1d;
       Offset = false;
-    } else if (AArch64::XSeqPairsAllClassRegClass.hasSubClassEq(RC)) {
+    } else if (AArch64::XSeqPairsClassRegClass.hasSubClassEq(RC)) {
       storeRegPairToStackSlot(getRegisterInfo(), MBB, MBBI,
                               get(HasC64 ? AArch64::ASTPXi : AArch64::STPXi),
                               SrcReg, isKill,
@@ -4631,7 +4631,7 @@ void AArch64InstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
         assert(!isStackPointerRegister(DestReg));
     } else if (AArch64::FPR64RegClass.hasSubClassEq(RC)) {
       Opc = HasPureCap ? AArch64::ALDRDui : AArch64::LDRDui;
-    } else if (AArch64::WSeqPairsAllClassRegClass.hasSubClassEq(RC)) {
+    } else if (AArch64::WSeqPairsClassRegClass.hasSubClassEq(RC)) {
       loadRegPairFromStackSlot(getRegisterInfo(), MBB, MBBI,
                                get(HasC64 ? AArch64::ALDPWi : AArch64::LDPWi),
                                DestReg, AArch64::sube32,
@@ -4653,7 +4653,7 @@ void AArch64InstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
              "Unexpected register load without NEON");
       Opc = HasC64 ? AArch64::ALD1Twov1d : AArch64::LD1Twov1d;
       Offset = false;
-    } else if (AArch64::XSeqPairsAllClassRegClass.hasSubClassEq(RC)) {
+    } else if (AArch64::XSeqPairsClassRegClass.hasSubClassEq(RC)) {
       loadRegPairFromStackSlot(getRegisterInfo(), MBB, MBBI,
                                get(HasC64 ? AArch64::ALDPXi : AArch64::LDPXi),
                                DestReg, AArch64::sube64,

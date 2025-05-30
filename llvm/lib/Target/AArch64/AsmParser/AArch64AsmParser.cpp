@@ -242,49 +242,6 @@ private:
                                OperandVector &Operands, MCStreamer &Out,
                                uint64_t &ErrorInfo,
                                bool MatchingInlineAsm) override;
-  // Returns true iff registers First and Second are from the same register
-  // class.
-  template <unsigned ClassID>
-  bool isRegPair(unsigned First, unsigned Second) const {
-    return AArch64MCRegisterClasses[ClassID].contains(First, Second);
-  }
-
-  // Provide an empty template, and specialize it to various register class
-  // to get a mapping between reg class and sub register index.
-  template <unsigned ClassID> unsigned buildSeqPair(unsigned First);
-
-  // Returns true iff the constraint that the second register in the pair has to
-  // be a successor of the first is not satisfied.
-  bool hasInvalidSuccessorEncoding(unsigned First, unsigned Second,
-                                 SMLoc SecondLoc) {
-    const MCRegisterInfo *RI = getContext().getRegisterInfo();
-    unsigned FirstEncoding = RI->getEncodingValue(First);
-    if (RI->getEncodingValue(Second) != FirstEncoding + 1)
-      return Error(
-          SecondLoc,
-          "expected second register in a pair to be a successor of the first");
-    return false;
-  }
-
-  // Returns true iff the constraint that the first GPR in a pair has to be even
-  // is not fulfilled.
-  bool hasInvalidEvenRegisterEncoding(unsigned First, SMLoc FirstLoc) {
-    const MCRegisterInfo *RI = getContext().getRegisterInfo();
-    unsigned FirstEncoding = RI->getEncodingValue(First);
-    if ((FirstEncoding & 0x1) != 0)
-      return Error(FirstLoc, "expected first even register of a "
-                             "consecutive same-size even/odd "
-                             "register pair");
-    return false;
-  }
-
-  // Report a failure to satisfy the constraint that the second register in the
-  // pair has to be of the same size than the first.
-  bool reportNotSameSizeRegPair(SMLoc SecondLoc) {
-    return Error(SecondLoc, "expected second register to be of "
-                            "the same size as the first in a "
-                            "register pair");
-  }
 
   void SwitchMode() {
     MCSubtargetInfo &STI = copySTI();
@@ -416,27 +373,6 @@ public:
                                 MCSymbolRefExpr::VariantKind &DarwinRefKind,
                                 int64_t &Addend);
 };
-
-template <>
-unsigned AArch64AsmParser::buildSeqPair<AArch64::WSeqPairsAllClassRegClassID>(
-    unsigned First) {
-  const MCRegisterInfo *RI = getContext().getRegisterInfo();
-  return RI->getMatchingSuperReg(
-      First, AArch64::sube32,
-      &AArch64MCRegisterClasses[AArch64::WSeqPairsAllClassRegClassID]);
-}
-template <>
-unsigned AArch64AsmParser::buildSeqPair<AArch64::XSeqPairsAllClassRegClassID>(
-    unsigned First) {
-  const MCRegisterInfo *RI = getContext().getRegisterInfo();
-  return RI->getMatchingSuperReg(
-      First, AArch64::sube64,
-      &AArch64MCRegisterClasses[AArch64::XSeqPairsAllClassRegClassID]);
-}
-
-} // end anonymous namespace
-
-namespace {
 
 /// AArch64Operand - Instances of this class represent a parsed AArch64 machine
 /// instruction.
@@ -1537,18 +1473,6 @@ public:
 
   bool isSyspXzrPair() const {
     return isGPR64<AArch64::GPR64RegClassID>() && Reg.RegNum == AArch64::XZR;
-  }
-
-  bool isWSeqPairAll() const {
-    return Kind == k_Register && Reg.Kind == RegKind::Scalar &&
-           AArch64MCRegisterClasses[AArch64::WSeqPairsAllClassRegClassID].contains(
-               Reg.RegNum);
-  }
-
-  bool isXSeqPairAll() const {
-    return Kind == k_Register && Reg.Kind == RegKind::Scalar &&
-           AArch64MCRegisterClasses[AArch64::XSeqPairsAllClassRegClassID].contains(
-               Reg.RegNum);
   }
 
   template<int64_t Angle, int64_t Remainder>
@@ -6818,110 +6742,6 @@ bool AArch64AsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
             llvm_unreachable("No valid mnemonic for alias?");
         }
       }
-    }
-  }
-  // Yet another horrible hack. The parser can not do look-ahead to
-  // disambiguate some instructions when parsing the operands.
-  // To solve the issue, we do not use a custom operand parser 'tryParse...'
-  // and rely instead on the generic operand parsing. This hack is massaging
-  // the operands (building register pairs and checking the constraints if any)
-  // depending on the instruction and all its operands.
-  bool HasC64 = STI->getFeatureBits()[AArch64::FeatureC64] != 0;
-  if (NumOperands == 8 && (Tok == "casp" || Tok == "caspa" ||
-                           Tok == "caspl" || Tok == "caspal")) {
-    AArch64Operand &Addr = static_cast<AArch64Operand &>(*Operands[6]);
-    if (!Addr.isReg())
-        return Error(Addr.getStartLoc(), "invalid operand for instruction");
-    int AddrReg = Addr.getReg();
-
-    bool UseMorelloInstr =
-       AArch64MCRegisterClasses[AArch64::CapspRegClassID].contains(AddrReg) &&
-       HasC64;
-    bool UseC64Instr =
-       AArch64MCRegisterClasses[AArch64::GPR64spRegClassID].contains(AddrReg)&&
-       !HasC64;
-
-    if (UseMorelloInstr || UseC64Instr) {
-      AArch64Operand &First = static_cast<AArch64Operand &>(*Operands[1]);
-      AArch64Operand &Second = static_cast<AArch64Operand &>(*Operands[2]);
-      AArch64Operand &Third = static_cast<AArch64Operand &>(*Operands[3]);
-      AArch64Operand &Fourth = static_cast<AArch64Operand &>(*Operands[4]);
-
-      if (!First.isReg())
-        return Error(First.getStartLoc(), "invalid operand for instruction");
-      if (!Second.isReg())
-        return Error(Second.getStartLoc(), "invalid operand for instruction");
-      if (!Third.isReg())
-        return Error(Third.getStartLoc(), "invalid operand for instruction");
-      if (!Fourth.isReg())
-        return Error(Fourth.getStartLoc(), "invalid operand for instruction");
-
-      int FirstReg = First.getReg();
-      int SecondReg = Second.getReg();
-      int ThirdReg = Third.getReg();
-      int FourthReg = Fourth.getReg();
-
-      bool AreWPairs =
-          isRegPair<AArch64::GPR32RegClassID>(FirstReg, SecondReg) &&
-          isRegPair<AArch64::GPR32RegClassID>(ThirdReg, FourthReg);
-      bool AreXPairs =
-          isRegPair<AArch64::GPR64RegClassID>(FirstReg, SecondReg) &&
-          isRegPair<AArch64::GPR64RegClassID>(ThirdReg, FourthReg);
-
-      // Provide a detailed diagnostic
-      if (!AreWPairs && !AreXPairs) {
-        // Check the first pair.
-        if (!isRegPair<AArch64::GPR32RegClassID>(FirstReg, SecondReg) &&
-            !isRegPair<AArch64::GPR64RegClassID>(FirstReg, SecondReg))
-          return reportNotSameSizeRegPair(Second.getStartLoc());
-        // Check the second pair.
-        if (!isRegPair<AArch64::GPR32RegClassID>(ThirdReg, FourthReg) &&
-            !isRegPair<AArch64::GPR64RegClassID>(ThirdReg, FourthReg))
-          return reportNotSameSizeRegPair(Fourth.getStartLoc());
-        // Then the pairs do not use same register size.
-        return Error(Third.getStartLoc(),
-                     "expected second register pair to be of "
-                     "the same size as the first register pair");
-      }
-
-      // Check the constraint that the first GPR in a pair has to be even
-      if (AreXPairs || AreWPairs) {
-        if (hasInvalidEvenRegisterEncoding(FirstReg, First.getStartLoc()))
-          return true;
-        if (hasInvalidEvenRegisterEncoding(ThirdReg, Third.getStartLoc()))
-          return true;
-      }
-
-      // Check the constraint that the second register in the pair has to be
-      // a successor of the first
-      if (hasInvalidSuccessorEncoding(FirstReg, SecondReg, Second.getStartLoc()))
-        return true;
-      if (hasInvalidSuccessorEncoding(ThirdReg, FourthReg, Fourth.getStartLoc()))
-        return true;
-
-      // Now build the pairs of the right type
-      unsigned FirstPair, SecondPair;
-      if (AreXPairs) {
-        FirstPair = buildSeqPair<AArch64::XSeqPairsAllClassRegClassID>(FirstReg);
-        SecondPair = buildSeqPair<AArch64::XSeqPairsAllClassRegClassID>(ThirdReg);
-      } else if (AreWPairs) {
-        FirstPair = buildSeqPair<AArch64::WSeqPairsAllClassRegClassID>(FirstReg);
-        SecondPair = buildSeqPair<AArch64::WSeqPairsAllClassRegClassID>(ThirdReg);
-      } else
-        llvm_unreachable("Missing a case.");
-
-      // And modify the operand list to now use the explicit pairs
-      Operands[1] =
-          AArch64Operand::CreateReg(FirstPair, RegKind::Scalar, First.getStartLoc(),
-                                    Second.getEndLoc(), getContext());
-      Operands[2] =
-          AArch64Operand::CreateReg(SecondPair, RegKind::Scalar, Third.getStartLoc(),
-                                    Fourth.getEndLoc(), getContext());
-      Operands[3] = std::move(Operands[5]);
-      Operands[4] = std::move(Operands[6]);
-      Operands[5] = std::move(Operands[7]);
-      Operands.pop_back();
-      Operands.pop_back();
     }
   }
 
