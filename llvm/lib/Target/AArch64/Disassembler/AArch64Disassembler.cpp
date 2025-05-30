@@ -951,7 +951,7 @@ DecodeStatus DecodeSImm(MCInst &Inst, unsigned Imm, uint64_t Addr,
   return Success;
 }
 
-template <unsigned bits, unsigned shift = 2>
+template <unsigned bits, unsigned scale = 4>
 static DecodeStatus DecodePCRelLabel(MCInst &Inst, unsigned Imm, uint64_t Addr,
                                      const MCDisassembler *Decoder) {
   int64_t ImmVal = Imm;
@@ -960,7 +960,7 @@ static DecodeStatus DecodePCRelLabel(MCInst &Inst, unsigned Imm, uint64_t Addr,
   if (ImmVal & (1 << (bits - 1)))
     ImmVal |= ~((1LL << bits) - 1);
 
-  if (!Decoder->tryAddingSymbolicOperand(Inst, ImmVal << shift, Addr,
+  if (!Decoder->tryAddingSymbolicOperand(Inst, ImmVal * scale, Addr,
                                          Inst.getOpcode() != AArch64::LDRXl, 0,
                                          0, 4))
     Inst.addOperand(MCOperand::createImm(ImmVal));
@@ -976,7 +976,7 @@ static DecodeStatus DecodePCRelLabel19(MCInst &Inst, unsigned Imm,
 static DecodeStatus DecodePCRelLabel17Scale16(MCInst &Inst, unsigned Imm,
                                               uint64_t Addr,
                                               const MCDisassembler *Decoder) {
-  return DecodePCRelLabel<17, 4>(Inst, Imm, Addr, Decoder);
+  return DecodePCRelLabel<17, 16>(Inst, Imm, Addr, Decoder);
 }
 
 static DecodeStatus DecodeSealForm(MCInst &Inst, unsigned Imm, uint64_t Addr,
