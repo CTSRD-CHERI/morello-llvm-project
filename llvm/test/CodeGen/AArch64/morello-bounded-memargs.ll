@@ -6,12 +6,10 @@ target triple = "aarch64-none-unknown-elf"
 
 define i32 @foo(i32 %x, i32 %y, i32 %z, i32 %u, i32 %v, i32 %w, i32 %t1, i32 %t2, i32 %t3, ptr addrspace(200) %t4) addrspace(200) {
 ; CHECK-LABEL: foo:
-; CHECK:       .Lfunc_begin0:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    str c30, [csp, #-48]! // 16-byte Folded Spill
-; CHECK-NEXT:    .cfi_def_cfa_offset 48
 ; CHECK-NEXT:    stp c20, c19, [csp, #16] // 32-byte Folded Spill
+; CHECK-NEXT:    .cfi_def_cfa_offset 48
 ; CHECK-NEXT:    .cfi_offset c19, -16
 ; CHECK-NEXT:    .cfi_offset c20, -32
 ; CHECK-NEXT:    .cfi_offset c30, -48
@@ -38,13 +36,11 @@ declare i32 @baz(ptr addrspace(200)) addrspace(200)
 
 define i32 @baf(i32 %x, i32 %y, i32 %z, i32 %u, i32 %v, i32 %w, i32 %t1, i32 %t2, i32 %t3, ptr addrspace(200) %t4, ...) addrspace(200) {
 ; CHECK-LABEL: baf:
-; CHECK:       .Lfunc_begin1:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    sub csp, csp, #80
-; CHECK-NEXT:    .cfi_def_cfa csp, -80
 ; CHECK-NEXT:    str c30, [csp, #32] // 16-byte Folded Spill
 ; CHECK-NEXT:    stp c20, c19, [csp, #48] // 32-byte Folded Spill
+; CHECK-NEXT:    .cfi_def_cfa_offset 80
 ; CHECK-NEXT:    .cfi_offset c19, -16
 ; CHECK-NEXT:    .cfi_offset c20, -32
 ; CHECK-NEXT:    .cfi_offset c30, -48
@@ -91,9 +87,7 @@ declare void @llvm.lifetime.end.p200(i64 immarg, ptr addrspace(200) nocapture) a
 
 define i32 @bb([4 x float] %f1.coerce, [4 x float] %f2.coerce, [4 x float] %f3.coerce, ...) addrspace(200) {
 ; CHECK-LABEL: bb:
-; CHECK:       .Lfunc_begin2:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    .cfi_def_cfa_offset 32
 ; CHECK-NEXT:    add c0, c9, #16
 ; CHECK-NEXT:    str c0, [csp, #-32]!
@@ -139,44 +133,42 @@ entry:
 
 define i32 @biz() local_unnamed_addr addrspace(200) {
 ; CHECK-LABEL: biz:
-; CHECK:       .Lfunc_begin3:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    sub csp, csp, #112
-; CHECK-NEXT:    .cfi_def_cfa csp, -112
 ; CHECK-NEXT:    str c30, [csp, #64] // 16-byte Folded Spill
 ; CHECK-NEXT:    stp c20, c19, [csp, #80] // 32-byte Folded Spill
+; CHECK-NEXT:    .cfi_def_cfa_offset 112
 ; CHECK-NEXT:    .cfi_offset c19, -16
 ; CHECK-NEXT:    .cfi_offset c20, -32
 ; CHECK-NEXT:    .cfi_offset c30, -48
-; CHECK-NEXT:    mov w8, #1
-; CHECK-NEXT:    mov w20, #8
+; CHECK-NEXT:    mov w8, #1 // =0x1
+; CHECK-NEXT:    mov w20, #8 // =0x8
 ; CHECK-NEXT:    scbnds c9, csp, #4, lsl #4 // =64
 ; CHECK-NEXT:    mov w0, wzr
-; CHECK-NEXT:    mov w1, #1
+; CHECK-NEXT:    mov w1, #1 // =0x1
 ; CHECK-NEXT:    str czr, [csp, #16]
-; CHECK-NEXT:    mov w2, #2
-; CHECK-NEXT:    mov w3, #3
+; CHECK-NEXT:    mov w2, #2 // =0x2
+; CHECK-NEXT:    mov w3, #3 // =0x3
 ; CHECK-NEXT:    str x8, [csp, #48]
-; CHECK-NEXT:    mov w4, #4
-; CHECK-NEXT:    mov w5, #5
+; CHECK-NEXT:    mov w4, #4 // =0x4
+; CHECK-NEXT:    mov w5, #5 // =0x5
 ; CHECK-NEXT:    str x8, [csp, #32]
-; CHECK-NEXT:    mov w6, #6
-; CHECK-NEXT:    mov w7, #7
+; CHECK-NEXT:    mov w6, #6 // =0x6
+; CHECK-NEXT:    mov w7, #7 // =0x7
 ; CHECK-NEXT:    str w20, [csp]
 ; CHECK-NEXT:    bl fiz
 ; CHECK-NEXT:    mov w19, w0
 ; CHECK-NEXT:    scbnds c9, csp, #32 // =32
 ; CHECK-NEXT:    mov w0, wzr
-; CHECK-NEXT:    mov w1, #1
-; CHECK-NEXT:    mov w2, #2
+; CHECK-NEXT:    mov w1, #1 // =0x1
+; CHECK-NEXT:    mov w2, #2 // =0x2
 ; CHECK-NEXT:    str czr, [csp, #16]
-; CHECK-NEXT:    mov w3, #3
-; CHECK-NEXT:    mov w4, #4
+; CHECK-NEXT:    mov w3, #3 // =0x3
+; CHECK-NEXT:    mov w4, #4 // =0x4
 ; CHECK-NEXT:    str w20, [csp]
-; CHECK-NEXT:    mov w5, #5
-; CHECK-NEXT:    mov w6, #6
-; CHECK-NEXT:    mov w7, #7
+; CHECK-NEXT:    mov w5, #5 // =0x5
+; CHECK-NEXT:    mov w6, #6 // =0x6
+; CHECK-NEXT:    mov w7, #7 // =0x7
 ; CHECK-NEXT:    bl fiz
 ; CHECK-NEXT:    add w0, w0, w19
 ; CHECK-NEXT:    ldp c20, c19, [csp, #80] // 32-byte Folded Reload
@@ -194,9 +186,7 @@ declare i32 @fiz(i32, i32, i32, i32, i32, i32, i32, i32, i32, ptr addrspace(200)
 
 define i32 @f(i32 %0, i32 %1, i32 %2, i32 %3, i32 %4, i32 %5, i32 %6, i32 %7, i32 %8, ...) local_unnamed_addr addrspace(200) #0 {
 ; CHECK-LABEL: f:
-; CHECK:       .Lfunc_begin4:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    .cfi_def_cfa_offset 32
 ; CHECK-NEXT:    ldr w8, [c9], #16
 ; CHECK-NEXT:    str c9, [csp, #-32]!
@@ -233,12 +223,10 @@ declare void @tail_callee(i32 %0, i32 %1, i32 %2, i32 %3, i32 %4, i32 %5, i32 %6
 ;; TODO: We should still be able to optimise this by storing via C9
 define void @tail_call(i32 %0, i32 %1, i32 %2, i32 %3, i32 %4, i32 %5, i32 %6, i32 %7, i32 %8) {
 ; CHECK-LABEL: tail_call:
-; CHECK:       .Lfunc_begin5:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    sub csp, csp, #32
-; CHECK-NEXT:    .cfi_def_cfa csp, -32
 ; CHECK-NEXT:    str c30, [csp, #16] // 16-byte Folded Spill
+; CHECK-NEXT:    .cfi_def_cfa_offset 32
 ; CHECK-NEXT:    .cfi_offset c30, -16
 ; CHECK-NEXT:    ldr w8, [c9]
 ; CHECK-NEXT:    scbnds c9, csp, #4 // =4
