@@ -111,11 +111,11 @@ def CC_AArch64_AAPCS : CallingConv<[
                                            [X0, X1, X2, X3, X4, X5, X6, X7]>>,
 
   // If more than will fit in registers, pass them on the stack instead.
-  CCIfType<[i1, i8, i16, f16], CCAssignToStack<8, 8>>,
+  CCIfType<[i1, i8, i16, f16, bf16], CCAssignToStack<8, 8>>,
   CCIfType<[i32, f32], CCAssignToStack<8, 8>>,
-  CCIfType<[i64, f64, v1f64, v2f32, v1i64, v2i32, v4i16, v8i8, v4f16],
+  CCIfType<[i64, f64, v1f64, v2f32, v1i64, v2i32, v4i16, v8i8, v4f16, v4bf16],
            CCAssignToStack<8, 8>>,
-  CCIfType<[f128, v2i64, v4i32, v8i16, v16i8, v4f32, v2f64, v8f16],
+  CCIfType<[f128, v2i64, v4i32, v8i16, v16i8, v4f32, v2f64, v8f16, v8bf16],
            CCAssignToStack<16, 16>>,
   CCIfType<[c128], CCAssignToStack<16, 16>>
 ]>;
