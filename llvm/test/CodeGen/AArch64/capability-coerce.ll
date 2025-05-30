@@ -11,7 +11,6 @@ target triple = "aarch64-none-unknown-elf"
 
 ; GVN shouldn't try to coerce a fat pointer to a capability or the other way around.
 
-; CHECK-LABEL: foo
 define dso_local void @foo(i64 %h.coerce, [1 x fp128] %g.coerce) local_unnamed_addr addrspace(200) #0 {
 ; CHECK-LABEL: define dso_local void @foo
 ; CHECK-SAME: (i64 [[H_COERCE:%.*]], [1 x fp128] [[G_COERCE:%.*]]) local_unnamed_addr addrspace(200) #[[ATTR0:[0-9]+]] {
@@ -19,26 +18,20 @@ define dso_local void @foo(i64 %h.coerce, [1 x fp128] %g.coerce) local_unnamed_a
 ; CHECK-NEXT:    [[REF_TMP_I:%.*]] = alloca [[CLASS_A_0:%.*]], align 16, addrspace(200)
 ; CHECK-NEXT:    [[G_SROA_0:%.*]] = alloca fp128, align 16, addrspace(200)
 ; CHECK-NEXT:    [[G_COERCE_FCA_0_EXTRACT:%.*]] = extractvalue [1 x fp128] [[G_COERCE]], 0
-; CHECK-NEXT:    store fp128 [[G_COERCE_FCA_0_EXTRACT]], fp128 addrspace(200)* [[G_SROA_0]], align 16
-; CHECK-NEXT:    [[TMP0:%.*]] = bitcast [[CLASS_A_0]] addrspace(200)* [[REF_TMP_I]] to i8 addrspace(200)*
-; CHECK-NEXT:    [[TMP1:%.*]] = bitcast [[CLASS_A_0]] addrspace(200)* [[REF_TMP_I]] to i8 addrspace(200)* addrspace(200)*
-; CHECK-NEXT:    [[G_SROA_0_0__SROA_CAST3:%.*]] = bitcast fp128 addrspace(200)* [[G_SROA_0]] to i8 addrspace(200)* addrspace(200)*
-; CHECK-NEXT:    [[TMP2:%.*]] = bitcast fp128 [[G_COERCE_FCA_0_EXTRACT]] to i128
-; CHECK-NEXT:    [[G_SROA_0_0_G_SROA_0_0_:%.*]] = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* [[G_SROA_0_0__SROA_CAST3]], align 16, !tbaa [[TBAA1:![0-9]+]]
-; CHECK-NEXT:    store i8 addrspace(200)* [[G_SROA_0_0_G_SROA_0_0_]], i8 addrspace(200)* addrspace(200)* [[TMP1]], align 16, !tbaa [[TBAA1]]
+; CHECK-NEXT:    store fp128 [[G_COERCE_FCA_0_EXTRACT]], ptr addrspace(200) [[G_SROA_0]], align 16
+; CHECK-NEXT:    [[TMP0:%.*]] = bitcast fp128 [[G_COERCE_FCA_0_EXTRACT]] to i128
+; CHECK-NEXT:    [[G_SROA_0_0_G_SROA_0_0_:%.*]] = load ptr addrspace(200), ptr addrspace(200) [[G_SROA_0]], align 16, !tbaa [[TBAA1:![0-9]+]]
+; CHECK-NEXT:    store ptr addrspace(200) [[G_SROA_0_0_G_SROA_0_0_]], ptr addrspace(200) [[REF_TMP_I]], align 16, !tbaa [[TBAA1]]
 ; CHECK-NEXT:    ret void
 ;
 entry:
   %ref.tmp.i = alloca %class.a.0, align 16, addrspace(200)
   %g.sroa.0 = alloca fp128, align 16, addrspace(200)
   %g.coerce.fca.0.extract = extractvalue [1 x fp128] %g.coerce, 0
-  store fp128 %g.coerce.fca.0.extract, fp128 addrspace(200)* %g.sroa.0, align 16
-  %0 = bitcast %class.a.0 addrspace(200)* %ref.tmp.i to i8 addrspace(200)*
-  %1 = bitcast %class.a.0 addrspace(200)* %ref.tmp.i to i8 addrspace(200)* addrspace(200)*
-  %g.sroa.0.0..sroa_cast3 = bitcast fp128 addrspace(200)* %g.sroa.0 to i8 addrspace(200)* addrspace(200)*
-  %2 = bitcast fp128 %g.coerce.fca.0.extract to i128
-  %g.sroa.0.0.g.sroa.0.0. = load i8 addrspace(200)*, i8 addrspace(200)* addrspace(200)* %g.sroa.0.0..sroa_cast3, align 16, !tbaa !2
-  store i8 addrspace(200)* %g.sroa.0.0.g.sroa.0.0., i8 addrspace(200)* addrspace(200)* %1, align 16, !tbaa !2
+  store fp128 %g.coerce.fca.0.extract, ptr addrspace(200) %g.sroa.0, align 16
+  %0 = bitcast fp128 %g.coerce.fca.0.extract to i128
+  %g.sroa.0.0.g.sroa.0.0. = load ptr addrspace(200), ptr addrspace(200) %g.sroa.0, align 16, !tbaa !2
+  store ptr addrspace(200) %g.sroa.0.0.g.sroa.0.0., ptr addrspace(200) %ref.tmp.i, align 16, !tbaa !2
   ret void
 }
 
