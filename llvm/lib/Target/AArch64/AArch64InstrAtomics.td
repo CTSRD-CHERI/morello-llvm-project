@@ -554,7 +554,7 @@ let Predicates = [HasLSE, HasNotC64] in {
 }
 
 // v8.9a/v9.4a FEAT_LRCPC patterns
-let Predicates = [HasRCPC3, HasNEON] in {
+let Predicates = [HasRCPC3, HasNEON, HasNotC64] in {
   // LDAP1 loads
   def : Pat<(vector_insert (v2i64 VecListOne128:$Rd),
                 (i64 (acquiring_load<atomic_load_64> GPR64sp:$Rn)), VectorIndexD:$idx),
