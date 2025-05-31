@@ -995,11 +995,11 @@ void AArch64::relocateAlloc(InputSectionBase &sec, uint8_t *buf) const {
     case R_MORELLO_CAPFRAG_ALIGNED_BASE:
     case R_MORELLO_CAPFRAG_UNALIGNED_BASE:
       writeFragmentAddress(loc, val);
-      break;
+      continue;
     case R_MORELLO_CAPFRAG_ALIGNED_SIZE_AND_PERM:
     case R_MORELLO_CAPFRAG_UNALIGNED_SIZE_AND_PERM:
       writeFragmentSizeAndPermissions(loc, val);
-      break;
+      continue;
     case R_MORELLO_TLSIE_OFFSET_AND_SIZE:
       break;
     default:
