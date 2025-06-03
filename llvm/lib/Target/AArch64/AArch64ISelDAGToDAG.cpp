@@ -1533,8 +1533,8 @@ bool AArch64DAGToDAGISel::SelectCAddrModeXRO(SDValue N, unsigned Size,
     // checked by using -ImmOff).
     unsigned Bits = HasC64 ? 12 : 9;
     unsigned Scale = HasC64 ? Log2_32(Size) : 0;
-
-    unsigned SMin = (APInt::getSignedMinValue(Bits).getSExtValue() - 1) << Scale;
+    unsigned SMin =
+        (unsigned)(APInt::getSignedMinValue(Bits).getSExtValue() - 1) << Scale;
     unsigned UMax = (APInt::getMaxValue(Bits).getZExtValue() + 1) << Scale;
     unsigned SMax = (APInt::getSignedMaxValue(Bits).getZExtValue() + 1) << Scale;
 
@@ -1628,7 +1628,8 @@ bool AArch64DAGToDAGISel::SelectAddrModeXRO(SDValue N, unsigned Size,
     // Skip the immediate can be selected by load/store addressing mode.
     // Also skip the immediate can be encoded by a single ADD (SUB is also
     // checked by using -ImmOff).
-    unsigned SMin = (APInt::getSignedMinValue(Bits).getSExtValue() - 1) << Scale;
+    unsigned SMin =
+        (unsigned)(APInt::getSignedMinValue(Bits).getSExtValue() - 1) << Scale;
     unsigned UMax = (APInt::getMaxValue(Bits).getZExtValue() + 1) << Scale;
     unsigned SMax = (APInt::getSignedMaxValue(Bits).getZExtValue() + 1) << Scale;
 
