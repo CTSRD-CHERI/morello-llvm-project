@@ -79,7 +79,7 @@ attributes #2 = { nounwind }
 ; ABS-NEXT:	.uleb128 .Ltmp0-.Lfunc_begin0           // >> Call Site 1 <<
 ; ABS-NEXT:	.uleb128 .Ltmp1-.Ltmp0                  //   Call between .Ltmp0 and .Ltmp1
 ; ABS-NEXT:	.byte	12                              // (landing pad is a capability)
-; ABS-NEXT:	.chericap	.L_ZNKSt3__17num_getIwNS_19istreambuf_iteratorIwNS_11char_traitsIwEEEEE6do_getES4_S4_QRNS_8ios_baseEQRjQRb$eh_alias+(.Ltmp2-.Lfunc_begin0) //     jumps to .Ltmp2
+; ABS-NEXT:	.chericap	.L_ZNKSt3__17num_getIwNS_19istreambuf_iteratorIwNS_11char_traitsIwEEEEE6do_getES4_S4_QRNS_8ios_baseEQRjQRb$local+(.Ltmp2-.Lfunc_begin0) //     jumps to .Ltmp2
 ; ABS-NEXT:	.byte	0                               //   On action: cleanup
 ; ABS-NEXT:	.uleb128 .Ltmp1-.Lfunc_begin0           // >> Call Site 2 <<
 ; ABS-NEXT:	.uleb128 .Lfunc_end0-.Ltmp1             //   Call between .Ltmp1 and .Lfunc_end0
@@ -111,6 +111,6 @@ attributes #2 = { nounwind }
 ; IND: .section	.data.rel.ro,"aGw",@progbits,_ZNKSt3__17num_getIwNS_19istreambuf_iteratorIwNS_11char_traitsIwEEEEE6do_getES4_S4_QRNS_8ios_baseEQRjQRb,comdat
 ; IND-NEXT:	.p2align	4
 ; IND-NEXT: .Ltmp3:
-; IND-NEXT:	.chericap	.L_ZNKSt3__17num_getIwNS_19istreambuf_iteratorIwNS_11char_traitsIwEEEEE6do_getES4_S4_QRNS_8ios_baseEQRjQRb$eh_alias+(.Ltmp2-.Lfunc_begin0)
+; IND-NEXT:	.chericap	.L_ZNKSt3__17num_getIwNS_19istreambuf_iteratorIwNS_11char_traitsIwEEEEE6do_getES4_S4_QRNS_8ios_baseEQRjQRb$local+(.Ltmp2-.Lfunc_begin0)
 
-; SYM: 0000000000000001    {{[0-9]+}} FUNC    LOCAL  DEFAULT     {{[0-9]+}} .L_ZNKSt3__17num_getIwNS_19istreambuf_iteratorIwNS_11char_traitsIwEEEEE6do_getES4_S4_QRNS_8ios_baseEQRjQRb$eh_alias
+; SYM: 0000000000000001    {{[0-9]+}} FUNC    LOCAL  DEFAULT     {{[0-9]+}} .L_ZNKSt3__17num_getIwNS_19istreambuf_iteratorIwNS_11char_traitsIwEEEEE6do_getES4_S4_QRNS_8ios_baseEQRjQRb$local

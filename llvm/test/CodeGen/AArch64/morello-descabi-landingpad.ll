@@ -8,7 +8,7 @@ target triple = "aarch64-none-unknown-elf"
 
 define noundef i32 @foo() addrspace(200) #0 personality ptr addrspace(200) @__gxx_personality_v0 {
 ; CHECK-LABEL: foo:
-; CHECK:       .Lfoo$eh_alias:
+; CHECK:       .Lfoo$local:
 ; CHECK-NEXT:  .Lfunc_begin0:
 ; CHECK-NEXT:    .cfi_startproc
 ; CHECK-NEXT:    .cfi_personality 0, __gxx_personality_v0

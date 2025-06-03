@@ -26,4 +26,4 @@ block:
 }
 
 ; CHECK-LABEL: addr:
-; CHECK-NEXT:	.chericap test_blockaddress+((.Ltmp0+1)-test_blockaddress)
+; CHECK-NEXT:	.chericap .Ltest_blockaddress$local+((.Ltmp0+1)-.Ltest_blockaddress$local)
