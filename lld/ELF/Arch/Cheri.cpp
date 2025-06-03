@@ -1045,6 +1045,7 @@ MorelloTLSLEDataSection::MorelloTLSLEDataSection()
 
 void MorelloTLSLEDataSection::writeTo(uint8_t *buf) {
   PhdrEntry *tls = Out::tlsPhdr;
+  // This is always called from one thread, no need for locking.
   for (const auto &i : this->relocsMap) {
     uint64_t off = i.first->getVA(0) + config->gotEntrySize * 2 +
            ((tls->p_vaddr - config->gotEntrySize * 2) & (tls->p_align - 1));
@@ -1056,12 +1057,14 @@ void MorelloTLSLEDataSection::writeTo(uint8_t *buf) {
 }
 
 uint64_t MorelloTLSLEDataSection::getSymbolIndex(const Symbol *sym) {
+  // This is always called from one thread, no need for locking.
   auto it = relocsMap.find(sym);
   assert(it != relocsMap.end() && "Couldn't find symbol data");
   return it->second;
 }
 
 void MorelloTLSLEDataSection::addTLSLEData(const Symbol *sym) {
+  std::lock_guard<std::mutex> lock(relocsMapMutex); // Called from parallelFor
   if (relocsMap.find(sym) != relocsMap.end())
     return;
   relocsMap.insert(std::make_pair(sym, index));

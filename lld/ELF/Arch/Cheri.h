@@ -188,6 +188,7 @@ public:
 private:
   unsigned index = 0;
   llvm::MapVector<const Symbol*, uint64_t> relocsMap;
+  std::mutex relocsMapMutex;
 };
 
 
