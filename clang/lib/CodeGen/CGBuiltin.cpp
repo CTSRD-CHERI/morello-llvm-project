@@ -10785,10 +10785,10 @@ Value *CodeGenFunction::EmitAArch64BuiltinExpr(unsigned BuiltinID,
     llvm::Type *StoreTy =
         llvm::IntegerType::get(getLLVMContext(), getContext().getTypeSize(Ty));
 
-    if (IsCap)
-      StoreVal = Builder.CreateBitCast(StoreVal,
-                                       llvm::PointerType::get(Int8Ty, 200));
-    else if (StoreVal->getType()->isPointerTy())
+    if (IsCap) {
+      StoreTy = ConvertType(Ty);
+      StoreVal = Builder.CreateBitCast(StoreVal, Int8CheriCapTy);
+    } else if (StoreVal->getType()->isPointerTy())
       StoreVal = Builder.CreatePtrToInt(StoreVal, Int64Ty);
     else {
       llvm::Type *IntTy = llvm::IntegerType::get(
