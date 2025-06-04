@@ -3,9 +3,9 @@
 
 target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
 
-define i32 @test(i32* %In, i64 %N) {
+define i32 @test(ptr %In, i64 %N) {
 ; CHECK-LABEL: define i32 @test
-; CHECK-SAME: (i32* [[IN:%.*]], i64 [[N:%.*]]) {
+; CHECK-SAME: (ptr [[IN:%.*]], i64 [[N:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    br label [[FOR_PREHEADER:%.*]]
 ; CHECK:       for.preheader:
@@ -17,18 +17,16 @@ define i32 @test(i32* %In, i64 %N) {
 ; CHECK:       for.body.preheader:
 ; CHECK-NEXT:    br label [[FOR_BODY:%.*]]
 ; CHECK:       for.body:
-; CHECK-NEXT:    [[LSR_IV1:%.*]] = phi i32* [ [[IN]], [[FOR_BODY_PREHEADER]] ], [ [[SCEVGEP:%.*]], [[FOR_BODY]] ]
+; CHECK-NEXT:    [[LSR_IV1:%.*]] = phi ptr [ [[IN]], [[FOR_BODY_PREHEADER]] ], [ [[SCEVGEP:%.*]], [[FOR_BODY]] ]
 ; CHECK-NEXT:    [[LSR_IV:%.*]] = phi i64 [ [[COUNTDOWN]], [[FOR_BODY_PREHEADER]] ], [ [[LSR_IV_NEXT:%.*]], [[FOR_BODY]] ]
 ; CHECK-NEXT:    [[ACC_LOOP:%.*]] = phi i32 [ [[ADD:%.*]], [[FOR_BODY]] ], [ 0, [[FOR_BODY_PREHEADER]] ]
-; CHECK-NEXT:    [[LSR_IV14:%.*]] = bitcast i32* [[LSR_IV1]] to i8*
-; CHECK-NEXT:    [[UGLYGEP:%.*]] = getelementptr i8, i8* [[LSR_IV14]], i64 [[LSR_IV2]]
-; CHECK-NEXT:    [[UGLYGEP5:%.*]] = bitcast i8* [[UGLYGEP]] to i32*
-; CHECK-NEXT:    [[VAL1:%.*]] = load i32, i32* [[LSR_IV1]], align 4
-; CHECK-NEXT:    [[VAL2:%.*]] = load i32, i32* [[UGLYGEP5]], align 4
+; CHECK-NEXT:    [[SCEVGEP4:%.*]] = getelementptr i8, ptr [[LSR_IV1]], i64 [[LSR_IV2]]
+; CHECK-NEXT:    [[VAL1:%.*]] = load i32, ptr [[LSR_IV1]], align 4
+; CHECK-NEXT:    [[VAL2:%.*]] = load i32, ptr [[SCEVGEP4]], align 4
 ; CHECK-NEXT:    [[MUL:%.*]] = mul i32 [[VAL1]], [[VAL2]]
 ; CHECK-NEXT:    [[ADD]] = add i32 [[MUL]], [[ACC_LOOP]]
 ; CHECK-NEXT:    [[LSR_IV_NEXT]] = add i64 [[LSR_IV]], -1
-; CHECK-NEXT:    [[SCEVGEP]] = getelementptr i32, i32* [[LSR_IV1]], i64 1
+; CHECK-NEXT:    [[SCEVGEP]] = getelementptr i8, ptr [[LSR_IV1]], i64 4
 ; CHECK-NEXT:    [[EXITCOND:%.*]] = icmp eq i64 [[LSR_IV_NEXT]], 0
 ; CHECK-NEXT:    br i1 [[EXITCOND]], label [[FOR_INC_LOOPEXIT:%.*]], label [[FOR_BODY]]
 ; CHECK:       for.inc.loopexit:
@@ -56,10 +54,10 @@ for.body:
   %i = phi i64 [ %i.next, %for.body ], [ 0, %for.preheader ]
   %acc.loop = phi i32 [ %add, %for.body ], [ 0, %for.preheader ]
   %off = add i64 %i, %countup
-  %arrayidx1 = getelementptr inbounds i32, i32* %In, i64 %i
-  %arrayidx2 = getelementptr inbounds i32, i32* %In, i64 %off
-  %val1 = load i32, i32* %arrayidx1, align 4
-  %val2 = load i32, i32* %arrayidx2, align 4
+  %arrayidx1 = getelementptr inbounds i32, ptr %In, i64 %i
+  %arrayidx2 = getelementptr inbounds i32, ptr %In, i64 %off
+  %val1 = load i32, ptr %arrayidx1, align 4
+  %val2 = load i32, ptr %arrayidx2, align 4
   %mul = mul i32 %val1, %val2
   %add = add i32 %mul, %acc.loop
   %i.next = add i64 %i, 1
