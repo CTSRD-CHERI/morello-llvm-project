@@ -145,7 +145,10 @@ unsigned __intcap xor(unsigned __intcap f)
 int capdiff(int * __capability a, int * __capability b)
 {
   // CHECK-LABEL: @capdiff(ptr addrspace(200){{.*}}, ptr addrspace(200){{.*}})
-  // CHECK: call i64 @llvm.cheri.cap.diff.i64(ptr addrspace(200)
+  // OFFSET: call i64 @llvm.cheri.cap.diff.i64(ptr addrspace(200)
+  // ADDR: @llvm.cheri.cap.address.get.i64(ptr addrspace(200) %0)
+  // ADDR: @llvm.cheri.cap.address.get.i64(ptr addrspace(200) %1)
+  // ADDR: sub i64
   // CHECK: %{{.*}} = trunc i64 %{{.*}} to i32
   return a-b;
 }
