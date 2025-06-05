@@ -175,7 +175,7 @@ void test_swp(uint32_t x, volatile void *p) {
 //
 // AArch64-LABEL: @test_pld(
 // AArch64-NEXT:  entry:
-// AArch64-NEXT:    call void @llvm.aarch64.prefetch(ptr null, i32 0, i32 0, i32 0, i32 1)
+// AArch64-NEXT:    call void @llvm.aarch64.prefetch.p0(ptr null, i32 0, i32 0, i32 0, i32 1)
 // AArch64-NEXT:    ret void
 //
 void test_pld() {
@@ -189,7 +189,7 @@ void test_pld() {
 //
 // AArch64-LABEL: @test_pldx(
 // AArch64-NEXT:  entry:
-// AArch64-NEXT:    call void @llvm.aarch64.prefetch(ptr null, i32 1, i32 2, i32 0, i32 1)
+// AArch64-NEXT:    call void @llvm.aarch64.prefetch.p0(ptr null, i32 1, i32 2, i32 0, i32 1)
 // AArch64-NEXT:    ret void
 //
 void test_pldx() {
@@ -204,7 +204,7 @@ void test_pldx() {
 //
 // AArch64-LABEL: @test_pli(
 // AArch64-NEXT:  entry:
-// AArch64-NEXT:    call void @llvm.aarch64.prefetch(ptr null, i32 0, i32 0, i32 0, i32 0)
+// AArch64-NEXT:    call void @llvm.aarch64.prefetch.p0(ptr null, i32 0, i32 0, i32 0, i32 0)
 // AArch64-NEXT:    ret void
 //
 void test_pli() {
@@ -218,7 +218,7 @@ void test_pli() {
 //
 // AArch64-LABEL: @test_plix(
 // AArch64-NEXT:  entry:
-// AArch64-NEXT:    call void @llvm.aarch64.prefetch(ptr null, i32 0, i32 2, i32 0, i32 0)
+// AArch64-NEXT:    call void @llvm.aarch64.prefetch.p0(ptr null, i32 0, i32 2, i32 0, i32 0)
 // AArch64-NEXT:    ret void
 //
 void test_plix() {
@@ -1719,5 +1719,3 @@ int test_rndrrs(uint64_t *__addr) {
   return __rndrrs(__addr);
 }
 #endif
-
-

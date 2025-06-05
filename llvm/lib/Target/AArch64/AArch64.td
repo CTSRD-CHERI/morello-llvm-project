@@ -1145,20 +1145,17 @@ def TuneNeoverseE1 : SubtargetFeature<"neoversee1", "ARMProcFamily", "NeoverseE1
                                       FeatureFuseAdrpAdd,
                                       FeaturePostRAScheduler]>;
 
-def TuneNeoverseN1 : SubtargetFeature<"neoversen1", "ARMProcFamily", "NeoverseN1",
-                                      "Neoverse N1 ARM processors", [
-                                      FeatureFuseAES,
-                                      FeatureFuseAdrpAdd,
-                                      FeatureLSLFast,
-                                      FeaturePostRAScheduler,
-                                      FeatureEnableSelectOptimize,
-                                      FeaturePredictableSelectIsExpensive]>;
+defvar TuneNeoverseN1Features = [FeatureFuseAES, FeatureFuseAdrpAdd,
+                                 FeatureLSLFast, FeaturePostRAScheduler,
+                                 FeatureEnableSelectOptimize,
+                                 FeaturePredictableSelectIsExpensive];
+def TuneNeoverseN1
+    : SubtargetFeature<"neoversen1", "ARMProcFamily", "NeoverseN1",
+                       "Neoverse N1 ARM processors", TuneNeoverseN1Features>;
 
-def TuneRainier : SubtargetFeature<"rainier", "ARMProcFamily", "Rainier",
-                                   "Rainier ARM processors", [
-                                   FeaturePostRAScheduler,
-                                   FeatureFuseAES
-                                   ]>;
+def TuneRainier
+    : SubtargetFeature<"rainier", "ARMProcFamily", "Rainier",
+                       "Rainier ARM processors", TuneNeoverseN1Features>;
 
 def TuneNeoverseN2 : SubtargetFeature<"neoversen2", "ARMProcFamily", "NeoverseN2",
                                       "Neoverse N2 ARM processors", [

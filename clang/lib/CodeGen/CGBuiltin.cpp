@@ -5898,6 +5898,11 @@ RValue CodeGenFunction::EmitBuiltinExpr(const GlobalDecl GD, unsigned BuiltinID,
     if (IntrinsicID == Intrinsic::not_intrinsic)
       IntrinsicID = Intrinsic::getIntrinsicForMSBuiltin(Prefix.data(), Name);
   }
+  SmallVector<llvm::Type *, 1> Types;
+  // Handle overloaded AArch64 prefetch, but reuse the generic checking code
+  // to reduce the downstream diff.
+  if (IntrinsicID == Intrinsic::aarch64_prefetch)
+    Types = {CGM.VoidPtrTy};
 
   if (IntrinsicID != Intrinsic::not_intrinsic) {
     SmallVector<Value*, 16> Args;
@@ -5909,7 +5914,7 @@ RValue CodeGenFunction::EmitBuiltinExpr(const GlobalDecl GD, unsigned BuiltinID,
     getContext().GetBuiltinType(BuiltinID, Error, &ICEArguments);
     assert(Error == ASTContext::GE_None && "Should not codegen an error");
 
-    Function *F = CGM.getIntrinsic(IntrinsicID);
+    Function *F = CGM.getIntrinsic(IntrinsicID, Types);
     llvm::FunctionType *FTy = F->getFunctionType();
 
     for (unsigned i = 0, e = E->getNumArgs(); i != e; ++i) {

@@ -676,6 +676,12 @@ static bool UpgradeIntrinsicFunction1(Function *F, Function *&NewFn) {
       return true;
     }
 
+    if (Name == "aarch64.prefetch") {
+      NewFn =
+          Intrinsic::getDeclaration(F->getParent(), Intrinsic::aarch64_prefetch,
+                                    F->arg_begin()->getType());
+      return true;
+    }
     if (Name.startswith("arm.rbit") || Name.startswith("aarch64.rbit")) {
       NewFn = Intrinsic::getDeclaration(F->getParent(), Intrinsic::bitreverse,
                                         F->arg_begin()->getType());
