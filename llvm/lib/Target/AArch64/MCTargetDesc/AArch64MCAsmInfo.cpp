@@ -73,9 +73,6 @@ AArch64MCAsmInfoELF::AArch64MCAsmInfoELF(const Triple &T, bool IsPureCap,
   if (T.getArch() == Triple::aarch64_be)
     IsLittleEndian = false;
 
-  Code32Directive = ".code\ta64";
-  CodeCapDirective = ".code\tc64";
-
   // We prefer NEON instructions to be printed in the generic form when
   // targeting ELF.
   AssemblerDialect = AsmWriterVariant == Default ? Generic : AsmWriterVariant;

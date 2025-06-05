@@ -31,7 +31,6 @@ class RISCV final : public TargetInfo {
 public:
   RISCV();
   uint32_t calcEFlags() const override;
-  bool calcIsCheriAbi() const override;
   int getCapabilitySize() const override;
   int64_t getImplicitAddend(const uint8_t *buf, RelType type) const override;
   void writeGotHeader(uint8_t *buf) const override;
@@ -69,7 +68,6 @@ enum Op {
   CIncOffsetImm = 0x105b,
   CLC_64 = 0x3003,
   CLC_128 = 0x200f,
-  CSub = 0x2800005b,
 };
 
 enum Reg {
@@ -113,10 +111,7 @@ RISCV::RISCV() {
   pltRel = R_RISCV_JUMP_SLOT;
   relativeRel = R_RISCV_RELATIVE;
   iRelativeRel = R_RISCV_IRELATIVE;
-  sizeRel = R_RISCV_CHERI_SIZE;
   cheriCapRel = R_RISCV_CHERI_CAPABILITY;
-  // TODO: R_RISCV_CHERI_JUMP_SLOT in a separate .got.plt / .captable.plt
-  cheriCapCallRel = R_RISCV_CHERI_CAPABILITY;
   if (config->is64) {
     symbolicRel = R_RISCV_64;
     tlsModuleIndexRel = R_RISCV_TLS_DTPMOD64;
@@ -128,11 +123,16 @@ RISCV::RISCV() {
     tlsOffsetRel = R_RISCV_TLS_DTPREL32;
     tlsGotRel = R_RISCV_TLS_TPREL32;
   }
-  gotRel = symbolicRel;
+  if (config->isCheriAbi)
+    gotRel = *cheriCapRel;
+  else
+    gotRel = symbolicRel;
   absPointerRel = symbolicRel;
 
   // .got[0] = _DYNAMIC
   gotHeaderEntriesNum = 1;
+  if (config->isCheriAbi)
+    gotEntrySize = getCapabilitySize();
 
   // .got.plt[0] = _dl_runtime_resolve, .got.plt[1] = link_map
   gotPltHeaderEntriesNum = 2;
@@ -187,16 +187,6 @@ uint32_t RISCV::calcEFlags() const {
   return target;
 }
 
-bool RISCV::calcIsCheriAbi() const {
-  bool isCheriAbi = config->eflags & EF_RISCV_CHERIABI;
-
-  if (config->isCheriAbi && !ctx.objectFiles.empty() && !isCheriAbi)
-    error(toString(ctx.objectFiles.front()) +
-          ": object file is non-CheriABI but emulation forces it");
-
-  return isCheriAbi;
-}
-
 int64_t RISCV::getImplicitAddend(const uint8_t *buf, RelType type) const {
   switch (type) {
   default:
@@ -231,6 +221,10 @@ void RISCV::writeGotHeader(uint8_t *buf) const {
 }
 
 void RISCV::writeGotPlt(uint8_t *buf, const Symbol &s) const {
+  // Initialised by __cap_relocs for CHERI
+  if (config->isCheriAbi)
+    return;
+
   if (config->is64)
     write64le(buf, in.plt->getVA());
   else
@@ -247,14 +241,7 @@ void RISCV::writeIgotPlt(uint8_t *buf, const Symbol &s) const {
 }
 
 void RISCV::writePltHeader(uint8_t *buf) const {
-  // TODO: Remove once we have a CHERI .got.plt and R_RISCV_CHERI_JUMP_SLOT.
-  // Without those there can be no lazy binding support (though the former
-  // requirement can be relaxed provided .captable[0] is _dl_runtime_resolve,
-  // at least when the PLT is non-empty), so for now we emit a header full of
-  // trapping instructions to ensure we don't accidentally end up trying to use
-  // it. Ideally we would have a header size of 0, but isCheriAbi isn't known
-  // in the constructor.
-  if (config->isCheriAbi) {
+  if (config->isCheriAbi && !config->zCheriRiscvJumpSlot) {
     memset(buf, 0, pltHeaderSize);
     return;
   }
@@ -268,7 +255,6 @@ void RISCV::writePltHeader(uint8_t *buf) const {
   // (c)jr (c)t3
   // (if shift == 0): nop
   uint32_t offset = in.gotPlt->getVA() - in.plt->getVA();
-  uint32_t ptrsub = config->isCheriAbi ? CSub : SUB;
   uint32_t ptrload = config->isCheriAbi ? config->is64 ? CLC_128 : CLC_64
                                         : config->is64 ? LD : LW;
   uint32_t ptraddi = config->isCheriAbi ? CIncOffsetImm : ADDI;
@@ -277,7 +263,7 @@ void RISCV::writePltHeader(uint8_t *buf) const {
   uint32_t ptrsize = config->isCheriAbi ? config->capabilitySize
                                         : config->wordsize;
   write32le(buf + 0, utype(AUIPC, X_T2, hi20(offset)));
-  write32le(buf + 4, rtype(ptrsub, X_T1, X_T1, X_T3));
+  write32le(buf + 4, rtype(SUB, X_T1, X_T1, X_T3));
   write32le(buf + 8, itype(ptrload, X_T3, X_T2, lo12(offset)));
   write32le(buf + 12, itype(ADDI, X_T1, X_T1, -target->pltHeaderSize - 12));
   write32le(buf + 16, itype(ptraddi, X_T0, X_T2, lo12(offset)));
@@ -297,8 +283,9 @@ void RISCV::writePlt(uint8_t *buf, const Symbol &sym,
   // nop
   uint32_t ptrload = config->isCheriAbi ? config->is64 ? CLC_128 : CLC_64
                                         : config->is64 ? LD : LW;
-  uint32_t entryva = config->isCheriAbi ? sym.getCapTableVA(in.plt.get(), 0)
-                                        : sym.getGotPltVA();
+  uint32_t entryva = config->isCheriAbi && !config->zCheriRiscvJumpSlot
+                         ? sym.getGotVA()
+                         : sym.getGotPltVA();
   uint32_t offset = entryva - pltEntryAddr;
   write32le(buf + 0, utype(AUIPC, X_T3, hi20(offset)));
   write32le(buf + 4, itype(ptrload, X_T3, X_T3, lo12(offset)));
@@ -372,12 +359,13 @@ RelExpr RISCV::getRelExpr(const RelType type, const Symbol &s,
     return config->relax ? R_RELAX_HINT : R_NONE;
   case R_RISCV_CHERI_CAPABILITY:
     return R_CHERI_CAPABILITY;
+  // TODO: Deprecate and eventually remove these
   case R_RISCV_CHERI_CAPTAB_PCREL_HI20:
-    return R_CHERI_CAPABILITY_TABLE_ENTRY_PC;
+    return R_GOT_PC;
   case R_RISCV_CHERI_TLS_IE_CAPTAB_PCREL_HI20:
-    return R_CHERI_CAPABILITY_TABLE_TLSIE_ENTRY_PC;
+    return R_GOT_PC;
   case R_RISCV_CHERI_TLS_GD_CAPTAB_PCREL_HI20:
-    return R_CHERI_CAPABILITY_TABLE_TLSGD_ENTRY_PC;
+    return R_TLSGD_PC;
   default:
     error(getErrorLocation(loc) + "unknown relocation (" + Twine(type) +
           ") against symbol " + toString(s));

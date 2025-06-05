@@ -698,6 +698,9 @@ GotSection::GotSection()
 
 void GotSection::addConstant(const Relocation &r) { relocations.push_back(r); }
 void GotSection::addEntry(Symbol &sym) {
+  // TODO: Separate out TLS IE entries for CHERI so we can pack them more
+  // efficiently rather than consuming a whole capability-sized slot for an
+  // integer.
   assert(sym.auxIdx == symAux.size() - 1);
   symAux.back().gotIdx = numEntries++;
 }
@@ -712,8 +715,12 @@ bool GotSection::addTlsDescEntry(Symbol &sym) {
 bool GotSection::addDynTlsEntry(Symbol &sym) {
   assert(sym.auxIdx == symAux.size() - 1);
   symAux.back().tlsGdIdx = numEntries;
-  // Global Dynamic TLS entries take two GOT slots.
-  numEntries += 2;
+  // Global Dynamic TLS entries take two GOT slots, except on CHERI where they
+  // can be packed into one GOT slot.
+  if (config->isCheriAbi)
+    ++numEntries;
+  else
+    numEntries += 2;
   return true;
 }
 
@@ -722,13 +729,13 @@ bool GotSection::addDynTlsEntry(Symbol &sym) {
 bool GotSection::addTlsIndex() {
   if (tlsIndexOff != uint32_t(-1))
     return false;
-  tlsIndexOff = numEntries * config->gotEntrySize;
+  tlsIndexOff = numEntries * target->gotEntrySize;
   numEntries += 2;
   return true;
 }
 
 uint32_t GotSection::getTlsDescOffset(const Symbol &sym) const {
-  return sym.getTlsDescIdx() * config->gotEntrySize;
+  return sym.getTlsDescIdx() * target->gotEntrySize;
 }
 
 uint64_t GotSection::getTlsDescAddr(const Symbol &sym) const {
@@ -736,11 +743,11 @@ uint64_t GotSection::getTlsDescAddr(const Symbol &sym) const {
 }
 
 uint64_t GotSection::getGlobalDynAddr(const Symbol &b) const {
-  return this->getVA() + b.getTlsGdIdx() * config->gotEntrySize;
+  return this->getVA() + b.getTlsGdIdx() * target->gotEntrySize;
 }
 
 uint64_t GotSection::getGlobalDynOffset(const Symbol &b) const {
-  return b.getTlsGdIdx() * config->gotEntrySize;
+  return b.getTlsGdIdx() * target->gotEntrySize;
 }
 
 void GotSection::finalizeContents() {
@@ -748,7 +755,7 @@ void GotSection::finalizeContents() {
       numEntries <= target->gotHeaderEntriesNum && !ElfSym::globalOffsetTable)
     size = 0;
   else
-    size = numEntries * config->gotEntrySize;
+    size = numEntries * target->gotEntrySize;
 }
 
 bool GotSection::isNeeded() const {
@@ -1066,7 +1073,7 @@ void MipsGotSection::build() {
     }
     for (std::pair<Symbol *, size_t> &p : got.dynTlsSymbols) {
       Symbol *s = p.first;
-      uint64_t offset = p.second * config->gotEntrySize;
+      uint64_t offset = p.second * target->gotEntrySize;
       if (s == nullptr) {
         if (!config->shared)
           continue;
@@ -1108,7 +1115,7 @@ void MipsGotSection::build() {
          got.pagesMap) {
       size_t pageCount = l.second.count;
       for (size_t pi = 0; pi < pageCount; ++pi) {
-        uint64_t offset = (l.second.firstIndex + pi) * config->gotEntrySize;
+        uint64_t offset = (l.second.firstIndex + pi) * target->gotEntrySize;
         mainPart->relaDyn->addReloc({target->relativeRel, this, offset, l.first,
                                      int64_t(pi * 0x10000)});
       }
@@ -1206,7 +1213,7 @@ void MipsGotSection::writeTo(uint8_t *buf) {
 // consistent across both 64-bit PowerPC ABIs as well as the 32-bit PowerPC ABI.
 GotPltSection::GotPltSection()
     : SyntheticSection(SHF_ALLOC | SHF_WRITE, SHT_PROGBITS,
-                       config->gotEntrySize, ".got.plt") {
+                       target->gotEntrySize, ".got.plt") {
   if (config->emachine == EM_PPC) {
     name = ".plt";
   } else if (config->emachine == EM_PPC64) {
@@ -1628,14 +1635,15 @@ DynamicSection<ELFT>::computeContents() {
       if (f->isNeeded)
         checkMipsShlibCompatible(f, f->cheriFlags, targetCheriFlags);
     }
-    if (in.cheriCapTable && in.cheriCapTable->isNeeded()) {
-      addInSec(DT_MIPS_CHERI_CAPTABLE, *in.cheriCapTable);
-      addInt(DT_MIPS_CHERI_CAPTABLESZ, in.cheriCapTable->getParent()->size);
+    if (in.mipsCheriCapTable && in.mipsCheriCapTable->isNeeded()) {
+      addInSec(DT_MIPS_CHERI_CAPTABLE, *in.mipsCheriCapTable);
+      addInt(DT_MIPS_CHERI_CAPTABLESZ, in.mipsCheriCapTable->getParent()->size);
     }
-    if (in.cheriCapTableMapping && in.cheriCapTableMapping->isNeeded()) {
-      addInSec(DT_MIPS_CHERI_CAPTABLE_MAPPING, *in.cheriCapTableMapping);
+    if (in.mipsCheriCapTableMapping &&
+        in.mipsCheriCapTableMapping->isNeeded()) {
+      addInSec(DT_MIPS_CHERI_CAPTABLE_MAPPING, *in.mipsCheriCapTableMapping);
       addInt(DT_MIPS_CHERI_CAPTABLE_MAPPINGSZ,
-             in.cheriCapTableMapping->getParent()->size);
+             in.mipsCheriCapTableMapping->getParent()->size);
     }
     if (in.capRelocs && in.capRelocs->isNeeded()) {
       addInSec(DT_MIPS_CHERI___CAPRELOCS, *in.capRelocs);
@@ -1814,16 +1822,12 @@ void RelocationBaseSection::finalizeContents() {
   if (in.relaPlt.get() == this && in.gotPlt->getParent()) {
     getParent()->flags |= ELF::SHF_INFO_LINK;
     // For CheriABI we use the captable as the sh_info value
-    if (config->isCheriAbi && in.cheriCapTable && in.cheriCapTable->isNeeded()) {
-      assert(in.cheriCapTable->getParent()->sectionIndex != UINT32_MAX);
-      getParent()->info = in.cheriCapTable->getParent()->sectionIndex;
-      if (in.relaIplt.get() == this)
-        getParent()->info = in.cheriCapTable->getParent()->sectionIndex;
-      if (in.relaDyn.get() == this)
-        getParent()->info = in.cheriCapTable->getParent()->sectionIndex;
+    if (config->isCheriAbi && in.mipsCheriCapTable &&
+        in.mipsCheriCapTable->isNeeded()) {
+      assert(in.mipsCheriCapTable->getParent()->sectionIndex != UINT32_MAX);
+      getParent()->info = in.mipsCheriCapTable->getParent()->sectionIndex;
     } else {
-      if (in.relaPlt.get() == this)
-        getParent()->info = in.gotPlt->getParent()->sectionIndex;
+      getParent()->info = in.gotPlt->getParent()->sectionIndex;
     }
     if (in.relaDyn.get() == this) {
       if (in.igotPlt && in.igotPlt->isNeeded())
@@ -1837,9 +1841,10 @@ void RelocationBaseSection::finalizeContents() {
   if (in.relaIplt.get() == this && in.igotPlt->getParent()) {
     getParent()->flags |= ELF::SHF_INFO_LINK;
     // For CheriABI we use the captable as the sh_info value
-    if (config->isCheriAbi && in.cheriCapTable && in.cheriCapTable->isNeeded()) {
-      assert(in.cheriCapTable->getParent()->sectionIndex != UINT32_MAX);
-      getParent()->info = in.cheriCapTable->getParent()->sectionIndex;
+    if (config->isCheriAbi && in.mipsCheriCapTable &&
+        in.mipsCheriCapTable->isNeeded()) {
+      assert(in.mipsCheriCapTable->getParent()->sectionIndex != UINT32_MAX);
+      getParent()->info = in.mipsCheriCapTable->getParent()->sectionIndex;
     } else if (in.igotPlt && in.igotPlt->isNeeded())
       getParent()->info = in.igotPlt->getParent()->sectionIndex;
     else if (!config->hasDynSymTab)
@@ -4054,8 +4059,8 @@ void InStruct::reset() {
   bss.reset();
   bssRelRo.reset();
   capRelocs.reset();
-  cheriCapTableMapping.reset();
-  cheriCapTableMapping.reset();
+  mipsCheriCapTableMapping.reset();
+  mipsCheriCapTableMapping.reset();
   got.reset();
   gotPlt.reset();
   igotPlt.reset();

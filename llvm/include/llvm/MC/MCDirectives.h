@@ -50,16 +50,6 @@ enum MCSymbolAttr {
   MCSA_Memtag,                  ///< .memtag (ELF)
 };
 
-enum MCAssemblerFlag {
-  MCAF_SyntaxUnified,         ///< .syntax (ARM/ELF)
-  MCAF_SubsectionsViaSymbols, ///< .subsections_via_symbols (MachO)
-  MCAF_Code16,                ///< .code16 (X86) / .code 16 (ARM)
-  MCAF_Code32,                ///< .code32 (X86) / .code 32 (ARM) /
-                              ///  .code a64 (AArch64)
-  MCAF_Code64,                ///< .code64 (X86)
-  MCAF_CodeCap                ///< .code c64 (AArch64)
-};
-
 enum MCDataRegionType {
   MCDR_DataRegion,            ///< .data_region
   MCDR_DataRegionJT8,         ///< .data_region jt8

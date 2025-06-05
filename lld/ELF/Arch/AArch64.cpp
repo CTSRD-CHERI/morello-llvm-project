@@ -33,7 +33,6 @@ namespace {
 class AArch64 : public TargetInfo {
 public:
   AArch64();
-  bool calcIsCheriAbi() const override;
   uint32_t calcEFlags() const override;
   RelExpr getRelExpr(RelType type, const Symbol &s,
                      const uint8_t *loc) const override;
@@ -98,16 +97,6 @@ AArch64::AArch64() {
   defaultImageBase = 0x200000;
 
   needsThunks = true;
-}
-
-bool AArch64::calcIsCheriAbi() const {
-  bool isCheriAbi = config->eflags & EF_AARCH64_CHERI_PURECAP;
-
-  if (config->isCheriAbi && !ctx.objectFiles.empty() && !isCheriAbi)
-    error(toString(ctx.objectFiles.front()) +
-          ": object file is non-CheriABI but emulation forces it");
-
-  return isCheriAbi;
 }
 
 static uint32_t getEFlags(InputFile *f) {

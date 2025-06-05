@@ -1230,8 +1230,8 @@ private:
 class MorelloCapRelocsSection;
 class MorelloTLSLEDataSection;
 class CheriCapRelocsSection;
-class CheriCapTableSection;
-class CheriCapTableMappingSection;
+class MipsCheriCapTableSection;
+class MipsCheriCapTableMappingSection;
 
 template <typename ELFT>
 class PartitionElfHeaderSection final : public SyntheticSection {
@@ -1340,10 +1340,10 @@ struct InStruct {
   std::unique_ptr<GotSection> got;
   std::unique_ptr<GotPltSection> gotPlt;
   std::unique_ptr<IgotPltSection> igotPlt;
-  std::unique_ptr<CheriCapTableSection> cheriCapTable;
+  std::unique_ptr<MipsCheriCapTableSection> mipsCheriCapTable;
   std::unique_ptr<CheriCapRelocsSection> capRelocs;
   // For per-file/per-function tables:
-  std::unique_ptr<CheriCapTableMappingSection> cheriCapTableMapping;
+  std::unique_ptr<MipsCheriCapTableMappingSection> mipsCheriCapTableMapping;
   std::unique_ptr<SyntheticSection> armCmseSGSection;
   std::unique_ptr<PPC64LongBranchTargetSection> ppc64LongBranchTarget;
   std::unique_ptr<SyntheticSection> mipsAbiFlags;

@@ -127,6 +127,7 @@ public:
 private:
   void createFiles(llvm::opt::InputArgList &args);
   void inferMachineType();
+  void inferIsCheriAbi();
   void link(llvm::opt::InputArgList &args);
   template <class ELFT> void compileBitcodeFiles(bool skipLinkedOutput);
 
@@ -313,6 +314,7 @@ struct Config {
   // -z captabledebug: add additional symbols $captable_load_<symbols> before
   // each captable clc instruction that indicates which symbol should be loaded
   bool zCapTableDebug;
+  bool zCheriRiscvJumpSlot;
   bool zCombreloc;
   bool zCopyreloc;
   bool zForceBti;
@@ -435,9 +437,6 @@ struct Config {
 
   // 4 for ELF32, 8 for ELF64.
   int wordsize;
-
-  // Got Entry Size, typically Wordsize
-  int gotEntrySize;
 
   // Size of a CHERI capability
   int capabilitySize = 0;

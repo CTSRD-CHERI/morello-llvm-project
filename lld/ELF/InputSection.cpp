@@ -632,8 +632,8 @@ static int64_t getTlsTpOffset(const Symbol &s) {
     // Variant 1.
   case EM_ARM:
   case EM_AARCH64:
-    return s.getVA(0) + config->gotEntrySize * 2 +
-           ((tls->p_vaddr - config->gotEntrySize * 2) & (tls->p_align - 1));
+    return s.getVA(0) + target->gotEntrySize * 2 +
+           ((tls->p_vaddr - target->gotEntrySize * 2) & (tls->p_align - 1));
   case EM_MIPS:
   case EM_PPC:
   case EM_PPC64:
@@ -887,44 +887,28 @@ uint64_t InputSectionBase::getRelocTargetVA(const InputFile *file, RelType type,
     return in.got->getTlsIndexVA() + a - p;
   case R_CHERI_CAPABILITY:
     llvm_unreachable("R_CHERI_CAPABILITY should not be handled here!");
-  case R_CHERI_CAPABILITY_TABLE_INDEX:
-  case R_CHERI_CAPABILITY_TABLE_INDEX_SMALL_IMMEDIATE:
-  case R_CHERI_CAPABILITY_TABLE_INDEX_CALL:
-  case R_CHERI_CAPABILITY_TABLE_INDEX_CALL_SMALL_IMMEDIATE:
+  case R_MIPS_CHERI_CAPTAB_INDEX:
+  case R_MIPS_CHERI_CAPTAB_INDEX_SMALL_IMMEDIATE:
+  case R_MIPS_CHERI_CAPTAB_INDEX_CALL:
+  case R_MIPS_CHERI_CAPTAB_INDEX_CALL_SMALL_IMMEDIATE:
     assert(a == 0 && "capability table index relocs should not have addends");
-    return sym.getCapTableOffset(isec, offset);
-  case R_CHERI_CAPABILITY_TABLE_ENTRY_PC: {
-    assert(a == 0 && "capability table entry relocs should not have addends");
-    return sym.getCapTableVA(isec, offset) - p;
-  }
-  case R_CHERI_CAPABILITY_TABLE_TLSGD_ENTRY_PC: {
-    assert(a == 0 && "capability table index relocs should not have addends");
-    uint64_t capTableOffset =
-        in.cheriCapTable->getDynTlsOffset(sym);
-    return ElfSym::cheriCapabilityTable->getVA() + capTableOffset - p;
-  }
-  case R_CHERI_CAPABILITY_TABLE_TLSIE_ENTRY_PC: {
-    assert(a == 0 && "capability table index relocs should not have addends");
-    uint64_t capTableOffset =
-        in.cheriCapTable->getTlsOffset(sym);
-    return ElfSym::cheriCapabilityTable->getVA() + capTableOffset - p;
-  }
-  case R_CHERI_CAPABILITY_TABLE_REL:
-    if (!ElfSym::cheriCapabilityTable) {
+    return sym.getMipsCheriCapTableOffset(isec, offset);
+  case R_MIPS_CHERI_CAPTAB_REL:
+    if (!ElfSym::mipsCheriCapabilityTable) {
       error("cannot compute difference between non-existent "
             "CheriCapabilityTable and symbol " + toString(sym));
       return sym.getVA(a);
     }
-    return sym.getVA(a) - ElfSym::cheriCapabilityTable->getVA();
+    return sym.getVA(a) - ElfSym::mipsCheriCapabilityTable->getVA();
   case R_MIPS_CHERI_CAPTAB_TLSGD:
     assert(a == 0 && "capability table index relocs should not have addends");
-    return in.cheriCapTable->getDynTlsOffset(sym);
+    return in.mipsCheriCapTable->getDynTlsOffset(sym);
   case R_MIPS_CHERI_CAPTAB_TLSLD:
     assert(a == 0 && "capability table index relocs should not have addends");
-    return in.cheriCapTable->getTlsIndexOffset();
+    return in.mipsCheriCapTable->getTlsIndexOffset();
   case R_MIPS_CHERI_CAPTAB_TPREL:
     assert(a == 0 && "capability table index relocs should not have addends");
-    return in.cheriCapTable->getTlsOffset(sym);
+    return in.mipsCheriCapTable->getTlsOffset(sym);
   case R_MORELLO_CAPFRAG_ALIGNED_BASE:
     return getMorelloBaseAddress(a, sym, isec, offset, true);
   case R_MORELLO_CAPFRAG_ALIGNED_SIZE_AND_PERM:

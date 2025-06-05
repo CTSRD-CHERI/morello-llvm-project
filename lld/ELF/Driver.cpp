@@ -541,6 +541,7 @@ static uint8_t getZStartStopVisibility(opt::InputArgList &args) {
 
 constexpr const char *knownZFlags[] = {
     "captabledebug",
+    "cheri-riscv-jump-slot",
     "combreloc",
     "copyreloc",
     "defs",
@@ -682,6 +683,7 @@ void LinkerDriver::linkerMain(ArrayRef<const char *> argsArr) {
       return;
 
     inferMachineType();
+    inferIsCheriAbi();
     setConfigs(args);
     checkOptions();
     if (errorCount())
@@ -1448,6 +1450,7 @@ static void readConfigs(opt::InputArgList &args) {
       args.hasFlag(OPT_warn_nulldynsym_rel, OPT_no_warn_nulldynsym_rel, false);
   config->whyExtract = args.getLastArgValue(OPT_why_extract);
   config->zCapTableDebug = getZFlag(args, "captabledebug", "nocaptabledebug", false);
+  config->zCheriRiscvJumpSlot = hasZOption(args, "cheri-riscv-jump-slot");
   config->zCombreloc = getZFlag(args, "combreloc", "nocombreloc", true);
   config->zCopyreloc = getZFlag(args, "copyreloc", "nocopyreloc", true);
   config->zForceBti = hasZOption(args, "force-bti");
@@ -1764,7 +1767,6 @@ static void setConfigs(opt::InputArgList &args) {
   config->isPic = config->pie || config->shared;
   config->picThunk = args.hasArg(OPT_pic_veneer, config->isPic);
   config->wordsize = config->is64 ? 8 : 4;
-  config->gotEntrySize = config->morelloC64Plt ? 16 : config->wordsize;
   // ELF defines two different ways to store relocation addends as shown below:
   //
   //  Rel: Addends are stored to the location where relocations are applied. It
@@ -2001,6 +2003,20 @@ static uint64_t getMaxPageSize(opt::InputArgList &args) {
     return 1;
   }
   return val;
+}
+
+// If -m <machine_type> did not force a CheriABI emulation, infer it from
+// object files.
+void LinkerDriver::inferIsCheriAbi() {
+  if (config->isCheriAbi)
+    return;
+
+  for (InputFile *f : files) {
+    if (f->ekind == ELFNoneKind)
+      continue;
+    config->isCheriAbi = isCheriAbi(f);
+    return;
+  }
 }
 
 // Parse -z common-page-size=<value>. The default value is defined by
@@ -3095,7 +3111,6 @@ void LinkerDriver::link(opt::InputArgList &args) {
   target = getTarget();
 
   config->eflags = target->calcEFlags();
-  config->isCheriAbi = target->calcIsCheriAbi();
   if (!config->morelloC64Plt)
     invokeELFT(readCheriVariants);
   if (config->isCheriAbi)

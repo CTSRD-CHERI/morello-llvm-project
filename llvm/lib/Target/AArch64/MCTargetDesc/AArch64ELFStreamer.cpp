@@ -56,6 +56,9 @@ class AArch64TargetAsmStreamer : public AArch64TargetStreamer {
 
   void emitInst(uint32_t Inst, const MCSubtargetInfo &STI) override;
 
+  void emitCodeC64() override { OS << "\t.code c64\n"; }
+  void emitCodeA64() override { OS << "\t.code a64\n"; }
+
   void emitDirectiveVariantPCS(MCSymbol *Symbol) override {
     OS << "\t.variant_pcs\t" << Symbol->getName() << "\n";
   }
@@ -320,10 +323,6 @@ private:
           "Function should start with mov c28, c29");
   }
 
-  void emitThumbFunc(MCSymbol *Func) override {
-    getAssembler().setIsThumbFunc(Func);
-  }
-
   void adjustCurrentLabels(const MCSubtargetInfo &STI) {
     const AArch64MCAsmInfoELF *MAI =
         static_cast<const AArch64MCAsmInfoELF *>(getContext().getAsmInfo());
@@ -333,7 +332,8 @@ private:
       return;
     }
     for (MCSymbol *Symb : CurrentLabels) {
-      emitThumbFunc(Symb);
+      // TODO: avoid reusing this thumb hook
+      getAssembler().setIsThumbFunc(Symb);
     }
     CurrentLabels.clear();
   }

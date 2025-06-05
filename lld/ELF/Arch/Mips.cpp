@@ -25,7 +25,6 @@ template <class ELFT> class MIPS final : public TargetInfo {
 public:
   MIPS();
   uint32_t calcEFlags() const override;
-  bool calcIsCheriAbi() const override;
   int getCapabilitySize() const override;
   RelExpr getRelExpr(RelType type, const Symbol &s,
                      const uint8_t *loc) const override;
@@ -81,16 +80,6 @@ template <class ELFT> uint32_t MIPS<ELFT>::calcEFlags() const {
   return calcMipsEFlags<ELFT>();
 }
 
-template <class ELFT> bool MIPS<ELFT>::calcIsCheriAbi() const {
-  bool isCheriAbi = (config->eflags & EF_MIPS_ABI) == EF_MIPS_ABI_CHERIABI;
-
-  if (config->isCheriAbi && !ctx.objectFiles.empty() && !isCheriAbi)
-    error(toString(ctx.objectFiles.front()) +
-          ": object file is non-CheriABI but emulation forces it");
-
-  return isCheriAbi;
-}
-
 template <class ELFT> int MIPS<ELFT>::getCapabilitySize() const {
   // Compute the size of a CHERI capability based on the MIPS ABI flags:
   if ((config->eflags & EF_MIPS_MACH) == EF_MIPS_MACH_CHERI128)
@@ -134,7 +123,7 @@ RelExpr MIPS<ELFT>::getRelExpr(RelType type, const Symbol &s,
   case R_MICROMIPS_GPREL7_S2:
     return R_MIPS_GOTREL;
   case R_MIPS_CHERI_CAPTABLEREL16:
-    return R_CHERI_CAPABILITY_TABLE_REL;
+    return R_MIPS_CHERI_CAPTAB_REL;
   case R_MIPS_26:
   case R_MICROMIPS_26_S1:
     return R_PLT;
@@ -223,16 +212,16 @@ RelExpr MIPS<ELFT>::getRelExpr(RelType type, const Symbol &s,
     return R_CHERI_CAPABILITY;
   case R_MIPS_CHERI_CAPTAB_LO16:
   case R_MIPS_CHERI_CAPTAB_HI16:
-    return R_CHERI_CAPABILITY_TABLE_INDEX;
+    return R_MIPS_CHERI_CAPTAB_INDEX;
   case R_MIPS_CHERI_CAPCALL_LO16:
   case R_MIPS_CHERI_CAPCALL_HI16:
-    return R_CHERI_CAPABILITY_TABLE_INDEX_CALL;
+    return R_MIPS_CHERI_CAPTAB_INDEX_CALL;
   case R_MIPS_CHERI_CAPTAB_CLC11:
   case R_MIPS_CHERI_CAPTAB20:
-    return R_CHERI_CAPABILITY_TABLE_INDEX_SMALL_IMMEDIATE;
+    return R_MIPS_CHERI_CAPTAB_INDEX_SMALL_IMMEDIATE;
   case R_MIPS_CHERI_CAPCALL_CLC11:
   case R_MIPS_CHERI_CAPCALL20:
-    return R_CHERI_CAPABILITY_TABLE_INDEX_CALL_SMALL_IMMEDIATE;
+    return R_MIPS_CHERI_CAPTAB_INDEX_CALL_SMALL_IMMEDIATE;
   case R_MIPS_CHERI_CAPTAB_TLS_GD_LO16:
   case R_MIPS_CHERI_CAPTAB_TLS_GD_HI16:
     return R_MIPS_CHERI_CAPTAB_TLSGD;

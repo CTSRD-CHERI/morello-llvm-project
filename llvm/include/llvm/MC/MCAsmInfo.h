@@ -18,8 +18,6 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/MC/MCDirectives.h"
 #include "llvm/MC/MCTargetOptions.h"
-#include "llvm/MC/MCDwarf.h"
-#include <map>
 #include <vector>
 
 namespace llvm {
@@ -183,14 +181,6 @@ protected:
   /// an inline assembly statement.  Defaults to "#APP\n", "#NO_APP\n"
   const char *InlineAsmStart;
   const char *InlineAsmEnd;
-
-  /// These are assembly directives that tells the assembler to interpret the
-  /// following instructions differently.  Defaults to ".code16", ".code32",
-  /// ".code64".
-  const char *Code16Directive;
-  const char *Code32Directive;
-  const char *Code64Directive;
-  const char *CodeCapDirective;
 
   /// Which dialect of an assembler variant to use.  Defaults to 0
   unsigned AssemblerDialect = 0;
@@ -686,10 +676,6 @@ public:
 
   const char *getInlineAsmStart() const { return InlineAsmStart; }
   const char *getInlineAsmEnd() const { return InlineAsmEnd; }
-  const char *getCode16Directive() const { return Code16Directive; }
-  const char *getCode32Directive() const { return Code32Directive; }
-  const char *getCode64Directive() const { return Code64Directive; }
-  const char *getCodeCapDirective() const { return CodeCapDirective; }
   unsigned getAssemblerDialect() const { return AssemblerDialect; }
   bool doesAllowAtInName() const { return AllowAtInName; }
   void setAllowAtInName(bool V) { AllowAtInName = V; }

@@ -224,7 +224,7 @@ static bool isRelExpr(RelExpr expr) {
                R_PPC64_RELAX_TOC, R_AARCH64_PAGE_PC, R_RELAX_GOT_PC,
                R_RISCV_PC_INDIRECT, R_PPC64_RELAX_GOT_PC, R_LOONGARCH_PAGE_PC,
                R_MORELLO_VADREF, R_MORELLO_DESC_PAGE_PC,
-               R_CHERI_CAPABILITY_TABLE_REL>(expr);
+               R_MIPS_CHERI_CAPTAB_REL>(expr);
 }
 
 static RelExpr toPlt(RelExpr expr) {
@@ -902,27 +902,40 @@ template <class PltSection, class GotPltSection>
 static void addPltEntry(PltSection &plt, GotPltSection &gotPlt,
                         RelocationBaseSection &rel, RelType type, Symbol &sym) {
   plt.addEntry(sym);
-  if (config->isCheriAbi && config->emachine != EM_AARCH64) {
-    // TODO: More normal .got.plt rather than piggy-backing on .captable. We
-    // pass R_CHERI_CAPABILITY_TABLE_INDEX rather than the more obvious
-    // R_CHERI_CAPABILITY_TABLE_INDEX_CALL to force dynamic relocations into
-    // .rela.dyn rather than .rela.plt so no rtld changes are needed, as the
-    // latter doesn't really achieve anything without lazy binding.
-    in.cheriCapTable->addEntry(sym, R_CHERI_CAPABILITY_TABLE_INDEX, &plt, 0);
-  } if (config->isCheriAbi && config->emachine == EM_AARCH64) {
+
+  // For CHERI-RISC-V if JUMP_SLOT relocations are disabled (to be compatible
+  // with old CheriBSD) we mark the symbol NEEDS_GOT so it will end up in .got
+  // as a function pointer, and uses .rela.dyn rather than .rela.plt, so no
+  // rtld changes are needed.
+  //
+  // TODO: Remove this option.
+  if (config->emachine == EM_RISCV && config->isCheriAbi &&
+      !config->zCheriRiscvJumpSlot)
+    return;
+
+  if (config->isCheriAbi && config->emachine == EM_AARCH64) {
     gotPlt.addEntry(sym);
     rel.addReloc({type, &gotPlt, sym.getGotPltOffset(),
                   sym.isPreemptible ? DynamicReloc::AgainstSymbol
                                     : DynamicReloc::AArch64ExecRel,
                   sym, 0, R_ABS});
     addMorelloCapabilityFragment(&gotPlt, &sym, sym.getGotPltOffset(), true);
-  } else {
-    gotPlt.addEntry(sym);
-    rel.addReloc({type, &gotPlt, sym.getGotPltOffset(),
-                  sym.isPreemptible ? DynamicReloc::AgainstSymbol
-                                    : DynamicReloc::AddendOnlyWithTargetVA,
-                  sym, 0, R_ABS});
+    return;
   }
+
+  if (config->isCheriAbi && !sym.isPreemptible)
+    error("cannot create non-preemptible PLT entry on CHERI against symbol: " +
+          toString(sym));
+
+  gotPlt.addEntry(sym);
+  rel.addReloc({type, &gotPlt, sym.getGotPltOffset(),
+                sym.isPreemptible ? DynamicReloc::AgainstSymbol
+                                  : DynamicReloc::AddendOnlyWithTargetVA,
+                sym, 0, R_ABS});
+  if (config->isCheriAbi)
+    invokeELFT(addCapabilityRelocation, &plt, *target->cheriCapRel, &gotPlt,
+               sym.getGotPltOffset(), R_CHERI_CAPABILITY, 0, false,
+               [] { return ""; });
 }
 
 static void addGotEntry(Symbol &sym) {
@@ -952,8 +965,12 @@ static void addGotEntry(Symbol &sym) {
   }
 
   // Otherwise, the value is either a link-time constant or the load base
-  // plus a constant.
-  if (!config->isPic || isAbsolute(sym))
+  // plus a constant. For CHERI it always requires run-time initialisation.
+  if (config->isCheriAbi) {
+    invokeELFT(addCapabilityRelocation, &sym, *target->cheriCapRel,
+               in.got.get(), off, R_CHERI_CAPABILITY, 0, false,
+               [] { return ""; });
+  } else if (!config->isPic || isAbsolute(sym))
     in.got->addConstant({R_ABS, target->symbolicRel, off, 0, &sym});
   else
     addRelativeReloc(*in.got, off, sym, 0, R_ABS, target->symbolicRel);
@@ -1009,12 +1026,11 @@ bool RelocationScanner::isStaticLinkTimeConstant(RelExpr e, RelType type,
   // These expressions always compute a constant
   if (oneof<R_GOTPLT, R_GOT_OFF, R_RELAX_HINT, R_MIPS_GOT_LOCAL_PAGE,
             R_MIPS_GOTREL, R_MIPS_GOT_OFF, R_MIPS_GOT_OFF32, R_MIPS_GOT_GP_PC,
-            R_CHERI_CAPABILITY_TABLE_INDEX,
-            R_CHERI_CAPABILITY_TABLE_INDEX_SMALL_IMMEDIATE,
-            R_CHERI_CAPABILITY_TABLE_INDEX_CALL,
-            R_CHERI_CAPABILITY_TABLE_INDEX_CALL_SMALL_IMMEDIATE,
-            R_CHERI_CAPABILITY_TABLE_ENTRY_PC,
-            R_CHERI_CAPABILITY_TABLE_REL,
+            R_MIPS_CHERI_CAPTAB_INDEX,
+            R_MIPS_CHERI_CAPTAB_INDEX_SMALL_IMMEDIATE,
+            R_MIPS_CHERI_CAPTAB_INDEX_CALL,
+            R_MIPS_CHERI_CAPTAB_INDEX_CALL_SMALL_IMMEDIATE,
+            R_MIPS_CHERI_CAPTAB_REL,
             R_AARCH64_GOT_PAGE_PC, R_GOT_PC, R_GOTONLY_PC, R_GOTPLTONLY_PC,
             R_PLT_PC, R_PLT_GOTPLT, R_PPC32_PLTREL, R_PPC64_CALL_PLT,
             R_PPC64_RELAX_TOC, R_RISCV_ADD, R_AARCH64_GOT_PAGE,
@@ -1140,13 +1156,12 @@ void RelocationScanner::processAux(RelExpr expr, RelType type, uint64_t offset,
   if (expr == R_MORELLO_DESC_CAPABILITY)
     expr = R_CHERI_CAPABILITY;
 
-  if (oneof<R_CHERI_CAPABILITY_TABLE_INDEX,
-            R_CHERI_CAPABILITY_TABLE_INDEX_SMALL_IMMEDIATE,
-            R_CHERI_CAPABILITY_TABLE_INDEX_CALL,
-            R_CHERI_CAPABILITY_TABLE_INDEX_CALL_SMALL_IMMEDIATE,
-            R_CHERI_CAPABILITY_TABLE_ENTRY_PC>(expr)) {
+  if (oneof<R_MIPS_CHERI_CAPTAB_INDEX,
+            R_MIPS_CHERI_CAPTAB_INDEX_SMALL_IMMEDIATE,
+            R_MIPS_CHERI_CAPTAB_INDEX_CALL,
+            R_MIPS_CHERI_CAPTAB_INDEX_CALL_SMALL_IMMEDIATE>(expr)) {
     std::lock_guard<std::mutex> lock(relocMutex);
-    in.cheriCapTable->addEntry(sym, expr, sec, offset);
+    in.mipsCheriCapTable->addEntry(sym, expr, sec, offset);
     // Write out the index into the instruction
     sec->relocations.push_back({expr, type, offset, addend, &sym});
     return;
@@ -1179,6 +1194,10 @@ void RelocationScanner::processAux(RelExpr expr, RelType type, uint64_t offset,
     }
   } else if (needsPlt(expr)) {
     sym.setFlags(NEEDS_PLT);
+    // See addPltEntry
+    if (config->emachine == EM_RISCV && config->isCheriAbi &&
+        !config->zCheriRiscvJumpSlot)
+      sym.setFlags(NEEDS_GOT);
   } else if (LLVM_UNLIKELY(isIfunc)) {
     sym.setFlags(HAS_DIRECT_RELOC);
   }
@@ -1322,6 +1341,10 @@ void RelocationScanner::processAux(RelExpr expr, RelType type, uint64_t offset,
                     "' cannot be preempted; recompile with -fPIE" +
                     getLocation(*sec, sym, offset));
       sym.setFlags(NEEDS_COPY | NEEDS_PLT);
+      // See addPltEntry
+      if (config->emachine == EM_RISCV && config->isCheriAbi &&
+          !config->zCheriRiscvJumpSlot)
+        sym.setFlags(NEEDS_GOT);
       sec->addReloc({expr, type, offset, addend, &sym});
       return;
     }
@@ -1353,17 +1376,17 @@ static unsigned handleMipsTlsRelocation(RelType type, Symbol &sym,
     return 1;
   }
   if (expr == R_MIPS_CHERI_CAPTAB_TLSLD) {
-    in.cheriCapTable->addTlsIndex();
+    in.mipsCheriCapTable->addTlsIndex();
     c.relocations.push_back({expr, type, offset, addend, &sym});
     return 1;
   }
   if (expr == R_MIPS_CHERI_CAPTAB_TLSGD) {
-    in.cheriCapTable->addDynTlsEntry(sym);
+    in.mipsCheriCapTable->addDynTlsEntry(sym);
     c.relocations.push_back({expr, type, offset, addend, &sym});
     return 1;
   }
   if (expr == R_MIPS_CHERI_CAPTAB_TPREL) {
-    in.cheriCapTable->addTlsEntry(sym);
+    in.mipsCheriCapTable->addTlsEntry(sym);
     c.relocations.push_back({expr, type, offset, addend, &sym});
     return 1;
   }
@@ -1411,21 +1434,6 @@ static unsigned handleTlsRelocation(RelType type, Symbol &sym,
                      config->emachine != EM_LOONGARCH &&
                      config->emachine != EM_RISCV &&
                      !c.file->ppc64DisableTLSRelax;
-
-  // No targets currently support TLS relaxation, so we can avoid duplicating
-  // much of the logic below for the captable.
-  if (expr == R_CHERI_CAPABILITY_TABLE_TLSGD_ENTRY_PC) {
-    std::lock_guard<std::mutex> lock(relocMutex);
-    in.cheriCapTable->addDynTlsEntry(sym);
-    c.relocations.push_back({expr, type, offset, addend, &sym});
-    return 1;
-  }
-  if (expr == R_CHERI_CAPABILITY_TABLE_TLSIE_ENTRY_PC) {
-    std::lock_guard<std::mutex> lock(relocMutex);
-    in.cheriCapTable->addTlsEntry(sym);
-    c.relocations.push_back({expr, type, offset, addend, &sym});
-    return 1;
-  }
 
   // If we are producing an executable and the symbol is non-preemptable, it
   // must be defined and the code sequence can be relaxed to use Local-Exec.
@@ -1869,7 +1877,7 @@ void elf::postScanRelocations() {
 
       // If the symbol is preemptible we need the dynamic linker to write
       // the offset too.
-      uint64_t offsetOff = off + config->gotEntrySize;
+      uint64_t offsetOff = off + target->gotEntrySize;
       if (sym.isPreemptible)
         mainPart->relaDyn->addSymbolReloc(target->tlsOffsetRel, *got, offsetOff,
                                           sym);

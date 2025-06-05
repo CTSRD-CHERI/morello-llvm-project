@@ -73,14 +73,6 @@ void MCWasmStreamer::emitLabelAtPos(MCSymbol *S, SMLoc Loc, MCFragment *F,
     Symbol->setTLS();
 }
 
-void MCWasmStreamer::emitAssemblerFlag(MCAssemblerFlag Flag) {
-  // Let the target do whatever target specific stuff it needs to do.
-  getAssembler().getBackend().handleAssemblerFlag(Flag);
-
-  // Do any generic stuff we need to do.
-  llvm_unreachable("invalid assembler flag!");
-}
-
 void MCWasmStreamer::changeSection(MCSection *Section,
                                    const MCExpr *Subsection) {
   MCAssembler &Asm = getAssembler();
@@ -254,10 +246,6 @@ void MCWasmStreamer::fixSymbolsInTLSFixups(const MCExpr *expr) {
     fixSymbolsInTLSFixups(cast<MCUnaryExpr>(expr)->getSubExpr());
     break;
   }
-}
-
-void MCWasmStreamer::emitThumbFunc(MCSymbol *Func) {
-  llvm_unreachable("Generic Wasm doesn't support this directive");
 }
 
 void MCWasmStreamer::emitSymbolDesc(MCSymbol *Symbol, unsigned DescValue) {

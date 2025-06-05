@@ -7323,8 +7323,10 @@ bool AArch64AsmParser::parseDirectiveCode(SMLoc L) {
   } else if (!SetC64 && getSTI().getFeatureBits()[AArch64::FeatureC64])
     SwitchMode();
 
-  getParser().getStreamer().emitAssemblerFlag(SetC64 ? MCAF_CodeCap
-                                                     : MCAF_Code32);
+  if (SetC64)
+    getTargetStreamer().emitCodeC64();
+  else
+    getTargetStreamer().emitCodeA64();
 
   return false;
 }
@@ -7370,9 +7372,9 @@ void AArch64AsmParser::FixModeAfterArchChange(bool WasC64, SMLoc Loc) {
     if (WarnOnDeprecatedArch)
       Warning(Loc, "Changing state with arch directive is deprecated");
     if (WasC64)
-      getParser().getStreamer().emitAssemblerFlag(MCAF_Code32);
+      getTargetStreamer().emitCodeA64();
     else
-      getParser().getStreamer().emitAssemblerFlag(MCAF_CodeCap);
+      getTargetStreamer().emitCodeC64();
   }
 }
 

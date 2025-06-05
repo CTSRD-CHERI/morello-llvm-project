@@ -219,9 +219,6 @@ public:
   virtual void finishLayout(MCAssembler const &Asm,
                             MCAsmLayout &Layout) const {}
 
-  /// Handle any target-specific assembler flags. By default, do nothing.
-  virtual void handleAssemblerFlag(MCAssemblerFlag Flag) {}
-
   virtual bool shouldClearThumbBitOnReloc() const {
     return true;
   }

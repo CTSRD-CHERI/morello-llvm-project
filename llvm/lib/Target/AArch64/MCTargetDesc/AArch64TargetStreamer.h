@@ -40,6 +40,13 @@ public:
   /// Callback used to implement the .inst directive.
   virtual void emitInst(uint32_t Inst, const MCSubtargetInfo &STI);
 
+  virtual void emitCodeA64() {
+    // Change parsing mode; no-op unless emitting assembly.
+  }
+  virtual void emitCodeC64() {
+    // Change parsing mode; no-op unless emitting assembly.
+  }
+
   /// Callback used to implement the .variant_pcs directive.
   virtual void emitDirectiveVariantPCS(MCSymbol *Symbol) {};
 

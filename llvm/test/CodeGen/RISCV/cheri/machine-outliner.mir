@@ -1,5 +1,5 @@
 ## The MachineOutliner was creating non-purecap instructions (found while compiling PCRE)
-# RUNs: %riscv64_cheri_purecap_llc --run-pass=machine-outliner %s -o - | FileCheck %s
+# RUN: %riscv64_cheri_purecap_llc --run-pass=machine-outliner %s -o - | FileCheck %s
 # RUN: %riscv64_cheri_purecap_llc --start-before=machine-outliner %s -o - | FileCheck %s --check-prefix=ASM
 --- |
   target datalayout = "e-m:e-pf200:128:128:128:64-p:64:64-i64:64-i128:128-n64-S128-A200-P200-G200"
@@ -48,7 +48,7 @@ body:             |
   ; CHECK-NEXT:   successors: %bb.2(0x40000000), %bb.3(0x40000000)
   ; CHECK-NEXT:   liveins: $c10, $c12, $c13, $x11
   ; CHECK-NEXT: {{  $}}
-  ; CHECK-NEXT:   $c5 = PseudoCCALLReg target-flags(riscv-ccall) @OUTLINED_FUNCTION_0, implicit-def $c5, implicit-def $c15, implicit-def $x14, implicit-def $x15, implicit $c10, implicit $c12
+  ; CHECK-NEXT:   $c5 = PseudoCCALLReg target-flags(riscv-call) @OUTLINED_FUNCTION_0, implicit-def $c5, implicit-def $c15, implicit-def $x14, implicit-def $x15, implicit $c10, implicit $c12
   ; CHECK-NEXT:   renamable $x14 = ANDI killed renamable $x14, 1
   ; CHECK-NEXT:   BEQ killed renamable $x14, $x0, %bb.3
   ; CHECK-NEXT: {{  $}}
@@ -56,7 +56,7 @@ body:             |
   ; CHECK-NEXT:   successors: %bb.3(0x80000000)
   ; CHECK-NEXT:   liveins: $c10, $c12, $c13, $x11
   ; CHECK-NEXT: {{  $}}
-  ; CHECK-NEXT:   $c5 = PseudoCCALLReg target-flags(riscv-ccall) @OUTLINED_FUNCTION_0, implicit-def $c5, implicit-def $c15, implicit-def $x14, implicit-def $x15, implicit $c10, implicit $c12
+  ; CHECK-NEXT:   $c5 = PseudoCCALLReg target-flags(riscv-call) @OUTLINED_FUNCTION_0, implicit-def $c5, implicit-def $c15, implicit-def $x14, implicit-def $x15, implicit $c10, implicit $c12
   ; CHECK-NEXT:   renamable $x15 = ANDI killed renamable $x14, 1
   ; CHECK-NEXT:   $c14 = CMove $c0
   ; CHECK-NEXT: {{  $}}

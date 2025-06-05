@@ -129,6 +129,9 @@ class SmallVectorSynthProvider:
         if the_type.IsReferenceType():
             the_type = the_type.GetDereferencedType()
 
+        if the_type.IsPointerType():
+            the_type = the_type.GetPointeeType()
+
         self.data_type = the_type.GetTemplateArgumentType(0)
         self.type_size = self.data_type.GetByteSize()
         assert self.type_size != 0
@@ -215,12 +218,14 @@ class OptionalSynthProvider:
 
 
 def SmallStringSummaryProvider(valobj, internal_dict):
-    num_elements = valobj.GetNumChildren()
+    # The underlying SmallVector base class is the first child.
+    vector = valobj.GetChildAtIndex(0)
+    num_elements = vector.GetNumChildren()
     res = '"'
-    for i in range(0, num_elements):
-        c = valobj.GetChildAtIndex(i).GetValue()
+    for i in range(num_elements):
+        c = vector.GetChildAtIndex(i)
         if c:
-            res += c.strip("'")
+            res += chr(c.GetValueAsUnsigned())
     res += '"'
     return res
 

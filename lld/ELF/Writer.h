@@ -48,6 +48,8 @@ struct PhdrEntry {
 void addReservedSymbols();
 bool isMorelloDescSection(const OutputSection *sec);
 
+bool isCheriAbi(const InputFile *f);
+
 template <class ELFT> uint32_t calcMipsEFlags();
 
 uint8_t getMipsFpAbiFlag(uint8_t oldFlag, llvm::StringRef oldFile,

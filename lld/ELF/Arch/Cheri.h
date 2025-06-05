@@ -15,11 +15,9 @@ namespace elf {
 
 struct SymbolAndOffset {
 public:
-  SymbolAndOffset(Symbol *s, int64_t o) : symOrSec(s), offset(o) {
+  SymbolAndOffset(llvm::PointerUnion<Symbol *, InputSectionBase *> s, int64_t o)
+      : symOrSec(s), offset(o) {
     assert(s && "Should not be null");
-  }
-  SymbolAndOffset(InputSectionBase *isec, int64_t o) : symOrSec(isec), offset(o) {
-    assert(isec && "Should not be null");
   }
   SymbolAndOffset(const SymbolAndOffset &) = default;
   SymbolAndOffset &operator=(const SymbolAndOffset &) = default;
@@ -77,7 +75,7 @@ struct CheriCapReloc {
 // FIXME: should de-template this class properly
 class CheriCapRelocsSection : public SyntheticSection {
 public:
-  CheriCapRelocsSection();
+  CheriCapRelocsSection(StringRef name);
   // Add a __cap_relocs section from in input object file
   template <class ELFT>
   void addSection(InputSectionBase *s);
@@ -263,9 +261,9 @@ private:
 // +---------------------------------------+
 // TODO: TLS caps also need to be per file/function
 
-class CheriCapTableSection : public SyntheticSection {
+class MipsCheriCapTableSection : public SyntheticSection {
 public:
-  CheriCapTableSection();
+  MipsCheriCapTableSection();
   // InputFile and Offset is needed in order to implement per-file/per-function
   // tables
   void addEntry(Symbol &sym, RelExpr expr, InputSectionBase *isec,
@@ -343,7 +341,7 @@ private:
   CaptableMap dynTlsEntries;
   CaptableMap tlsEntries;
   bool valuesAssigned = false;
-  friend class CheriCapTableMappingSection;
+  friend class MipsCheriCapTableMappingSection;
 };
 
 // TODO: could shrink these to reduce size overhead but this is experimental
@@ -357,13 +355,13 @@ struct CaptableMappingEntry {
 
 // Map from symbol vaddr -> captable subset so that RTLD can setup the correct
 // trampolines to initialize $cgp to the correct subset
-class CheriCapTableMappingSection : public SyntheticSection {
+class MipsCheriCapTableMappingSection : public SyntheticSection {
 public:
-  CheriCapTableMappingSection();
+  MipsCheriCapTableMappingSection();
   bool isNeeded() const override {
     if (config->capTableScope == CapTableScopePolicy::All)
       return false;
-    return in.cheriCapTable && in.cheriCapTable->isNeeded();
+    return in.mipsCheriCapTable && in.mipsCheriCapTable->isNeeded();
   }
   void writeTo(uint8_t *buf) override;
   size_t getSize() const override;
@@ -397,11 +395,11 @@ inline void readOnlyCapRelocsError(Symbol &sym, const Twine &sourceMsg) {
 }
 
 template <typename ELFT>
-void addCapabilityRelocation(Symbol *sym, RelType type, InputSectionBase *sec,
-                             uint64_t offset, RelExpr expr, int64_t addend,
-                             bool isCallExpr,
-                             llvm::function_ref<std::string()> referencedBy,
-                             RelocationBaseSection *dynRelSec = nullptr);
+void addCapabilityRelocation(
+    llvm::PointerUnion<Symbol *, InputSectionBase *> target, RelType type,
+    InputSectionBase *sec, uint64_t offset, RelExpr expr, int64_t addend,
+    bool isCallExpr, llvm::function_ref<std::string()> referencedBy,
+    RelocationBaseSection *dynRelSec = nullptr);
 
 // Emit either a dynamic relocation or __cap_reloc entry to initialize a
 // GOT slot.
