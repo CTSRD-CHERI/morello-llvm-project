@@ -39,7 +39,6 @@ public:
   RelExpr getRelExpr(RelType type, const Symbol &s,
                      const uint8_t *loc) const override;
   RelType getDynRel(RelType type) const override;
-  bool isCheriPCCDirectRel(RelType type) const override;
   int getCapabilitySize() const override { return 16; }
   uint64_t getCheriRequiredAlignment(uint64_t len) const override;
   int64_t getImplicitAddend(const uint8_t *buf, RelType type) const override;
@@ -239,32 +238,6 @@ RelExpr AArch64::getRelExpr(RelType type, const Symbol &s,
     error(getErrorLocation(loc) + "unknown relocation (" + Twine(type) +
           ") against symbol " + toString(s));
     return R_NONE;
-  }
-}
-
-bool AArch64::isCheriPCCDirectRel(RelType type) const {
-  switch (type) {
-  case R_AARCH64_PREL16:
-  case R_AARCH64_PREL32:
-  case R_AARCH64_PREL64:
-  case R_AARCH64_ADR_PREL_LO21:
-  case R_AARCH64_LD_PREL_LO19:
-  case R_AARCH64_MOVW_PREL_G0:
-  case R_AARCH64_MOVW_PREL_G0_NC:
-  case R_AARCH64_MOVW_PREL_G1:
-  case R_AARCH64_MOVW_PREL_G1_NC:
-  case R_AARCH64_MOVW_PREL_G2:
-  case R_AARCH64_MOVW_PREL_G2_NC:
-  case R_AARCH64_MOVW_PREL_G3:
-  case R_AARCH64_ADR_PREL_PG_HI21:
-  case R_AARCH64_ADR_PREL_PG_HI21_NC:
-  case R_MORELLO_ADR_PREL_PG_HI20:
-  case R_MORELLO_ADR_PREL_PG_HI20_NC:
-  case R_MORELLO_DESC_ADR_PREL_PG_HI20:
-  case R_MORELLO_LD_PREL_LO17:
-    return true;
-  default:
-    return false;
   }
 }
 
