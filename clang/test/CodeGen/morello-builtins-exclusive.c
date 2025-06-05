@@ -1,4 +1,4 @@
-// RUN: %clang_cc1 -Wall -Werror -triple aarch64-none-elf -target-feature +c64 -target-abi purecap -disable-O0-optnone -emit-llvm -o - %s | opt -S -mem2reg | FileCheck %s
+// RUN: %clang_cc1 -Wall -Werror -triple aarch64-none-elf -target-feature +c64 -target-abi purecap -disable-O0-optnone -emit-llvm -o - %s | opt -S -passes=mem2reg | FileCheck %s
 
 struct Simple {
   char a, b;

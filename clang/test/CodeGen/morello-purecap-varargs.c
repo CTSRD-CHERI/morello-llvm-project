@@ -2,7 +2,7 @@
 // RUN: %clang_cc1 -triple arm64-linux-gnu -target-feature +morello \
 // RUN:    -target-feature +c64 -target-abi purecap \
 // RUN:    -emit-llvm -o - -disable-O0-optnone %s | \
-// RUN:  opt -S -mem2reg | \
+// RUN:  opt -S -passes=mem2reg | \
 // RUN:  FileCheck  %s
 
 #include <stdarg.h>
