@@ -1,3 +1,4 @@
+; RUN: llc --debugify-and-strip-all-safe=0 -mtriple=arm64-- -O3 -debug-pass=Structure < %s -o /dev/null 2>&1
 ; RUN: llc --debugify-and-strip-all-safe=0 -mtriple=arm64-- -O3 -debug-pass=Structure < %s -o /dev/null 2>&1 | \
 ; RUN:     grep -v "Verify generated machine code" | FileCheck %s
 
@@ -36,9 +37,14 @@
 ; CHECK-NEXT:       Scalar Evolution Analysis
 ; CHECK-NEXT:       Loop Data Prefetch
 ; CHECK-NEXT:       Falkor HW Prefetch Fix
+; CHECK-NEXT:     CHERI bound stack allocations
+; CHECK-NEXT:     FunctionPass Manager
 ; CHECK-NEXT:       Module Verifier
+; CHECK-NEXT:       Dominator Tree Construction
 ; CHECK-NEXT:       Basic Alias Analysis (stateless AA impl)
+; CHECK-NEXT:       Natural Loop Information
 ; CHECK-NEXT:       Canonicalize natural loops
+; CHECK-NEXT:       Scalar Evolution Analysis
 ; CHECK-NEXT:       Loop Pass Manager
 ; CHECK-NEXT:         Canonicalize Freeze Instructions in Loops
 ; CHECK-NEXT:         Induction Variable Users
