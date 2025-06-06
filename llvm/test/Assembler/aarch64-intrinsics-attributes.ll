@@ -8,7 +8,7 @@
 declare i64 @llvm.aarch64.ldxr.p0(ptr)
 
 ; CHECK: declare i32 @llvm.aarch64.stxp.p0(i64, i64, ptr) [[NOFREE_NOUNWIND_WILLRETURN]]
-declare i32 @llvm.aarch64.stxp(i64, i64, ptr)
+declare i32 @llvm.aarch64.stxp.p0(i64, i64, ptr)
 
 ; CHECK: declare i32 @llvm.aarch64.dsb(i32) [[NOFREE_NOUNWIND_WILLRETURN]]
 declare i32 @llvm.aarch64.dsb(i32)
