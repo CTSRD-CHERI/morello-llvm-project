@@ -5,9 +5,7 @@
 
 define i128 @val_compare_and_swap(ptr addrspace(200) %p, i128 %oldval, i128 %newval) {
 ; CHECK-LABEL: val_compare_and_swap:
-; CHECK:       .Lfunc_begin0:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:  .LBB0_1: // =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    ldaxp x8, x1, [c0]
 ; CHECK-NEXT:    cmp x8, x2
@@ -32,9 +30,7 @@ define i128 @val_compare_and_swap(ptr addrspace(200) %p, i128 %oldval, i128 %new
 
 define void @fetch_and_nand(ptr addrspace(200) %p, i128 %bits) {
 ; CHECK-LABEL: fetch_and_nand:
-; CHECK:       .Lfunc_begin1:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:  .LBB1_1: // %atomicrmw.start
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    ldxp x9, x8, [c0]
@@ -57,9 +53,7 @@ define void @fetch_and_nand(ptr addrspace(200) %p, i128 %bits) {
 
 define void @fetch_and_or(ptr addrspace(200) %p, i128 %bits) {
 ; CHECK-LABEL: fetch_and_or:
-; CHECK:       .Lfunc_begin2:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:  .LBB2_1: // %atomicrmw.start
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    ldaxp x9, x8, [c0]
@@ -80,9 +74,7 @@ define void @fetch_and_or(ptr addrspace(200) %p, i128 %bits) {
 
 define void @fetch_and_add(ptr addrspace(200) %p, i128 %bits) {
 ; CHECK-LABEL: fetch_and_add:
-; CHECK:       .Lfunc_begin3:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:  .LBB3_1: // %atomicrmw.start
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    ldaxp x9, x8, [c0]
@@ -103,9 +95,7 @@ define void @fetch_and_add(ptr addrspace(200) %p, i128 %bits) {
 
 define void @fetch_and_sub(ptr addrspace(200) %p, i128 %bits) {
 ; CHECK-LABEL: fetch_and_sub:
-; CHECK:       .Lfunc_begin4:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:  .LBB4_1: // %atomicrmw.start
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    ldaxp x9, x8, [c0]
@@ -126,20 +116,14 @@ define void @fetch_and_sub(ptr addrspace(200) %p, i128 %bits) {
 
 define void @fetch_and_min(ptr addrspace(200) %p, i128 %bits) {
 ; CHECK-LABEL: fetch_and_min:
-; CHECK:       .Lfunc_begin5:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:  .LBB5_1: // %atomicrmw.start
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    ldaxp x9, x8, [c0]
-; CHECK-NEXT:    cmp x9, x2
-; CHECK-NEXT:    cset w10, ls
-; CHECK-NEXT:    cmp x8, x3
-; CHECK-NEXT:    cset w11, le
-; CHECK-NEXT:    csel w10, w10, w11, eq
-; CHECK-NEXT:    cmp w10, #0
-; CHECK-NEXT:    csel x10, x8, x3, ne
-; CHECK-NEXT:    csel x11, x9, x2, ne
+; CHECK-NEXT:    cmp x2, x9
+; CHECK-NEXT:    sbcs xzr, x3, x8
+; CHECK-NEXT:    csel x10, x8, x3, ge
+; CHECK-NEXT:    csel x11, x9, x2, ge
 ; CHECK-NEXT:    stlxp w12, x11, x10, [c0]
 ; CHECK-NEXT:    cbnz w12, .LBB5_1
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
@@ -155,20 +139,14 @@ define void @fetch_and_min(ptr addrspace(200) %p, i128 %bits) {
 
 define void @fetch_and_max(ptr addrspace(200) %p, i128 %bits) {
 ; CHECK-LABEL: fetch_and_max:
-; CHECK:       .Lfunc_begin6:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:  .LBB6_1: // %atomicrmw.start
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    ldaxp x9, x8, [c0]
-; CHECK-NEXT:    cmp x9, x2
-; CHECK-NEXT:    cset w10, hi
-; CHECK-NEXT:    cmp x8, x3
-; CHECK-NEXT:    cset w11, gt
-; CHECK-NEXT:    csel w10, w10, w11, eq
-; CHECK-NEXT:    cmp w10, #0
-; CHECK-NEXT:    csel x10, x8, x3, ne
-; CHECK-NEXT:    csel x11, x9, x2, ne
+; CHECK-NEXT:    cmp x2, x9
+; CHECK-NEXT:    sbcs xzr, x3, x8
+; CHECK-NEXT:    csel x10, x8, x3, lt
+; CHECK-NEXT:    csel x11, x9, x2, lt
 ; CHECK-NEXT:    stlxp w12, x11, x10, [c0]
 ; CHECK-NEXT:    cbnz w12, .LBB6_1
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
@@ -184,20 +162,14 @@ define void @fetch_and_max(ptr addrspace(200) %p, i128 %bits) {
 
 define void @fetch_and_umin(ptr addrspace(200) %p, i128 %bits) {
 ; CHECK-LABEL: fetch_and_umin:
-; CHECK:       .Lfunc_begin7:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:  .LBB7_1: // %atomicrmw.start
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    ldaxp x9, x8, [c0]
-; CHECK-NEXT:    cmp x9, x2
-; CHECK-NEXT:    cset w10, ls
-; CHECK-NEXT:    cmp x8, x3
-; CHECK-NEXT:    cset w11, ls
-; CHECK-NEXT:    csel w10, w10, w11, eq
-; CHECK-NEXT:    cmp w10, #0
-; CHECK-NEXT:    csel x10, x8, x3, ne
-; CHECK-NEXT:    csel x11, x9, x2, ne
+; CHECK-NEXT:    cmp x2, x9
+; CHECK-NEXT:    sbcs xzr, x3, x8
+; CHECK-NEXT:    csel x10, x8, x3, hs
+; CHECK-NEXT:    csel x11, x9, x2, hs
 ; CHECK-NEXT:    stlxp w12, x11, x10, [c0]
 ; CHECK-NEXT:    cbnz w12, .LBB7_1
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
@@ -213,20 +185,14 @@ define void @fetch_and_umin(ptr addrspace(200) %p, i128 %bits) {
 
 define void @fetch_and_umax(ptr addrspace(200) %p, i128 %bits) {
 ; CHECK-LABEL: fetch_and_umax:
-; CHECK:       .Lfunc_begin8:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:  .LBB8_1: // %atomicrmw.start
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    ldaxp x9, x8, [c0]
-; CHECK-NEXT:    cmp x9, x2
-; CHECK-NEXT:    cset w10, hi
-; CHECK-NEXT:    cmp x8, x3
-; CHECK-NEXT:    cset w11, hi
-; CHECK-NEXT:    csel w10, w10, w11, eq
-; CHECK-NEXT:    cmp w10, #0
-; CHECK-NEXT:    csel x10, x8, x3, ne
-; CHECK-NEXT:    csel x11, x9, x2, ne
+; CHECK-NEXT:    cmp x2, x9
+; CHECK-NEXT:    sbcs xzr, x3, x8
+; CHECK-NEXT:    csel x10, x8, x3, lo
+; CHECK-NEXT:    csel x11, x9, x2, lo
 ; CHECK-NEXT:    stlxp w12, x11, x10, [c0]
 ; CHECK-NEXT:    cbnz w12, .LBB8_1
 ; CHECK-NEXT:  // %bb.2: // %atomicrmw.end
@@ -242,9 +208,7 @@ define void @fetch_and_umax(ptr addrspace(200) %p, i128 %bits) {
 
 define i128 @atomic_load_seq_cst(ptr addrspace(200) %p) {
 ; CHECK-LABEL: atomic_load_seq_cst:
-; CHECK:       .Lfunc_begin9:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    mov c2, c0
 ; CHECK-NEXT:  .LBB9_1: // %atomicrmw.start
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
@@ -259,9 +223,7 @@ define i128 @atomic_load_seq_cst(ptr addrspace(200) %p) {
 
 define i128 @atomic_load_relaxed(i64, i64, ptr addrspace(200) %p) {
 ; CHECK-LABEL: atomic_load_relaxed:
-; CHECK:       .Lfunc_begin10:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:  .LBB10_1: // %atomicrmw.start
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    ldxp x0, x1, [c2]
@@ -275,9 +237,7 @@ define i128 @atomic_load_relaxed(i64, i64, ptr addrspace(200) %p) {
 
 define void @atomic_store_seq_cst(i128 %in, ptr addrspace(200) %p) {
 ; CHECK-LABEL: atomic_store_seq_cst:
-; CHECK:       .Lfunc_begin11:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:  .LBB11_1: // %atomicrmw.start
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    ldaxp xzr, x8, [c2]
@@ -291,9 +251,7 @@ define void @atomic_store_seq_cst(i128 %in, ptr addrspace(200) %p) {
 
 define void @atomic_store_release(i128 %in, ptr addrspace(200) %p) {
 ; CHECK-LABEL: atomic_store_release:
-; CHECK:       .Lfunc_begin12:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:  .LBB12_1: // %atomicrmw.start
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    ldxp xzr, x8, [c2]
@@ -307,9 +265,7 @@ define void @atomic_store_release(i128 %in, ptr addrspace(200) %p) {
 
 define void @atomic_store_relaxed(i128 %in, ptr addrspace(200) %p) {
 ; CHECK-LABEL: atomic_store_relaxed:
-; CHECK:       .Lfunc_begin13:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:  .LBB13_1: // %atomicrmw.start
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    ldxp xzr, x8, [c2]
