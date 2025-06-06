@@ -164,6 +164,9 @@ static bool isAdrpAddPair(const MachineInstr *FirstMI,
   if ((FirstMI == nullptr || FirstMI->getOpcode() == AArch64::ADRP) &&
       SecondMI.getOpcode() == AArch64::ADDXri)
     return true;
+  if ((FirstMI == nullptr || FirstMI->getOpcode() == AArch64::PADRP) &&
+    SecondMI.getOpcode() == AArch64::CapAddImm)
+    return true;
   return false;
 }
 
