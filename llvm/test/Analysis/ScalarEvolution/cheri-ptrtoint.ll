@@ -4,23 +4,23 @@
 target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128-A200-P200-G200"
 target triple = "aarch64-none-unknown-elf"
 
-define void @foo(i64 addrspace(200)* nocapture %a, i8 addrspace(200)* addrspace(200)* nocapture %b, i8 addrspace(200)* %c, i64 %val) local_unnamed_addr addrspace(200) {
+define void @foo(ptr addrspace(200) nocapture %a, ptr addrspace(200) nocapture %b, ptr addrspace(200) %c, i64 %val) local_unnamed_addr addrspace(200) {
 ; CHECK-LABEL: 'foo'
 ; CHECK-NEXT:  Classifying expressions for: @foo
-; CHECK-NEXT:    %0 = call i64 @llvm.cheri.cap.address.get.i64(i8 addrspace(200)* %c)
-; CHECK-NEXT:    --> (ptrtoint i8 addrspace(200)* %c to i64) U: full-set S: full-set
-; CHECK-NEXT:    %1 = call i8 addrspace(200)* @llvm.cheri.cap.address.set.i64(i8 addrspace(200)* %c, i64 %val)
-; CHECK-NEXT:    --> ((-1 * (ptrtoint i8 addrspace(200)* %c to i64)) + %val + %c) U: full-set S: full-set
+; CHECK-NEXT:    %0 = call i64 @llvm.cheri.cap.address.get.i64(ptr addrspace(200) %c)
+; CHECK-NEXT:    --> (ptrtoint ptr addrspace(200) %c to i64) U: full-set S: full-set
+; CHECK-NEXT:    %1 = call ptr addrspace(200) @llvm.cheri.cap.address.set.i64(ptr addrspace(200) %c, i64 %val)
+; CHECK-NEXT:    --> ((-1 * (ptrtoint ptr addrspace(200) %c to i64)) + %val + %c) U: full-set S: full-set
 ; CHECK-NEXT:  Determining loop execution counts for: @foo
 ;
 entry:
-  %0 = call i64 @llvm.cheri.cap.address.get.i64(i8 addrspace(200)* %c)
-  store i64 %0, i64 addrspace(200)* %a, align 8
-  %1 = call i8 addrspace(200)* @llvm.cheri.cap.address.set.i64(i8 addrspace(200)* %c, i64 %val)
-  store i8 addrspace(200)* %1, i8 addrspace(200)* addrspace(200)* %b, align 16
+  %0 = call i64 @llvm.cheri.cap.address.get.i64(ptr addrspace(200) %c)
+  store i64 %0, ptr addrspace(200) %a, align 8
+  %1 = call ptr addrspace(200) @llvm.cheri.cap.address.set.i64(ptr addrspace(200) %c, i64 %val)
+  store ptr addrspace(200) %1, ptr addrspace(200) %b, align 16
   ret void
 }
 
-declare i64 @llvm.cheri.cap.address.get.i64(i8 addrspace(200)*) addrspace(200)
+declare i64 @llvm.cheri.cap.address.get.i64(ptr addrspace(200)) addrspace(200)
 
-declare i8 addrspace(200)* @llvm.cheri.cap.address.set.i64(i8 addrspace(200)*, i64) addrspace(200)
+declare ptr addrspace(200) @llvm.cheri.cap.address.set.i64(ptr addrspace(200), i64) addrspace(200)
