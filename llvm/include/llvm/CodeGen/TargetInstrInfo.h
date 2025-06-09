@@ -1999,18 +1999,6 @@ public:
     return Inst.isReturn() && Inst.isCall();
   }
 
-  /// Return true iff the target supports capabilities
-  virtual bool supportsCapabilities() const { return false; }
-
-  /// Get the capabilities address space for the target. 200 is the default
-  /// address space for capabilities, so targets using a different address space
-  /// should override this method.
-  /// Requirement: the target supports capabilities
-  virtual unsigned getCapabilitiesAddressSpace() const {
-    assert(supportsCapabilities() && "Target does not support capabilities.");
-    return 200;
-  }
-
   /// True if the instruction is bound to the top of its basic block and no
   /// other instructions shall be inserted before it. This can be implemented
   /// to prevent register allocator to insert spills before such instructions.

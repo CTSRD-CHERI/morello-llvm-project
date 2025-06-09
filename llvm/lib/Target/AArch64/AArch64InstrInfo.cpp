@@ -7747,15 +7747,6 @@ AArch64InstrInfo::decomposeMachineOperandsTargetFlags(unsigned TF) const {
   return std::make_pair(TF & Mask, TF & ~Mask);
 }
 
-bool AArch64InstrInfo::supportsCapabilities() const {
-  return Subtarget.hasMorello();
-}
-
-unsigned AArch64InstrInfo::getCapabilitiesAddressSpace() const {
-  assert(Subtarget.hasMorello() && "No morello support.");
-  return 200;
-}
-
 ArrayRef<std::pair<unsigned, const char *>>
 AArch64InstrInfo::getSerializableDirectMachineOperandTargetFlags() const {
   using namespace AArch64II;

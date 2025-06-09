@@ -9481,13 +9481,8 @@ void SelectionDAGBuilder::visitInlineAsm(const CallBase &Call,
         assert((OpInfo.isIndirect ||
                 OpInfo.ConstraintType != TargetLowering::C_Memory) &&
                "Operand must be indirect to be a mem!");
-        // FIXME: what is the correct AS here?
-        unsigned AS = DAG.getDataLayout().getGlobalsAddressSpace();
-        if (InOperandVal.getValueType().isFatPointer())
-          AS = DAG.getSubtarget().getInstrInfo()->getCapabilitiesAddressSpace();
-        (void)AS;
-        assert(InOperandVal.getValueType() ==
-                   TLI.getPointerTy(DAG.getDataLayout(), AS) &&
+        assert((InOperandVal.getValueType().isCapability() ||
+                InOperandVal.getValueType().isScalarInteger()) &&
                "Memory operands expect pointer values");
 
         unsigned ConstraintID =
