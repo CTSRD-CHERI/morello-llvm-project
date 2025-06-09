@@ -92,20 +92,20 @@ define void @bar(ptr addrspace(200) %a0, ptr addrspace(200) %a1, ptr addrspace(2
 ; CHECK-NEXT:    add x12, x8, #4
 ; CHECK-NEXT:    add x13, x8, #5
 ; CHECK-NEXT:    add x14, x8, #6
-; CHECK-NEXT:    ldrb w9, [c1, x9]
 ; CHECK-NEXT:    add x15, x8, #7
+; CHECK-NEXT:    ldrb w9, [c1, x9]
 ; CHECK-NEXT:    ldrb w10, [c2, x10]
 ; CHECK-NEXT:    ldrb w11, [c3, x11]
 ; CHECK-NEXT:    ldrb w12, [c4, x12]
 ; CHECK-NEXT:    ldrb w13, [c5, x13]
+; CHECK-NEXT:    ldrb w14, [c6, x14]
 ; CHECK-NEXT:    add w9, w10, w9
-; CHECK-NEXT:    ldrb w10, [c6, x14]
-; CHECK-NEXT:    add w9, w9, w11
-; CHECK-NEXT:    ldrb w11, [c7, x15]
-; CHECK-NEXT:    add w9, w9, w12
-; CHECK-NEXT:    add w9, w9, w13
+; CHECK-NEXT:    ldrb w15, [c7, x15]
+; CHECK-NEXT:    add w10, w11, w12
 ; CHECK-NEXT:    add w9, w9, w10
-; CHECK-NEXT:    add w9, w9, w11
+; CHECK-NEXT:    add w11, w13, w14
+; CHECK-NEXT:    add w10, w11, w15
+; CHECK-NEXT:    add w9, w9, w10
 ; CHECK-NEXT:    strb w9, [c0, x8]
 ; CHECK-NEXT:    ret c30
 entry:
