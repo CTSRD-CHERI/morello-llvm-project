@@ -16,17 +16,19 @@ define void @hoge.1(i1 %cond, i1 %cond2, ptr addrspace(200) %arg, i64 %arg2) loc
 ; CHECK-NEXT:    %tmp6 = select i1 %tmp5, i1 true, i1 %cond2
 ; CHECK-NEXT:    --> (true + ((true + %tmp5) umin_seq (true + %cond2))) U: full-set S: full-set
 ; CHECK-NEXT:    %tmp17 = phi ptr addrspace(200) [ %tmp18, %bb13 ], [ null, %bb4 ]
-; CHECK-NEXT:    --> {null,+,1}<%bb13> U: [0,-1) S: [0,-1) Exits: (-1 + (1 umax {(ptrtoint ptr addrspace(200) %arg to i64),+,1}<%bb1>) + null) LoopDispositions: { %bb13: Computable }
+; CHECK-NEXT:    --> {null,+,1}<nuw><%bb13> U: [0,-1) S: [0,-1) Exits: (-1 + (1 umax {(ptrtoint ptr addrspace(200) %arg to i64),+,1}<%bb1>) + null) LoopDispositions: { %bb13: Computable }
 ; CHECK-NEXT:    %tmp18 = getelementptr i8, ptr addrspace(200) %tmp17, i64 1
-; CHECK-NEXT:    --> {(1 + null)<nuw><nsw>,+,1}<%bb13> U: [1,0) S: [1,0) Exits: ((1 umax {(ptrtoint ptr addrspace(200) %arg to i64),+,1}<%bb1>) + null) LoopDispositions: { %bb13: Computable }
+; CHECK-NEXT:    --> {(1 + null)<nuw><nsw>,+,1}<nuw><%bb13> U: [1,0) S: [1,0) Exits: ((1 umax {(ptrtoint ptr addrspace(200) %arg to i64),+,1}<%bb1>) + null) LoopDispositions: { %bb13: Computable }
 ; CHECK-NEXT:  Determining loop execution counts for: @hoge.1
 ; CHECK-NEXT:  Loop %bb13: backedge-taken count is (-1 + (1 umax {(ptrtoint ptr addrspace(200) %arg to i64),+,1}<%bb1>))
-; CHECK-NEXT:  Loop %bb13: max backedge-taken count is -2
+; CHECK-NEXT:  Loop %bb13: constant max backedge-taken count is -2
+; CHECK-NEXT:  Loop %bb13: symbolic max backedge-taken count is (-1 + (1 umax {(ptrtoint ptr addrspace(200) %arg to i64),+,1}<%bb1>))
 ; CHECK-NEXT:  Loop %bb13: Predicated backedge-taken count is (-1 + (1 umax {(ptrtoint ptr addrspace(200) %arg to i64),+,1}<%bb1>))
 ; CHECK-NEXT:   Predicates:
 ; CHECK:       Loop %bb13: Trip multiple is 1
 ; CHECK-NEXT:  Loop %bb1: Unpredictable backedge-taken count.
-; CHECK-NEXT:  Loop %bb1: Unpredictable max backedge-taken count.
+; CHECK-NEXT:  Loop %bb1: Unpredictable constant max backedge-taken count.
+; CHECK-NEXT:  Loop %bb1: Unpredictable symbolic max backedge-taken count.
 ; CHECK-NEXT:  Loop %bb1: Unpredictable predicated backedge-taken count.
 ;
 bb:
