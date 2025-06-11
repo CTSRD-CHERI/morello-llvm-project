@@ -25,7 +25,7 @@ pmullb z0.d, z0.d, z0.d
 // CHECK-NOT: [[@LINE-1]]:{{[0-9]+}}:
 
 pmullb z0.q, z0.q, z0.q
-// CHECK: [[@LINE-1]]:{{[0-9]+}}: error: invalid element width
+// CHECK: [[@LINE-1]]:{{[0-9]+}}: error: invalid operand for instruction
 // CHECK-NEXT: pmullb z0.q, z0.q, z0.q
 // CHECK-NOT: [[@LINE-1]]:{{[0-9]+}}:
 
