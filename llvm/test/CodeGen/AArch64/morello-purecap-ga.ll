@@ -10,14 +10,12 @@ target triple = "aarch64-none-unknown-elf"
 
 define i32 @getvals(ptr addrspace(200) nocapture %a) local_unnamed_addr addrspace(200) {
 ; CHECK-LABEL: getvals:
-; CHECK:       .Lfunc_begin0:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    adrp c1, .L__cap_merged_table+16
-; CHECK-NEXT:    ldr c1, [c1, :lo12:.L__cap_merged_table+16]
 ; CHECK-NEXT:    adrp c2, .L__cap_merged_table+32
-; CHECK-NEXT:    ldr c2, [c2, :lo12:.L__cap_merged_table+32]
 ; CHECK-NEXT:    adrp c3, .L__cap_merged_table+48
+; CHECK-NEXT:    ldr c1, [c1, :lo12:.L__cap_merged_table+16]
+; CHECK-NEXT:    ldr c2, [c2, :lo12:.L__cap_merged_table+32]
 ; CHECK-NEXT:    ldr c3, [c3, :lo12:.L__cap_merged_table+48]
 ; CHECK-NEXT:    stp c1, c2, [c0, #0]
 ; CHECK-NEXT:    str c3, [c0, #32]
@@ -34,12 +32,10 @@ entry:
 ; Make sure LSR doesn't replace global aliases produced by global merge with the aliasee.
 define void @foo(i32 %a) local_unnamed_addr addrspace(200) {
 ; CHECK-LABEL: foo:
-; CHECK:       .Lfunc_begin1:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    stp c30, c21, [csp, #-64]! // 32-byte Folded Spill
-; CHECK-NEXT:    .cfi_def_cfa_offset 64
 ; CHECK-NEXT:    stp c20, c19, [csp, #32] // 32-byte Folded Spill
+; CHECK-NEXT:    .cfi_def_cfa_offset 64
 ; CHECK-NEXT:    .cfi_offset c19, -16
 ; CHECK-NEXT:    .cfi_offset c20, -32
 ; CHECK-NEXT:    .cfi_offset c21, -48
@@ -49,10 +45,10 @@ define void @foo(i32 %a) local_unnamed_addr addrspace(200) {
 ; CHECK-NEXT:    b.lt .LBB1_3
 ; CHECK-NEXT:  // %bb.1: // %for.body.preheader
 ; CHECK-NEXT:    adrp c20, .L__cap_merged_table+32
-; CHECK-NEXT:    mov x19, xzr
-; CHECK-NEXT:    ldr c20, [c20, :lo12:.L__cap_merged_table+32]
 ; CHECK-NEXT:    adrp c21, .L__cap_merged_table+48
+; CHECK-NEXT:    ldr c20, [c20, :lo12:.L__cap_merged_table+32]
 ; CHECK-NEXT:    ldr c21, [c21, :lo12:.L__cap_merged_table+48]
+; CHECK-NEXT:    mov x19, xzr
 ; CHECK-NEXT:  .LBB1_2: // %for.body
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    lsl x8, x19, #2
@@ -93,9 +89,7 @@ for.end:
 
 define void @bar(ptr addrspace(200) %end) local_unnamed_addr addrspace(200) {
 ; CHECK-LABEL: bar:
-; CHECK:       .Lfunc_begin2:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    stp c30, c19, [csp, #-32]! // 32-byte Folded Spill
 ; CHECK-NEXT:    .cfi_def_cfa_offset 32
 ; CHECK-NEXT:    .cfi_offset c19, -16
@@ -106,8 +100,8 @@ define void @bar(ptr addrspace(200) %end) local_unnamed_addr addrspace(200) {
 ; CHECK-NEXT:    b.lt .LBB2_3
 ; CHECK-NEXT:  // %bb.1: // %for.body.preheader
 ; CHECK-NEXT:    adrp c0, .L__cap_merged_table+48
-; CHECK-NEXT:    ldr c0, [c0, :lo12:.L__cap_merged_table+48]
 ; CHECK-NEXT:    adrp c1, .L__cap_merged_table+32
+; CHECK-NEXT:    ldr c0, [c0, :lo12:.L__cap_merged_table+48]
 ; CHECK-NEXT:    ldr c1, [c1, :lo12:.L__cap_merged_table+32]
 ; CHECK-NEXT:  .LBB2_2: // %for.body
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
@@ -144,9 +138,7 @@ for.end:
 ; instead of using the merged global.
 define ptr addrspace(200) @baz() local_unnamed_addr addrspace(200) {
 ; CHECK-LABEL: baz:
-; CHECK:       .Lfunc_begin3:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    adrp c0, .L__cap_merged_table+32
 ; CHECK-NEXT:    ldr c0, [c0, :lo12:.L__cap_merged_table+32]
 ; CHECK-NEXT:    ret c30
@@ -156,9 +148,7 @@ define ptr addrspace(200) @baz() local_unnamed_addr addrspace(200) {
 ; Same as above, even if we are doing a safe memory operation.
 define void @bif() local_unnamed_addr addrspace(200) {
 ; CHECK-LABEL: bif:
-; CHECK:       .Lfunc_begin4:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    adrp c0, .L__cap_merged_table+32
 ; CHECK-NEXT:    ldr c0, [c0, :lo12:.L__cap_merged_table+32]
 ; CHECK-NEXT:    str wzr, [c0]
@@ -170,14 +160,12 @@ define void @bif() local_unnamed_addr addrspace(200) {
 ; Unsafe loads/stores need a bounds setting instruction.
 define void @goo() local_unnamed_addr addrspace(200) {
 ; CHECK-LABEL: goo:
-; CHECK:       .Lfunc_begin5:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    adrp c0, .L__cap_merged_table+32
-; CHECK-NEXT:    mov w8, #3
-; CHECK-NEXT:    ldr c0, [c0, :lo12:.L__cap_merged_table+32]
 ; CHECK-NEXT:    adrp c1, .L__cap_merged_table+48
+; CHECK-NEXT:    ldr c0, [c0, :lo12:.L__cap_merged_table+32]
 ; CHECK-NEXT:    ldr c1, [c1, :lo12:.L__cap_merged_table+48]
+; CHECK-NEXT:    mov w8, #3 // =0x3
 ; CHECK-NEXT:    str w8, [c0, #804]
 ; CHECK-NEXT:    str w8, [c1, #804]
 ; CHECK-NEXT:    ret c30
@@ -190,14 +178,12 @@ entry:
 ; If we have one unsafe and one safe the safe one doesn't need a setbounds
 define void @bat() local_unnamed_addr addrspace(200) {
 ; CHECK-LABEL: bat:
-; CHECK:       .Lfunc_begin6:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    adrp c0, .L__cap_merged_table+32
-; CHECK-NEXT:    mov w8, #3
-; CHECK-NEXT:    ldr c0, [c0, :lo12:.L__cap_merged_table+32]
 ; CHECK-NEXT:    adrp c1, .L__cap_merged_table
+; CHECK-NEXT:    ldr c0, [c0, :lo12:.L__cap_merged_table+32]
 ; CHECK-NEXT:    ldr c1, [c1, :lo12:.L__cap_merged_table]
+; CHECK-NEXT:    mov w8, #3 // =0x3
 ; CHECK-NEXT:    str w8, [c0, #804]
 ; CHECK-NEXT:    str w8, [c1, #804]
 ; CHECK-NEXT:    ret c30

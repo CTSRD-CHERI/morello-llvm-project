@@ -10,13 +10,13 @@ define ptr addrspace(200) @foo(i32 %max) local_unnamed_addr addrspace(200) {
 entry:
 ; CHECK:  mov c28, c29
 ; CHECK-NEXT: sub csp, csp, #208
-; CHECK-NEXT: .cfi_def_cfa csp, -208
 ; CHECK-NEXT: str c17, [csp, #32]
 ; CHECK-NEXT: stp c30, c27, [csp, #48]
 ; CHECK-NEXT: stp c26, c25, [csp, #80]
 ; CHECK-NEXT: stp c24, c23, [csp, #112]
 ; CHECK-NEXT: stp c22, c21, [csp, #144]
 ; CHECK-NEXT: stp c20, c19, [csp, #176]
+; CHECK-NEXT: .cfi_def_cfa_offset 208
 
 ; CHECK:      ldp c20, c19, [csp, #176]
 ; CHECK-NEXT: ldp c22, c21, [csp, #144]

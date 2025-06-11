@@ -8,24 +8,21 @@ target triple = "aarch64-none-unknown-elf"
 
 define noundef i32 @foo() addrspace(200) #0 personality ptr addrspace(200) @__gxx_personality_v0 {
 ; CHECK-LABEL: foo:
-; CHECK:       .Lfoo$local:
-; CHECK-NEXT:  .Lfunc_begin0:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:    .cfi_personality 0, __gxx_personality_v0
-; CHECK-NEXT:    .cfi_lsda 0, .Lexception0
+; CHECK:         .cfi_personality 156, DW.ref.__gxx_personality_v0
+; CHECK-NEXT:    .cfi_lsda 28, .Lexception0
 ; CHECK-NEXT:  // %bb.0: // %entry
 ; CHECK-NEXT:    mov c28, c29
 ; CHECK-NEXT:    sub csp, csp, #80
-; CHECK-NEXT:    .cfi_def_cfa csp, -80
 ; CHECK-NEXT:    stp c30, c19, [csp, #48] // 32-byte Folded Spill
+; CHECK-NEXT:    .cfi_def_cfa_offset 80
 ; CHECK-NEXT:    .cfi_offset c19, -16
 ; CHECK-NEXT:    .cfi_offset c30, -32
-; CHECK-NEXT:    mov w0, #4
+; CHECK-NEXT:    mov w0, #4 // =0x4
 ; CHECK-NEXT:    mov c19, c28
 ; CHECK-NEXT:    str wzr, [csp, #44]
 ; CHECK-NEXT:    bl __cxa_allocate_exception
 ; CHECK-NEXT:    mov c28, c19
-; CHECK-NEXT:    mov w8, #20
+; CHECK-NEXT:    mov w8, #20 // =0x14
 ; CHECK-NEXT:    str w8, [c0]
 ; CHECK-NEXT:  .Ltmp0:
 ; CHECK-NEXT:    adrp c1, :got:_ZTIi
@@ -42,7 +39,7 @@ define noundef i32 @foo() addrspace(200) #0 personality ptr addrspace(200) @__gx
 ; CHECK-NEXT:    str w1, [csp, #12]
 ; CHECK-NEXT:    bl __cxa_begin_catch
 ; CHECK-NEXT:    mov c28, c19
-; CHECK-NEXT:    mov w8, #42
+; CHECK-NEXT:    mov w8, #42 // =0x2a
 ; CHECK-NEXT:    ldr w9, [c0]
 ; CHECK-NEXT:    str w9, [csp, #8]
 ; CHECK-NEXT:    str w8, [csp, #44]

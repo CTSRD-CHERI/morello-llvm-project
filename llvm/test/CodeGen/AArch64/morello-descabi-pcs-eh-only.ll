@@ -11,11 +11,8 @@ target triple = "aarch64-none-unknown-elf"
 
 define noundef i32 @_Z3barv() local_unnamed_addr addrspace(200) personality ptr addrspace(200) @__gxx_personality_v0 {
 ; CHECK-LABEL: _Z3barv:
-; CHECK:       .L_Z3barv$local:
-; CHECK-NEXT:  .Lfunc_begin0:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:    .cfi_personality 0, __gxx_personality_v0
-; CHECK-NEXT:    .cfi_lsda 0, .Lexception0
+; CHECK:         .cfi_personality 156, DW.ref.__gxx_personality_v0
+; CHECK-NEXT:    .cfi_lsda 28, .Lexception0
 ; CHECK-NEXT:  // %bb.0: // %entry
 ; CHECK-NEXT:    mov c28, c29
 ; CHECK-NEXT:    stp c30, c19, [csp, #-32]! // 32-byte Folded Spill
@@ -37,7 +34,7 @@ define noundef i32 @_Z3barv() local_unnamed_addr addrspace(200) personality ptr 
 ; CHECK-NEXT:    mov c28, c19
 ; CHECK-NEXT:    bl __cxa_end_catch
 ; CHECK-NEXT:    mov c28, c19
-; CHECK-NEXT:    mov w0, #42
+; CHECK-NEXT:    mov w0, #42 // =0x2a
 ; CHECK-NEXT:    ldp c30, c19, [csp], #32 // 32-byte Folded Reload
 ; CHECK-NEXT:    ret c30
 entry:
@@ -68,19 +65,17 @@ eh.resume:
 
 define internal fastcc void @_ZL3foov() unnamed_addr addrspace(200) {
 ; CHECK-LABEL: _ZL3foov:
-; CHECK:       .Lfunc_begin1:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    mov c28, c29
 ; CHECK-NEXT:    stp c30, c19, [csp, #-32]! // 32-byte Folded Spill
 ; CHECK-NEXT:    .cfi_def_cfa_offset 32
 ; CHECK-NEXT:    .cfi_offset c19, -16
 ; CHECK-NEXT:    .cfi_offset c30, -32
 ; CHECK-NEXT:    mov c19, c28
-; CHECK-NEXT:    mov w0, #4
+; CHECK-NEXT:    mov w0, #4 // =0x4
 ; CHECK-NEXT:    bl __cxa_allocate_exception
 ; CHECK-NEXT:    mov c28, c19
-; CHECK-NEXT:    mov w8, #20
+; CHECK-NEXT:    mov w8, #20 // =0x14
 ; CHECK-NEXT:    str w8, [c0]
 ; CHECK-NEXT:    adrp c1, :got:_ZTIi
 ; CHECK-NEXT:    ldr c1, [c1, :got_lo12:_ZTIi]

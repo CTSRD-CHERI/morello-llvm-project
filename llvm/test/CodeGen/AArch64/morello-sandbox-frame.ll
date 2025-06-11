@@ -7,8 +7,8 @@ target triple = "aarch64-none--elf"
 define i32 @frameWithCapabilityRegisters(i32 %argc, ptr addrspace(200) %argv) addrspace(200) {
 entry:
 ; CHECK: stp	c30, c24, [csp, #-48]!
-; CHECK-NEXT: .cfi_def_cfa_offset 48
 ; CHECK-NEXT: str	x19, [csp, #32]
+; CHECK-NEXT: .cfi_def_cfa_offset 48
 ; CHECK: ldr	x19, [csp, #32]
 ; CHECK-NEXT: ldp	c30, c24, [csp], #48
 

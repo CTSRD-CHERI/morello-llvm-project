@@ -12,12 +12,12 @@ define i32 @testStackVars(i32 %argc, ptr addrspace(200) %argv) addrspace(200) {
 ; CHECK-LABEL: testStackVars:
 ; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    sub csp, csp, #160
-; CHECK-NEXT:    .cfi_def_cfa csp, -160
 ; CHECK-NEXT:    str c29, [csp, #32] // 16-byte Folded Spill
 ; CHECK-NEXT:    stp c30, c28, [csp, #48] // 32-byte Folded Spill
 ; CHECK-NEXT:    stp c27, c26, [csp, #80] // 32-byte Folded Spill
 ; CHECK-NEXT:    stp c25, c24, [csp, #112] // 32-byte Folded Spill
 ; CHECK-NEXT:    str x19, [csp, #144] // 8-byte Folded Spill
+; CHECK-NEXT:    .cfi_def_cfa_offset 160
 ; CHECK-NEXT:    .cfi_offset w19, -16
 ; CHECK-NEXT:    .cfi_offset c24, -32
 ; CHECK-NEXT:    .cfi_offset c25, -48
@@ -30,13 +30,13 @@ define i32 @testStackVars(i32 %argc, ptr addrspace(200) %argv) addrspace(200) {
 ; CHECK-NEXT:    add c0, csp, #152
 ; CHECK-NEXT:    add c1, csp, #28
 ; CHECK-NEXT:    scbnds c24, c0, #8 // =8
-; CHECK-NEXT:    add c0, csp, #24
+; CHECK-NEXT:    add c0, csp, #26
 ; CHECK-NEXT:    scbnds c26, c0, #2 // =2
-; CHECK-NEXT:    add c0, csp, #20
+; CHECK-NEXT:    add c0, csp, #24
 ; CHECK-NEXT:    scbnds c27, c0, #1 // =1
-; CHECK-NEXT:    add c0, csp, #8
+; CHECK-NEXT:    add c0, csp, #16
 ; CHECK-NEXT:    scbnds c28, c0, #8 // =8
-; CHECK-NEXT:    add c0, csp, #4
+; CHECK-NEXT:    add c0, csp, #12
 ; CHECK-NEXT:    scbnds c25, c1, #4 // =4
 ; CHECK-NEXT:    scbnds c29, c0, #4 // =4
 ; CHECK-NEXT:    mov c0, c24

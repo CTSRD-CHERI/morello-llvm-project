@@ -11,9 +11,7 @@ target datalayout = "e-m:e-i64:64-i128:128-n32:64-S128-pf200:128:128:128:64-A200
 
 define i32 @test_generaldynamic() {
 ; PIC-LABEL: test_generaldynamic:
-; PIC:       .Lfunc_begin0:
-; PIC-NEXT:    .cfi_startproc
-; PIC-NEXT:  // %bb.0:
+; PIC:       // %bb.0:
 ; PIC-NEXT:    str c30, [csp, #-16]! // 16-byte Folded Spill
 ; PIC-NEXT:    .cfi_def_cfa_offset 16
 ; PIC-NEXT:    .cfi_offset c30, -16
@@ -29,9 +27,7 @@ define i32 @test_generaldynamic() {
 ; PIC-NEXT:    ret c30
 ;
 ; NOPIC-LABEL: test_generaldynamic:
-; NOPIC:       .Lfunc_begin0:
-; NOPIC-NEXT:    .cfi_startproc
-; NOPIC-NEXT:  // %bb.0:
+; NOPIC:       // %bb.0:
 ; NOPIC-NEXT:    adrp c0, :gottprel:general_dynamic_var
 ; NOPIC-NEXT:    add c0, c0, :gottprel_lo12:general_dynamic_var
 ; NOPIC-NEXT:    ldp x0, x8, [c0]
@@ -46,9 +42,7 @@ define i32 @test_generaldynamic() {
 
 define ptr addrspace(200) @test_generaldynamic_addr() {
 ; PIC-LABEL: test_generaldynamic_addr:
-; PIC:       .Lfunc_begin1:
-; PIC-NEXT:    .cfi_startproc
-; PIC-NEXT:  // %bb.0:
+; PIC:       // %bb.0:
 ; PIC-NEXT:    str c30, [csp, #-16]! // 16-byte Folded Spill
 ; PIC-NEXT:    .cfi_def_cfa_offset 16
 ; PIC-NEXT:    .cfi_offset c30, -16
@@ -63,9 +57,7 @@ define ptr addrspace(200) @test_generaldynamic_addr() {
 ; PIC-NEXT:    ret c30
 ;
 ; NOPIC-LABEL: test_generaldynamic_addr:
-; NOPIC:       .Lfunc_begin1:
-; NOPIC-NEXT:    .cfi_startproc
-; NOPIC-NEXT:  // %bb.0:
+; NOPIC:       // %bb.0:
 ; NOPIC-NEXT:    adrp c0, :gottprel:general_dynamic_var
 ; NOPIC-NEXT:    add c0, c0, :gottprel_lo12:general_dynamic_var
 ; NOPIC-NEXT:    ldp x0, x8, [c0]
@@ -82,9 +74,7 @@ define ptr addrspace(200) @test_generaldynamic_addr() {
 ; For now we're using general dynamic for local dynamic as well.
 define i32 @test_localdynamic() {
 ; PIC-LABEL: test_localdynamic:
-; PIC:       .Lfunc_begin2:
-; PIC-NEXT:    .cfi_startproc
-; PIC-NEXT:  // %bb.0:
+; PIC:       // %bb.0:
 ; PIC-NEXT:    str c30, [csp, #-16]! // 16-byte Folded Spill
 ; PIC-NEXT:    .cfi_def_cfa_offset 16
 ; PIC-NEXT:    .cfi_offset c30, -16
@@ -105,9 +95,7 @@ define i32 @test_localdynamic() {
 ; PIC-NEXT:    ret c30
 ;
 ; NOPIC-LABEL: test_localdynamic:
-; NOPIC:       .Lfunc_begin2:
-; NOPIC-NEXT:    .cfi_startproc
-; NOPIC-NEXT:  // %bb.0:
+; NOPIC:       // %bb.0:
 ; NOPIC-NEXT:    adrp c0, :gottprel:local_dynamic_var
 ; NOPIC-NEXT:    add c0, c0, :gottprel_lo12:local_dynamic_var
 ; NOPIC-NEXT:    ldp x0, x8, [c0]
@@ -122,9 +110,7 @@ define i32 @test_localdynamic() {
 
 define ptr addrspace(200) @test_localdynamic_addr() {
 ; PIC-LABEL: test_localdynamic_addr:
-; PIC:       .Lfunc_begin3:
-; PIC-NEXT:    .cfi_startproc
-; PIC-NEXT:  // %bb.0:
+; PIC:       // %bb.0:
 ; PIC-NEXT:    str c30, [csp, #-16]! // 16-byte Folded Spill
 ; PIC-NEXT:    .cfi_def_cfa_offset 16
 ; PIC-NEXT:    .cfi_offset c30, -16
@@ -144,9 +130,7 @@ define ptr addrspace(200) @test_localdynamic_addr() {
 ; PIC-NEXT:    ret c30
 ;
 ; NOPIC-LABEL: test_localdynamic_addr:
-; NOPIC:       .Lfunc_begin3:
-; NOPIC-NEXT:    .cfi_startproc
-; NOPIC-NEXT:  // %bb.0:
+; NOPIC:       // %bb.0:
 ; NOPIC-NEXT:    adrp c0, :gottprel:local_dynamic_var
 ; NOPIC-NEXT:    add c0, c0, :gottprel_lo12:local_dynamic_var
 ; NOPIC-NEXT:    ldp x0, x8, [c0]
@@ -161,9 +145,7 @@ define ptr addrspace(200) @test_localdynamic_addr() {
 
 define i32 @test_localdynamic_deduplicate() {
 ; PIC-LABEL: test_localdynamic_deduplicate:
-; PIC:       .Lfunc_begin4:
-; PIC-NEXT:    .cfi_startproc
-; PIC-NEXT:  // %bb.0:
+; PIC:       // %bb.0:
 ; PIC-NEXT:    str c30, [csp, #-16]! // 16-byte Folded Spill
 ; PIC-NEXT:    .cfi_def_cfa_offset 16
 ; PIC-NEXT:    .cfi_offset c30, -16
@@ -191,14 +173,12 @@ define i32 @test_localdynamic_deduplicate() {
 ; PIC-NEXT:    ret c30
 ;
 ; NOPIC-LABEL: test_localdynamic_deduplicate:
-; NOPIC:       .Lfunc_begin4:
-; NOPIC-NEXT:    .cfi_startproc
-; NOPIC-NEXT:  // %bb.0:
+; NOPIC:       // %bb.0:
 ; NOPIC-NEXT:    adrp c0, :gottprel:local_dynamic_var
 ; NOPIC-NEXT:    add c0, c0, :gottprel_lo12:local_dynamic_var
-; NOPIC-NEXT:    ldp x0, x8, [c0]
 ; NOPIC-NEXT:    adrp c1, :gottprel:local_dynamic_var2
 ; NOPIC-NEXT:    add c1, c1, :gottprel_lo12:local_dynamic_var2
+; NOPIC-NEXT:    ldp x0, x8, [c0]
 ; NOPIC-NEXT:    ldp x1, x9, [c1]
 ; NOPIC-NEXT:    mrs c2, CTPIDR_EL0
 ; NOPIC-NEXT:    add c0, c2, x0, uxtx

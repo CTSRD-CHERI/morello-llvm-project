@@ -7,9 +7,9 @@ define void @test_blockaddress() nounwind {
 ; CHECK-LABEL: test_blockaddress:
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    adrp c0, :got:addr
-; CHECK-NEXT:    ldr c0, [c0, :got_lo12:addr]
 ; CHECK-NEXT:    adrp c1, .Ltmp0
 ; CHECK-NEXT:    add c1, c1, :lo12:.Ltmp0+1
+; CHECK-NEXT:    ldr c0, [c0, :got_lo12:addr]
 ; CHECK-NEXT:    seal c1, c1, rb
 ; CHECK-NEXT:    str c1, [c0, #0]
 ; CHECK-NEXT:    ldr c0, [c0, #0]

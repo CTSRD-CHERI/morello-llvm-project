@@ -85,8 +85,8 @@ define i32 @test_localdynamic() {
 
 ; CHECK-ASM: mrs c2, CTPIDR_EL0
 ; CHECK-ASM: adrp c0, 0x0
-; CHECK-ASM-NEXT: ldr c1, [c0, #0]
-; CHECK-ASM-NEXT: add c0, c0, #0
+; CHECK-ASM-NEXT: ldr c1, [c0, #0x0]
+; CHECK-ASM-NEXT: add c0, c0, #0x0
 ; CHECK-ASM-NEXT: nop
 ; CHECK-ASM-NEXT: blr c1
 }

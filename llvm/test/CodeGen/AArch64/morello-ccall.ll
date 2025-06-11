@@ -56,18 +56,18 @@ define void @foo(ptr addrspace(200) %ddc, ptr addrspace(200) %pcc, i32 %num, i32
 ; CHECK-LABEL:foo:
 
 ; C64: stp     d9, d8, [csp, #-[[#FRAME_SIZE:]]]!
-; C64-NEXT: .cfi_def_cfa_offset [[#FRAME_SIZE]]
 ; C64-NEXT: str     c30, [csp, #{{[0-9]+}}]
 ; C64-NEXT: stp     c24, c23, [csp, #{{[0-9]+}}]
 ; C64-NEXT: stp     c22, c21, [csp, #{{[0-9]+}}]
 ; C64-NEXT: stp     c20, c19, [csp, #{{[0-9]+}}]
+; C64-NEXT: .cfi_def_cfa_offset [[#FRAME_SIZE]]
 
 ; A64: stp     d9, d8, [sp, #-[[#FRAME_SIZE:]]]!
-; A64-NEXT: .cfi_def_cfa_offset [[#FRAME_SIZE]]
 ; A64-NEXT: str     x30, [sp, #{{[0-9]+}}]
 ; A64-NEXT: stp     x24, x23, [sp, #{{[0-9]+}}]
 ; A64-NEXT: stp     x22, x21, [sp, #{{[0-9]+}}]
 ; A64-NEXT: stp     x20, x19, [sp, #{{[0-9]+}}]
+; A64-NEXT: .cfi_def_cfa_offset [[#FRAME_SIZE]]
 
 ; CHECK-DAG:    mov x3, xzr
 ; CHECK-DAG:    mov x4, xzr

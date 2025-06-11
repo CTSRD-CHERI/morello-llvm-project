@@ -13,7 +13,6 @@ entry:
 }
 
 ; PCS16:	stp	d15, d14, [csp, #-192]! // 16-byte Folded Spill
-; PCS16-NEXT:	.cfi_def_cfa_offset 192
 ; PCS16-NEXT:	stp	d13, d12, [csp, #16]    // 16-byte Folded Spill
 ; PCS16-NEXT:	str	c28, [csp, #64]         // 16-byte Folded Spill
 ; PCS16-NEXT:	stp	d11, d10, [csp, #32]    // 16-byte Folded Spill
@@ -23,6 +22,7 @@ entry:
 ; PCS16-NEXT:	str	x23, [csp, #144]        // 8-byte Folded Spill
 ; PCS16-NEXT:	stp	x22, x21, [csp, #160]   // 16-byte Folded Spill
 ; PCS16-NEXT:	stp	x20, x19, [csp, #176]   // 16-byte Folded Spill
+; PCS16-NEXT:	.cfi_def_cfa_offset 192
 
 ; PCS16:	ldp	x20, x19, [csp, #176]   // 16-byte Folded Reload
 ; PCS16-NEXT:	ldp	c25, c24, [csp, #112]   // 32-byte Folded Reload
@@ -36,7 +36,6 @@ entry:
 ; PCS16-NEXT:	ldp	d15, d14, [csp], #192   // 16-byte Folded Reload
 
 ; PCS32:	stp	d15, d14, [csp, #-224]! // 16-byte Folded Spill
-; PCS32-NEXT:	.cfi_def_cfa_offset 224
 ; PCS32-NEXT:	stp	d13, d12, [csp, #16]    // 16-byte Folded Spill
 ; PCS32-NEXT:	stp	c28, c27, [csp, #64]    // 32-byte Folded Spill
 ; PCS32-NEXT:	stp	d11, d10, [csp, #32]    // 16-byte Folded Spill
@@ -45,6 +44,7 @@ entry:
 ; PCS32-NEXT:	stp	c24, c23, [csp, #128]   // 32-byte Folded Spill
 ; PCS32-NEXT:	stp	c22, c21, [csp, #160]   // 32-byte Folded Spill
 ; PCS32-NEXT:	stp	c20, c19, [csp, #192]   // 32-byte Folded Spill
+; PCS32-NEXT:	.cfi_def_cfa_offset 224
 
 ; PCS32:	ldp	d9, d8, [csp, #48]      // 16-byte Folded Reload
 ; PCS32-NEXT:	ldp	c20, c19, [csp, #192]   // 32-byte Folded Reload
@@ -60,7 +60,6 @@ entry:
 ; Make sure we don't emit ldr	d14, [csp], #256.
 ; PCS32-LABEL: bar
 ; PCS32:	str	d14, [csp, #-256]!      // 8-byte Folded Spill
-; PCS32-NEXT:   .cfi_def_cfa_offset 256
 ; PCS32-NEXT:   stp	d13, d12, [csp, #16]    // 16-byte Folded Spill
 ; PCS32-NEXT:   stp	c29, c30, [csp, #64]    // 32-byte Folded Spill
 ; PCS32-NEXT:   stp	d11, d10, [csp, #32]    // 16-byte Folded Spill
@@ -70,6 +69,9 @@ entry:
 ; PCS32-NEXT:   stp	c24, c23, [csp, #160]   // 32-byte Folded Spill
 ; PCS32-NEXT:   stp	c22, c21, [csp, #192]   // 32-byte Folded Spill
 ; PCS32-NEXT:   stp	c20, c19, [csp, #224]   // 32-byte Folded Spill
+; PCS32-NEXT:   sub csp, csp, #1200
+;; offset= 1200(300*4)+256
+; PCS32-NEXT:   .cfi_def_cfa_offset 1456
 
 ; PCS32:        ldp	d9, d8, [csp, #48]      // 16-byte Folded Reload
 ; PCS32-NEXT:   ldp	c20, c19, [csp, #224]   // 32-byte Folded Reload

@@ -13,16 +13,15 @@ target triple = "aarch64-none--elf"
 
 define dso_local ptr addrspace(200) @bar0(i32 %x, i32 %y) local_unnamed_addr addrspace(200) #0 {
 ; CHECK-LABEL: bar0:
-; CHECK:       .Lfunc_begin0:
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    adrp c1, :got:a
 ; CHECK-NEXT:    // kill: def $w0 killed $w0 def $x0
 ; CHECK-NEXT:    sbfiz x8, x0, #2, #32
 ; CHECK-NEXT:    ldr c1, [c1, :got_lo12:a]
-; CHECK-NEXT:    ldr w9, [c1, x8]
 ; CHECK-NEXT:    adrp c0, baz
 ; CHECK-NEXT:    add c0, c0, :lo12:baz
 ; CHECK-NEXT:    seal c0, c0, rb
+; CHECK-NEXT:    ldr w9, [c1, x8]
 ; CHECK-NEXT:    add w9, w9, #1
 ; CHECK-NEXT:    str w9, [c1, x8]
 ; CHECK-NEXT:    ret c30
@@ -37,16 +36,15 @@ entry:
 
 define internal ptr addrspace(200) @baz(i32 %x, i32 %y) addrspace(200) #0 {
 ; CHECK-LABEL: baz:
-; CHECK:       .Lfunc_begin1:
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    adrp c1, :got:a
 ; CHECK-NEXT:    // kill: def $w0 killed $w0 def $x0
 ; CHECK-NEXT:    sbfiz x8, x0, #2, #32
 ; CHECK-NEXT:    ldr c1, [c1, :got_lo12:a]
-; CHECK-NEXT:    ldr w9, [c1, x8]
 ; CHECK-NEXT:    adrp c0, baz
 ; CHECK-NEXT:    add c0, c0, :lo12:baz
 ; CHECK-NEXT:    seal c0, c0, rb
+; CHECK-NEXT:    ldr w9, [c1, x8]
 ; CHECK-NEXT:    add w9, w9, #1
 ; CHECK-NEXT:    str w9, [c1, x8]
 ; CHECK-NEXT:    ret c30
@@ -61,16 +59,15 @@ entry:
 
 define dso_local ptr addrspace(200) @bar1(i32 %x, i32 %y) local_unnamed_addr addrspace(200) #0 {
 ; CHECK-LABEL: bar1:
-; CHECK:       .Lfunc_begin2:
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    // kill: def $w1 killed $w1 def $x1
 ; CHECK-NEXT:    sbfiz x8, x1, #2, #32
-; CHECK-NEXT:    adrp c1, :got:a
-; CHECK-NEXT:    ldr c1, [c1, :got_lo12:a]
-; CHECK-NEXT:    ldr w9, [c1, x8]
 ; CHECK-NEXT:    adrp c0, baz
 ; CHECK-NEXT:    add c0, c0, :lo12:baz
+; CHECK-NEXT:    adrp c1, :got:a
+; CHECK-NEXT:    ldr c1, [c1, :got_lo12:a]
 ; CHECK-NEXT:    seal c0, c0, rb
+; CHECK-NEXT:    ldr w9, [c1, x8]
 ; CHECK-NEXT:    add w9, w9, #2
 ; CHECK-NEXT:    str w9, [c1, x8]
 ; CHECK-NEXT:    ret c30
@@ -85,8 +82,7 @@ entry:
 
 define dso_local void  @coff(i32 %x, i32 %y) local_unnamed_addr addrspace(200) #0 {
 ; CHECK-LABEL: coff:
-; CHECK:       .Lfunc_begin3:
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    adrp c0, .L__cap_merged_table
 ; CHECK-NEXT:    ldr c0, [c0, :lo12:.L__cap_merged_table]
 ; CHECK-NEXT:    ldr w8, [c0, #4]
@@ -103,8 +99,7 @@ entry:
 
 define dso_local i32 @fun() local_unnamed_addr addrspace(200) #1 {
 ; CHECK-LABEL: fun:
-; CHECK:       .Lfunc_begin4:
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    adrp c0, :got:a
 ; CHECK-NEXT:    ldr c0, [c0, :got_lo12:a]
 ; CHECK-NEXT:    ldr w0, [c0]
