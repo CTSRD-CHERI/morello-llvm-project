@@ -7,8 +7,7 @@
 
 define void @below_threshold(i32 %in, i32 addrspace(200)* %out) nounwind {
 ; CHECK-LABEL: below_threshold:
-; CHECK:       .Lfunc_begin0:
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    cmp w0, #1
 ; CHECK-NEXT:    b.eq .LBB0_3
 ; CHECK-NEXT:  // %bb.1: // %entry
@@ -42,18 +41,17 @@ exit:
 ; value of 4 (set in llvm/lib/CodeGen/TargetLoweringBase.cpp).
 define void @above_threshold_mips(i32 %in, i32 addrspace(200)* %out) nounwind {
 ; CHECK-LABEL: above_threshold_mips:
-; CHECK:       .Lfunc_begin1:
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    sub w9, w0, #1
 ; CHECK-NEXT:    cmp w9, #3
 ; CHECK-NEXT:    b.hi .LBB1_6
 ; CHECK-NEXT:  // %bb.1: // %entry
 ; CHECK-NEXT:    adrp c0, .LJTI1_0
-; CHECK-NEXT:    mov w8, #4 // =0x4
 ; CHECK-NEXT:    add c0, c0, :lo12:.LJTI1_0
 ; CHECK-NEXT:    adr c2, .LBB1_2
 ; CHECK-NEXT:    ldrb w10, [c0, x9]
 ; CHECK-NEXT:    add c2, c2, x10, uxtx #2
+; CHECK-NEXT:    mov w8, #4 // =0x4
 ; CHECK-NEXT:    cvtp x9, c2
 ; CHECK-NEXT:    br x9
 ; CHECK-NEXT:  .LBB1_2: // %bb2
@@ -96,18 +94,17 @@ exit:
 
 define void @above_threshold_all(i32 %in, i32 addrspace(200)* %out) nounwind {
 ; CHECK-LABEL: above_threshold_all:
-; CHECK:       .Lfunc_begin2:
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    sub w9, w0, #1
 ; CHECK-NEXT:    cmp w9, #5
 ; CHECK-NEXT:    b.hi .LBB2_8
 ; CHECK-NEXT:  // %bb.1: // %entry
 ; CHECK-NEXT:    adrp c0, .LJTI2_0
-; CHECK-NEXT:    mov w8, #4 // =0x4
 ; CHECK-NEXT:    add c0, c0, :lo12:.LJTI2_0
 ; CHECK-NEXT:    adr c2, .LBB2_2
 ; CHECK-NEXT:    ldrb w10, [c0, x9]
 ; CHECK-NEXT:    add c2, c2, x10, uxtx #2
+; CHECK-NEXT:    mov w8, #4 // =0x4
 ; CHECK-NEXT:    cvtp x9, c2
 ; CHECK-NEXT:    br x9
 ; CHECK-NEXT:  .LBB2_2: // %bb2
@@ -160,4 +157,11 @@ exit:
 }
 
 ; UTC_ARGS: --disable
+; CHECK-LABEL: .LJTI2_0:
+; CHECK-NEXT:    .byte (.LBB2_7-.LBB2_2)>>2
+; CHECK-NEXT:    .byte (.LBB2_2-.LBB2_2)>>2
+; CHECK-NEXT:    .byte (.LBB2_3-.LBB2_2)>>2
+; CHECK-NEXT:    .byte (.LBB2_4-.LBB2_2)>>2
+; CHECK-NEXT:    .byte (.LBB2_5-.LBB2_2)>>2
+; CHECK-NEXT:    .byte (.LBB2_6-.LBB2_2)>>2
 ; UTC_ARGS: --enable

@@ -100,4 +100,11 @@ exit:
 @IF-RISCV@; CHECK-NEXT:    .word .LBB2_5-.Labove_threshold_all$jump_table_base
 @IF-RISCV@; CHECK-NEXT:    .word .LBB2_6-.Labove_threshold_all$jump_table_base
 @IF-RISCV@; CHECK-NEXT:    .word .LBB2_7-.Labove_threshold_all$jump_table_base
+@IF-MORELLO@; CHECK-LABEL: .LJTI2_0:
+@IF-MORELLO@; CHECK-NEXT:    .byte (.LBB2_7-.LBB2_2)>>2
+@IF-MORELLO@; CHECK-NEXT:    .byte (.LBB2_2-.LBB2_2)>>2
+@IF-MORELLO@; CHECK-NEXT:    .byte (.LBB2_3-.LBB2_2)>>2
+@IF-MORELLO@; CHECK-NEXT:    .byte (.LBB2_4-.LBB2_2)>>2
+@IF-MORELLO@; CHECK-NEXT:    .byte (.LBB2_5-.LBB2_2)>>2
+@IF-MORELLO@; CHECK-NEXT:    .byte (.LBB2_6-.LBB2_2)>>2
 ; UTC_ARGS: --enable
