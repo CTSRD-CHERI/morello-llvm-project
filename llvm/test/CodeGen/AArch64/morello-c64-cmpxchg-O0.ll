@@ -5,8 +5,7 @@
 
 define { i128, i1 } @test_cmpxchg_128(ptr addrspace(200) %addr, i128 %desired, i128 %new) nounwind {
 ; CHECK-LABEL: test_cmpxchg_128:
-; CHECK:       .Lfunc_begin0:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    mov x9, x4
 ; CHECK-NEXT:    mov c4, c0
 ; CHECK-NEXT:  .LBB0_1: // =>This Inner Loop Header: Depth=1
@@ -24,10 +23,8 @@ define { i128, i1 } @test_cmpxchg_128(ptr addrspace(200) %addr, i128 %desired, i
 ; CHECK-NEXT:    stlxp w8, x0, x1, [c4]
 ; CHECK-NEXT:    cbnz w8, .LBB0_1
 ; CHECK-NEXT:  .LBB0_4:
-; CHECK-NEXT:    eor x9, x1, x3
-; CHECK-NEXT:    eor x8, x0, x2
-; CHECK-NEXT:    orr x8, x8, x9
-; CHECK-NEXT:    subs x8, x8, #0
+; CHECK-NEXT:    subs x8, x0, x2
+; CHECK-NEXT:    ccmp x1, x3, #0, eq
 ; CHECK-NEXT:    cset w2, eq
 ; CHECK-NEXT:    ret c30
   %res = cmpxchg ptr addrspace(200) %addr, i128 %desired, i128 %new seq_cst monotonic

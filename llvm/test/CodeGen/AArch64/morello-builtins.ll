@@ -114,9 +114,7 @@ entry:
 ; CHECK: scbnds	[[C3:c[0-9]+]], [[C2]], #11
 ; CHECK: cthi	[[C8:c[0-9]+]], [[C3]], {{x[0-9]+}}
 ; CHECK: chkssu [[C9:c[0-9]+]], [[C8]], c0
-; CHECK: cset   [[sealed:w[0-9]+]], mi
-; CHECK: cmp    [[sealed]], #0
-; CHECK: csel   [[C10:c[0-9]+]], [[C9]], czr, ne
+; CHECK: csel   [[C10:c[0-9]+]], [[C9]], czr, mi
 ; CHECK: cvtz   [[C11:c[0-9]+]], [[C10]], {{x[0-9]+}}
   %C0 = call ptr addrspace(200) @llvm.cheri.cap.perms.and(ptr addrspace(200) %foo, i64 12)
   %C1 = call ptr addrspace(200) @llvm.cheri.cap.seal(ptr addrspace(200) %foo, ptr addrspace(200) %C0)
