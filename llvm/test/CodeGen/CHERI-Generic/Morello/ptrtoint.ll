@@ -6,8 +6,7 @@
 
 define internal i64 @ptrtoint(i8 addrspace(200)* %cap) addrspace(200) nounwind {
 ; CHECK-LABEL: ptrtoint:
-; CHECK:       .Lfunc_begin0:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    gcvalue x0, c0
 ; CHECK-NEXT:    ret c30
 ;
@@ -21,8 +20,7 @@ define internal i64 @ptrtoint(i8 addrspace(200)* %cap) addrspace(200) nounwind {
 
 define internal i64 @ptrtoint_plus_const(i8 addrspace(200)* %cap) addrspace(200) nounwind {
 ; CHECK-LABEL: ptrtoint_plus_const:
-; CHECK:       .Lfunc_begin1:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    add x0, x0, #2
 ; CHECK-NEXT:    ret c30
 ;
@@ -37,8 +35,7 @@ define internal i64 @ptrtoint_plus_const(i8 addrspace(200)* %cap) addrspace(200)
 
 define internal i64 @ptrtoint_plus_var(i8 addrspace(200)* %cap, i64 %add) addrspace(200) nounwind {
 ; CHECK-LABEL: ptrtoint_plus_var:
-; CHECK:       .Lfunc_begin2:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    add x0, x0, x1
 ; CHECK-NEXT:    ret c30
 ;
@@ -53,8 +50,7 @@ define internal i64 @ptrtoint_plus_var(i8 addrspace(200)* %cap, i64 %add) addrsp
 
 define internal i64 @ptrtoint_null() addrspace(200) nounwind {
 ; CHECK-LABEL: ptrtoint_null:
-; CHECK:       .Lfunc_begin3:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    mov x0, xzr
 ; CHECK-NEXT:    gcvalue x0, c0
 ; CHECK-NEXT:    ret c30
@@ -70,8 +66,7 @@ define internal i64 @ptrtoint_null() addrspace(200) nounwind {
 
 define internal i64 @ptrtoint_null_plus_const() addrspace(200) nounwind {
 ; CHECK-LABEL: ptrtoint_null_plus_const:
-; CHECK:       .Lfunc_begin4:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    mov x0, xzr
 ; CHECK-NEXT:    add x0, x0, #2
 ; CHECK-NEXT:    ret c30
@@ -88,8 +83,7 @@ define internal i64 @ptrtoint_null_plus_const() addrspace(200) nounwind {
 
 define internal i64 @ptrtoint_null_plus_var(i64 %add) addrspace(200) nounwind {
 ; CHECK-LABEL: ptrtoint_null_plus_var:
-; CHECK:       .Lfunc_begin5:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    mov x1, xzr
 ; CHECK-NEXT:    add x0, x1, x0
 ; CHECK-NEXT:    ret c30

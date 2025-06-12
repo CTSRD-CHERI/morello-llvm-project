@@ -10,8 +10,7 @@ define i64 @subp(i8 addrspace(200)* readnone %a, i8 addrspace(200)* readnone %b)
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: subp:
-; PURECAP:       .Lfunc_begin0:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    sub x0, x0, x1
 ; PURECAP-NEXT:    ret c30
   %1 = tail call i64 @llvm.cheri.cap.diff.i64(i8 addrspace(200)* %a, i8 addrspace(200)* %b)

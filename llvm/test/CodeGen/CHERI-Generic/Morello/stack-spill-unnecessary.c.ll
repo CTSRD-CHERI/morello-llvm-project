@@ -17,8 +17,7 @@ declare void @multi_arg(i32 addrspace(200)* %start, i32 addrspace(200)* %end, i8
 
 define void @use_after_call() addrspace(200) nounwind {
 ; CHECK-LABEL: use_after_call:
-; CHECK:       .Lfunc_begin0:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    sub csp, csp, #48
 ; CHECK-NEXT:    mov w8, #123 // =0x7b
 ; CHECK-NEXT:    add c0, csp, #12
@@ -51,8 +50,7 @@ define void @use_after_call() addrspace(200) nounwind {
 
 define void @use_after_call_no_store() addrspace(200) nounwind {
 ; CHECK-LABEL: use_after_call_no_store:
-; CHECK:       .Lfunc_begin1:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    sub csp, csp, #64
 ; CHECK-NEXT:    add c0, csp, #12
 ; CHECK-NEXT:    add c1, csp, #8
@@ -90,8 +88,7 @@ define void @use_after_call_no_store() addrspace(200) nounwind {
 
 define void @multi_use() addrspace(200) nounwind {
 ; CHECK-LABEL: multi_use:
-; CHECK:       .Lfunc_begin2:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    sub csp, csp, #64
 ; CHECK-NEXT:    add c0, csp, #12
 ; CHECK-NEXT:    add c1, csp, #8

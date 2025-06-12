@@ -10,8 +10,7 @@
 ; before the GEP/PTRADD.
 define void @foo() nounwind {
 ; CHECK-LABEL: foo:
-; CHECK:       .Lfunc_begin0:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    sub csp, csp, #32
 ; CHECK-NEXT:    add c0, csp, #14
 ; CHECK-NEXT:    str c30, [csp, #16] // 16-byte Folded Spill

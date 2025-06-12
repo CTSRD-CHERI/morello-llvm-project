@@ -10,8 +10,7 @@
 
 define void @_thr_umutex_init(%struct.umutex addrspace(200)* %mtx) local_unnamed_addr addrspace(200) nounwind "frame-pointer"="none" {
 ; CHECK-LABEL: _thr_umutex_init:
-; CHECK:       .Lfunc_begin0:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    movi v0.2d, #0000000000000000
 ; CHECK-NEXT:    stp q0, q0, [c0, #16]
 ; CHECK-NEXT:    str q0, [c0]
@@ -23,8 +22,7 @@ define void @_thr_umutex_init(%struct.umutex addrspace(200)* %mtx) local_unnamed
 
 define void @_thr_umutex_init_volatile(%struct.umutex addrspace(200)* %mtx) local_unnamed_addr addrspace(200) nounwind "frame-pointer"="none" {
 ; CHECK-LABEL: _thr_umutex_init_volatile:
-; CHECK:       .Lfunc_begin1:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    adrp c1, .L__cap_merged_table
 ; CHECK-NEXT:    ldr c1, [c1, :lo12:.L__cap_merged_table]
 ; CHECK-NEXT:    ldr c2, [c1, #0]

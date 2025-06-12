@@ -12,8 +12,7 @@
 @_ZN3fooD1Ev = alias void (), void () addrspace(200)* @_ZN3fooD2Ev
 define void @_ZN3fooD2Ev() addrspace(200) nounwind {
 ; ASM-LABEL: _ZN3fooD2Ev:
-; ASM:       .Lfunc_begin0:
-; ASM-NEXT:  // %bb.0:
+; ASM:       // %bb.0:
 ; ASM-NEXT:    ret c30
   ret void
 }

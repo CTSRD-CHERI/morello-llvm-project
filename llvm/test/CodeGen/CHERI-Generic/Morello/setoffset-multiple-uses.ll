@@ -13,8 +13,7 @@ declare ptr addrspace(200) @llvm.cheri.cap.offset.set.i64(ptr addrspace(200), i6
 
 define void @infer_values_from_null_set_offset() addrspace(200) nounwind {
 ; ASM-LABEL: infer_values_from_null_set_offset:
-; ASM:       .Lfunc_begin0:
-; ASM-NEXT:  // %bb.0:
+; ASM:       // %bb.0:
 ; ASM-NEXT:    str c30, [csp, #-16]! // 16-byte Folded Spill
 ; ASM-NEXT:    mov w0, #57920 // =0xe240
 ; ASM-NEXT:    movk w0, #1, lsl #16
@@ -34,8 +33,7 @@ define void @infer_values_from_null_set_offset() addrspace(200) nounwind {
 
 define void @multiple_uses_big_constant() addrspace(200) nounwind {
 ; ASM-LABEL: multiple_uses_big_constant:
-; ASM:       .Lfunc_begin1:
-; ASM-NEXT:  // %bb.0:
+; ASM:       // %bb.0:
 ; ASM-NEXT:    stp c30, c19, [csp, #-32]! // 32-byte Folded Spill
 ; ASM-NEXT:    mov w8, #57920 // =0xe240
 ; ASM-NEXT:    mov x0, xzr
@@ -66,8 +64,7 @@ define void @multiple_uses_big_constant() addrspace(200) nounwind {
 ; Here we should use an immediate cincoffset:
 define void @multiple_uses_small_constant() addrspace(200) nounwind {
 ; ASM-LABEL: multiple_uses_small_constant:
-; ASM:       .Lfunc_begin2:
-; ASM-NEXT:  // %bb.0:
+; ASM:       // %bb.0:
 ; ASM-NEXT:    stp c30, c19, [csp, #-32]! // 32-byte Folded Spill
 ; ASM-NEXT:    mov x0, xzr
 ; ASM-NEXT:    add c19, c0, #123

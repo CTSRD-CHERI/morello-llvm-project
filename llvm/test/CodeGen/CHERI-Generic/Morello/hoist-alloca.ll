@@ -72,8 +72,7 @@
 
 define void @hoist_alloca_uncond(i32 signext %cond) local_unnamed_addr addrspace(200) nounwind {
 ; CHECK-LABEL: hoist_alloca_uncond:
-; CHECK:       .Lfunc_begin0:
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    str c29, [csp, #-80]! // 16-byte Folded Spill
 ; CHECK-NEXT:    stp c30, c21, [csp, #16] // 32-byte Folded Spill
 ; CHECK-NEXT:    stp c20, c19, [csp, #48] // 32-byte Folded Spill
@@ -120,8 +119,7 @@ declare void @call(i32 addrspace(200)*, i32 addrspace(200)*) local_unnamed_addr 
 
 define void @hoist_alloca_cond(i32 signext %cond) local_unnamed_addr addrspace(200) nounwind {
 ; CHECK-LABEL: hoist_alloca_cond:
-; CHECK:       .Lfunc_begin1:
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    stp c29, c30, [csp, #-96]! // 32-byte Folded Spill
 ; CHECK-NEXT:    stp c22, c21, [csp, #32] // 32-byte Folded Spill
 ; CHECK-NEXT:    stp c20, c19, [csp, #64] // 32-byte Folded Spill

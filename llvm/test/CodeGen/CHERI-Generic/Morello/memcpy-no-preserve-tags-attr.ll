@@ -14,8 +14,7 @@ declare void @llvm.memmove.p200i8.p200i8.i64(i8 addrspace(200)* nocapture writeo
 ; don't know whether the type might actually contain capabilities (e.g. unions).
 define void @memcpy_no_attr(%struct.pair addrspace(200)* %a, %struct.pair addrspace(200)* %b) addrspace(200) nounwind {
 ; CHECK-LABEL: memcpy_no_attr:
-; CHECK:       .Lfunc_begin0:
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    str c30, [csp, #-16]! // 16-byte Folded Spill
 ; CHECK-NEXT:    mov w2, #16 // =0x10
 ; CHECK-NEXT:    bl memcpy
@@ -30,8 +29,7 @@ entry:
 
 define void @memmove_no_attr(%struct.pair addrspace(200)* %a, %struct.pair addrspace(200)* %b) addrspace(200) nounwind {
 ; CHECK-LABEL: memmove_no_attr:
-; CHECK:       .Lfunc_begin1:
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    str c30, [csp, #-16]! // 16-byte Folded Spill
 ; CHECK-NEXT:    mov w2, #16 // =0x10
 ; CHECK-NEXT:    bl memmove
@@ -47,8 +45,7 @@ entry:
 ; We have to emit a call if the intrinsic has must_preserve_cheri_tags:
 define void @memcpy_must_preserve(%struct.pair addrspace(200)* %a, %struct.pair addrspace(200)* %b) addrspace(200) nounwind {
 ; CHECK-LABEL: memcpy_must_preserve:
-; CHECK:       .Lfunc_begin2:
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    str c30, [csp, #-16]! // 16-byte Folded Spill
 ; CHECK-NEXT:    mov w2, #16 // =0x10
 ; CHECK-NEXT:    bl memcpy
@@ -63,8 +60,7 @@ entry:
 
 define void @memmove_must_preserve(%struct.pair addrspace(200)* %a, %struct.pair addrspace(200)* %b) addrspace(200) nounwind {
 ; CHECK-LABEL: memmove_must_preserve:
-; CHECK:       .Lfunc_begin3:
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    str c30, [csp, #-16]! // 16-byte Folded Spill
 ; CHECK-NEXT:    mov w2, #16 // =0x10
 ; CHECK-NEXT:    bl memmove
@@ -80,8 +76,7 @@ entry:
 ; We should be able to inline the call memcpy/memmove if the intrinsic has no_preserve_cheri_tags:
 define void @memcpy_no_preserve(%struct.pair addrspace(200)* %a, %struct.pair addrspace(200)* %b) addrspace(200) nounwind {
 ; CHECK-LABEL: memcpy_no_preserve:
-; CHECK:       .Lfunc_begin4:
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    ldr q0, [c1]
 ; CHECK-NEXT:    str q0, [c0]
 ; CHECK-NEXT:    ret c30
@@ -94,8 +89,7 @@ entry:
 
 define void @memmove_no_preserve(%struct.pair addrspace(200)* %a, %struct.pair addrspace(200)* %b) addrspace(200) nounwind {
 ; CHECK-LABEL: memmove_no_preserve:
-; CHECK:       .Lfunc_begin5:
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    ldr q0, [c1]
 ; CHECK-NEXT:    str q0, [c0]
 ; CHECK-NEXT:    ret c30

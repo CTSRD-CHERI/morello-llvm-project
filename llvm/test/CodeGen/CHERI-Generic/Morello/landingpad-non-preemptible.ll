@@ -21,11 +21,7 @@
 @_ZTIi = external dso_local addrspace(200) constant ptr addrspace(200)
 define dso_local noundef signext i32 @_Z8do_catchv() local_unnamed_addr addrspace(200) #0 personality ptr addrspace(200) @__gxx_personality_v0 {
 ; CHECK-LABEL: _Z8do_catchv:
-; CHECK:       .L_Z8do_catchv$local:
-; CHECK-NEXT:    .type .L_Z8do_catchv$local,@function
-; CHECK-NEXT:  .Lfunc_begin0:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:    .cfi_personality 156, DW.ref.__gxx_personality_v0
+; CHECK:         .cfi_personality 156, DW.ref.__gxx_personality_v0
 ; CHECK-NEXT:    .cfi_lsda 28, .Lexception0
 ; CHECK-NEXT:  // %bb.0: // %entry
 ; CHECK-NEXT:    stp c30, c19, [csp, #-32]! // 32-byte Folded Spill

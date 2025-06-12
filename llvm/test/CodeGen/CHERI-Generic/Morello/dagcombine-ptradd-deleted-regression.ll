@@ -23,8 +23,7 @@ define internal i32 @foo(i32 addrspace(200)* %a, i64 addrspace(200)* %b) nounwin
 ; HYBRID-NEXT:    b .LBB0_1
 ;
 ; PURECAP-LABEL: foo:
-; PURECAP:       .Lfunc_begin0:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    stp c30, c19, [csp, #-32]! // 32-byte Folded Spill
 ; PURECAP-NEXT:    add c19, c0, #4
 ; PURECAP-NEXT:  .LBB0_1: // %loop

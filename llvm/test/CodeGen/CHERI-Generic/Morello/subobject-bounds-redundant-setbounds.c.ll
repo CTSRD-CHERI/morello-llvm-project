@@ -36,9 +36,7 @@ target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:12
 
 define void @use_inline(ptr addrspace(200) nocapture %arg) local_unnamed_addr addrspace(200) {
 ; ASM-LABEL: use_inline:
-; ASM:       .Lfunc_begin0:
-; ASM-NEXT:    .cfi_startproc
-; ASM-NEXT:  // %bb.0:
+; ASM:       // %bb.0:
 ; ASM-NEXT:    mov w8, #2 // =0x2
 ; ASM-NEXT:    str w8, [c0]
 ; ASM-NEXT:    ret c30
@@ -53,8 +51,7 @@ define void @use_inline(ptr addrspace(200) nocapture %arg) local_unnamed_addr ad
 
 define signext i32 @stack_array() local_unnamed_addr addrspace(200) nounwind {
 ; ASM-LABEL: stack_array:
-; ASM:       .Lfunc_begin1:
-; ASM-NEXT:  // %bb.0:
+; ASM:       // %bb.0:
 ; ASM-NEXT:    sub csp, csp, #80
 ; ASM-NEXT:    add c0, csp, #8
 ; ASM-NEXT:    stp c30, c19, [csp, #48] // 32-byte Folded Spill
@@ -104,8 +101,7 @@ declare void @llvm.lifetime.end.p200(i64 immarg, ptr addrspace(200) nocapture) a
 
 define signext i32 @stack_int() local_unnamed_addr addrspace(200) nounwind {
 ; ASM-LABEL: stack_int:
-; ASM:       .Lfunc_begin2:
-; ASM-NEXT:  // %bb.0:
+; ASM:       // %bb.0:
 ; ASM-NEXT:    sub csp, csp, #32
 ; ASM-NEXT:    mov w8, #1 // =0x1
 ; ASM-NEXT:    add c0, csp, #12
@@ -154,8 +150,7 @@ define signext i32 @stack_int() local_unnamed_addr addrspace(200) nounwind {
 
 define signext i32 @stack_int_inlined() local_unnamed_addr addrspace(200) nounwind {
 ; ASM-LABEL: stack_int_inlined:
-; ASM:       .Lfunc_begin3:
-; ASM-NEXT:  // %bb.0:
+; ASM:       // %bb.0:
 ; ASM-NEXT:    sub csp, csp, #16
 ; ASM-NEXT:    mov w8, #1 // =0x1
 ; ASM-NEXT:    mov w9, #2 // =0x2
@@ -203,8 +198,7 @@ define signext i32 @stack_int_inlined() local_unnamed_addr addrspace(200) nounwi
 
 define signext i32 @out_of_bounds_setbounds() local_unnamed_addr addrspace(200) nounwind {
 ; ASM-LABEL: out_of_bounds_setbounds:
-; ASM:       .Lfunc_begin4:
-; ASM-NEXT:  // %bb.0:
+; ASM:       // %bb.0:
 ; ASM-NEXT:    sub csp, csp, #16
 ; ASM-NEXT:    add c0, csp, #12
 ; ASM-NEXT:    mov w8, #2 // =0x2
@@ -243,8 +237,7 @@ define signext i32 @out_of_bounds_setbounds() local_unnamed_addr addrspace(200) 
 
 define signext i32 @setbounds_escapes() local_unnamed_addr addrspace(200) nounwind {
 ; ASM-LABEL: setbounds_escapes:
-; ASM:       .Lfunc_begin5:
-; ASM-NEXT:  // %bb.0:
+; ASM:       // %bb.0:
 ; ASM-NEXT:    sub csp, csp, #32
 ; ASM-NEXT:    mov w8, #2 // =0x2
 ; ASM-NEXT:    add c0, csp, #12
@@ -286,8 +279,7 @@ define signext i32 @setbounds_escapes() local_unnamed_addr addrspace(200) nounwi
 ; llvm.assume() should not add bounds:
 define void @assume_aligned() local_unnamed_addr addrspace(200) nounwind {
 ; ASM-LABEL: assume_aligned:
-; ASM:       .Lfunc_begin6:
-; ASM-NEXT:  // %bb.0:
+; ASM:       // %bb.0:
 ; ASM-NEXT:    sub csp, csp, #16
 ; ASM-NEXT:    mov w8, #1 // =0x1
 ; ASM-NEXT:    str w8, [csp, #12]

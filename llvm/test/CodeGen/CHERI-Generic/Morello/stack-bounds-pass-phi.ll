@@ -12,8 +12,7 @@ declare void @foo(ptr addrspace(200)) addrspace(200)
 ; Check that we don't attempt to insert stack bounds intrinisics before the PHI at the start of a basic block:
 define void @test_phi(i1 %cond) addrspace(200) nounwind {
 ; ASM-LABEL: test_phi:
-; ASM:       .Lfunc_begin0:
-; ASM-NEXT:  // %bb.0: // %entry
+; ASM:       // %bb.0: // %entry
 ; ASM-NEXT:    sub csp, csp, #48
 ; ASM-NEXT:    stp c30, c19, [csp, #16] // 32-byte Folded Spill
 ; ASM-NEXT:    tbz w0, #0, .LBB0_2
@@ -97,8 +96,7 @@ phi_block:
 ; Check that we don't place all bounded allocas in the entry block, instead only do it in the predecessor
 define void @test_only_created_in_predecessor_block(i1 %cond) addrspace(200) nounwind {
 ; ASM-LABEL: test_only_created_in_predecessor_block:
-; ASM:       .Lfunc_begin1:
-; ASM-NEXT:  // %bb.0: // %entry
+; ASM:       // %bb.0: // %entry
 ; ASM-NEXT:    sub csp, csp, #32
 ; ASM-NEXT:    str c30, [csp, #16] // 16-byte Folded Spill
 ; ASM-NEXT:    tbz w0, #0, .LBB1_2

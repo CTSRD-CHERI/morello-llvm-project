@@ -21,8 +21,7 @@ declare i64 @llvm.cheri.cap.high.get.i64(i8 addrspace(200)*)
 
 define i64 @perms_get(i8 addrspace(200)* %cap) nounwind {
 ; PURECAP-LABEL: perms_get:
-; PURECAP:       .Lfunc_begin0:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    gcperm x0, c0
 ; PURECAP-NEXT:    ret c30
 ;
@@ -36,8 +35,7 @@ define i64 @perms_get(i8 addrspace(200)* %cap) nounwind {
 
 define i64 @type_get(i8 addrspace(200)* %cap) nounwind {
 ; PURECAP-LABEL: type_get:
-; PURECAP:       .Lfunc_begin1:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    gctype x0, c0
 ; PURECAP-NEXT:    ret c30
 ;
@@ -51,8 +49,7 @@ define i64 @type_get(i8 addrspace(200)* %cap) nounwind {
 
 define i64 @base_get(i8 addrspace(200)* %cap) nounwind {
 ; PURECAP-LABEL: base_get:
-; PURECAP:       .Lfunc_begin2:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    gcbase x0, c0
 ; PURECAP-NEXT:    ret c30
 ;
@@ -66,8 +63,7 @@ define i64 @base_get(i8 addrspace(200)* %cap) nounwind {
 
 define i64 @length_get(i8 addrspace(200)* %cap) nounwind {
 ; PURECAP-LABEL: length_get:
-; PURECAP:       .Lfunc_begin3:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    gclen x0, c0
 ; PURECAP-NEXT:    ret c30
 ;
@@ -81,8 +77,7 @@ define i64 @length_get(i8 addrspace(200)* %cap) nounwind {
 
 define i64 @tag_get(i8 addrspace(200)* %cap) nounwind {
 ; PURECAP-LABEL: tag_get:
-; PURECAP:       .Lfunc_begin4:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    gctag x8, c0
 ; PURECAP-NEXT:    cmp x8, #0
 ; PURECAP-NEXT:    cset w0, ne
@@ -101,8 +96,7 @@ define i64 @tag_get(i8 addrspace(200)* %cap) nounwind {
 
 define i64 @sealed_get(i8 addrspace(200)* %cap) nounwind {
 ; PURECAP-LABEL: sealed_get:
-; PURECAP:       .Lfunc_begin5:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    gcseal x8, c0
 ; PURECAP-NEXT:    cmp x8, #0
 ; PURECAP-NEXT:    cset w0, ne
@@ -121,8 +115,7 @@ define i64 @sealed_get(i8 addrspace(200)* %cap) nounwind {
 
 define i64 @offset_get(i8 addrspace(200)* %cap) nounwind {
 ; PURECAP-LABEL: offset_get:
-; PURECAP:       .Lfunc_begin6:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    gcoff x0, c0
 ; PURECAP-NEXT:    ret c30
 ;
@@ -136,8 +129,7 @@ define i64 @offset_get(i8 addrspace(200)* %cap) nounwind {
 
 define i64 @flags_get(i8 addrspace(200)* %cap) nounwind {
 ; PURECAP-LABEL: flags_get:
-; PURECAP:       .Lfunc_begin7:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    mov x0, xzr
 ; PURECAP-NEXT:    ret c30
 ;
@@ -151,8 +143,7 @@ define i64 @flags_get(i8 addrspace(200)* %cap) nounwind {
 
 define i64 @address_get(i8 addrspace(200)* %cap) nounwind {
 ; PURECAP-LABEL: address_get:
-; PURECAP:       .Lfunc_begin8:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    gcvalue x0, c0
 ; PURECAP-NEXT:    ret c30
 ;
@@ -166,8 +157,7 @@ define i64 @address_get(i8 addrspace(200)* %cap) nounwind {
 
 define i64 @high_get(i8 addrspace(200)* %cap) nounwind {
 ; PURECAP-LABEL: high_get:
-; PURECAP:       .Lfunc_begin9:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cfhi x0, c0
 ; PURECAP-NEXT:    ret c30
 ;
@@ -198,8 +188,7 @@ declare i8 addrspace(200)* @llvm.cheri.cap.seal.entry(i8 addrspace(200)*)
 
 define i8 addrspace(200)* @seal(i8 addrspace(200)* %cap1, i8 addrspace(200)* %cap2) nounwind {
 ; PURECAP-LABEL: seal:
-; PURECAP:       .Lfunc_begin10:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    seal c0, c0, c1
 ; PURECAP-NEXT:    ret c30
 ;
@@ -213,8 +202,7 @@ define i8 addrspace(200)* @seal(i8 addrspace(200)* %cap1, i8 addrspace(200)* %ca
 
 define i8 addrspace(200)* @unseal(i8 addrspace(200)* %cap1, i8 addrspace(200)* %cap2) nounwind {
 ; PURECAP-LABEL: unseal:
-; PURECAP:       .Lfunc_begin11:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    unseal c0, c0, c1
 ; PURECAP-NEXT:    ret c30
 ;
@@ -228,8 +216,7 @@ define i8 addrspace(200)* @unseal(i8 addrspace(200)* %cap1, i8 addrspace(200)* %
 
 define i8 addrspace(200)* @perms_and(i8 addrspace(200)* %cap, i64 %perms) nounwind {
 ; PURECAP-LABEL: perms_and:
-; PURECAP:       .Lfunc_begin12:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    mvn x8, x1
 ; PURECAP-NEXT:    clrperm c0, c0, x8
 ; PURECAP-NEXT:    ret c30
@@ -245,8 +232,7 @@ define i8 addrspace(200)* @perms_and(i8 addrspace(200)* %cap, i64 %perms) nounwi
 
 define i8 addrspace(200)* @flags_set(i8 addrspace(200)* %cap, i64 %flags) nounwind {
 ; PURECAP-LABEL: flags_set:
-; PURECAP:       .Lfunc_begin13:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    ret c30
 ;
 ; HYBRID-LABEL: flags_set:
@@ -258,8 +244,7 @@ define i8 addrspace(200)* @flags_set(i8 addrspace(200)* %cap, i64 %flags) nounwi
 
 define i8 addrspace(200)* @offset_set(i8 addrspace(200)* %cap, i64 %offset) nounwind {
 ; PURECAP-LABEL: offset_set:
-; PURECAP:       .Lfunc_begin14:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    scoff c0, c0, x1
 ; PURECAP-NEXT:    ret c30
 ;
@@ -273,8 +258,7 @@ define i8 addrspace(200)* @offset_set(i8 addrspace(200)* %cap, i64 %offset) noun
 
 define i8 addrspace(200)* @address_set(i8 addrspace(200)* %cap, i64 %address) nounwind {
 ; PURECAP-LABEL: address_set:
-; PURECAP:       .Lfunc_begin15:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    scvalue c0, c0, x1
 ; PURECAP-NEXT:    ret c30
 ;
@@ -288,8 +272,7 @@ define i8 addrspace(200)* @address_set(i8 addrspace(200)* %cap, i64 %address) no
 
 define i8 addrspace(200)* @bounds_set(i8 addrspace(200)* %cap, i64 %bounds) nounwind {
 ; PURECAP-LABEL: bounds_set:
-; PURECAP:       .Lfunc_begin16:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    scbnds c0, c0, x1
 ; PURECAP-NEXT:    ret c30
 ;
@@ -303,8 +286,7 @@ define i8 addrspace(200)* @bounds_set(i8 addrspace(200)* %cap, i64 %bounds) noun
 
 define i8 addrspace(200)* @bounds_set_exact(i8 addrspace(200)* %cap, i64 %bounds) nounwind {
 ; PURECAP-LABEL: bounds_set_exact:
-; PURECAP:       .Lfunc_begin17:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    scbndse c0, c0, x1
 ; PURECAP-NEXT:    ret c30
 ;
@@ -318,8 +300,7 @@ define i8 addrspace(200)* @bounds_set_exact(i8 addrspace(200)* %cap, i64 %bounds
 
 define i8 addrspace(200)* @high_set(i8 addrspace(200)* %cap, i64 %high) nounwind {
 ; PURECAP-LABEL: high_set:
-; PURECAP:       .Lfunc_begin18:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cthi c0, c0, x1
 ; PURECAP-NEXT:    ret c30
 ;
@@ -333,8 +314,7 @@ define i8 addrspace(200)* @high_set(i8 addrspace(200)* %cap, i64 %high) nounwind
 
 define i8 addrspace(200)* @bounds_set_immediate(i8 addrspace(200)* %cap) nounwind {
 ; PURECAP-LABEL: bounds_set_immediate:
-; PURECAP:       .Lfunc_begin19:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    scbnds c0, c0, #42 // =42
 ; PURECAP-NEXT:    ret c30
 ;
@@ -348,8 +328,7 @@ define i8 addrspace(200)* @bounds_set_immediate(i8 addrspace(200)* %cap) nounwin
 
 define i8 addrspace(200)* @tag_clear(i8 addrspace(200)* %cap) nounwind {
 ; PURECAP-LABEL: tag_clear:
-; PURECAP:       .Lfunc_begin20:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    clrtag c0, c0
 ; PURECAP-NEXT:    ret c30
 ;
@@ -363,8 +342,7 @@ define i8 addrspace(200)* @tag_clear(i8 addrspace(200)* %cap) nounwind {
 
 define i8 addrspace(200)* @build(i8 addrspace(200)* %cap1, i8 addrspace(200)* %cap2) nounwind {
 ; PURECAP-LABEL: build:
-; PURECAP:       .Lfunc_begin21:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    build c0, c1, c0
 ; PURECAP-NEXT:    ret c30
 ;
@@ -378,8 +356,7 @@ define i8 addrspace(200)* @build(i8 addrspace(200)* %cap1, i8 addrspace(200)* %c
 
 define i8 addrspace(200)* @type_copy(i8 addrspace(200)* %cap1, i8 addrspace(200)* %cap2) nounwind {
 ; PURECAP-LABEL: type_copy:
-; PURECAP:       .Lfunc_begin22:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cpytype c0, c0, c1
 ; PURECAP-NEXT:    ret c30
 ;
@@ -393,8 +370,7 @@ define i8 addrspace(200)* @type_copy(i8 addrspace(200)* %cap1, i8 addrspace(200)
 
 define i8 addrspace(200)* @conditional_seal(i8 addrspace(200)* %cap1, i8 addrspace(200)* %cap2) nounwind {
 ; PURECAP-LABEL: conditional_seal:
-; PURECAP:       .Lfunc_begin23:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cseal c0, c0, c1
 ; PURECAP-NEXT:    ret c30
 ;
@@ -408,8 +384,7 @@ define i8 addrspace(200)* @conditional_seal(i8 addrspace(200)* %cap1, i8 addrspa
 
 define i8 addrspace(200)* @seal_entry(i8 addrspace(200)* %cap) nounwind {
 ; PURECAP-LABEL: seal_entry:
-; PURECAP:       .Lfunc_begin24:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    seal c0, c0, rb
 ; PURECAP-NEXT:    ret c30
 ;
@@ -431,8 +406,7 @@ declare i8 addrspace(200)* @llvm.cheri.pcc.get()
 
 define i64 @to_pointer(i8 addrspace(200)* %cap1, i8 addrspace(200)* %cap2) nounwind {
 ; PURECAP-LABEL: to_pointer:
-; PURECAP:       .Lfunc_begin25:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cvt x0, c1, c0
 ; PURECAP-NEXT:    ret c30
 ;
@@ -446,8 +420,7 @@ define i64 @to_pointer(i8 addrspace(200)* %cap1, i8 addrspace(200)* %cap2) nounw
 
 define i64 @to_pointer_ddc_relative(i8 addrspace(200)* %cap) nounwind {
 ; PURECAP-LABEL: to_pointer_ddc_relative:
-; PURECAP:       .Lfunc_begin26:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cvtd x0, c0
 ; PURECAP-NEXT:    ret c30
 ;
@@ -462,8 +435,7 @@ define i64 @to_pointer_ddc_relative(i8 addrspace(200)* %cap) nounwind {
 
 define i8 addrspace(200)* @from_pointer(i8 addrspace(200)* %cap, i64 %ptr) nounwind {
 ; PURECAP-LABEL: from_pointer:
-; PURECAP:       .Lfunc_begin27:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cvtz c0, c0, x1
 ; PURECAP-NEXT:    ret c30
 ;
@@ -477,8 +449,7 @@ define i8 addrspace(200)* @from_pointer(i8 addrspace(200)* %cap, i64 %ptr) nounw
 
 define i8 addrspace(200)* @from_ddc(i64 %ptr) nounwind {
 ; PURECAP-LABEL: from_ddc:
-; PURECAP:       .Lfunc_begin28:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cvtdz c0, x0
 ; PURECAP-NEXT:    ret c30
 ;
@@ -493,8 +464,7 @@ define i8 addrspace(200)* @from_ddc(i64 %ptr) nounwind {
 
 define i64 @diff(i8 addrspace(200)* %cap1, i8 addrspace(200)* %cap2) nounwind {
 ; PURECAP-LABEL: diff:
-; PURECAP:       .Lfunc_begin29:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    sub x0, x0, x1
 ; PURECAP-NEXT:    ret c30
 ;
@@ -508,8 +478,7 @@ define i64 @diff(i8 addrspace(200)* %cap1, i8 addrspace(200)* %cap2) nounwind {
 
 define i8 addrspace(200)* @ddc_get() nounwind {
 ; PURECAP-LABEL: ddc_get:
-; PURECAP:       .Lfunc_begin30:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    mrs c0, DDC
 ; PURECAP-NEXT:    ret c30
 ;
@@ -523,8 +492,7 @@ define i8 addrspace(200)* @ddc_get() nounwind {
 
 define i8 addrspace(200)* @pcc_get() nounwind {
 ; PURECAP-LABEL: pcc_get:
-; PURECAP:       .Lfunc_begin31:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    adr c0, #0
 ; PURECAP-NEXT:    ret c30
 ;
@@ -543,8 +511,7 @@ declare i1 @llvm.cheri.cap.subset.test(i8 addrspace(200)* %cap1, i8 addrspace(20
 
 define i64 @subset_test(i8 addrspace(200)* %cap1, i8 addrspace(200)* %cap2) nounwind {
 ; PURECAP-LABEL: subset_test:
-; PURECAP:       .Lfunc_begin32:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    chkss c0, c1
 ; PURECAP-NEXT:    cset w0, mi
 ; PURECAP-NEXT:    ret c30
@@ -563,8 +530,7 @@ declare i1 @llvm.cheri.cap.equal.exact(i8 addrspace(200)* %cap1, i8 addrspace(20
 
 define i64 @equal_exact(i8 addrspace(200)* %cap1, i8 addrspace(200)* %cap2) nounwind {
 ; PURECAP-LABEL: equal_exact:
-; PURECAP:       .Lfunc_begin33:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    chkeq c0, c1
 ; PURECAP-NEXT:    cset w0, eq
 ; PURECAP-NEXT:    ret c30

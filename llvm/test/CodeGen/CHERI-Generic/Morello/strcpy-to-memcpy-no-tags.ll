@@ -19,8 +19,7 @@ declare ptr addrspace(200) @stpncpy(ptr addrspace(200), ptr addrspace(200), i64)
 
 define void @test_strcpy_to_memcpy(ptr addrspace(200) align 8 %dst) addrspace(200) nounwind {
 ; CHECK-ASM-LABEL: test_strcpy_to_memcpy:
-; CHECK-ASM:       .Lfunc_begin0:
-; CHECK-ASM-NEXT:  // %bb.0: // %entry
+; CHECK-ASM:       // %bb.0: // %entry
 ; CHECK-ASM-NEXT:    adrp c1, .L__cap_merged_table
 ; CHECK-ASM-NEXT:    ldr c1, [c1, :lo12:.L__cap_merged_table]
 ; CHECK-ASM-NEXT:    strb wzr, [c0, #16]
@@ -40,8 +39,7 @@ entry:
 
 define void @test_stpcpy_to_memcpy(ptr addrspace(200) align 8 %dst) addrspace(200) nounwind {
 ; CHECK-ASM-LABEL: test_stpcpy_to_memcpy:
-; CHECK-ASM:       .Lfunc_begin1:
-; CHECK-ASM-NEXT:  // %bb.0: // %entry
+; CHECK-ASM:       // %bb.0: // %entry
 ; CHECK-ASM-NEXT:    adrp c1, .L__cap_merged_table
 ; CHECK-ASM-NEXT:    ldr c1, [c1, :lo12:.L__cap_merged_table]
 ; CHECK-ASM-NEXT:    strb wzr, [c0, #16]
@@ -61,8 +59,7 @@ entry:
 
 define void @test_strcat_to_memcpy(ptr addrspace(200) align 8 %dst) addrspace(200) nounwind {
 ; CHECK-ASM-LABEL: test_strcat_to_memcpy:
-; CHECK-ASM:       .Lfunc_begin2:
-; CHECK-ASM-NEXT:  // %bb.0: // %entry
+; CHECK-ASM:       // %bb.0: // %entry
 ; CHECK-ASM-NEXT:    stp c30, c19, [csp, #-32]! // 32-byte Folded Spill
 ; CHECK-ASM-NEXT:    mov c19, c0
 ; CHECK-ASM-NEXT:    bl strlen
@@ -90,8 +87,7 @@ entry:
 
 define void @test_strncpy_to_memcpy(ptr addrspace(200) align 8 %dst) addrspace(200) nounwind {
 ; CHECK-ASM-LABEL: test_strncpy_to_memcpy:
-; CHECK-ASM:       .Lfunc_begin3:
-; CHECK-ASM-NEXT:  // %bb.0: // %entry
+; CHECK-ASM:       // %bb.0: // %entry
 ; CHECK-ASM-NEXT:    adrp c1, .L__cap_merged_table
 ; CHECK-ASM-NEXT:    ldr c1, [c1, :lo12:.L__cap_merged_table]
 ; CHECK-ASM-NEXT:    strb wzr, [c0, #16]
@@ -112,8 +108,7 @@ entry:
 ; Note: stpncpy is not handled by SimplifyLibcalls yet, so this should not be changed.
 define void @test_stpncpy_to_memcpy(ptr addrspace(200) align 8 %dst) addrspace(200) nounwind {
 ; CHECK-ASM-LABEL: test_stpncpy_to_memcpy:
-; CHECK-ASM:       .Lfunc_begin4:
-; CHECK-ASM-NEXT:  // %bb.0: // %entry
+; CHECK-ASM:       // %bb.0: // %entry
 ; CHECK-ASM-NEXT:    adrp c1, .L__cap_merged_table
 ; CHECK-ASM-NEXT:    ldr c1, [c1, :lo12:.L__cap_merged_table]
 ; CHECK-ASM-NEXT:    strb wzr, [c0, #16]

@@ -23,8 +23,7 @@ target datalayout = "e-m:e-pf200:128:128:128:64-i8:8:32-i16:16:32-i64:64-i128:12
 
 define i32 @first_i32_store_to_load_fwd(ptr addrspace(200) %arg) local_unnamed_addr addrspace(200) nounwind {
 ; ASM-LABEL: first_i32_store_to_load_fwd:
-; ASM:       .Lfunc_begin0:
-; ASM-NEXT:  // %bb.0:
+; ASM:       // %bb.0:
 ; ASM-NEXT:    sub csp, csp, #80
 ; ASM-NEXT:    str c0, [csp, #0]
 ; ASM-NEXT:    ldr w0, [csp]
@@ -46,8 +45,7 @@ define i32 @first_i32_store_to_load_fwd(ptr addrspace(200) %arg) local_unnamed_a
 
 define i32 @second_i32_store_to_load_fwd(ptr addrspace(200) %arg) local_unnamed_addr addrspace(200) nounwind {
 ; ASM-LABEL: second_i32_store_to_load_fwd:
-; ASM:       .Lfunc_begin1:
-; ASM-NEXT:  // %bb.0:
+; ASM:       // %bb.0:
 ; ASM-NEXT:    sub csp, csp, #80
 ; ASM-NEXT:    str c0, [csp, #0]
 ; ASM-NEXT:    ldr w0, [csp, #4]
@@ -70,8 +68,7 @@ define i32 @second_i32_store_to_load_fwd(ptr addrspace(200) %arg) local_unnamed_
 
 define i32 @third_i32_store_to_load_fwd(ptr addrspace(200) %arg) local_unnamed_addr addrspace(200) nounwind {
 ; ASM-LABEL: third_i32_store_to_load_fwd:
-; ASM:       .Lfunc_begin2:
-; ASM-NEXT:  // %bb.0:
+; ASM:       // %bb.0:
 ; ASM-NEXT:    sub csp, csp, #80
 ; ASM-NEXT:    str c0, [csp, #0]
 ; ASM-NEXT:    ldr w0, [csp, #8]
@@ -94,8 +91,7 @@ define i32 @third_i32_store_to_load_fwd(ptr addrspace(200) %arg) local_unnamed_a
 
 define i32 @fourth_i32_store_to_load_fwd(ptr addrspace(200) %arg) local_unnamed_addr addrspace(200) nounwind {
 ; ASM-LABEL: fourth_i32_store_to_load_fwd:
-; ASM:       .Lfunc_begin3:
-; ASM-NEXT:  // %bb.0:
+; ASM:       // %bb.0:
 ; ASM-NEXT:    sub csp, csp, #80
 ; ASM-NEXT:    str c0, [csp, #0]
 ; ASM-NEXT:    ldr w0, [csp, #12]

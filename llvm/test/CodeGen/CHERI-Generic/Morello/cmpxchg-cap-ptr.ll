@@ -8,8 +8,7 @@
 
 define { i8, i1 } @test_cmpxchg_strong_i8(ptr addrspace(200) %ptr, i8 %exp, i8 %new) nounwind {
 ; PURECAP-LABEL: test_cmpxchg_strong_i8:
-; PURECAP:       .Lfunc_begin0:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    mov c3, c0
 ; PURECAP-NEXT:    // kill: def $w2 killed $w2 def $x2
 ; PURECAP-NEXT:  .LBB0_1: // %cmpxchg.start
@@ -46,8 +45,7 @@ define { i8, i1 } @test_cmpxchg_strong_i8(ptr addrspace(200) %ptr, i8 %exp, i8 %
 
 define { i16, i1 } @test_cmpxchg_strong_i16(ptr addrspace(200) %ptr, i16 %exp, i16 %new) nounwind {
 ; PURECAP-LABEL: test_cmpxchg_strong_i16:
-; PURECAP:       .Lfunc_begin1:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    mov c3, c0
 ; PURECAP-NEXT:    // kill: def $w2 killed $w2 def $x2
 ; PURECAP-NEXT:  .LBB1_1: // %cmpxchg.start
@@ -84,8 +82,7 @@ define { i16, i1 } @test_cmpxchg_strong_i16(ptr addrspace(200) %ptr, i16 %exp, i
 
 define { i32, i1 } @test_cmpxchg_strong_i32(ptr addrspace(200) %ptr, i32 %exp, i32 %new) nounwind {
 ; PURECAP-LABEL: test_cmpxchg_strong_i32:
-; PURECAP:       .Lfunc_begin2:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    mov c3, c0
 ; PURECAP-NEXT:  .LBB2_1: // %cmpxchg.start
 ; PURECAP-NEXT:    // =>This Inner Loop Header: Depth=1
@@ -121,8 +118,7 @@ define { i32, i1 } @test_cmpxchg_strong_i32(ptr addrspace(200) %ptr, i32 %exp, i
 
 define { i64, i1 } @test_cmpxchg_strong_i64(ptr addrspace(200) %ptr, i64 %exp, i64 %new) nounwind {
 ; PURECAP-LABEL: test_cmpxchg_strong_i64:
-; PURECAP:       .Lfunc_begin3:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    mov c3, c0
 ; PURECAP-NEXT:  .LBB3_1: // %cmpxchg.start
 ; PURECAP-NEXT:    // =>This Inner Loop Header: Depth=1
@@ -156,8 +152,7 @@ define { i64, i1 } @test_cmpxchg_strong_i64(ptr addrspace(200) %ptr, i64 %exp, i
 
 define { ptr addrspace(200), i1 } @test_cmpxchg_strong_cap(ptr addrspace(200) %ptr, ptr addrspace(200) %exp, ptr addrspace(200) %new) nounwind {
 ; PURECAP-LABEL: test_cmpxchg_strong_cap:
-; PURECAP:       .Lfunc_begin4:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    mov c3, c1
 ; PURECAP-NEXT:    casal c3, c2, [c0]
 ; PURECAP-NEXT:    cmp x3, x1
@@ -183,8 +178,7 @@ define { ptr addrspace(200), i1 } @test_cmpxchg_strong_cap(ptr addrspace(200) %p
 
 define { ptr addrspace(200), i1 } @test_cmpxchg_strong_cap_i32(ptr addrspace(200) %ptr, ptr addrspace(200) %exp, ptr addrspace(200) %new) nounwind {
 ; PURECAP-LABEL: test_cmpxchg_strong_cap_i32:
-; PURECAP:       .Lfunc_begin5:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    mov c3, c1
 ; PURECAP-NEXT:    casal c3, c2, [c0]
 ; PURECAP-NEXT:    cmp x3, x1
@@ -211,8 +205,7 @@ define { ptr addrspace(200), i1 } @test_cmpxchg_strong_cap_i32(ptr addrspace(200
 
 define { i8, i1 } @test_cmpxchg_weak_i8(ptr addrspace(200) %ptr, i8 %exp, i8 %new) nounwind {
 ; PURECAP-LABEL: test_cmpxchg_weak_i8:
-; PURECAP:       .Lfunc_begin6:
-; PURECAP-NEXT:  // %bb.0: // %cmpxchg.start
+; PURECAP:       // %bb.0: // %cmpxchg.start
 ; PURECAP-NEXT:    mov c3, c0
 ; PURECAP-NEXT:    ldaxrb w0, [c0]
 ; PURECAP-NEXT:    // kill: def $w2 killed $w2 def $x2
@@ -250,8 +243,7 @@ define { i8, i1 } @test_cmpxchg_weak_i8(ptr addrspace(200) %ptr, i8 %exp, i8 %ne
 
 define { i16, i1 } @test_cmpxchg_weak_i16(ptr addrspace(200) %ptr, i16 %exp, i16 %new) nounwind {
 ; PURECAP-LABEL: test_cmpxchg_weak_i16:
-; PURECAP:       .Lfunc_begin7:
-; PURECAP-NEXT:  // %bb.0: // %cmpxchg.start
+; PURECAP:       // %bb.0: // %cmpxchg.start
 ; PURECAP-NEXT:    mov c3, c0
 ; PURECAP-NEXT:    ldaxrh w0, [c0]
 ; PURECAP-NEXT:    // kill: def $w2 killed $w2 def $x2
@@ -289,8 +281,7 @@ define { i16, i1 } @test_cmpxchg_weak_i16(ptr addrspace(200) %ptr, i16 %exp, i16
 
 define { i32, i1 } @test_cmpxchg_weak_i32(ptr addrspace(200) %ptr, i32 %exp, i32 %new) nounwind {
 ; PURECAP-LABEL: test_cmpxchg_weak_i32:
-; PURECAP:       .Lfunc_begin8:
-; PURECAP-NEXT:  // %bb.0: // %cmpxchg.start
+; PURECAP:       // %bb.0: // %cmpxchg.start
 ; PURECAP-NEXT:    mov c3, c0
 ; PURECAP-NEXT:    ldaxr w0, [c0]
 ; PURECAP-NEXT:    cmp w0, w1
@@ -327,8 +318,7 @@ define { i32, i1 } @test_cmpxchg_weak_i32(ptr addrspace(200) %ptr, i32 %exp, i32
 
 define { i64, i1 } @test_cmpxchg_weak_i64(ptr addrspace(200) %ptr, i64 %exp, i64 %new) nounwind {
 ; PURECAP-LABEL: test_cmpxchg_weak_i64:
-; PURECAP:       .Lfunc_begin9:
-; PURECAP-NEXT:  // %bb.0: // %cmpxchg.start
+; PURECAP:       // %bb.0: // %cmpxchg.start
 ; PURECAP-NEXT:    mov c3, c0
 ; PURECAP-NEXT:    ldaxr x0, [c0]
 ; PURECAP-NEXT:    cmp x0, x1
@@ -362,8 +352,7 @@ define { i64, i1 } @test_cmpxchg_weak_i64(ptr addrspace(200) %ptr, i64 %exp, i64
 
 define { ptr addrspace(200), i1 } @test_cmpxchg_weak_cap(ptr addrspace(200) %ptr, ptr addrspace(200) %exp, ptr addrspace(200) %new) nounwind {
 ; PURECAP-LABEL: test_cmpxchg_weak_cap:
-; PURECAP:       .Lfunc_begin10:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    mov c3, c1
 ; PURECAP-NEXT:    casal c3, c2, [c0]
 ; PURECAP-NEXT:    cmp x3, x1
@@ -389,8 +378,7 @@ define { ptr addrspace(200), i1 } @test_cmpxchg_weak_cap(ptr addrspace(200) %ptr
 
 define { ptr addrspace(200), i1 } @test_cmpxchg_weak_cap_i32(ptr addrspace(200) %ptr, ptr addrspace(200) %exp, ptr addrspace(200) %new) nounwind {
 ; PURECAP-LABEL: test_cmpxchg_weak_cap_i32:
-; PURECAP:       .Lfunc_begin11:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    mov c3, c1
 ; PURECAP-NEXT:    casal c3, c2, [c0]
 ; PURECAP-NEXT:    cmp x3, x1

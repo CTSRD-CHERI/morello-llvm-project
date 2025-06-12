@@ -33,10 +33,7 @@ declare void @cheribsdtest_check_cap_eq(ptr addrspace(200) noundef, ptr addrspac
 
 define dso_local void @lazy_bind_args() addrspace(200) nounwind {
 ; ASM-LABEL: lazy_bind_args:
-; ASM:       .Llazy_bind_args$local:
-; ASM-NEXT:    .type .Llazy_bind_args$local,@function
-; ASM-NEXT:  .Lfunc_begin0:
-; ASM-NEXT:  // %bb.0: // %entry
+; ASM:       // %bb.0: // %entry
 ; ASM-NEXT:    sub csp, csp, #32
 ; ASM-NEXT:    mov c0, csp
 ; ASM-NEXT:    scbnds c0, c0, #16 // =16

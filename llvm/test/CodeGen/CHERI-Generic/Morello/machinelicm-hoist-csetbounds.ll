@@ -31,10 +31,7 @@ declare ptr addrspace(200) @llvm.cheri.cap.bounds.set.i64(ptr addrspace(200), i6
 
 define dso_local void @hoist_csetbounds(i32 signext %cond, ptr addrspace(200) %f) local_unnamed_addr addrspace(200) nounwind {
 ; CHECK-LABEL: hoist_csetbounds:
-; CHECK:       .Lhoist_csetbounds$local:
-; CHECK-NEXT:    .type .Lhoist_csetbounds$local,@function
-; CHECK-NEXT:  .Lfunc_begin0:
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    str c30, [csp, #-80]! // 16-byte Folded Spill
 ; CHECK-NEXT:    stp c22, c21, [csp, #16] // 32-byte Folded Spill
 ; CHECK-NEXT:    mov w22, #-1 // =0xffffffff

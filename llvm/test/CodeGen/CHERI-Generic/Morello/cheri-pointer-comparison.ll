@@ -48,8 +48,7 @@ define i32 @eq(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: eq:
-; PURECAP:       .Lfunc_begin0:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    cset w0, eq
 ; PURECAP-NEXT:    ret c30
@@ -66,8 +65,7 @@ define i32 @ne(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: ne:
-; PURECAP:       .Lfunc_begin1:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    cset w0, ne
 ; PURECAP-NEXT:    ret c30
@@ -84,8 +82,7 @@ define i32 @ugt(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: ugt:
-; PURECAP:       .Lfunc_begin2:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    cset w0, hi
 ; PURECAP-NEXT:    ret c30
@@ -102,8 +99,7 @@ define i32 @uge(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: uge:
-; PURECAP:       .Lfunc_begin3:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    cset w0, hs
 ; PURECAP-NEXT:    ret c30
@@ -120,8 +116,7 @@ define i32 @ult(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: ult:
-; PURECAP:       .Lfunc_begin4:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    cset w0, lo
 ; PURECAP-NEXT:    ret c30
@@ -138,8 +133,7 @@ define i32 @ule(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: ule:
-; PURECAP:       .Lfunc_begin5:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    cset w0, ls
 ; PURECAP-NEXT:    ret c30
@@ -156,8 +150,7 @@ define i32 @sgt(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: sgt:
-; PURECAP:       .Lfunc_begin6:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    cset w0, gt
 ; PURECAP-NEXT:    ret c30
@@ -174,8 +167,7 @@ define i32 @sge(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: sge:
-; PURECAP:       .Lfunc_begin7:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    cset w0, ge
 ; PURECAP-NEXT:    ret c30
@@ -192,8 +184,7 @@ define i32 @slt(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: slt:
-; PURECAP:       .Lfunc_begin8:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    cset w0, lt
 ; PURECAP-NEXT:    ret c30
@@ -210,8 +201,7 @@ define i32 @sle(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: sle:
-; PURECAP:       .Lfunc_begin9:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    cset w0, le
 ; PURECAP-NEXT:    ret c30
@@ -228,8 +218,7 @@ define i32 @eq_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: eq_null:
-; PURECAP:       .Lfunc_begin10:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    cset w0, eq
 ; PURECAP-NEXT:    ret c30
@@ -246,8 +235,7 @@ define i32 @ne_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: ne_null:
-; PURECAP:       .Lfunc_begin11:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    cset w0, ne
 ; PURECAP-NEXT:    ret c30
@@ -264,8 +252,7 @@ define i32 @ugt_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: ugt_null:
-; PURECAP:       .Lfunc_begin12:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    cset w0, hi
 ; PURECAP-NEXT:    ret c30
@@ -282,8 +269,7 @@ define i32 @uge_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: uge_null:
-; PURECAP:       .Lfunc_begin13:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    cset w0, hs
 ; PURECAP-NEXT:    ret c30
@@ -300,8 +286,7 @@ define i32 @ult_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: ult_null:
-; PURECAP:       .Lfunc_begin14:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    cset w0, lo
 ; PURECAP-NEXT:    ret c30
@@ -318,8 +303,7 @@ define i32 @ule_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: ule_null:
-; PURECAP:       .Lfunc_begin15:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    cset w0, ls
 ; PURECAP-NEXT:    ret c30
@@ -336,8 +320,7 @@ define i32 @sgt_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: sgt_null:
-; PURECAP:       .Lfunc_begin16:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    cset w0, gt
 ; PURECAP-NEXT:    ret c30
@@ -354,8 +337,7 @@ define i32 @sge_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: sge_null:
-; PURECAP:       .Lfunc_begin17:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    cset w0, ge
 ; PURECAP-NEXT:    ret c30
@@ -372,8 +354,7 @@ define i32 @slt_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: slt_null:
-; PURECAP:       .Lfunc_begin18:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    cset w0, lt
 ; PURECAP-NEXT:    ret c30
@@ -390,8 +371,7 @@ define i32 @sle_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: sle_null:
-; PURECAP:       .Lfunc_begin19:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    cset w0, le
 ; PURECAP-NEXT:    ret c30
@@ -408,8 +388,7 @@ define i8 addrspace(200)* @select_eq(i8 addrspace(200)* %a, i8 addrspace(200)* %
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_eq:
-; PURECAP:       .Lfunc_begin20:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    csel c0, c0, c1, eq
 ; PURECAP-NEXT:    ret c30
@@ -426,8 +405,7 @@ define i8 addrspace(200)* @select_ne(i8 addrspace(200)* %a, i8 addrspace(200)* %
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_ne:
-; PURECAP:       .Lfunc_begin21:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    csel c0, c0, c1, ne
 ; PURECAP-NEXT:    ret c30
@@ -444,8 +422,7 @@ define i8 addrspace(200)* @select_ugt(i8 addrspace(200)* %a, i8 addrspace(200)* 
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_ugt:
-; PURECAP:       .Lfunc_begin22:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    csel c0, c0, c1, hi
 ; PURECAP-NEXT:    ret c30
@@ -462,8 +439,7 @@ define i8 addrspace(200)* @select_uge(i8 addrspace(200)* %a, i8 addrspace(200)* 
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_uge:
-; PURECAP:       .Lfunc_begin23:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    csel c0, c0, c1, hs
 ; PURECAP-NEXT:    ret c30
@@ -480,8 +456,7 @@ define i8 addrspace(200)* @select_ult(i8 addrspace(200)* %a, i8 addrspace(200)* 
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_ult:
-; PURECAP:       .Lfunc_begin24:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    csel c0, c0, c1, lo
 ; PURECAP-NEXT:    ret c30
@@ -498,8 +473,7 @@ define i8 addrspace(200)* @select_ule(i8 addrspace(200)* %a, i8 addrspace(200)* 
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_ule:
-; PURECAP:       .Lfunc_begin25:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    csel c0, c0, c1, ls
 ; PURECAP-NEXT:    ret c30
@@ -516,8 +490,7 @@ define i8 addrspace(200)* @select_sgt(i8 addrspace(200)* %a, i8 addrspace(200)* 
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_sgt:
-; PURECAP:       .Lfunc_begin26:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    csel c0, c0, c1, gt
 ; PURECAP-NEXT:    ret c30
@@ -534,8 +507,7 @@ define i8 addrspace(200)* @select_sge(i8 addrspace(200)* %a, i8 addrspace(200)* 
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_sge:
-; PURECAP:       .Lfunc_begin27:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    csel c0, c0, c1, ge
 ; PURECAP-NEXT:    ret c30
@@ -552,8 +524,7 @@ define i8 addrspace(200)* @select_slt(i8 addrspace(200)* %a, i8 addrspace(200)* 
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_slt:
-; PURECAP:       .Lfunc_begin28:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    csel c0, c0, c1, lt
 ; PURECAP-NEXT:    ret c30
@@ -570,8 +541,7 @@ define i8 addrspace(200)* @select_sle(i8 addrspace(200)* %a, i8 addrspace(200)* 
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_sle:
-; PURECAP:       .Lfunc_begin29:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    csel c0, c0, c1, le
 ; PURECAP-NEXT:    ret c30
@@ -588,8 +558,7 @@ define i8 addrspace(200)* @select_eq_null(i8 addrspace(200)* %a, i8 addrspace(20
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_eq_null:
-; PURECAP:       .Lfunc_begin30:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    csel c0, c0, c1, eq
 ; PURECAP-NEXT:    ret c30
@@ -606,8 +575,7 @@ define i8 addrspace(200)* @select_ne_null(i8 addrspace(200)* %a, i8 addrspace(20
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_ne_null:
-; PURECAP:       .Lfunc_begin31:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    csel c0, c0, c1, ne
 ; PURECAP-NEXT:    ret c30
@@ -624,8 +592,7 @@ define i8 addrspace(200)* @select_ugt_null(i8 addrspace(200)* %a, i8 addrspace(2
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_ugt_null:
-; PURECAP:       .Lfunc_begin32:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    csel c0, c0, c1, hi
 ; PURECAP-NEXT:    ret c30
@@ -642,8 +609,7 @@ define i8 addrspace(200)* @select_uge_null(i8 addrspace(200)* %a, i8 addrspace(2
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_uge_null:
-; PURECAP:       .Lfunc_begin33:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    csel c0, c0, c1, hs
 ; PURECAP-NEXT:    ret c30
@@ -660,8 +626,7 @@ define i8 addrspace(200)* @select_ult_null(i8 addrspace(200)* %a, i8 addrspace(2
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_ult_null:
-; PURECAP:       .Lfunc_begin34:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    csel c0, c0, c1, lo
 ; PURECAP-NEXT:    ret c30
@@ -678,8 +643,7 @@ define i8 addrspace(200)* @select_ule_null(i8 addrspace(200)* %a, i8 addrspace(2
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_ule_null:
-; PURECAP:       .Lfunc_begin35:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    csel c0, c0, c1, ls
 ; PURECAP-NEXT:    ret c30
@@ -696,8 +660,7 @@ define i8 addrspace(200)* @select_sgt_null(i8 addrspace(200)* %a, i8 addrspace(2
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_sgt_null:
-; PURECAP:       .Lfunc_begin36:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    csel c0, c0, c1, gt
 ; PURECAP-NEXT:    ret c30
@@ -714,8 +677,7 @@ define i8 addrspace(200)* @select_sge_null(i8 addrspace(200)* %a, i8 addrspace(2
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_sge_null:
-; PURECAP:       .Lfunc_begin37:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    csel c0, c0, c1, ge
 ; PURECAP-NEXT:    ret c30
@@ -732,8 +694,7 @@ define i8 addrspace(200)* @select_slt_null(i8 addrspace(200)* %a, i8 addrspace(2
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_slt_null:
-; PURECAP:       .Lfunc_begin38:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    csel c0, c0, c1, lt
 ; PURECAP-NEXT:    ret c30
@@ -750,8 +711,7 @@ define i8 addrspace(200)* @select_sle_null(i8 addrspace(200)* %a, i8 addrspace(2
 ; HYBRID-NEXT:    ret
 ;
 ; PURECAP-LABEL: select_sle_null:
-; PURECAP:       .Lfunc_begin39:
-; PURECAP-NEXT:  // %bb.0:
+; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    csel c0, c0, c1, le
 ; PURECAP-NEXT:    ret c30
@@ -774,8 +734,7 @@ define i32 @branch_eq(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    b func1
 ;
 ; PURECAP-LABEL: branch_eq:
-; PURECAP:       .Lfunc_begin40:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    b.eq .LBB40_2
 ; PURECAP-NEXT:  // %bb.1: // %if.end
@@ -804,8 +763,7 @@ define i32 @branch_ne(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_ne:
-; PURECAP:       .Lfunc_begin41:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    b.eq .LBB41_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then
@@ -834,8 +792,7 @@ define i32 @branch_ugt(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_ugt:
-; PURECAP:       .Lfunc_begin42:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    b.ls .LBB42_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then
@@ -864,8 +821,7 @@ define i32 @branch_uge(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_uge:
-; PURECAP:       .Lfunc_begin43:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    b.lo .LBB43_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then
@@ -894,8 +850,7 @@ define i32 @branch_ult(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_ult:
-; PURECAP:       .Lfunc_begin44:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    b.hs .LBB44_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then
@@ -924,8 +879,7 @@ define i32 @branch_ule(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_ule:
-; PURECAP:       .Lfunc_begin45:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    b.hi .LBB45_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then
@@ -954,8 +908,7 @@ define i32 @branch_sgt(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_sgt:
-; PURECAP:       .Lfunc_begin46:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    b.le .LBB46_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then
@@ -984,8 +937,7 @@ define i32 @branch_sge(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_sge:
-; PURECAP:       .Lfunc_begin47:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    b.lt .LBB47_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then
@@ -1014,8 +966,7 @@ define i32 @branch_slt(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_slt:
-; PURECAP:       .Lfunc_begin48:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    b.ge .LBB48_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then
@@ -1044,8 +995,7 @@ define i32 @branch_sle(i8 addrspace(200)* %a, i8 addrspace(200)* %b) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_sle:
-; PURECAP:       .Lfunc_begin49:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cmp x0, x1
 ; PURECAP-NEXT:    b.gt .LBB49_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then
@@ -1073,8 +1023,7 @@ define i32 @branch_eq_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    b func1
 ;
 ; PURECAP-LABEL: branch_eq_null:
-; PURECAP:       .Lfunc_begin50:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cbz x0, .LBB50_2
 ; PURECAP-NEXT:  // %bb.1: // %if.end
 ; PURECAP-NEXT:    b func2
@@ -1101,8 +1050,7 @@ define i32 @branch_ne_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_ne_null:
-; PURECAP:       .Lfunc_begin51:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cbz x0, .LBB51_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then
 ; PURECAP-NEXT:    b func1
@@ -1130,8 +1078,7 @@ define i32 @branch_ugt_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_ugt_null:
-; PURECAP:       .Lfunc_begin52:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    b.ls .LBB52_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then
@@ -1160,8 +1107,7 @@ define i32 @branch_uge_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_uge_null:
-; PURECAP:       .Lfunc_begin53:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    b.lo .LBB53_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then
@@ -1190,8 +1136,7 @@ define i32 @branch_ult_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_ult_null:
-; PURECAP:       .Lfunc_begin54:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    b.hs .LBB54_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then
@@ -1220,8 +1165,7 @@ define i32 @branch_ule_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_ule_null:
-; PURECAP:       .Lfunc_begin55:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    b.hi .LBB55_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then
@@ -1250,8 +1194,7 @@ define i32 @branch_sgt_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_sgt_null:
-; PURECAP:       .Lfunc_begin56:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    b.le .LBB56_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then
@@ -1279,8 +1222,7 @@ define i32 @branch_sge_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_sge_null:
-; PURECAP:       .Lfunc_begin57:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    tbnz x0, #63, .LBB57_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then
 ; PURECAP-NEXT:    b func1
@@ -1308,8 +1250,7 @@ define i32 @branch_slt_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_slt_null:
-; PURECAP:       .Lfunc_begin58:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    b.ge .LBB58_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then
@@ -1338,8 +1279,7 @@ define i32 @branch_sle_null(i8 addrspace(200)* %a) nounwind {
 ; HYBRID-NEXT:    b func2
 ;
 ; PURECAP-LABEL: branch_sle_null:
-; PURECAP:       .Lfunc_begin59:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cmp x0, #0
 ; PURECAP-NEXT:    b.gt .LBB59_2
 ; PURECAP-NEXT:  // %bb.1: // %if.then

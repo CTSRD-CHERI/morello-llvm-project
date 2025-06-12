@@ -8,10 +8,7 @@
 
 define dso_local ptr addrspace(200) @frameaddr() addrspace(200) nounwind {
 ; PURECAP-LABEL: frameaddr:
-; PURECAP:       .Lframeaddr$local:
-; PURECAP-NEXT:    .type .Lframeaddr$local,@function
-; PURECAP-NEXT:  .Lfunc_begin0:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    sub csp, csp, #48
 ; PURECAP-NEXT:    stp c29, c30, [csp, #16] // 32-byte Folded Spill
 ; PURECAP-NEXT:    add c29, csp, #16
@@ -22,9 +19,7 @@ define dso_local ptr addrspace(200) @frameaddr() addrspace(200) nounwind {
 ; PURECAP-NEXT:    ret c30
 ;
 ; HYBRID-LABEL: frameaddr:
-; HYBRID:       .Lframeaddr$local:
-; HYBRID-NEXT:    .type .Lframeaddr$local,@function
-; HYBRID-NEXT:  // %bb.0: // %entry
+; HYBRID:       // %bb.0: // %entry
 ; HYBRID-NEXT:    sub sp, sp, #32
 ; HYBRID-NEXT:    stp x29, x30, [sp, #16] // 16-byte Folded Spill
 ; HYBRID-NEXT:    add x29, sp, #16
@@ -45,19 +40,14 @@ declare ptr addrspace(200) @llvm.frameaddress.p200(i32 immarg) addrspace(200)
 
 define dso_local ptr addrspace(200) @retaddr() addrspace(200) nounwind {
 ; PURECAP-LABEL: retaddr:
-; PURECAP:       .Lretaddr$local:
-; PURECAP-NEXT:    .type .Lretaddr$local,@function
-; PURECAP-NEXT:  .Lfunc_begin1:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    sub csp, csp, #16
 ; PURECAP-NEXT:    mov c0, c30
 ; PURECAP-NEXT:    str c30, [csp], #16
 ; PURECAP-NEXT:    ret c30
 ;
 ; HYBRID-LABEL: retaddr:
-; HYBRID:       .Lretaddr$local:
-; HYBRID-NEXT:    .type .Lretaddr$local,@function
-; HYBRID-NEXT:  // %bb.0: // %entry
+; HYBRID:       // %bb.0: // %entry
 ; HYBRID-NEXT:    sub sp, sp, #32
 ; HYBRID-NEXT:    str x30, [sp, #16] // 8-byte Folded Spill
 ; HYBRID-NEXT:    hint #7

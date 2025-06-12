@@ -11,8 +11,7 @@ declare void @llvm.assume(i1) addrspace(200)
 
 define void @memcpy_assume(i8 addrspace(200)* addrspace(200)* %local_cap_ptr, i8 addrspace(200)* %align1) addrspace(200) nounwind {
 ; CHECK-LABEL: memcpy_assume:
-; CHECK:       .Lfunc_begin0:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    ldp c2, c0, [c0, #0]
 ; CHECK-NEXT:    stp c2, c0, [c1, #0]
 ; CHECK-NEXT:    ret c30
@@ -27,8 +26,7 @@ define void @memcpy_assume(i8 addrspace(200)* addrspace(200)* %local_cap_ptr, i8
 
 define void @memmove_assume(i8 addrspace(200)* addrspace(200)* %local_cap_ptr, i8 addrspace(200)* %align1) addrspace(200) nounwind {
 ; CHECK-LABEL: memmove_assume:
-; CHECK:       .Lfunc_begin1:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    ldp c2, c0, [c0, #0]
 ; CHECK-NEXT:    stp c2, c0, [c1, #0]
 ; CHECK-NEXT:    ret c30

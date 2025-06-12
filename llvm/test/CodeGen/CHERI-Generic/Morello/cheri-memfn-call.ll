@@ -11,8 +11,7 @@ declare void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) nocapture, ptr addrsp
 
 define void @call_memset(ptr addrspace(200) align 4 %dst) nounwind {
 ; PURECAP-LABEL: call_memset:
-; PURECAP:       .Lfunc_begin0:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    movi v0.2d, #0000000000000000
 ; PURECAP-NEXT:    str xzr, [c0, #32]
 ; PURECAP-NEXT:    stp q0, q0, [c0]
@@ -32,8 +31,7 @@ entry:
 
 define void @call_memcpy(ptr addrspace(200) align 4 %dst, ptr addrspace(200) align 4 %src) nounwind {
 ; PURECAP-LABEL: call_memcpy:
-; PURECAP:       .Lfunc_begin1:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    str c30, [csp, #-16]! // 16-byte Folded Spill
 ; PURECAP-NEXT:    mov w2, #40 // =0x28
 ; PURECAP-NEXT:    bl memcpy
@@ -54,8 +52,7 @@ entry:
 
 define void @call_memmove(ptr addrspace(200) align 4 %dst, ptr addrspace(200) align 4 %src) nounwind {
 ; PURECAP-LABEL: call_memmove:
-; PURECAP:       .Lfunc_begin2:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    str c30, [csp, #-16]! // 16-byte Folded Spill
 ; PURECAP-NEXT:    mov w2, #40 // =0x28
 ; PURECAP-NEXT:    bl memmove

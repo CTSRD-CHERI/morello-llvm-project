@@ -12,9 +12,7 @@ declare void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) noalias nocapture wri
 
 define linkonce_odr void @copy_from_zero_constant(ptr addrspace(200) %dst) addrspace(200) {
 ; CHECK-LABEL: copy_from_zero_constant:
-; CHECK:       .Lfunc_begin0:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %do.body
+; CHECK:       // %bb.0: // %do.body
 ; CHECK-NEXT:    stp xzr, xzr, [c0]
 ; CHECK-NEXT:    ret c30
 do.body:
@@ -24,9 +22,7 @@ do.body:
 
 define linkonce_odr void @copy_from_zero_constant_with_offset(ptr addrspace(200) %dst) addrspace(200) {
 ; CHECK-LABEL: copy_from_zero_constant_with_offset:
-; CHECK:       .Lfunc_begin1:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %do.body
+; CHECK:       // %bb.0: // %do.body
 ; CHECK-NEXT:    stp xzr, xzr, [c0]
 ; CHECK-NEXT:    ret c30
 do.body:
@@ -37,9 +33,7 @@ do.body:
 
 define linkonce_odr void @copy_from_large_zero_constant(ptr addrspace(200) %dst) addrspace(200) {
 ; CHECK-LABEL: copy_from_large_zero_constant:
-; CHECK:       .Lfunc_begin2:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %do.body
+; CHECK:       // %bb.0: // %do.body
 ; CHECK-NEXT:    str xzr, [c0]
 ; CHECK-NEXT:    ret c30
 do.body:
@@ -49,9 +43,7 @@ do.body:
 
 define linkonce_odr void @copy_from_ptr_constant(ptr addrspace(200) %dst) addrspace(200) {
 ; CHECK-LABEL: copy_from_ptr_constant:
-; CHECK:       .Lfunc_begin3:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %do.body
+; CHECK:       // %bb.0: // %do.body
 ; CHECK-NEXT:    adrp c1, .L__cap_merged_table+16
 ; CHECK-NEXT:    ldr c1, [c1, :lo12:.L__cap_merged_table+16]
 ; CHECK-NEXT:    ldr c1, [c1, #0]
@@ -64,9 +56,7 @@ do.body:
 
 define linkonce_odr void @copy_from_ptr_constant_with_offset(ptr addrspace(200) %dst) addrspace(200) {
 ; CHECK-LABEL: copy_from_ptr_constant_with_offset:
-; CHECK:       .Lfunc_begin4:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %do.body
+; CHECK:       // %bb.0: // %do.body
 ; CHECK-NEXT:    adrp c1, .L__cap_merged_table+16
 ; CHECK-NEXT:    ldr c1, [c1, :lo12:.L__cap_merged_table+16]
 ; CHECK-NEXT:    ldr c1, [c1, #16]
@@ -82,9 +72,7 @@ do.body:
 
 define linkonce_odr void @copy_from_zero_constant_preserve(ptr addrspace(200) %dst) addrspace(200) {
 ; CHECK-LABEL: copy_from_zero_constant_preserve:
-; CHECK:       .Lfunc_begin5:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %do.body
+; CHECK:       // %bb.0: // %do.body
 ; CHECK-NEXT:    stp xzr, xzr, [c0]
 ; CHECK-NEXT:    ret c30
 do.body:
@@ -94,9 +82,7 @@ do.body:
 
 define linkonce_odr void @copy_from_zero_constant_with_offset_preserve(ptr addrspace(200) %dst) addrspace(200) {
 ; CHECK-LABEL: copy_from_zero_constant_with_offset_preserve:
-; CHECK:       .Lfunc_begin6:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %do.body
+; CHECK:       // %bb.0: // %do.body
 ; CHECK-NEXT:    stp xzr, xzr, [c0]
 ; CHECK-NEXT:    ret c30
 do.body:
@@ -107,9 +93,7 @@ do.body:
 
 define linkonce_odr void @copy_from_large_zero_constant_preserve(ptr addrspace(200) %dst) addrspace(200) {
 ; CHECK-LABEL: copy_from_large_zero_constant_preserve:
-; CHECK:       .Lfunc_begin7:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %do.body
+; CHECK:       // %bb.0: // %do.body
 ; CHECK-NEXT:    str xzr, [c0]
 ; CHECK-NEXT:    ret c30
 do.body:
@@ -119,9 +103,7 @@ do.body:
 
 define linkonce_odr void @copy_from_ptr_constant_preserve(ptr addrspace(200) %dst) addrspace(200) {
 ; CHECK-LABEL: copy_from_ptr_constant_preserve:
-; CHECK:       .Lfunc_begin8:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %do.body
+; CHECK:       // %bb.0: // %do.body
 ; CHECK-NEXT:    adrp c1, .L__cap_merged_table+16
 ; CHECK-NEXT:    ldr c1, [c1, :lo12:.L__cap_merged_table+16]
 ; CHECK-NEXT:    ldr c1, [c1, #0]
@@ -134,9 +116,7 @@ do.body:
 
 define linkonce_odr void @copy_from_ptr_constant_with_offset_preserve(ptr addrspace(200) %dst) addrspace(200) {
 ; CHECK-LABEL: copy_from_ptr_constant_with_offset_preserve:
-; CHECK:       .Lfunc_begin9:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %do.body
+; CHECK:       // %bb.0: // %do.body
 ; CHECK-NEXT:    adrp c1, .L__cap_merged_table+16
 ; CHECK-NEXT:    ldr c1, [c1, :lo12:.L__cap_merged_table+16]
 ; CHECK-NEXT:    ldr c1, [c1, #16]
@@ -153,9 +133,7 @@ do.body:
 
 define linkonce_odr void @copy_from_underaligned_zero_constant(ptr addrspace(200) %dst) addrspace(200) {
 ; CHECK-LABEL: copy_from_underaligned_zero_constant:
-; CHECK:       .Lfunc_begin10:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %do.body
+; CHECK:       // %bb.0: // %do.body
 ; CHECK-NEXT:    stp xzr, xzr, [c0]
 ; CHECK-NEXT:    ret c30
 do.body:
@@ -165,9 +143,7 @@ do.body:
 
 define linkonce_odr void @copy_from_underaligned_zero_constant_preserve(ptr addrspace(200) %dst) addrspace(200) {
 ; CHECK-LABEL: copy_from_underaligned_zero_constant_preserve:
-; CHECK:       .Lfunc_begin11:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %do.body
+; CHECK:       // %bb.0: // %do.body
 ; CHECK-NEXT:    stp xzr, xzr, [c0]
 ; CHECK-NEXT:    ret c30
 do.body:

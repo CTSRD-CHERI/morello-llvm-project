@@ -18,8 +18,7 @@ declare i32 @use_alloca(ptr addrspace(200)) local_unnamed_addr addrspace(200)
 
 define i32 @alloca_in_entry(i1 %arg) local_unnamed_addr addrspace(200) nounwind {
 ; ASM-LABEL: alloca_in_entry:
-; ASM:       .Lfunc_begin0:
-; ASM-NEXT:  // %bb.0: // %entry
+; ASM:       // %bb.0: // %entry
 ; ASM-NEXT:    sub csp, csp, #32
 ; ASM-NEXT:    str c30, [csp, #16] // 16-byte Folded Spill
 ; ASM-NEXT:    // kill: def $w1 killed $w0
@@ -44,8 +43,7 @@ define i32 @alloca_in_entry(i1 %arg) local_unnamed_addr addrspace(200) nounwind 
 ; ASM-NEXT:    ret c30
 ;
 ; ASM-OPT-LABEL: alloca_in_entry:
-; ASM-OPT:       .Lfunc_begin0:
-; ASM-OPT-NEXT:  // %bb.0: // %entry
+; ASM-OPT:       // %bb.0: // %entry
 ; ASM-OPT-NEXT:    tbz w0, #0, .LBB0_2
 ; ASM-OPT-NEXT:  // %bb.1: // %use_alloca_no_bounds
 ; ASM-OPT-NEXT:    sub csp, csp, #32
@@ -102,8 +100,7 @@ exit:                                             ; preds = %use_alloca_need_bou
 
 define i32 @alloca_not_in_entry(i1 %arg) local_unnamed_addr addrspace(200) nounwind {
 ; ASM-LABEL: alloca_not_in_entry:
-; ASM:       .Lfunc_begin1:
-; ASM-NEXT:  // %bb.0: // %entry
+; ASM:       // %bb.0: // %entry
 ; ASM-NEXT:    stp c29, c30, [csp, #-32]! // 32-byte Folded Spill
 ; ASM-NEXT:    mov c29, csp
 ; ASM-NEXT:    sub csp, csp, #32
@@ -144,8 +141,7 @@ define i32 @alloca_not_in_entry(i1 %arg) local_unnamed_addr addrspace(200) nounw
 ; ASM-NEXT:    ret c30
 ;
 ; ASM-OPT-LABEL: alloca_not_in_entry:
-; ASM-OPT:       .Lfunc_begin1:
-; ASM-OPT-NEXT:  // %bb.0: // %entry
+; ASM-OPT:       // %bb.0: // %entry
 ; ASM-OPT-NEXT:    tbz w0, #0, .LBB1_2
 ; ASM-OPT-NEXT:  // %bb.1: // %do_alloca
 ; ASM-OPT-NEXT:    stp c29, c30, [csp, #-32]! // 32-byte Folded Spill
@@ -212,8 +208,7 @@ exit:                                             ; preds = %use_alloca_need_bou
 ; We can't use llvm.cheri.bounded.stack.cap.i64 here, since that only works for static allocas:
 define i32 @crash_reproducer(i1 %arg) local_unnamed_addr addrspace(200) nounwind {
 ; ASM-LABEL: crash_reproducer:
-; ASM:       .Lfunc_begin2:
-; ASM-NEXT:  // %bb.0: // %entry
+; ASM:       // %bb.0: // %entry
 ; ASM-NEXT:    stp c29, c30, [csp, #-32]! // 32-byte Folded Spill
 ; ASM-NEXT:    mov c29, csp
 ; ASM-NEXT:    sub csp, csp, #32
@@ -249,8 +244,7 @@ define i32 @crash_reproducer(i1 %arg) local_unnamed_addr addrspace(200) nounwind
 ; ASM-NEXT:    ret c30
 ;
 ; ASM-OPT-LABEL: crash_reproducer:
-; ASM-OPT:       .Lfunc_begin2:
-; ASM-OPT-NEXT:  // %bb.0: // %entry
+; ASM-OPT:       // %bb.0: // %entry
 ; ASM-OPT-NEXT:    sub csp, csp, #32
 ; ASM-OPT-NEXT:    mov c0, csp
 ; ASM-OPT-NEXT:    str c30, [csp, #16] // 16-byte Folded Spill

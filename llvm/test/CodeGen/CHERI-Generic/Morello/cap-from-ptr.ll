@@ -9,8 +9,7 @@
 
 define internal ptr addrspace(200) @test(ptr addrspace(200) %ptr, ptr addrspace(200) %cap, i64 %offset) nounwind {
 ; PURECAP-LABEL: test:
-; PURECAP:       .Lfunc_begin0:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cvtz c1, c1, x2
 ; PURECAP-NEXT:    mov c2, c0
 ; PURECAP-NEXT:    mov c0, c1
@@ -40,8 +39,7 @@ entry:
 ;; (int_cheri_cap_from_ptr x, 0) -> null
 define internal ptr addrspace(200) @cap_from_ptr_zero(ptr addrspace(200) %ptr, ptr addrspace(200) %cap) nounwind {
 ; PURECAP-LABEL: cap_from_ptr_zero:
-; PURECAP:       .Lfunc_begin1:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    mov c1, c0
 ; PURECAP-NEXT:    mov x0, xzr
 ; PURECAP-NEXT:    str czr, [c1, #0]
@@ -68,8 +66,7 @@ entry:
 ;; Check that (int_cheri_cap_from_ptr ddc, x) can use the DDC register directly
 define internal ptr addrspace(200) @cap_from_ptr_ddc(ptr addrspace(200) %ptr, i64 %offset) nounwind {
 ; PURECAP-LABEL: cap_from_ptr_ddc:
-; PURECAP:       .Lfunc_begin2:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    cvtdz c1, x1
 ; PURECAP-NEXT:    mov c2, c0
 ; PURECAP-NEXT:    mov c0, c1
@@ -101,8 +98,7 @@ entry:
 ;; Check that (int_cheri_cap_from_ptr x, 0) -> null has priority over direct DDC usage
 define internal ptr addrspace(200) @cap_from_ptr_ddc_zero(ptr addrspace(200) %ptr) nounwind {
 ; PURECAP-LABEL: cap_from_ptr_ddc_zero:
-; PURECAP:       .Lfunc_begin3:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    mov c1, c0
 ; PURECAP-NEXT:    mov x0, xzr
 ; PURECAP-NEXT:    str czr, [c1, #0]
@@ -130,8 +126,7 @@ entry:
 ;; Check that (int_cheri_cap_from_ptr null, x) does not use register zero (since that is DDC)
 define internal ptr addrspace(200) @cap_from_ptr_null(ptr addrspace(200) %ptr, i64 %offset) nounwind {
 ; PURECAP-LABEL: cap_from_ptr_null:
-; PURECAP:       .Lfunc_begin4:
-; PURECAP-NEXT:  // %bb.0: // %entry
+; PURECAP:       // %bb.0: // %entry
 ; PURECAP-NEXT:    mov x2, xzr
 ; PURECAP-NEXT:    cvtz c1, c2, x1
 ; PURECAP-NEXT:    mov c2, c0

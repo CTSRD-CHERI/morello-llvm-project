@@ -12,8 +12,7 @@
 
 define hidden void @optnone_preserve_tags_memcpy(i8 addrspace(200)* %dst, i8 addrspace(200)* %src) optnone noinline nounwind {
 ; CHECK-LABEL: optnone_preserve_tags_memcpy:
-; CHECK:       .Lfunc_begin0:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    ldr c2, [c1, #0]
 ; CHECK-NEXT:    str c2, [c0, #0]
 ; CHECK-NEXT:    ldr x8, [c1, #16]
@@ -31,8 +30,7 @@ define hidden void @optnone_preserve_tags_memcpy(i8 addrspace(200)* %dst, i8 add
 
 define hidden void @optsize_preserve_tags_memcpy(i8 addrspace(200)* %dst, i8 addrspace(200)* %src) optsize nounwind {
 ; CHECK-LABEL: optsize_preserve_tags_memcpy:
-; CHECK:       .Lfunc_begin1:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    mov w2, #31 // =0x1f
 ; CHECK-NEXT:    b memcpy
   tail call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %dst, i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %src, i64 31, i1 false) must_preserve_cheri_tags
@@ -41,8 +39,7 @@ define hidden void @optsize_preserve_tags_memcpy(i8 addrspace(200)* %dst, i8 add
 
 define hidden void @default_preserve_tags_memcpy(i8 addrspace(200)* %dst, i8 addrspace(200)* %src) nounwind {
 ; CHECK-LABEL: default_preserve_tags_memcpy:
-; CHECK:       .Lfunc_begin2:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    ldr c2, [c1, #0]
 ; CHECK-NEXT:    str c2, [c0, #0]
 ; CHECK-NEXT:    ldrb w8, [c1, #30]
@@ -60,8 +57,7 @@ define hidden void @default_preserve_tags_memcpy(i8 addrspace(200)* %dst, i8 add
 
 define hidden void @optnone_preserve_tags_memmove(i8 addrspace(200)* %dst, i8 addrspace(200)* %src) optnone noinline nounwind {
 ; CHECK-LABEL: optnone_preserve_tags_memmove:
-; CHECK:       .Lfunc_begin3:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    mov w2, #31 // =0x1f
 ; CHECK-NEXT:    b memmove
   tail call void @llvm.memmove.p200i8.p200i8.i64(i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %dst, i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %src, i64 31, i1 false) must_preserve_cheri_tags
@@ -70,8 +66,7 @@ define hidden void @optnone_preserve_tags_memmove(i8 addrspace(200)* %dst, i8 ad
 
 define hidden void @optsize_preserve_tags_memmove(i8 addrspace(200)* %dst, i8 addrspace(200)* %src) optsize nounwind {
 ; CHECK-LABEL: optsize_preserve_tags_memmove:
-; CHECK:       .Lfunc_begin4:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    mov w2, #31 // =0x1f
 ; CHECK-NEXT:    b memmove
   tail call void @llvm.memmove.p200i8.p200i8.i64(i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %dst, i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %src, i64 31, i1 false) must_preserve_cheri_tags
@@ -80,8 +75,7 @@ define hidden void @optsize_preserve_tags_memmove(i8 addrspace(200)* %dst, i8 ad
 
 define hidden void @default_preserve_tags_memmove(i8 addrspace(200)* %dst, i8 addrspace(200)* %src) nounwind{
 ; CHECK-LABEL: default_preserve_tags_memmove:
-; CHECK:       .Lfunc_begin5:
-; CHECK-NEXT:  // %bb.0:
+; CHECK:       // %bb.0:
 ; CHECK-NEXT:    mov w2, #31 // =0x1f
 ; CHECK-NEXT:    b memmove
   tail call void @llvm.memmove.p200i8.p200i8.i64(i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %dst, i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %src, i64 31, i1 false) must_preserve_cheri_tags
