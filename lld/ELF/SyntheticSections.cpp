@@ -1073,7 +1073,7 @@ void MipsGotSection::build() {
     }
     for (std::pair<Symbol *, size_t> &p : got.dynTlsSymbols) {
       Symbol *s = p.first;
-      uint64_t offset = p.second * target->gotEntrySize;
+      uint64_t offset = p.second * config->wordsize;
       if (s == nullptr) {
         if (!config->shared)
           continue;
@@ -1115,7 +1115,7 @@ void MipsGotSection::build() {
          got.pagesMap) {
       size_t pageCount = l.second.count;
       for (size_t pi = 0; pi < pageCount; ++pi) {
-        uint64_t offset = (l.second.firstIndex + pi) * target->gotEntrySize;
+        uint64_t offset = (l.second.firstIndex + pi) * config->wordsize;
         mainPart->relaDyn->addReloc({target->relativeRel, this, offset, l.first,
                                      int64_t(pi * 0x10000)});
       }
