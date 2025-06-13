@@ -3,7 +3,7 @@
 # RUN: llvm-mc -filetype=obj -triple=aarch64-unknown-freebsd %s -mattr=+morello,+c64 -target-abi purecap -o %tmain.o
 # RUN: ld.lld -shared -soname=tdso.so %tdso.o -o %tdso.so
 # RUN: ld.lld --hash-style=sysv %tmain.o %tdso.so -o %tout
-# RUN: llvm-objdump -d --no-show-raw-insn %tout | FileCheck %s
+# RUN: llvm-objdump -d --no-show-raw-insn --no-print-imm-hex %tout | FileCheck %s
 # RUN: llvm-readobj -S -r %tout | FileCheck -check-prefix=RELOC %s
 
 # RELOC:      Section {
@@ -35,10 +35,10 @@
 ## 0x2203c0 & 0xfff = 0x3c0 = 960
 
 # CHECK:     <_start>:
-# CHECK-NEXT: 2102e0: adrp c0, 0x220000 <_start+0x40>
+# CHECK-NEXT: 2102e0: adrp c0, 0x220000 <_start+0xfd20>
 # CHECK-NEXT: 2102e4: add  c0, c0, #944
 # CHECK-NEXT: 2102e8: ldp  x0, x1, [c0]
-# CHECK-NEXT: 2102ec: adrp c0, 0x220000 <_start+0x4c>
+# CHECK-NEXT: 2102ec: adrp c0, 0x220000 <_start+0xfd20>
 # CHECK-NEXT: 2102f0: add  c0, c0, #960
 # CHECK-NEXT: 2102f4: ldp  x0, x1, [c0]
 
