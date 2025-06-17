@@ -18,35 +18,6 @@
 #error This header requires C++11 or greater
 #endif
 
-namespace NoRTTITypeID {
-  template <typename T>
-  struct TypeNameHelper
-  {
-    static const char *getTypeName(void)
-    {
-      static char typeName[sizeof(__PRETTY_FUNCTION__)] = {};
-      if (typeName[0])
-        return typeName;
-      // We don't care about efficiency.
-      std::string  fun(__PRETTY_FUNCTION__);
-      std::size_t found = fun.find_last_of("=");
-      std::string name = fun.substr(found + 2, fun.size() - found - 3).c_str();
-      memcpy(typeName, name.c_str(), name.size() + 1);
-      return typeName;
-    }
-  };
-}
-
-template <typename T>
-const char* getTypeName(void)
-{
-#if !defined(TEST_HAS_NO_RTTI)
-  return typeid(T).name();
-#else
-  return NoRTTITypeID::TypeNameHelper<T>::getTypeName();
-#endif
-}
-
 // TypeID - Represent a unique identifier for a type. TypeID allows equality
 // comparisons between different types.
 struct TypeID {
