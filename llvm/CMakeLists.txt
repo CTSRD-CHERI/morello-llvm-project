@@ -844,8 +844,6 @@ if(CMAKE_SYSTEM_NAME MATCHES "BSD|Linux|OS390")
 else()
   set(LLVM_ENABLE_PER_TARGET_RUNTIME_DIR_default OFF)
 endif()
-# FIXME: Morello CI not ready for this
-set(LLVM_ENABLE_PER_TARGET_RUNTIME_DIR_default OFF)
 set(LLVM_ENABLE_PER_TARGET_RUNTIME_DIR ${LLVM_ENABLE_PER_TARGET_RUNTIME_DIR_default} CACHE BOOL
   "Enable per-target runtimes directory")
 
