@@ -3,8 +3,8 @@
 // RUN: ld.lld --local-caprelocs=elf %t.o -o %t
 // RUN: llvm-readobj --section-headers --relocs --expand-relocs --symbols -x .data %t | FileCheck %s
 
-/// Basics of the .capinit relocation using static linking.
-/// We create two capabilites via .capinit. These will produce R_MORELLO_CAPINIT
+/// Basics of the capinit relocation using static linking.
+/// We create two capabilites via .chericap. These will produce R_MORELLO_CAPINIT
 /// Relocations that the linker will propogate to the "rela.dyn" section.
 /// Although the symbol size is not specified in the source, the linker will
 /// use until the end of the section to calculate the symbol size.
@@ -16,16 +16,12 @@
  .type ptr1, %object
  .size ptr1, 16
 ptr1:
- .capinit str + 8
- .8byte 0
- .8byte 0
+ .chericap str + 8
 
  .type ptr2, %object
  .size ptr2, 16
 ptr2:
- .capinit str
- .8byte 0
- .8byte 0
+ .chericap str
 
 str:
  .string "Hello World"

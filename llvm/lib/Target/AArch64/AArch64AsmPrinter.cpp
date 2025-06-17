@@ -1682,10 +1682,10 @@ void AArch64AsmPrinter::emitInstruction(const MachineInstr *MI) {
   }
   case AArch64::TLSDESC_C64_CALLSEQ: {
     /// lower this to:
-    ///    nop
     ///    adrp  c0, :tlsdesc:var
     ///    ldr   c1, [c0, #:tlsdesc_lo12:var]
     ///    add   c0, c0, #:tlsdesc_lo12:var
+    ///    nop
     ///    .tlsdesccall var
     ///    blr   c1
     const MachineOperand &MO_Sym = MI->getOperand(0);

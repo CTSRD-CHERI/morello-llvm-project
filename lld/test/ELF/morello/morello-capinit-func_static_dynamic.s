@@ -3,7 +3,7 @@
 // RUN: ld.lld -v --local-caprelocs=elf %t.o -o %t --fatal-warnings
 // RUN: llvm-readobj --symbols --relocs --expand-relocs --section-headers -x .data.rel.ro %t | FileCheck %s
 
-/// An example showing .capinit to one of each of the permission types. We check
+/// An example showing .chericap to one of each of the permission types. We check
 /// that the permissions, base, offsets are correct.
 
  .rodata
@@ -33,24 +33,12 @@ func:
 
  .data.rel.ro
  .balign 16
- .capinit ro
- .xword 0
- .xword 0
- .capinit ro2
- .xword 0
- .xword 0
- .capinit _start
- .xword 0
- .xword 0
- .capinit func
- .xword 0
- .xword 0
- .capinit rw
- .xword 0
- .xword 0
- .capinit bss
- .xword 0
- .xword 0
+ .chericap ro
+ .chericap ro2
+ .chericap _start
+ .chericap func
+ .chericap rw
+ .chericap bss
 
  .data
  .balign 65536

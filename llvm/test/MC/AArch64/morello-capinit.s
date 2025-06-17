@@ -18,18 +18,14 @@ str:
 	.globl	ptr1
 	.p2align	4
 ptr1:
-	.capinit str+8
-	.xword	0
-	.xword	0
+	.chericap str+8
 	.size	ptr1, 16
 
 	.type	ptr2,@object
 	.globl	ptr2
 	.p2align	4
 ptr2:
-	.capinit str
-	.xword	0
-	.xword	0
+	.chericap str
 	.size	ptr2, 16
 
 	.type	.L.str,@object

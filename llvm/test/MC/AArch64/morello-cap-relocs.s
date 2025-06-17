@@ -13,12 +13,8 @@ end:
 .size start, end-start
 
 start1:
-.capinit sym1
-.xword 0
-.xword 0
-.capinit sym2
-.xword 0
-.xword 0
+.chericap sym1
+.chericap sym2
 end1:
 .size start1, end1-start1
 

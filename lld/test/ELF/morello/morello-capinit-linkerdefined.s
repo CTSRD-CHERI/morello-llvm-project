@@ -36,86 +36,70 @@ _start: ret
 
  .data.rel.ro
 
- .capinit __preinit_array_start
- .xword 0
- .xword 0
- .capinit __preinit_array_end
- .xword 0
- .xword 0
+ .chericap __preinit_array_start
+ .chericap __preinit_array_end
 
- .capinit __init_array_start
- .xword 0
- .xword 0
- .capinit __init_array_end
- .xword 0
- .xword 0
+ .chericap __init_array_start
+ .chericap __init_array_end
 
- .capinit __fini_array_start
- .xword 0
- .xword 0
- .capinit __fini_array_end
- .xword 0
- .xword 0
+ .chericap __fini_array_start
+ .chericap __fini_array_end
 
- .capinit __start_mysection
- .xword 0
- .xword 0
+ .chericap __start_mysection
 
- .capinit __stop_mysection
- .xword 0
- .xword 0
+ .chericap __stop_mysection
 // CHECK: CHERI __cap_relocs [
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x221408 (__fini_array_end)
+// CHECK-NEXT:     Location: 0x221410
 // CHECK-NEXT:     Base: __preinit_array_start (0x220C00)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 8
 // CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x221418
+// CHECK-NEXT:     Location: 0x221420
 // CHECK-NEXT:     Base: __preinit_array_end (0x220C08)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 0
 // CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x221428
+// CHECK-NEXT:     Location: 0x221430
 // CHECK-NEXT:     Base: __init_array_start (0x221000)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 8
 // CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x221438
+// CHECK-NEXT:     Location: 0x221440
 // CHECK-NEXT:     Base: __init_array_end (0x221008)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 0
 // CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x221448
+// CHECK-NEXT:     Location: 0x221450
 // CHECK-NEXT:     Base: __fini_array_start (0x221400)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 8
 // CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x221458
+// CHECK-NEXT:     Location: 0x221460
 // CHECK-NEXT:     Base: __fini_array_end (0x221408)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 0
 // CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x221468
+// CHECK-NEXT:     Location: 0x221470
 // CHECK-NEXT:     Base: __start_mysection (0x200400)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 8
 // CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x221478
+// CHECK-NEXT:     Location: 0x221480
 // CHECK-NEXT:     Base: __stop_mysection (0x200408)
 // CHECK-NEXT:     Offset: 0
 // CHECK-NEXT:     Length: 0

@@ -70,29 +70,17 @@ _start:
 
  .data.rel.ro
  .balign 65536
- .capinit small
- .xword 0
- .xword 0
+ .chericap small
 
- .capinit no_alignment
- .xword 0
- .xword 0
+ .chericap no_alignment
 
- .capinit cap_align_8
- .xword 0
- .xword 0
+ .chericap cap_align_8
 
- .capinit _start
- .xword 0
- .xword 0
+ .chericap _start
 
- .capinit __fini_array_start
- .xword 0
- .xword 0
+ .chericap __fini_array_start
 
- .capinit __fini_array_end
- .xword 0
- .xword 0
+ .chericap __fini_array_end
 
 // FIXME: the __cap_reloc at 0x230040 should be using __fini_array_start and
 // not intersect with other sections. currently this capability also covers

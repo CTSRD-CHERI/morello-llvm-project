@@ -13,9 +13,7 @@ hello:
  .type foo, %object
  .size foo, 16
 foo:
- .capinit hello
- .8byte 0
- .8byte 0
+ .chericap hello
 
 .text
 .type ifunc STT_GNU_IFUNC
@@ -36,7 +34,7 @@ _start:
 // CHECK: Relocations [
 // CHECK-NEXT: .rela.dyn {
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x22025C
+// CHECK-NEXT:     Offset: 0x220260
 // CHECK-NEXT:     Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:     Symbol: -
 // CHECK-NEXT:     Addend: 0x0
@@ -139,8 +137,8 @@ _start:
 // CHECK-NEXT: }
 
 // CHECK:      Hex dump of section '.data':
-// CHECK-NEXT: 0x00220250 48656c6c 6f20576f 726c6400 50022200 Hello World
-// CHECK-NEXT: 0x00220260 00000000 0c000000 00000002
+// CHECK-NEXT: 0x00220250 48656c6c 6f20576f 726c6400 00000000 Hello World
+// CHECK-NEXT: 0x00220260 50022200 00000000 0c000000 00000002
 
 // CHECK:      Hex dump of section '.got.plt':
 // CHECK-NEXT: 0x00220270 c0012000 00000000 c0000200 00000004

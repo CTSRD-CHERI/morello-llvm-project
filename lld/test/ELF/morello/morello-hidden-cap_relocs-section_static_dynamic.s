@@ -17,16 +17,12 @@ hello:
  .type ptr1, %object
  .size ptr1, 16
 ptr1:
- .capinit hello + 8
- .8byte 0
- .8byte 0
+ .chericap hello + 8
 
  .type ptr2, %object
  .size ptr2, 16
 ptr2:
- .capinit bye
- .8byte 0
- .8byte 0
+ .chericap bye
 
 bye:
  .string "Bye World"
@@ -39,8 +35,8 @@ bye:
 
 // CHECK: Relocations [
 // CHECK-NEXT:   .rela.dyn {
-// CHECK-NEXT:     0x3C R_MORELLO_RELATIVE - 0x8
-// CHECK-NEXT:     0x4C R_MORELLO_RELATIVE - 0x0
+// CHECK-NEXT:     0x40 R_MORELLO_RELATIVE - 0x8
+// CHECK-NEXT:     0x50 R_MORELLO_RELATIVE - 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT: ]
 
@@ -66,7 +62,7 @@ bye:
 
 // CHECK     :   Symbol {
 // CHECK:          Name: ptr2
-// CHECK-NEXT:     Value: 0x4C
+// CHECK-NEXT:     Value: 0x50
 // CHECK-NEXT:     Size: 16
 // CHECK-NEXT:     Binding: Local
 // CHECK-NEXT:     Type: Object
@@ -76,7 +72,7 @@ bye:
 
 // CHECK     :   Symbol {
 // CHECK:          Name: bye
-// CHECK-NEXT:     Value: 0x5C
+// CHECK-NEXT:     Value: 0x60
 // CHECK-NEXT:     Size: 10
 // CHECK-NEXT:     Binding: Local
 // CHECK-NEXT:     Type: None
@@ -111,11 +107,11 @@ bye:
 /// Check contents of section other
 /// string (hello): "Hello World"
 /// cap frag (ptr1): address: 0x30 ("Hello world"), size: 12(0xc), perm: RW(0x2)
-/// cap frag (ptr2): address: 0x5c ("Bye world"), size: 10(0xa), perm: RW(0x2)
+/// cap frag (ptr2): address: 0x60 ("Bye world"), size: 10(0xa), perm: RW(0x2)
 /// string (bye): "Bye World"
 
 // CHECK:      Hex dump of section 'other':
-// CHECK-NEXT: 0x00000030 48656c6c 6f20576f 726c6400 30000000 Hello World.0...
-// CHECK-NEXT: 0x00000040 00000000 0c000000 00000002 5c000000 ............\...
-// CHECK-NEXT: 0x00000050 00000000 0a000000 00000002 42796520 ............Bye
-// CHECK-NEXT: 0x00000060 576f726c 6400{{.*}}                 World.
+// CHECK-NEXT: 0x00000030 48656c6c 6f20576f 726c6400 00000000 Hello World.....
+// CHECK-NEXT: 0x00000040 30000000 00000000 0c000000 00000002 0...............
+// CHECK-NEXT: 0x00000050 60000000 00000000 0a000000 00000002 `...............
+// CHECK-NEXT: 0x00000060 42796520 576f726c 6400{{.*}}        Bye World.

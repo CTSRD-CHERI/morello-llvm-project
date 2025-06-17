@@ -24,9 +24,7 @@ target:
  ret
 
  .data.rel.ro
- .capinit foo
- .xword 0
- .xword 0
+ .chericap foo
 
  .data
  .global foo
@@ -49,7 +47,7 @@ foo:
 // CHECK-NEXT:       SHF_ALLOC (0x2)
 // CHECK-NEXT:       SHF_WRITE (0x1)
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x220244
+// CHECK-NEXT:     Address: 0x220250
 
 // CHECK: Relocations [
 // CHECK-NEXT:   Section {{.*}} .rela.text {
@@ -59,7 +57,7 @@ foo:
 // CHECK-NEXT:     0x21023C R_MORELLO_LD128_GOT_LO12_NC foo 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {{.*}} .rela.data.rel.ro {
-// CHECK-NEXT:     0x220244 R_MORELLO_CAPINIT foo 0x0
+// CHECK-NEXT:     0x220250 R_MORELLO_CAPINIT foo 0x0
 
 // SHARED:     Name: .text
 // SHARED-NEXT:     Type: SHT_PROGBITS

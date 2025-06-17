@@ -44,18 +44,10 @@
 _start: ret
 
  .data.rel.ro
- .capinit __eh_frame_start
- .xword 0
- .xword 0
- .capinit __eh_frame_end
- .xword 0
- .xword 0
- .capinit __eh_frame_hdr_start
- .xword 0
- .xword 0
- .capinit __eh_frame_hdr_end
- .xword 0
- .xword 0
+ .chericap __eh_frame_start
+ .chericap __eh_frame_end
+ .chericap __eh_frame_hdr_start
+ .chericap __eh_frame_hdr_end
 
 // FIXME: capabilities to sections should be made representable through
 // padding.

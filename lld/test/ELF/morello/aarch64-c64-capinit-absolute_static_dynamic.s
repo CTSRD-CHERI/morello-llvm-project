@@ -20,13 +20,9 @@ _start:
  ldr c1, [c1, :got_lo12:bar]
 
  .data.rel.ro
- .capinit foo
- .xword 0
- .xword 0
+ .chericap foo
 
- .capinit bar
- .xword 0
- .xword 0
+ .chericap bar
 
 // CHECK:        Name: .data.rel.ro
 // CHECK-NEXT:   Type: SHT_PROGBITS
