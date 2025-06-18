@@ -154,7 +154,7 @@ class TestAArch64XMLRegOffsets(GDBRemoteTestBase):
             "x26": 0x0000FFFFBF6CD000,
             "x27": 0x0000FFFFBF54C1F0,
             "x28": 0x0000000000000001,
-            "fp": 0x0000FFFFBF54B9D0,
+            "x29": 0x0000FFFFBF54B9D0,
             "x30": 0x00000000004007E4,
             "sp": 0x0000FFFFBF54B9D0,
             "pc": 0x00000000004007E4,

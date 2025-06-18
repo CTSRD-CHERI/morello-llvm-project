@@ -61,6 +61,8 @@ class MorelloCapabilityOperationTestCase(CapabilityOperationTestBase):
         # Write {tag=0, address=0x1000, attributes={[Store Load],
         # range=[0x1000, 0x4000)}} to c23.
         remote.registers['c23'].write(0x00c0000000400010000000000000001000)
+        # Use a different value for c29 to show that cfp reads c23
+        remote.registers['c29'].write(0x00c0000000400010000000000000029000)
 
         # Mark c23 as the frame pointer (note that this is intentionally not
         # ABI-compliant, we're just making sure we use the value provided by
@@ -68,6 +70,7 @@ class MorelloCapabilityOperationTestCase(CapabilityOperationTestBase):
         # FIXME: This should only be true unless we're using the hack for
         # hardcoding the Morello registers.
         remote.registers['c23'].alt_name='cfp'
+        remote.registers['x23'].alt_name='fp'
 
         # 0x0010: ELF header for a completely empty program.
         remote.memory.write(0x0010, [
@@ -161,13 +164,22 @@ class MorelloCapabilityOperationTestCase(CapabilityOperationTestBase):
         self.expect('register read -f capability c9',
                     substrs=["c9 = {tag = 1, address = 0x0000000000002000, attributes = {[Store Load], range = [0x1000-0x4000)}}"])
 
+        self.expect('register read x29',
+                    substrs=["x29 = 0x0000000000029000"])
+        self.expect('register read c29',
+                    substrs=["c29 = 0x00c0000000400010000000000000029000"])
+        self.expect('register read -f capability c29',
+                    substrs=["c29 = {tag = 0, address = 0x0000000000029000, attributes = {[Store Load], range = [0x21000-0x24000)}}"])
+
         self.expect('register read x23',
+                    substrs=["x23 = 0x0000000000001000"])
+        self.expect('register read fp',
                     substrs=["x23 = 0x0000000000001000"])
         self.expect('register read c23',
                     substrs=["c23 = 0x00c0000000400010000000000000001000"])
         self.expect('register read -f capability c23',
                     substrs=["c23 = {tag = 0, address = 0x0000000000001000, attributes = {[Store Load], range = [0x1000-0x4000)}}"])
-
+        # This should read c23 and not c29!
         self.expect('register read cfp',
                     substrs=["c23 = 0x00c0000000400010000000000000001000"])
 

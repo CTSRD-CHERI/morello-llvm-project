@@ -79,4 +79,4 @@ class TestQemuAarch64TargetXml(GDBRemoteTestBase):
 
 
 # UNWIND: eh_frame UnwindPlan:
-# UNWIND: row[0]:    0: CFA=fp+16 => x30=[CFA-8]
+# UNWIND: row[0]:    0: CFA=x29+16 => x30=[CFA-8]

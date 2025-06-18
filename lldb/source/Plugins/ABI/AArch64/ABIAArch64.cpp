@@ -59,9 +59,13 @@ std::string ABIAArch64::GetMCName(std::string reg) {
 uint32_t ABIAArch64::GetGenericNum(llvm::StringRef name) {
   return llvm::StringSwitch<uint32_t>(name)
       .Case("pc", LLDB_REGNUM_GENERIC_PC)
+      .Case("pcc", LLDB_REGNUM_GENERIC_PCC)
       .Cases("lr", "x30", LLDB_REGNUM_GENERIC_RA)
+      .Cases("clr", "c30", LLDB_REGNUM_GENERIC_RAC)
       .Cases("sp", "x31", LLDB_REGNUM_GENERIC_SP)
+      .Cases("csp", "c31", LLDB_REGNUM_GENERIC_CSP)
       .Cases("fp", "x29", LLDB_REGNUM_GENERIC_FP)
+      .Cases("cfp", "c29", LLDB_REGNUM_GENERIC_CFP)
       .Case("cpsr", LLDB_REGNUM_GENERIC_FLAGS)
       .Case("x0", LLDB_REGNUM_GENERIC_ARG1)
       .Case("x1", LLDB_REGNUM_GENERIC_ARG2)

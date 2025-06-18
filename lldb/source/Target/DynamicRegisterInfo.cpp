@@ -17,6 +17,8 @@
 #include "lldb/Utility/StringExtractor.h"
 #include "lldb/Utility/StructuredData.h"
 
+#include "clang/Basic/Builtins.h"
+
 using namespace lldb;
 using namespace lldb_private;
 
@@ -442,10 +444,18 @@ static void MarkAsFP(lldb_private::RegisterInfo &fp_reg_info,
     // Register has already been marked as FP.
     return;
   }
-
-  assert(fp_reg_info.alt_name == nullptr && "FP already has an alternate name");
-  fp_reg_info.alt_name = fp_reg_info.name;
-  fp_reg_info.name = is_capability ? "cfp" : "fp";
+  assert((fp_reg_info.alt_name == nullptr ||
+          llvm::StringRef(fp_reg_info.alt_name).ends_with("fp")) &&
+         "FP already has an alternate name");
+  assert(!llvm::StringRef(fp_reg_info.name).ends_with("fp") &&
+         "FP name is already set correctly");
+  // Don't override the register name but list (c)fp as an alternate name
+  llvm::StringRef alt_name(fp_reg_info.alt_name ? fp_reg_info.alt_name : "");
+  if (alt_name.empty() || alt_name == fp_reg_info.name)
+    fp_reg_info.alt_name = is_capability ? "cfp" : "fp";
+  else
+    assert(llvm::StringRef(fp_reg_info.name).ends_with("fp") ||
+           llvm::StringRef(fp_reg_info.alt_name).ends_with("fp"));
 
   assert(fp_reg_info.kinds[lldb::eRegisterKindGeneric] == LLDB_INVALID_REGNUM &&
          "FP already has a register kind");
@@ -461,8 +471,12 @@ static void MaybeEraseFP(lldb_private::RegisterInfo &reg_info,
     return;
 
   reg_info.kinds[lldb::eRegisterKindGeneric] = LLDB_INVALID_REGNUM;
-  reg_info.name = reg_info.alt_name;
-  reg_info.alt_name = nullptr;
+  if (llvm::StringRef(reg_info.alt_name ? reg_info.alt_name : "")
+          .ends_with("fp")) {
+    reg_info.alt_name = nullptr;
+  }
+  // The name should be a plain x/c register not (c)fp
+  assert(!llvm::StringRef(reg_info.name).ends_with("fp"));
 }
 
 void DynamicRegisterInfo::Finalize(const ArchSpec &arch) {
@@ -650,17 +664,34 @@ void DynamicRegisterInfo::Finalize(const ArchSpec &arch) {
   ConfigureOffsets();
 
   if (arch.GetTriple().isAArch64()) {
-    const char *fp = is_desc_abi ? "x17" : "x29";
-    const char *cfp = is_desc_abi ? "c17" : "c29";
+    // Override the FP information to avoid hardcoded x29.
+    RegisterInfo *explicit_fp = nullptr;
+    RegisterInfo *explicit_cfp = nullptr;
     for (auto &reg : m_regs) {
-      if (reg.kinds[eRegisterKindGeneric] == LLDB_REGNUM_GENERIC_FP)
+      llvm::StringRef reg_name(reg.name);
+      llvm::StringRef reg_alt_name(reg.alt_name ? reg.alt_name : "");
+      if (reg_name == "fp" || reg_alt_name == "fp") {
+        explicit_fp = &reg;
+        MarkAsFP(reg, /*is_capability=*/false);
+      } else if (reg_name == "cfp" || reg_alt_name == "cfp") {
+        explicit_cfp = &reg;
+        MarkAsFP(reg, /*is_capability=*/true);
+      } else if (reg.kinds[eRegisterKindGeneric] == LLDB_REGNUM_GENERIC_FP) {
         MaybeEraseFP(reg, /*is_capability*/ false);
-      if (reg.kinds[eRegisterKindGeneric] == LLDB_REGNUM_GENERIC_CFP)
+      } else if (reg.kinds[eRegisterKindGeneric] == LLDB_REGNUM_GENERIC_CFP) {
         MaybeEraseFP(reg, /*is_capability*/ true);
-      if (strcmp(reg.name, fp) == 0)
-        MarkAsFP(reg, /*is_capability*/ false);
-      if (strcmp(reg.name, cfp) == 0)
-        MarkAsFP(reg, /*is_capability*/ true);
+      }
+    }
+    if (!explicit_fp || !explicit_cfp) {
+      const char *fp = is_desc_abi ? "x17" : "x29";
+      const char *cfp = is_desc_abi ? "c17" : "c29";
+      for (auto &reg : m_regs) {
+        if (explicit_fp == nullptr && strcmp(reg.name, fp) == 0) {
+          MarkAsFP(reg, /*is_capability*/ false);
+        } else if (explicit_cfp == nullptr && strcmp(reg.name, cfp) == 0) {
+          MarkAsFP(reg, /*is_capability*/ true);
+        }
+      }
     }
   }
 

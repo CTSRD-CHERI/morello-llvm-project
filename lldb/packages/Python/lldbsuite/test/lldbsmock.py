@@ -73,10 +73,8 @@ def setup_morello(remote):
     remote.registers = Registers(
             # General purpose registers (xN)
             [Register('x{}'.format(N), offset=N * 8, value=rv[N], gcc=N, dwarf=N,
-                **gpr_desc) for N in range(29)] +
-            [Register('x29', offset=232, value=rv[29], gcc=29, dwarf=29,
-                alt_name='fp', generic='fp', **gpr_desc),
-            Register('x30', offset=240, value=rv[30], gcc=30, dwarf=30,
+                **gpr_desc) for N in range(30)] +
+            [Register('x30', offset=240, value=rv[30], gcc=30, dwarf=30,
                 alt_name='lr', generic='ra', **gpr_desc),
             # State registers
             Register('sp', offset=248, value=csp_res, gcc=31, dwarf=31, generic='sp',
