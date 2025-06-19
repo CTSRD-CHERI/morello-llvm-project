@@ -297,7 +297,7 @@ class HelpCommandTestCase(TestBase):
             substrs=[
                 "[<address-expression>]\n\n       -A ( --show-all-children )",
                 # Starts with the end of the show-all-children line
-                "to show.\n\n       -D",
+                "to show.\n\n       -C[<tagged-memory-type>]",
             ],
         )
 
