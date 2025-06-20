@@ -858,6 +858,11 @@ static bool alignToRequired(OutputSection *first, OutputSection *last,
   if (reqdAlign == 1)
     return changed;
   if (reqdAlign > first->addralign) {
+    // When adjusting the alignment for capability representability, we keep
+    // track of the  old value since adjusting addralign can have side effects
+    // e.g. for SHT_NOTE sections (where the alignment is used for reading).
+    if (!first->originalAddralign)
+      first->originalAddralign = llvm::Align(first->addralign);
     first->addralign = reqdAlign;
     changed = true;
   }

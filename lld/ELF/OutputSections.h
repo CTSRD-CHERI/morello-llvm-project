@@ -105,6 +105,12 @@ public:
   // DATA_RELRO_END.
   bool relro = false;
 
+  // If set stores the original addralign prior to adjusting it to ensure fully
+  // representable capabilities. This is needed since changing addralign has
+  // side effects such as breaking the reading of ELF notes, so we write the
+  // original addralign value to the section headers.
+  llvm::MaybeAlign originalAddralign;
+
   void finalize();
   template <class ELFT>
   void writeTo(uint8_t *buf, llvm::parallel::TaskGroup &tg);

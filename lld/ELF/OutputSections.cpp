@@ -63,7 +63,8 @@ uint32_t OutputSection::getPhdrFlags() const {
 template <class ELFT>
 void OutputSection::writeHeaderTo(typename ELFT::Shdr *shdr) {
   shdr->sh_entsize = entsize;
-  shdr->sh_addralign = addralign;
+  shdr->sh_addralign =
+      originalAddralign ? (*originalAddralign).value() : addralign;
   shdr->sh_type = type;
   shdr->sh_offset = offset;
   shdr->sh_flags = flags;

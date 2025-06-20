@@ -2,6 +2,11 @@
 
 // RUN: llvm-mc -filetype=obj -triple aarch64 -target-abi purecap lib.s -o lib.o
 // RUN: llvm-mc -filetype=obj -triple aarch64 -target-abi purecap app.s -o app.o
+/// Check that the notes are correctly 4-byte alinged:
+// RUN: llvm-readelf --section-headers app.o | FileCheck %s --check-prefix=OBJ-NOTE-ALIGN
+// RUN: llvm-readelf --section-headers lib.o | FileCheck %s --check-prefix=OBJ-NOTE-ALIGN
+// OBJ-NOTE-ALIGN: Name              Type            Address          Off    Size   ES Flg Lk Inf Al
+// OBJ-NOTE-ALIGN: .note.cheri       NOTE            0000000000000000 000044 000030 00   A  0   0  4{{$}}
 // RUN: llvm-mc -filetype=obj -triple aarch64 -target-abi purecap -cheri-cap-table-abi=pcrel lib.s -o lib1.o
 // RUN: llvm-mc -filetype=obj -triple aarch64 -target-abi purecap -cheri-cap-table-abi=pcrel app.s -o app1.o
 // RUN: llvm-mc -filetype=obj -triple aarch64 -target-abi purecap -cheri-cap-table-abi=fn-desc lib.s -o lib2.o
@@ -10,6 +15,16 @@
 // RUN: llvm-mc -filetype=obj -triple aarch64 -target-abi purecap-benchmark app.s -o app3.o
 
 // RUN: ld.lld app.o lib.o -o app 2>&1 | FileCheck %s --check-prefix=NOERROR --allow-empty
+// RUN: llvm-readelf --section-headers app
+// RUN: llvm-readelf --section-headers app | FileCheck %s --check-prefix=EXE-NOTE-ALIGN
+/// ld.lld overaligns the .note.cheri section in morelloLinkerDefinedCapabilityAlign()
+/// to ensure that the entire X/RO region can be represented precisely. Since
+/// .note.cheri happens to be the first section in this region we end up
+/// aligning it to 32 bytes. But we should not be adjusting the sh_addralign member
+/// since that is used for parsing the notes section.
+// EXE-NOTE-ALIGN: [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
+// EXE-NOTE-ALIGN: [ 1] .note.cheri       NOTE            [[#]]            000160 000030 00   A  0   0 4{{$}}
+// EXE-NOTE-ALIGN: [ 2] .text
 // RUN: llvm-readobj -h --notes app | FileCheck %s --check-prefix=NT-PCREL
 // RUN: ld.lld app1.o lib1.o -o app1 2>&1 | FileCheck %s --check-prefix=NOERROR --allow-empty
 // RUN: llvm-readobj -h --notes app1 | FileCheck %s --check-prefix=NT-PCREL
