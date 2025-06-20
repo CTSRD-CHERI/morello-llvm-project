@@ -101,7 +101,7 @@ void LinuxSignals::Reset() {
 #endif
   ADD_SIGCODE(SIGSEGV, 11, SEGV_CAPTAGERR,    10, "capability tag fault", SignalCodePrintOption::Address);
   ADD_SIGCODE(SIGSEGV, 11, SEGV_CAPSEALEDERR, 11, "capability sealed fault", SignalCodePrintOption::Address);
-  ADD_SIGCODE(SIGSEGV, 11, SEGV_CAPBOUNDSERR, 12, "capability bounds fault", SignalCodePrintOption::Address);
+  ADD_SIGCODE(SIGSEGV, 11, SEGV_CAPBOUNDSERR, 12, "capability bounds fault", SignalCodePrintOption::Bounds);
   ADD_SIGCODE(SIGSEGV, 11, SEGV_CAPPERMERR,   13, "capability permission fault", SignalCodePrintOption::Address);
   ADD_SIGCODE(SIGSEGV, 11, SEGV_CAPACCESSERR, 14, "capability access fault", SignalCodePrintOption::Address);
 

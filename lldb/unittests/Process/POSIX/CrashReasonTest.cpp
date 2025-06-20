@@ -8,6 +8,9 @@
 
 #include "Plugins/Process/POSIX/CrashReason.h"
 
+#include "lldb/Host/FileSystem.h"
+#include "lldb/Host/HostInfo.h"
+
 #include "gtest/gtest.h"
 
 #ifndef SEGV_CAPTAGERR
@@ -30,6 +33,8 @@
 #define SEGV_CAPACCESSERR 14
 #endif
 
+using namespace lldb_private;
+
 namespace {
 struct CrashReasonTestInfo {
   // Test inputs (will be put in a siginfo_t).
@@ -38,21 +43,42 @@ struct CrashReasonTestInfo {
   // Test outputs.
   const char *description;
 };
+
+class CrashReasonTest : public testing::Test {
+public:
+  static void SetUpTestCase() {
+    FileSystem::Initialize();
+    HostInfo::Initialize();
+  }
+  static void TearDownTestCase() {
+    HostInfo::Terminate();
+    FileSystem::Terminate();
+  }
+};
 } // namespace
 
-TEST(CrashReasonTest, ReasonAndDescriptionForSIGSEGV) {
+TEST_F(CrashReasonTest, ReasonAndDescriptionForSIGSEGV) {
   const std::vector<CrashReasonTestInfo> crashReasonTestInfos = {
-      {SEGV_CAPTAGERR, "signal SIGSEGV: capability tag fault"},
-      {SEGV_CAPSEALEDERR, "signal SIGSEGV: capability sealed fault"},
-      {SEGV_CAPBOUNDSERR, "signal SIGSEGV: capability bounds fault"},
-      {SEGV_CAPPERMERR, "signal SIGSEGV: capability permission fault"},
-      {SEGV_CAPACCESSERR, "signal SIGSEGV: capability access fault"},
+      {SEGV_CAPTAGERR,
+       "signal SIGSEGV: capability tag fault (fault address: 0x1234)"},
+      {SEGV_CAPSEALEDERR,
+       "signal SIGSEGV: capability sealed fault (fault address: 0x1234)"},
+      {SEGV_CAPBOUNDSERR,
+       "signal SIGSEGV: upper bound violation (fault address: 0x1234, lower "
+       "bound: 0x1000, upper bound: 0x1010)"},
+      {SEGV_CAPPERMERR,
+       "signal SIGSEGV: capability permission fault (fault address: 0x1234)"},
+      {SEGV_CAPACCESSERR,
+       "signal SIGSEGV: capability access fault (fault address: 0x1234)"},
   };
 
   for (const CrashReasonTestInfo &t : crashReasonTestInfos) {
     siginfo_t info;
     info.si_signo = SIGSEGV;
     info.si_code = t.si_code;
+    info.si_addr = (void *)(uintptr_t)0x1234;
+    info.si_lower = (void *)(uintptr_t)0x1000;
+    info.si_upper = (void *)(uintptr_t)0x1010;
     EXPECT_EQ(t.description, GetCrashReasonString(info));
   }
 }
