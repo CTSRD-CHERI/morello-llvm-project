@@ -34,3 +34,37 @@ ArchitectureAArch64::Create(const ArchSpec &arch) {
   }
   return std::unique_ptr<Architecture>(new ArchitectureAArch64());
 }
+
+addr_t
+ArchitectureAArch64::GetCallableLoadAddress(addr_t code_addr,
+                                          AddressClass addr_class) const {
+  switch (addr_class) {
+  case AddressClass::eData:
+  case AddressClass::eDebug:
+    return LLDB_INVALID_ADDRESS;
+  case AddressClass::eCodeAlternateISA:
+    // When we're in C64 mode, we need to set the discriminating bit.
+    return code_addr | addr_t(0x1);
+  default:
+    break;
+  }
+
+  return code_addr;
+}
+
+addr_t ArchitectureAArch64::GetOpcodeLoadAddress(addr_t opcode_addr,
+                                               AddressClass addr_class) const {
+  switch (addr_class) {
+  case AddressClass::eData:
+  case AddressClass::eDebug:
+    return LLDB_INVALID_ADDRESS;
+  default:
+    break;
+  }
+
+  // Make sure we clear the discriminating bit for C64 addresses. This has no
+  // effect for A64 addresses. Ideally we should only be doing it for
+  // AddressClass::eCodeAlternateISA, but we're not very consistent about
+  // passing the correct value of addr_class.
+  return opcode_addr & ~addr_t(0x1);
+}

@@ -28,6 +28,12 @@ public:
     return &m_memory_tag_manager;
   }
 
+  lldb::addr_t GetCallableLoadAddress(lldb::addr_t load_addr,
+                                      AddressClass addr_class) const override;
+
+  lldb::addr_t GetOpcodeLoadAddress(lldb::addr_t load_addr,
+                                    AddressClass addr_class) const override;
+
 private:
   static std::unique_ptr<Architecture> Create(const ArchSpec &arch);
   ArchitectureAArch64() = default;
