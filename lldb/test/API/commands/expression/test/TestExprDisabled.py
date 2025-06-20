@@ -32,10 +32,10 @@ class ExprAArch64CommandsTestCase(TestBase):
         self.addTearDownHook(
             lambda: self.dbg.SetSelectedPlatform(self.original_platform))
 
-    def test_expr_disabled_for_aarch64(self):
+    def test_expr_disabled_for_aarch64_purecap(self):
+        self.runCmd("settings set target.aarch64-morello-desc-abi true")
         target = self.dbg.CreateTargetWithFileAndArch(None, 'aarch64')
         self.assertTrue(target, VALID_TARGET)
-
         self.expect("settings show target.force-expr-evaluation",
                 substrs=["target.force-expr-evaluation (boolean) = false"])
         self.expect("expression 22",
