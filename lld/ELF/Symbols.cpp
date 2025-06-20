@@ -280,6 +280,8 @@ uint64_t Symbol::getPltVA() const {
   // While linking microMIPS code PLT code are always microMIPS
   // code. Set the less-significant bit to track that fact.
   // See detailed comment in the `getSymVA` function.
+  if (config->emachine == EM_MIPS && isMicroMips())
+    outVA |= 1;
   // When we are in pure capability mode the address of the Plt is a
   // capability. At present getSymVA() has this already for non-linker
   // generated symbols.
