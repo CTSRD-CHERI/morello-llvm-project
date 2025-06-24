@@ -54,6 +54,7 @@ add_llvm_component_library(LLVMAnalysis
   ConstraintSystem.cpp
   Delinearization.cpp
   DemandedBits.cpp
+  DemandedCheriMetadata.cpp
   DependenceAnalysis.cpp
   DependenceGraphBuilder.cpp
   DevelopmentModeInlineAdvisor.cpp

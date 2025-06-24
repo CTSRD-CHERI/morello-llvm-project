@@ -39,6 +39,7 @@
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/Function.h"
 #include "llvm/InitializePasses.h"
+#include "llvm/Passes/PassBuilder.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCTargetOptions.h"
 #include "llvm/MC/TargetRegistry.h"
@@ -49,6 +50,9 @@
 #include "llvm/Target/TargetOptions.h"
 #include "llvm/Transforms/CFGuard.h"
 #include "llvm/Transforms/Scalar.h"
+#include "llvm/Transforms/Scalar/CheriCapToInt.h"
+#include "llvm/Transforms/Scalar/InstSimplifyPass.h"
+#include "llvm/Transforms/Scalar/EarlyCSE.h"
 #include <memory>
 #include <string>
 
@@ -84,6 +88,11 @@ static cl::opt<bool> EnableRangeChecking("aarch64-enable-range-checking",
                                          cl::desc("Add range information on "
                                                   "pointer casts"),
                                          cl::init(false), cl::Hidden);
+
+static cl::opt<bool> EnableCapToInt("aarch64-enable-cap-to-int",
+                                    cl::desc("Convert capabilities to "
+                                             "integers"),
+                                    cl::init(false), cl::Hidden);
 
 static cl::opt<bool> EnableAdvSIMDScalar(
     "aarch64-enable-simd-scalar",
@@ -477,6 +486,19 @@ AArch64TargetMachine::getSubtargetImpl(const Function &F) const {
                                            MaxSVEVectorSize);
   }
   return I.get();
+}
+
+void AArch64TargetMachine::registerPassBuilderCallbacks(PassBuilder &PB) {
+  if (IsMorello() && EnableCapToInt) {
+    PB.registerScalarOptimizerLateEPCallback(
+      [](FunctionPassManager &PM, PassBuilder::OptimizationLevel Level) {
+        if (Level != PassBuilder::OptimizationLevel::O0) {
+          PM.addPass(CheriCapToIntPass());
+          PM.addPass(InstSimplifyPass());
+          PM.addPass(EarlyCSEPass());
+	}
+      });
+  }
 }
 
 void AArch64leTargetMachine::anchor() { }

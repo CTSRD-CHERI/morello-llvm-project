@@ -218,6 +218,7 @@ namespace {
       (void) llvm::createMustExecutePrinter();
       (void) llvm::createMustBeExecutedContextPrinter();
       (void) llvm::createFloat2IntPass();
+      (void) llvm::createCheriCapToIntPass();
       (void) llvm::createEliminateAvailableExternallyPass();
       (void)llvm::createScalarizeMaskedMemIntrinLegacyPass();
       (void) llvm::createWarnMissedTransformationsPass();
