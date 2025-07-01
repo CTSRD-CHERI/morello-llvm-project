@@ -52,7 +52,7 @@ inline bool isCheriPointer(Type *Ty, const DataLayout *DL) {
 }
 
 inline bool isPureCap(const DataLayout &DL) {
-  return DL.getGlobalsAddressSpace() == 200;
+  return DL.getDefaultGlobalsAddressSpace() == 200;
 }
 
 namespace cheri {

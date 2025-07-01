@@ -645,7 +645,7 @@ bool GlobalMerge::doInitialization(Module &M) {
   IsMachO = Triple(M.getTargetTriple()).isOSBinFormatMachO();
 
   auto &DL = M.getDataLayout();
-  IsPureCap = DL.getGlobalsAddressSpace() == 200;
+  IsPureCap = DL.getDefaultGlobalsAddressSpace() == 200;
   if (IsPureCap && !TM)
     return false;
 

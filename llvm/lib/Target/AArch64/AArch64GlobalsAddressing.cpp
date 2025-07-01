@@ -166,7 +166,7 @@ public:
     const DataLayout &DL = F.getParent()->getDataLayout();
     LLVMContext &C = F.getParent()->getContext();
     PointerType *I8Ptr = PointerType::get(Type::getInt8Ty(C),
-                                          DL.getGlobalsAddressSpace());
+                                          DL.getDefaultGlobalsAddressSpace());
     // Make sure this is a load or a store and the use is our address operand.
     if (!((isa<LoadInst>(GVUse.Inst) && GVUse.Idx == 0) ||
         (isa<StoreInst>(GVUse.Inst) && GVUse.Idx == 1)))

@@ -5071,7 +5071,7 @@ SDValue AArch64TargetLowering::LowerINTRINSIC_WO_CHAIN(SDValue Op,
   switch (IntNo) {
   default: return SDValue();    // Don't custom lower most intrinsics.
   case Intrinsic::thread_pointer: {
-    unsigned AS = DAG.getDataLayout().getGlobalsAddressSpace();
+    unsigned AS = DAG.getDataLayout().getDefaultGlobalsAddressSpace();
     EVT PtrVT = getPointerTy(DAG.getDataLayout(), AS);
     return DAG.getNode(AArch64ISD::THREAD_POINTER, dl, PtrVT);
   }
@@ -9299,7 +9299,7 @@ AArch64TargetLowering::LowerELFGlobalTLSAddress(SDValue Op,
   // which may be larger than needed.
 
   SDValue TPOff;
-  unsigned AS = DAG.getDataLayout().getGlobalsAddressSpace();
+  unsigned AS = DAG.getDataLayout().getDefaultGlobalsAddressSpace();
   EVT PtrVT = getPointerTy(DAG.getDataLayout(), AS);
   SDLoc DL(Op);
   const GlobalValue *GV = GA->getGlobal();

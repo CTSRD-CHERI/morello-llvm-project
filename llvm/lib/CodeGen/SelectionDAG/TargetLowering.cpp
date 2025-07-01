@@ -497,8 +497,9 @@ SDValue TargetLowering::getPICJumpTableRelocBase(SDValue Table,
 
   if ((JTEncoding == MachineJumpTableInfo::EK_GPRel64BlockAddress) ||
       (JTEncoding == MachineJumpTableInfo::EK_GPRel32BlockAddress))
-    return DAG.getGLOBAL_OFFSET_TABLE(getPointerTy(
-        DAG.getDataLayout(), DAG.getDataLayout().getGlobalsAddressSpace()));
+    return DAG.getGLOBAL_OFFSET_TABLE(
+        getPointerTy(DAG.getDataLayout(),
+                     DAG.getDataLayout().getDefaultGlobalsAddressSpace()));
 
   return Table;
 }
@@ -8651,7 +8652,8 @@ SDValue TargetLowering::CTTZTableLookup(SDNode *Node, SelectionDAG &DAG,
       DAG.getConstant(ShiftAmt, DL, VT));
   Lookup = DAG.getSExtOrTrunc(
       Lookup, DL,
-      getPointerRangeTy(TD, DAG.getDataLayout().getGlobalsAddressSpace()));
+      getPointerRangeTy(TD,
+                        DAG.getDataLayout().getDefaultGlobalsAddressSpace()));
 
   SmallVector<uint8_t> Table(BitWidth, 0);
   for (unsigned i = 0; i < BitWidth; i++) {
@@ -8663,7 +8665,7 @@ SDValue TargetLowering::CTTZTableLookup(SDNode *Node, SelectionDAG &DAG,
   // Create a ConstantArray in Constant Pool
   auto *CA = ConstantDataArray::get(*DAG.getContext(), Table);
   SDValue CPIdx = DAG.getConstantPool(
-      CA, getPointerTy(TD, DAG.getDataLayout().getGlobalsAddressSpace()),
+      CA, getPointerTy(TD, DAG.getDataLayout().getDefaultGlobalsAddressSpace()),
       TD.getPrefTypeAlign(CA->getType()));
   SDValue ExtLoad = DAG.getExtLoad(ISD::ZEXTLOAD, DL, VT, DAG.getEntryNode(),
                                    DAG.getMemBasePlusOffset(CPIdx, Lookup, DL),
@@ -9734,7 +9736,7 @@ SDValue TargetLowering::LowerToTLSEmulatedModel(const GlobalAddressSDNode *GA,
                                                 SelectionDAG &DAG) const {
   // Access to address of TLS varialbe xyz is lowered to a function call:
   //   __emutls_get_address( address of global variable named "__emutls_v.xyz" )
-  unsigned AddrSpace = DAG.getDataLayout().getGlobalsAddressSpace();
+  unsigned AddrSpace = DAG.getDataLayout().getDefaultGlobalsAddressSpace();
   EVT DataPtrVT = getPointerTy(DAG.getDataLayout(), AddrSpace);
   PointerType *VoidPtrType = Type::getInt8PtrTy(*DAG.getContext(), AddrSpace);
   SDLoc dl(GA);

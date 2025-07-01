@@ -9729,10 +9729,11 @@ Value *CodeGenFunction::EmitSVEStructLoad(const SVETypeFlags &TypeFlags,
                                           SmallVectorImpl<Value*> &Ops,
                                           unsigned IntID) {
   llvm::ScalableVectorType *VTy = getSVEType(TypeFlags);
-  auto VecPtrTy =
-      llvm::PointerType::get(VTy, CGM.getDataLayout().getGlobalsAddressSpace());
+  auto VecPtrTy = llvm::PointerType::get(
+      VTy, CGM.getDataLayout().getDefaultGlobalsAddressSpace());
   auto EltPtrTy = llvm::PointerType::get(
-      VTy->getElementType(), CGM.getDataLayout().getGlobalsAddressSpace());
+      VTy->getElementType(),
+      CGM.getDataLayout().getDefaultGlobalsAddressSpace());
 
   unsigned N;
   switch (IntID) {
@@ -9775,10 +9776,11 @@ Value *CodeGenFunction::EmitSVEStructStore(const SVETypeFlags &TypeFlags,
                                            SmallVectorImpl<Value*> &Ops,
                                            unsigned IntID) {
   llvm::ScalableVectorType *VTy = getSVEType(TypeFlags);
-  auto VecPtrTy =
-      llvm::PointerType::get(VTy, CGM.getDataLayout().getGlobalsAddressSpace());
+  auto VecPtrTy = llvm::PointerType::get(
+      VTy, CGM.getDataLayout().getDefaultGlobalsAddressSpace());
   auto EltPtrTy = llvm::PointerType::get(
-      VTy->getElementType(), CGM.getDataLayout().getGlobalsAddressSpace());
+      VTy->getElementType(),
+      CGM.getDataLayout().getDefaultGlobalsAddressSpace());
 
   unsigned N;
   switch (IntID) {
