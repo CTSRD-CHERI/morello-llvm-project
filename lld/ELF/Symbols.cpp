@@ -506,6 +506,8 @@ bool elf::computeIsPreemptible(const Symbol &sym) {
 void Symbol::mergeProperties(const Symbol &other) {
   if (other.exportDynamic)
     exportDynamic = true;
+  if (other.isSectionStartSymbol)
+    isSectionStartSymbol = true;
 
   // DSO symbols do not affect visibility in the output.
   if (!other.isShared() && other.visibility() != STV_DEFAULT) {

@@ -30,8 +30,13 @@
 // RUN:       } \
 // RUN:       } " > %t.script
 
-// RUN: ld.lld -v %t.o -o %t --script %t.script
-// RUN: llvm-readobj --cap-relocs --expand-relocs %t | FileCheck %s
+// RUN: ld.lld --verbose %t.o -o %t --script %t.script 2>&1 | FileCheck %s --check-prefix=LOG
+// LOG: lld: Treating __start_mysection as a section start symbol
+// LOG: lld: Treating __preinit_array_start as a section start symbol
+// LOG: lld: Treating __init_array_start as a section start symbol
+// LOG: lld: Treating __fini_array_start as a section start symbol
+// RUN: llvm-readelf --cap-relocs --expand-relocs --symbols %t
+// RUN: llvm-readelf --cap-relocs --expand-relocs --symbols %t | FileCheck %s
 
 /// Using a linker script. Check that linker defined section start symbols
 /// get the size of the output section, and stop/end symbols get a size of 0.
@@ -74,6 +79,14 @@ _start: ret
 
  .chericap __stop_mysection
 
+// CHECK:      [[#%.16x,PREINIT_START:]]  0 NOTYPE  LOCAL  HIDDEN      [[#]] __preinit_array_start
+// CHECK-NEXT: [[#%.16x,PREINIT_START+8]] 0 NOTYPE  LOCAL  HIDDEN      [[#]] __preinit_array_end
+// CHECK-NEXT: [[#%.16x,INIT_START:]]     0 NOTYPE  LOCAL  HIDDEN      [[#]] __init_array_start
+// CHECK-NEXT: [[#%.16x,INIT_START+8]]    0 NOTYPE  LOCAL  HIDDEN      [[#]] __init_array_end
+// CHECK-NEXT: [[#%.16x,FINI_START:]]     0 NOTYPE  LOCAL  HIDDEN      [[#]] __fini_array_start
+// CHECK-NEXT: [[#%.16x,FINI_START+8]]    0 NOTYPE  LOCAL  HIDDEN      [[#]] __fini_array_end
+// CHECK-NEXT: [[#%.16x,MY_START:]]       0 NOTYPE  LOCAL  HIDDEN      [[#]] __start_mysection
+// CHECK-NEXT: [[#%.16x,MY_START+8]]      0 NOTYPE  LOCAL  HIDDEN      [[#]] __stop_mysection
 // CHECK: CHERI __cap_relocs [
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Location: 0x211010
