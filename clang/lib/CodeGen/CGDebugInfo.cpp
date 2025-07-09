@@ -1193,9 +1193,12 @@ llvm::DIType *CGDebugInfo::CreatePointerLikeType(llvm::dwarf::Tag Tag,
   // Size is always the size of a pointer.
   uint64_t Size = CGM.getContext().getTypeSize(Ty);
   auto Align = getTypeAlignIfRequired(Ty, CGM.getContext());
+  unsigned TargetAS = CGM.getTypes().getTargetAddressSpace(PointeeTy);
+  if (Ty->isCHERICapabilityType(CGM.getContext(), /*IncludeIntCap=*/false) &&
+      !CGM.getTarget().areAllPointersCapabilities())
+    TargetAS = CGM.getContext().getTargetAddressSpace(LangAS::cheri_capability);
   std::optional<unsigned> DWARFAddressSpace =
-      CGM.getTarget().getDWARFAddressSpace(
-          CGM.getTypes().getTargetAddressSpace(PointeeTy));
+      CGM.getTarget().getDWARFAddressSpace(TargetAS);
 
   SmallVector<llvm::Metadata *, 4> Annots;
   auto *BTFAttrTy = dyn_cast<BTFTagAttributedType>(PointeeTy);
