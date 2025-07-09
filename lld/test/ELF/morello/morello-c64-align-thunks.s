@@ -67,13 +67,13 @@ target2:
 /// When we align the PCC we incur additional alignment for .text.2 which
 /// forces the creation of range extension thunks.
 // ALIGN: 0000000001000000 <__C64ADRPThunk_target>:
-// ALIGN-NEXT:  1000000:        adrp    c16, 0x9000000 <_start+0x1ffe8>
-// ALIGN-NEXT:  1000004:        add     c16, c16, #1
+// ALIGN-NEXT:  1000000:        adrp    c16, 0x9000000 <target>
+// ALIGN-NEXT:  1000004:        add     c16, c16, #0x1
 // ALIGN-NEXT:  1000008:        br      c16
 
 // ALIGN: 000000000100000c <__C64ADRPThunk_target2>:
-// ALIGN-NEXT:  100000c:        adrp    c16, 0x9000000 <_start+0x1fff4>
-// ALIGN-NEXT:  1000010:        add     c16, c16, #5
+// ALIGN-NEXT:  100000c:        adrp    c16, 0x9000000 <target>
+// ALIGN-NEXT:  1000010:        add     c16, c16, #0x5
 // ALIGN-NEXT:  1000014:        br      c16
 
 // ALIGN: 0000000001000018 <_start>:

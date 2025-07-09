@@ -12,10 +12,10 @@
 // DISAS-NEXT:         bl   0x210320
 
 // DISAS:      <.plt>:
-// DISAS-NEXT: 210300: stp  c16, c30, [csp, #-32]!
+// DISAS-NEXT: 210300: stp  c16, c30, [csp, #-0x20]!
 // DISAS-NEXT:         adrp c16, 0x230000
-// DISAS-NEXT:         ldr  c17, [c16, #1056]
-// DISAS-NEXT:         add  c16, c16, #1056
+// DISAS-NEXT:         ldr  c17, [c16, #0x420]
+// DISAS-NEXT:         add  c16, c16, #0x420
 // DISAS-NEXT:         br   x17
 // DISAS-NEXT:         nop
 // DISAS-NEXT:         nop
@@ -23,8 +23,8 @@
 
 // DISAS:      <foo@plt>:
 // DISAS-NEXT: 210320: adrp c16, 0x230000
-// DISAS-NEXT:         add  c16, c16, #1072
-// DISAS-NEXT:         ldr  c17, [c16, #0]
+// DISAS-NEXT:         add  c16, c16, #0x430
+// DISAS-NEXT:         ldr  c17, [c16, #0x0]
 // DISAS-NEXT:         br   x17
 
 // GOTPLT: Contents of section .got.plt:

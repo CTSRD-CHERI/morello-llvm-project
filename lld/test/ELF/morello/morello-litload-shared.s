@@ -15,5 +15,5 @@ __start:
 
 
 // CHECK: <__start>:
-// CHECK-NEXT:  ldr	c9, #-16
+// CHECK-NEXT:  ldr	c9, #-0x10
 // CHECK-NEXT:  br	c9

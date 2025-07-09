@@ -21,14 +21,13 @@
 // DISASM: Disassembly of section .text:
 // DISASM-EMPTY:
 // DISASM-NEXT:   0000000000210160 <_start>:
-// FIXME: is this llvm-objdump output wrong?
-// DISASM-NEXT:   210160:      ldr     c8, #65568
+// DISASM-NEXT:   210160:      ldr     c8, #0x10020
 // DISASM-NEXT:   210164:      nop
 // DISASM-NEXT:   210168:      nop
-// DISASM-NEXT:   21016c:      ldr     c9, #65568
+// DISASM-NEXT:   21016c:      ldr     c9, #0x10020
 // DISASM-NEXT:   210170:      nop
-// DISASM-NEXT:   210174:      ldr     c10, #65552
-// DISASM-NEXT:   210178:      ldr     c11, #65552
+// DISASM-NEXT:   210174:      ldr     c10, #0x10010
+// DISASM-NEXT:   210178:      ldr     c11, #0x10010
 
 // SYM: Name: sym (6)
 // SYM-NEXT: Value: 0x220180

@@ -1,7 +1,7 @@
 // REQUIRES: aarch64
 // RUN: llvm-mc --triple=aarch64-none-elf -target-abi purecap -mattr=+c64,+morello -filetype=obj %s -o %t.o
 // RUN: ld.lld %t.o -o %t
-// RUN: llvm-objdump -d --no-show-raw-insn --triple=aarch64-none-elf --mattr=+morello %t | FileCheck %s --check-prefix=DIS
+// RUN: llvm-objdump -d --no-show-raw-insn --no-print-imm-hex --triple=aarch64-none-elf --mattr=+morello %t | FileCheck %s --check-prefix=DIS
 // RUN: llvm-readobj --sections --cap-relocs --expand-relocs %t | FileCheck %s
 
 /// The R_MORELLO_LD128_GOT_LO12_NC relocation causes the linker to create a
@@ -39,13 +39,13 @@ foo:
  .xword 10
 
 // DIS: 0000000000210238 <_start>:
-// DIS-NEXT:   210238:        adrp    c0, 0x220000 <_start+0x40>
+// DIS-NEXT:   210238:        adrp    c0, 0x220000 <_start+0x
 // DIS-NEXT:   21023c:        ldr     c0, [c0, #736]
-// DIS-NEXT:   210240:        adrp    c1, 0x220000 <_start+0x48>
+// DIS-NEXT:   210240:        adrp    c1, 0x220000 <_start+0x
 // DIS-NEXT:   210244:        ldr     c1, [c1, #720]
-// DIS-NEXT:   210248:        adrp    c1, 0x220000 <_start+0x50>
+// DIS-NEXT:   210248:        adrp    c1, 0x220000 <_start+0x
 // DIS-NEXT:   21024c:        ldr     c1, [c1, #720]
-// DIS-NEXT:   210250:        adrp    c2, 0x220000 <_start+0x58>
+// DIS-NEXT:   210250:        adrp    c2, 0x220000 <_start+0x
 // DIS-NEXT:   210254:        ldr     c2, [c1, #752]
 
 /// .rodata is the start of the executable capability range

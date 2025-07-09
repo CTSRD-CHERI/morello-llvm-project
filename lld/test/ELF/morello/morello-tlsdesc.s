@@ -1,7 +1,7 @@
 // REQUIRES: aarch64
 // RUN: llvm-mc -filetype=obj -triple=aarch64-pc-linux %s -target-abi purecap -mattr=+c64,+morello -o %t.o
 // RUN: ld.lld --hash-style=sysv -shared %t.o -o %t.so
-// RUN: llvm-objdump -d --mattr=+morello --no-show-raw-insn %t.so | FileCheck %s
+// RUN: llvm-objdump -d --mattr=+morello --no-show-raw-insn --no-print-imm-hex %t.so | FileCheck %s
 // RUN: llvm-readobj -r %t.so | FileCheck --check-prefix=REL %s
 
 .text
@@ -15,7 +15,7 @@
 // create target specific dynamic TLSDESC relocation where addend is
 // the symbol VMA in tls block.
 
-// CHECK:      10308: adrp    c0, 0x20000 <$d.1+0x10>
+// CHECK:      10308: adrp    c0, 0x20000 <local2+0x1fff8>
 // CHECK-NEXT: 1030c: ldr     c1, [c0, #976]
 // CHECK-NEXT: 10310: add     c0, c0, #976
 // CHECK-NEXT: 10314: blr     c1
@@ -26,7 +26,7 @@
   .tlsdesccall local1
   blr     c1
 
-// CHECK:      10318: adrp    c0, 0x20000 <$d.1+0x20>
+// CHECK:      10318: adrp    c0, 0x20000 <local2+0x1fff8>
 // CHECK-NEXT: 1031c: ldr     c1, [c0, #1008]
 // CHECK-NEXT: 10320: add     c0, c0, #1008
 // CHECK-NEXT: 10324: blr     c1
@@ -37,7 +37,7 @@
   .tlsdesccall local2
   blr     c1
 
-// CHECK:      10328: adrp    c0, 0x20000 <$d.1+0x30>
+// CHECK:      10328: adrp    c0, 0x20000 <local2+0x1fff8>
 // CHECK-NEXT: 1032c: ldr     c1, [c0, #1040]
 // CHECK-NEXT: 10330: add     c0, c0, #1040
 // CHECK-NEXT: 10334: blr     c1

@@ -5,7 +5,7 @@
 # RUN: echo '.globl sym3; .size sym3, 0xD000C; .section .data; sym3:; .xword 0' | llvm-mc -filetype=obj -triple=aarch64-unknown-freebsd -o %t4.o
 # RUN: echo '.globl sym4; .size sym4, 0xE000D000C; .section .data; sym4:; .xword 0' | llvm-mc -filetype=obj -triple=aarch64-unknown-freebsd -o %t5.o
 # RUN: ld.lld %t %t2.o %t3.o %t4.o %t5.o -o %t2
-# RUN: llvm-objdump -d %t2 | FileCheck %s
+# RUN: llvm-objdump --no-print-imm-hex -d %t2 | FileCheck %s
 
 .section .R_MORELLO_MOVW_SIZE,"ax",@progbits
 movz1:

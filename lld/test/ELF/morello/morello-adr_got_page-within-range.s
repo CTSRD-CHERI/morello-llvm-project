@@ -22,7 +22,7 @@
 // RELOCS-NEXT: Section
 // RELOCS-NEXT:   0x0 R_MORELLO_ADR_GOT_PAGE foo 0x0
 
-// DISASM: 210230: adrp c25, 0x220000 <_start+0x40>
+// DISASM: 210230: adrp c25, 0x220000 <_start+0xfdd0>
 
 /// P = 210230
 /// Address of .got = 0x220270

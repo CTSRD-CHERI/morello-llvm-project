@@ -34,13 +34,13 @@ target2: ret
 // CHECK-NEXT:  b       0x134 <__C64ADRPThunk_target2>
 
 // CHECK: <__C64ADRPThunk_target>:
-// CHECK-NEXT:  adrp    c16, 0xf000000 <__C64ADRPThunk_target2+0x3bff4>
-// CHECK-NEXT:  c16, c16, #1
+// CHECK-NEXT:  adrp    c16, 0xf000000 <target>
+// CHECK-NEXT:  c16, c16, #0x1
 // CHECK-NEXT:  br      c16
 
 // CHECK: <__C64ADRPThunk_target2>:
-// CHECK-NEXT:  adrp    c16, 0xf000000 <__C64ADRPThunk_target2+0x3c000>
-// CHECK-NEXT:  add     c16, c16, #5
+// CHECK-NEXT:  adrp    c16, 0xf000000 <target>
+// CHECK-NEXT:  add     c16, c16, #0x5
 // CHECK-NEXT:  br      c16
 
 // CHECK: <target>:

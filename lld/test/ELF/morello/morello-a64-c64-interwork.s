@@ -38,7 +38,7 @@ _start:
 // A64_LAST-NEXT: bl 0x13c <__AArch64AbsLongThunk_far_away>
 
 // A64_LAST: <__AArch64AbsLongThunk_far_away>:
-// A64_LAST-NEXT: ldr x16, 0x144 <$d>
+// A64_LAST-NEXT: ldr x16, 0x144 <__AArch64AbsLongThunk_far_away+0x8>
 // A64_LAST-NEXT: br  x16
 
 
@@ -52,7 +52,7 @@ _start:
 // C64_LAST-EMPTY:
 // C64_LAST-NEXT: <$c>:
 // C64_LAST-NEXT: adrp c16, 0xf000000
-// C64_LAST-NEXT: add  c16, c16, #1
+// C64_LAST-NEXT: add  c16, c16, #0x1
 // C64_LAST-NEXT: br   c16
 
 // C64_LAST: <func>:
@@ -61,7 +61,7 @@ _start:
 
 // C64_LAST: <__C64ADRPThunk_far_away>:
 // C64_LAST-NEXT: adrp c16, 0xf000000
-// C64_LAST-NEXT: add  c16, c16, #1
+// C64_LAST-NEXT: add  c16, c16, #0x1
 // C64_LAST-NEXT: br   c16
 
 // CHECK: <far_away>:
