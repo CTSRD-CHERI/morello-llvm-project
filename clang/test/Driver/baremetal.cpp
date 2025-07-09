@@ -149,16 +149,16 @@
 // RUN: %clang -### %s --target=aarch64_be-none-elf -mbig-endian --sysroot=%S/Inputs/baremetal_arm 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-AARCH64BE %s
 
-// RUN: %clang -### %s --target=aarch64-none-elf --sysroot=%S/Inputs/baremetal_arm 2>&1 \
-// RUN:   | FileCheck --check-prefix=CHECK-AARCH64LE %s
+// RUNNOT: %clang -### %s --target=aarch64-none-elf --sysroot=%S/Inputs/baremetal_arm 2>&1 \
+// RUNNOT:   | FileCheck --check-prefix=CHECK-AARCH64LE %s
 // CHECK-AARCH64LE: "{{.*}}ld{{(.exe)?}}" "{{.*}}.o" "-Bstatic" "-EL"
 // CHECK-AARCH64LE-NOT: "--be8"
 
-// RUN: %clang -### %s --target=aarch64_be-none-elf -mlittle-endian --sysroot=%S/Inputs/baremetal_arm 2>&1 \
-// RUN:   | FileCheck --check-prefix=CHECK-AARCH64LE %s
+// RUNNOT: %clang -### %s --target=aarch64_be-none-elf -mlittle-endian --sysroot=%S/Inputs/baremetal_arm 2>&1 \
+// RUNNOT:   | FileCheck --check-prefix=CHECK-AARCH64LE %s
 
-// RUN: %clang -no-canonical-prefixes %s -### --target=aarch64-none-elf 2>&1 \
-// RUN:   | FileCheck --check-prefix=CHECK-AARCH64-NO-HOST-INC %s
+// RUNNOT: %clang -no-canonical-prefixes %s -### --target=aarch64-none-elf 2>&1 \
+// RUNNOT:   | FileCheck --check-prefix=CHECK-AARCH64-NO-HOST-INC %s
 // Verify that the bare metal driver does not include any host system paths:
 // CHECK-AARCH64-NO-HOST-INC: InstalledDir: [[INSTALLEDDIR:.+]]
 // CHECK-AARCH64-NO-HOST-INC: "-resource-dir" "[[RESOURCE:[^"]+]]"
