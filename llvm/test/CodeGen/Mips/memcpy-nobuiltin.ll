@@ -31,7 +31,7 @@ entry:
 
 define void @memcpy_aligned_nobuiltin(i8* %dst, i8* %src) #0 {
 entry:
-  call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 8 %dst, i8* align 8 %src, i64 16, i1 false) #3
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 8 %dst, i8* align 8 %src, i64 32, i1 false) #3
   ret void
   ; The memcpy could be inlined but was tagged with must_preserve_cheri_tags -> should call memcpy()
   ; CHECK-LABEL: memcpy_aligned_nobuiltin:
@@ -62,7 +62,7 @@ entry:
 
 define void @memmove_aligned_nobuiltin(i8* %dst, i8* %src) #0 {
 entry:
-  call void @llvm.memmove.p0i8.p0i8.i64(i8* align 16 %dst, i8* align 16 %src, i64 16, i1 false) #3
+  call void @llvm.memmove.p0i8.p0i8.i64(i8* align 16 %dst, i8* align 16 %src, i64 32, i1 false) #3
   ret void
   ; The memmove could be inlined but was tagged with nobuiltin -> should call memmove()
   ; CHECK-LABEL: memmove_aligned_nobuiltin:
