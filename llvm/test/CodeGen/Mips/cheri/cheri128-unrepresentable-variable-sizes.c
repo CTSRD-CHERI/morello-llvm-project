@@ -45,25 +45,25 @@
 // SECTIONS-NEXT: 0000000000000000  4096 TLS     LOCAL  DEFAULT   10 thread_char4096
 // SECTIONS-NEXT: 0000000000000000   128 OBJECT  LOCAL  DEFAULT   14 zero128
 // SECTIONS-NEXT: 0000000000000000  4096 OBJECT  LOCAL  DEFAULT   15 zero4096
-// SECTIONS-NEXT: 0000000000000000 65535 OBJECT  LOCAL  DEFAULT   16 zero65535
-// SECTIONS-NEXT: 0000000000000000 65537 OBJECT  LOCAL  DEFAULT   17 zero65537
-// SECTIONS-NEXT: 0000000000000000 139267 OBJECT LOCAL  DEFAULT   18 zero139267
-// SECTIONS-NEXT: 0000000000000000 65535 OBJECT  GLOBAL DEFAULT    6 char65535
-// SECTIONS-NEXT: 0000000000000000 65537 OBJECT  GLOBAL HIDDEN     7 char65537
-// SECTIONS-NEXT: 0000000000000000 139267 OBJECT GLOBAL PROTECTED   8 char139267
-// SECTIONS-NEXT: 0000000000000000 65535 TLS     GLOBAL DEFAULT   11 thread_char65535
-// SECTIONS-NEXT: 0000000000000000 65537 TLS     GLOBAL HIDDEN    12 thread_char65537
-// SECTIONS-NEXT: 0000000000000000 139267 TLS    GLOBAL PROTECTED  13 thread_char139267
+// SECTIONS-NEXT: 0000000000000000 65536 OBJECT  LOCAL  DEFAULT   16 zero65535
+// SECTIONS-NEXT: 0000000000000000 65664 OBJECT  LOCAL  DEFAULT   17 zero65537
+// SECTIONS-NEXT: 0000000000000000 139520 OBJECT LOCAL  DEFAULT   18 zero139267
+// SECTIONS-NEXT: 0000000000000000 65536 OBJECT  GLOBAL DEFAULT    6 char65535
+// SECTIONS-NEXT: 0000000000000000 65664 OBJECT  GLOBAL HIDDEN     7 char65537
+// SECTIONS-NEXT: 0000000000000000 139520 OBJECT GLOBAL PROTECTED   8 char139267
+// SECTIONS-NEXT: 0000000000000000 65536 TLS     GLOBAL DEFAULT   11 thread_char65535
+// SECTIONS-NEXT: 0000000000000000 65664 TLS     GLOBAL HIDDEN    12 thread_char65537
+// SECTIONS-NEXT: 0000000000000000 139520 TLS    GLOBAL PROTECTED  13 thread_char139267
 // SECTIONS-NEXT: 0000000000000001   128 OBJECT  GLOBAL DEFAULT  COM common128
 // SECTIONS-NEXT: 0000000000000008  4096 OBJECT  GLOBAL DEFAULT  COM common4096
-// SECTIONS-NEXT: 0000000000000080 65535 OBJECT  GLOBAL DEFAULT  COM common65535
-// SECTIONS-NEXT: 0000000000000080 65537 OBJECT  GLOBAL HIDDEN   COM common65537
-// SECTIONS-NEXT: 0000000000000100 139267 OBJECT GLOBAL PROTECTED COM common139267
+// SECTIONS-NEXT: 0000000000000080 65536 OBJECT  GLOBAL DEFAULT  COM common65535
+// SECTIONS-NEXT: 0000000000000080 65664 OBJECT  GLOBAL HIDDEN   COM common65537
+// SECTIONS-NEXT: 0000000000000100 139520 OBJECT GLOBAL PROTECTED COM common139267
 // SECTIONS-NEXT: 0000000000000000   128 TLS     GLOBAL DEFAULT   19 thread_zero128
 // SECTIONS-NEXT: 0000000000000000  4096 TLS     GLOBAL DEFAULT   20 thread_zero4096
-// SECTIONS-NEXT: 0000000000000000 65535 TLS     GLOBAL DEFAULT   21 thread_zero65535
-// SECTIONS-NEXT: 0000000000000000 65537 TLS     GLOBAL HIDDEN   22 thread_zero65537
-// SECTIONS-NEXT: 0000000000000000 139267 TLS    GLOBAL PROTECTED  23 thread_zero139267
+// SECTIONS-NEXT: 0000000000000000 65536 TLS     GLOBAL DEFAULT   21 thread_zero65535
+// SECTIONS-NEXT: 0000000000000000 65664 TLS     GLOBAL HIDDEN   22 thread_zero65537
+// SECTIONS-NEXT: 0000000000000000 139520 TLS    GLOBAL PROTECTED  23 thread_zero139267
 
 __attribute__((used)) static char char128[128] = {1};
 __attribute__((used)) static char char4096[4096] = {2};
@@ -150,7 +150,7 @@ __attribute__((visibility("protected"))) __thread char thread_zero139267[139267]
 // ASM-NEXT: 	.byte	3                       # 0x3
 // ASM-NEXT: 	.space	65534
 // ASM-NEXT: 	.space	1                       # Tail padding to ensure precise bounds
-// ASM-NEXT: 	.size	char65535, 65535
+// ASM-NEXT: 	.size	char65535, 65536
 
 // ASM-LABEL: 	.section	.data.char65537,"aw",@progbits
 // ASM-NEXT: 	.globl	char65537
@@ -159,7 +159,7 @@ __attribute__((visibility("protected"))) __thread char thread_zero139267[139267]
 // ASM-NEXT: 	.byte	4                       # 0x4
 // ASM-NEXT: 	.space	65536
 // ASM-NEXT: 	.space	127                     # Tail padding to ensure precise bounds
-// ASM-NEXT: 	.size	char65537, 65537
+// ASM-NEXT: 	.size	char65537, 65664
 
 // ASM-LABEL: 	.section	.data.char139267,"aw",@progbits
 // ASM-NEXT: 	.globl	char139267
@@ -168,7 +168,7 @@ __attribute__((visibility("protected"))) __thread char thread_zero139267[139267]
 // ASM-NEXT: 	.byte	5                       # 0x5
 // ASM-NEXT: 	.space	139266
 // ASM-NEXT: 	.space	253                     # Tail padding to ensure precise bounds
-// ASM-NEXT: 	.size	char139267, 139267
+// ASM-NEXT: 	.size	char139267, 139520
 // ASM-EMPTY:
 // ASM-NEXT: 	.type	thread_char128,@object  # @thread_char128
 // ASM-NEXT: 	.section	.tdata.thread_char128,"awT",@progbits
@@ -193,7 +193,7 @@ __attribute__((visibility("protected"))) __thread char thread_zero139267[139267]
 // ASM-NEXT: 	.byte	3                       # 0x3
 // ASM-NEXT: 	.space	65534
 // ASM-NEXT: 	.space	1                       # Tail padding to ensure precise bounds
-// ASM-NEXT: 	.size	thread_char65535, 65535
+// ASM-NEXT: 	.size	thread_char65535, 65536
 // ASM-EMPTY:
 // ASM-NEXT: 	.hidden	thread_char65537        # @thread_char65537
 // ASM-NEXT: 	.type	thread_char65537,@object
@@ -204,7 +204,7 @@ __attribute__((visibility("protected"))) __thread char thread_zero139267[139267]
 // ASM-NEXT: 	.byte	4                       # 0x4
 // ASM-NEXT: 	.space	65536
 // ASM-NEXT: 	.space	127                     # Tail padding to ensure precise bounds
-// ASM-NEXT: 	.size	thread_char65537, 65537
+// ASM-NEXT: 	.size	thread_char65537, 65664
 // ASM-EMPTY:
 // ASM-NEXT: 	.protected	thread_char139267 # @thread_char139267
 // ASM-NEXT: 	.type	thread_char139267,@object
@@ -215,7 +215,7 @@ __attribute__((visibility("protected"))) __thread char thread_zero139267[139267]
 // ASM-NEXT: 	.byte	5                       # 0x5
 // ASM-NEXT: 	.space	139266
 // ASM-NEXT: 	.space	253                     # Tail padding to ensure precise bounds
-// ASM-NEXT: 	.size	thread_char139267, 139267
+// ASM-NEXT: 	.size	thread_char139267, 139520
 // ASM-EMPTY:
 // ASM-NEXT: 	.type	zero128,@object         # @zero128
 // ASM-NEXT: 	.section	.bss.zero128,"aw",@nobits
@@ -236,7 +236,7 @@ __attribute__((visibility("protected"))) __thread char thread_zero139267[139267]
 // ASM-NEXT: zero65535:
 // ASM-NEXT: 	.space	65535
 // ASM-NEXT: 	.space	1                       # Tail padding to ensure precise bounds
-// ASM-NEXT: 	.size	zero65535, 65535
+// ASM-NEXT: 	.size	zero65535, 65536
 // ASM-EMPTY:
 // ASM-NEXT: 	.type	zero65537,@object       # @zero65537
 // ASM-NEXT: 	.section	.bss.zero65537,"aw",@nobits
@@ -244,7 +244,7 @@ __attribute__((visibility("protected"))) __thread char thread_zero139267[139267]
 // ASM-NEXT: zero65537:
 // ASM-NEXT: 	.space	65537
 // ASM-NEXT: 	.space	127                     # Tail padding to ensure precise bounds
-// ASM-NEXT: 	.size	zero65537, 65537
+// ASM-NEXT: 	.size	zero65537, 65664
 // ASM-EMPTY:
 // ASM-NEXT: 	.type	zero139267,@object      # @zero139267
 // ASM-NEXT: 	.section	.bss.zero139267,"aw",@nobits
@@ -252,7 +252,7 @@ __attribute__((visibility("protected"))) __thread char thread_zero139267[139267]
 // ASM-NEXT: zero139267:
 // ASM-NEXT: 	.space	139267
 // ASM-NEXT: 	.space	253                     # Tail padding to ensure precise bounds
-// ASM-NEXT: 	.size	zero139267, 139267
+// ASM-NEXT: 	.size	zero139267, 139520
 // ASM-EMPTY:
 // ASM-NEXT: 	.type	common128,@object       # @common128
 // ASM-NEXT: 	.comm	common128,128,1
@@ -260,15 +260,12 @@ __attribute__((visibility("protected"))) __thread char thread_zero139267[139267]
 // ASM-NEXT: 	.comm	common4096,4096,8
 // ASM-NEXT: 	.type	common65535,@object     # @common65535
 // ASM-NEXT: 	.comm	common65535,65536,128   # adding 1 bytes of tail padding for precise bounds.
-// ASM-NEXT: 	.size	common65535, 65535      # explicit size directive required due to 1 bytes of tail padding for precise bounds.
 // ASM-NEXT: 	.hidden	common65537             # @common65537
 // ASM-NEXT: 	.type	common65537,@object
 // ASM-NEXT: 	.comm	common65537,65664,128   # adding 127 bytes of tail padding for precise bounds.
-// ASM-NEXT: 	.size	common65537, 65537      # explicit size directive required due to 127 bytes of tail padding for precise bounds.
 // ASM-NEXT: 	.protected	common139267    # @common139267
 // ASM-NEXT: 	.type	common139267,@object
 // ASM-NEXT: 	.comm	common139267,139520,256 # adding 253 bytes of tail padding for precise bounds.
-// ASM-NEXT: 	.size	common139267, 139267    # explicit size directive required due to 253 bytes of tail padding for precise bounds.
 // ASM-NEXT: 	.type	thread_zero128,@object  # @thread_zero128
 // ASM-NEXT: 	.section	.tbss.thread_zero128,"awT",@nobits
 // ASM-NEXT: 	.globl	thread_zero128
@@ -291,7 +288,7 @@ __attribute__((visibility("protected"))) __thread char thread_zero139267[139267]
 // ASM-NEXT: thread_zero65535:
 // ASM-NEXT: 	.space	65535
 // ASM-NEXT: 	.space	1                       # Tail padding to ensure precise bounds
-// ASM-NEXT: 	.size	thread_zero65535, 65535
+// ASM-NEXT: 	.size	thread_zero65535, 65536
 // ASM-EMPTY:
 // ASM-NEXT: 	.hidden	thread_zero65537        # @thread_zero65537
 // ASM-NEXT: 	.type	thread_zero65537,@object
@@ -301,7 +298,7 @@ __attribute__((visibility("protected"))) __thread char thread_zero139267[139267]
 // ASM-NEXT: thread_zero65537:
 // ASM-NEXT: 	.space	65537
 // ASM-NEXT: 	.space	127                     # Tail padding to ensure precise bounds
-// ASM-NEXT: 	.size	thread_zero65537, 65537
+// ASM-NEXT: 	.size	thread_zero65537, 65664
 // ASM-EMPTY:
 // ASM-NEXT: 	.protected	thread_zero139267 # @thread_zero139267
 // ASM-NEXT: 	.type	thread_zero139267,@object
@@ -311,4 +308,4 @@ __attribute__((visibility("protected"))) __thread char thread_zero139267[139267]
 // ASM-NEXT: thread_zero139267:
 // ASM-NEXT: 	.space	139267
 // ASM-NEXT: 	.space	253                     # Tail padding to ensure precise bounds
-// ASM-NEXT: 	.size	thread_zero139267, 139267
+// ASM-NEXT: 	.size	thread_zero139267, 139520
