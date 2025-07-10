@@ -14,7 +14,7 @@ let Predicates = [HasMorello, HasNotC64], DecoderNamespace = "AArch64Morello" in
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
   def AltCapLoadAcq : AltCapLoadAcqFmt<(outs Cap:$Ct), (ins Capsp0:$Rn), "ldar", "\t$Ct, [$Rn]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
-  def AltCapStoreRel : AltCapStoreRelFmt<(outs), (ins Cap:$Ct, Capsp0:$Rn), "stlr", "\t$Ct, [$Rn]", []>;
+  def AltCapStoreRel : AltCapStoreRelFmt<(outs), (ins Cap:$Ct, Capsp:$Rn), "stlr", "\t$Ct, [$Rn]", []>;
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
   def AltLoadByteAcq : AltLoadByteAcqFmt<(outs GPR32:$Rt), (ins Capsp0:$Rn), "ldarb", "\t$Rt, [$Rn]", []>;
 let mayLoad = 1, hasSideEffects = 0, mayStore = 0 in
@@ -62,7 +62,7 @@ let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
   def AltStoreByteImmUnscaled : AltStoreByteImmUnscaledFmt<(outs), (ins GPR32:$Rt, Capsp:$Rn, simm9:$imm9), "sturb", "\t$Rt, [$Rn, $imm9]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
-  def AltStoreByteRel : AltStoreByteRelFmt<(outs), (ins GPR32:$Rt, Capsp0:$Rn), "stlrb", "\t$Rt, [$Rn]", []>;
+  def AltStoreByteRel : AltStoreByteRelFmt<(outs), (ins GPR32:$Rt, Capsp:$Rn), "stlrb", "\t$Rt, [$Rn]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
   def AltStoreCapImmPre : AltStoreCapImmPreFmt<(outs), (ins Cap:$Ct, Capsp:$Rn, uimm9s16:$imm9), "str", "\t$Ct, [$Rn, $imm9]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
@@ -88,7 +88,7 @@ let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
   def AltStoreWordImmUnscaled : AltStoreWordImmUnscaledFmt<(outs), (ins GPR32:$Rt, Capsp:$Rn, simm9:$imm9), "stur", "\t$Rt, [$Rn, $imm9]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
-  def AltStoreWordRel : AltStoreWordRelFmt<(outs), (ins GPR32:$Rt, Capsp0:$Rn), "stlr", "\t$Rt, [$Rn]", []>;
+  def AltStoreWordRel : AltStoreWordRelFmt<(outs), (ins GPR32:$Rt, Capsp:$Rn), "stlr", "\t$Rt, [$Rn]", []>;
 }
 let Predicates = [HasMorello], DecoderNamespace = "AArch64Morello" in {
 def CapAlignDown : CapAlignDownFmt<(outs Capsp:$Cd), (ins Capsp:$Cn, uimm6:$imm6), "alignd", "\t$Cd, $Cn, $imm6", []>;
@@ -273,7 +273,7 @@ let mayLoad = 0, hasSideEffects = 0, mayStore = 1, Constraints = "@earlyclobber 
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
   def CapStorePairNonTemporal : CapStorePairNonTemporalFmt<(outs), (ins Cap:$Ct, Cap:$Ct2, GPR64sp:$Rn, simm7s16:$imm7), "stnp", "\t$Ct, $Ct2, [$Rn, $imm7]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
-  def CapStoreRel : CapStoreRelFmt<(outs), (ins Cap:$Ct, GPR64sp0:$Rn), "stlr", "\t$Ct, [$Rn]", []>;
+  def CapStoreRel : CapStoreRelFmt<(outs), (ins Cap:$Ct, GPR64sp:$Rn), "stlr", "\t$Ct, [$Rn]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
   def CapStoreTagsPriv : CapStoreTagsPrivFmt<(outs), (ins GPR64:$Rt, GPR64sp:$Rn), "stct", "\t$Rt, [$Rn]", []>;
 let mayLoad = 0, hasSideEffects = 0, mayStore = 1 in
@@ -401,6 +401,12 @@ def : InstAlias<"str\t$Ct, [$Rn, $Rm]",
                 (CapStoreRegExtX Cap:$Ct, GPR64sp:$Rn, GPR64:$Rm, 0, 0)>;
 def : InstAlias<"ldr\t$Ct, [$Rn, $Rm]",
                 (CapLoadRegExtX Cap:$Ct, GPR64sp:$Rn, GPR64:$Rm, 0, 0)>;
+
+// See RCPC3 comment in AArch64InstrInfo.td
+def : InstAlias<"stlrb\t$Rt, [$Rn, #0]" , (AltStoreByteRel  GPR32: $Rt, Capsp:$Rn)>;
+def : InstAlias<"stlr\t$Rt, [$Rn, #0]" , (AltStoreWordRel  GPR32: $Rt, Capsp:$Rn)>;
+def : InstAlias<"stlr\t$Ct, [$Rn, #0]" , (AltCapStoreRel   Cap: $Ct, Capsp:$Rn)>;
+def : InstAlias<"stlr\t$Ct, [$Rn, #0]" , (CapStoreRel      Cap: $Ct, GPR64sp:$Rn)>;
 
 // Load/Store capability (register) via alternate base.
 def : InstAlias<"ldr\t$Ct, [$Rn, $Rm]", (AltLoadCapRegExtX Cap:$Ct, Capsp:$Rn, GPR64:$Rm, 0, 0)>;

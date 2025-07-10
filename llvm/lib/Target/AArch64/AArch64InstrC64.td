@@ -1365,6 +1365,11 @@ def ASTLRX  : PStoreRelease  <0b11, 1, 0, 0, 1, GPR64, "stlr">;
 def ASTLRB  : PStoreRelease  <0b00, 1, 0, 0, 1, GPR32, "stlrb">;
 def ASTLRH  : PStoreRelease  <0b01, 1, 0, 0, 1, GPR32, "stlrh">;
 
+def ASTLRW0  : InstAlias<"stlr\t$Rt, [$Rn, #0]" , (ASTLRW   GPR32: $Rt, Capsp:$Rn)>;
+def ASTLRX0  : InstAlias<"stlr\t$Rt, [$Rn, #0]" , (ASTLRX   GPR64: $Rt, Capsp:$Rn)>;
+def ASTLRB0  : InstAlias<"stlrb\t$Rt, [$Rn, #0]", (ASTLRB   GPR32: $Rt, Capsp:$Rn)>;
+def ASTLRH0  : InstAlias<"stlrh\t$Rt, [$Rn, #0]", (ASTLRH   GPR32: $Rt, Capsp:$Rn)>;
+
 def ASTLXRW : PStoreExclusive<0b10, 0, 0, 0, 1, GPR32, "stlxr">;
 def ASTLXRX : PStoreExclusive<0b11, 0, 0, 0, 1, GPR64, "stlxr">;
 def ASTLXRB : PStoreExclusive<0b00, 0, 0, 0, 1, GPR32, "stlxrb">;

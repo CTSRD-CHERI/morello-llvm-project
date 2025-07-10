@@ -613,7 +613,7 @@ let mayLoad = 0, mayStore = 1 in
 class PStoreRelease<bits<2> sz, bit o2, bit L, bit o1, bit o0,
                     RegisterClass regtype, string asm>
     : LoadStoreExclusiveSimple<sz, o2, L, o1, o0, (outs),
-                               (ins regtype:$Rt, Capsp0:$Rn),
+                               (ins regtype:$Rt, Capsp:$Rn),
                                asm, "\t$Rt, [$Rn]">,
       Sched<[WriteST]> {
   let DecoderNamespace = "AArch64C64";
