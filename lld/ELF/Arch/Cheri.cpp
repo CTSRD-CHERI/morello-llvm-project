@@ -1063,6 +1063,13 @@ void addMorelloC64GotRelocation(RelType dynType, Symbol *sym,
 static void addMorelloCapabilityRelocation(Symbol *sym, RelType type,
                                          InputSectionBase *sec, uint64_t offset,
                                          int64_t addend) {
+  if (!sym->isPreemptible && sym->isUndefWeak()) {
+    sec->addReloc({R_ABS, target->symbolicRel, offset, addend, sym});
+    sec->addReloc(
+        {R_ADDEND, target->symbolicRel, offset + config->wordsize, 0, sym});
+    return;
+  }
+
   // When dynamic linking we propagate the R_MORELLO_CAPINIT if the symbol is
   // preemptible, otherwise we use R_MORELLO_RELATIVE or
   // R_MORELLO_FUNC_RELATIVE.
@@ -1643,6 +1650,27 @@ void addCapabilityRelocation(
         message("Using trampoline for function pointer against " +
                 verboseToString(sym));
     }
+  }
+
+  // Non-preemptible undef weak symbols are link-time constants
+  if (sym && !sym->isPreemptible && sym->isUndefWeak()) {
+    if (config->isLE) {
+      sec->addReloc({R_ABS, target->symbolicRel, offset, addend, sym});
+      sec->addReloc(
+          {R_ADDEND, target->symbolicRel, offset + config->wordsize, 0, sym});
+    } else {
+      sec->addReloc({R_ADDEND, target->symbolicRel, offset, 0, sym});
+      sec->addReloc(
+          {R_ABS, target->symbolicRel, offset + config->wordsize, addend, sym});
+    }
+    // Handle deprecated CHERI-256
+    if (target->getCapabilitySize() == config->wordsize * 4) {
+      sec->addReloc({R_ADDEND, target->symbolicRel,
+                     offset + 2 * config->wordsize, 0, sym});
+      sec->addReloc({R_ADDEND, target->symbolicRel,
+                     offset + 3 * config->wordsize, 0, sym});
+    }
+    return;
   }
 
   // local cap relocs don't need a Elf relocation with a full symbol lookup:

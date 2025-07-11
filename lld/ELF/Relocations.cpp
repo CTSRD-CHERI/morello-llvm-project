@@ -939,7 +939,7 @@ static void addGotEntry(Symbol &sym) {
   in.got->addEntry(sym);
   uint64_t off = sym.getGotOffset();
 
-  if (config->morelloC64Plt) {
+  if (config->morelloC64Plt && (sym.isPreemptible || !sym.isUndefWeak())) {
     // There are additional static relocations needed to initialize the GOT
     // entry. Delegate this to addMorelloC64GotRelocation.
     RelType reltype;
