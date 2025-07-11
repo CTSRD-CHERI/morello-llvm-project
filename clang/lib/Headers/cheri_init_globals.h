@@ -191,15 +191,6 @@ cheri_init_globals_impl(const struct capreloc *start_relocs,
     const void *__capability *__capability dest =
         (const void *__capability *__capability)cheri_address_or_offset_set(
             data_cap, reloc->capability_location + base_addr);
-#ifndef __aarch64__
-    /* Morello uses object == 0 for functions */
-    if (reloc->object == 0) {
-      /* XXXAR: clang fills uninitialized capabilities with 0xcacaca..., so we
-       * we need to explicitly write NULL here */
-      *dest = (void *__capability)0;
-      continue;
-    }
-#endif
     const void *__capability base_cap;
     bool can_set_bounds = true;
     if ((reloc->permissions & function_reloc_flag) == function_reloc_flag) {
