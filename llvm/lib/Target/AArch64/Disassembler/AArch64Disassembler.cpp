@@ -2490,35 +2490,13 @@ static DecodeStatus DecodeTestAndBranch(MCInst &Inst, uint32_t insn,
   return Success;
 }
 
-static DecodeStatus DecodeGPRSeqPairsClassRegisterClass(MCInst &Inst,
-                                                        unsigned RegClassID,
-                                                        unsigned RegNo,
-                                                        uint64_t Addr,
-                                                        const MCDisassembler *Decoder) {
-  switch (Inst.getOpcode()) {
-  default:
-    break;
-  case AArch64::CASPW:
-  case AArch64::CASPX:
-  case AArch64::CASPAW:
-  case AArch64::CASPAX:
-  case AArch64::CASPLW:
-  case AArch64::CASPLX:
-  case AArch64::CASPALW:
-  case AArch64::CASPALX:
-  case AArch64::ACASPW:
-  case AArch64::ACASPX:
-  case AArch64::ACASPAW:
-  case AArch64::ACASPAX:
-  case AArch64::ACASPLW:
-  case AArch64::ACASPLX:
-  case AArch64::ACASPALW:
-  case AArch64::ACASPALX:
-    // Register number must be even (see CASP instruction)
-    if (RegNo & 0x1)
-      return Fail;
-    break;
-  }
+static DecodeStatus
+DecodeGPRSeqPairsClassRegisterClass(MCInst &Inst, unsigned RegClassID,
+                                    unsigned RegNo, uint64_t Addr,
+                                    const MCDisassembler *Decoder) {
+  // Register number must be even (see CASP instruction)
+  if (RegNo & 0x1)
+    return Fail;
 
   unsigned Reg = AArch64MCRegisterClasses[RegClassID].getRegister(RegNo / 2);
   Inst.addOperand(MCOperand::createReg(Reg));
