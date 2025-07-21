@@ -2443,7 +2443,7 @@
 //// 32-bit addresses
         ldr w0, [w20]
         ldrsh x3, [wsp]
-// CHECK-ERROR: error: invalid operand for instruction
+// CHECK-ERROR: error: expected label or encodable integer pc offset
 // CHECK-ERROR-NEXT:         ldr w0, [w20]
 // CHECK-ERROR-NEXT:                  ^
 // CHECK-ERROR-NEXT: error: invalid operand for instruction
@@ -2523,7 +2523,7 @@
         ldr w10, [x6, x9, sxtw #2]
         ldr w11, [x7, w2, lsl #2]
         ldr w12, [x8, w1, sxtx]
-// CHECK-ERROR-NEXT: error: invalid operand for instruction
+// CHECK-ERROR-NEXT: error: expected label or encodable integer pc offset
 // CHECK-ERROR-NEXT:        ldr w3, [xzr, x3]
 // CHECK-ERROR-NEXT:                 ^
 // CHECK-ERROR-NEXT: error: expected #imm after shift specifier
@@ -3275,7 +3275,10 @@
         adrp x3, #20            // Immediate unaligned
         adrp w2, loc            // 64-bit register needed
         adrp x5, :got_lo12:loc  // bad relocation type
-// CHECK-ERROR: error: invalid operand for instruction
+// CHECK-ERROR: error: unknown token in expression
+// CHECK-ERROR-NEXT:         adr sp, loc
+// CHECK-ERROR-NEXT:             ^
+// CHECK-ERROR: error: invalid operand
 // CHECK-ERROR-NEXT:         adr sp, loc
 // CHECK-ERROR-NEXT:             ^
 // CHECK-ERROR-NEXT: error: unexpected adr label
@@ -3287,9 +3290,12 @@
 // CHECK-ERROR-NEXT: error: expected label or encodable integer pc offset
 // CHECK-ERROR-NEXT:         adrp x3, #20
 // CHECK-ERROR-NEXT:                  ^
-// CHECK-ERROR-NEXT: error: invalid operand for instruction
+// CHECK-ERROR-NEXT: error: unknown token in expression
 // CHECK-ERROR-NEXT:         adrp w2, loc
 // CHECK-ERROR-NEXT:              ^
+// CHECK-ERROR-NEXT: error: invalid operand
+// CHECK-ERROR-NEXT: adrp w2, loc            // 64-bit register needed
+// CHECK-ERROR-NEXT:        ^
 // CHECK-ERROR-NEXT: error: page or gotpage label reference expected
 // CHECK-ERROR-NEXT:         adrp x5, :got_lo12:loc
 // CHECK-ERROR-NEXT:             ^
@@ -3916,4 +3922,3 @@
 // CHECK-ERROR-NEXT: error: invalid operand for instruction
 // CHECK-ERROR-NEXT:         drps x2
 // CHECK-ERROR-NEXT:              ^
-
