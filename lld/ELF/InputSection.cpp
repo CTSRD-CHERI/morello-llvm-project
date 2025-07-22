@@ -909,14 +909,10 @@ uint64_t InputSectionBase::getRelocTargetVA(const InputFile *file, RelType type,
   case R_MIPS_CHERI_CAPTAB_TPREL:
     assert(a == 0 && "capability table index relocs should not have addends");
     return in.mipsCheriCapTable->getTlsOffset(sym);
-  case R_MORELLO_CAPFRAG_ALIGNED_BASE:
-    return getMorelloBaseAddress(a, sym, isec, offset, true);
-  case R_MORELLO_CAPFRAG_ALIGNED_SIZE_AND_PERM:
-    return getMorelloSizeAndPermissions(a, sym, isec, offset, true);
-  case R_MORELLO_CAPFRAG_UNALIGNED_BASE:
-    return getMorelloBaseAddress(a, sym, isec, offset, false);
-  case R_MORELLO_CAPFRAG_UNALIGNED_SIZE_AND_PERM:
-    return getMorelloSizeAndPermissions(a, sym, isec, offset, false);
+  case R_MORELLO_CAPFRAG_BASE:
+    return getMorelloBaseAddress(a, sym, isec, offset);
+  case R_MORELLO_CAPFRAG_SIZE_AND_PERM:
+    return getMorelloSizeAndPermissions(a, sym, isec, offset);
   case R_MORELLO_VADREF:
     if (sym.isUndefWeak())
       return a;

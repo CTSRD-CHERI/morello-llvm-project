@@ -146,9 +146,7 @@ foo:
 // SHARED-NEXT:    Section: .data
 
 // SHARED:      Hex dump of section '.data.rel.ro':
-/// foo: address: 0x304E0, size = 4, perms = RW(0x2)
-// SHARED-NEXT: 0x000203e0 e0040300 00000000 04000000 00000002
+// SHARED-NEXT: 0x000203e0 00000000 00000000 00000000 00000000
 
 // SHARED:      Hex dump of section '.got':
-/// foo: address: 0x304E0, size = 4, perms = RW(0x2)
-// SHARED-NEXT: 0x000204d0 e0040300 00000000 04000000 00000002
+// SHARED-NEXT: 0x000204d0 00000000 00000000 00000000 00000000

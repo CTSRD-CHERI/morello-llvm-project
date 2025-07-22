@@ -46,28 +46,28 @@ from_app:
  .chericap func2
 
 // CHECK: Contents of section .data.rel.ro:
-/// rodata (shlib.so) rw (default) size 8
-// CHECK-NEXT:  220530 00000000 00000000 08000000 00000002
-/// data (shlib.so) rw (default) size 8
-// CHECK-NEXT:  220540 00000000 00000000 08000000 00000002
+/// rodata (shlib.so) undef
+// CHECK-NEXT:  220530 00000000 00000000 00000000 00000000
+/// data (shlib.so) undef
+// CHECK-NEXT:  220540 00000000 00000000 00000000 00000000
 /// appdata 0x2306f0 rw size 8
 // CHECK-NEXT:  220550 f0062300 00000000 08000000 00000002
 /// from_app 210469 exec size 4
 // CHECK-NEXT:  220560 40022000 00000000 00050300 00000004
-/// func2 (shlib.so) exec size 4
-// CHECK-NEXT:  220570 00000000 00000000 04000000 00000004
+/// func2 (shlib.so) exec undef
+// CHECK-NEXT:  220570 00000000 00000000 00000000 00000000
 
 // CHECK-PIE: Contents of section .data.rel.ro:
-/// rodata (shlib.so) rw (default) size 8
-// CHECK-PIE-NEXT:  20530 00000000 00000000 08000000 00000002
-/// data (shlib.so) rw (default) size 8
-// CHECK-PIE-NEXT:  20540 00000000 00000000 08000000 00000002
+/// rodata (shlib.so) undef
+// CHECK-PIE-NEXT:  20530 00000000 00000000 00000000 00000000
+/// data (shlib.so) undef
+// CHECK-PIE-NEXT:  20540 00000000 00000000 00000000 00000000
 /// appdata 0x30700 rw size 8
 // CHECK-PIE-NEXT:  20550 00070300 00000000 08000000 00000002
 /// from_app 14069 exec size 4
 // CHECK-PIE-NEXT:  20560 40020000 00000000 40050300 00000004
-/// func2 (shlib.so) exec size 4
-// CHECK-PIE-NEXT:  20570 00000000 00000000 04000000 00000004
+/// func2 (shlib.so) exec undef
+// CHECK-PIE-NEXT:  20570 00000000 00000000 00000000 00000000
 
  .data
  .global appdata
@@ -78,12 +78,12 @@ appdata: .xword 8
 // CHECK: Contents of section .got:
 /// from_app 230622 exec size 4
 // CHECK-NEXT:  220690 40022000 00000000 00050300 00000004
-/// func2 (shlib.so) exec size 4
-// CHECK-NEXT:  2206a0 00000000 00000000 04000000 00000004
-/// rodata (shlib.so) RW (default) size 8
-// CHECK-NEXT:  2206b0 00000000 00000000 08000000 00000002
-/// data (shlib.so) RW (default) size 8
-// CHECK-NEXT:  2206c0 00000000 00000000 08000000 00000002
+/// func2 (shlib.so) exec undef
+// CHECK-NEXT:  2206a0 00000000 00000000 00000000 00000000
+/// rodata (shlib.so) undef
+// CHECK-NEXT:  2206b0 00000000 00000000 00000000 00000000
+/// data (shlib.so) undef
+// CHECK-NEXT:  2206c0 00000000 00000000 00000000 00000000
 /// _start 210431 exec size 4
 // CHECK-NEXT:  2206d0 40022000 00000000 00050300 00000004
 /// appdata 0x23000 rw size 8
@@ -93,11 +93,11 @@ appdata: .xword 8
 /// from_app 14069 exec size 4
 // CHECK-PIE-NEXT:  206a0 40020000 00000000 40050300 00000004
 /// func2 (shlib.so) exec size 4
-// CHECK-PIE-NEXT:  206b0 00000000 00000000 04000000 00000004
-/// rodata (shlib.so) RW (default) size 8
-// CHECK-PIE-NEXT:  206c0 00000000 00000000 08000000 00000002
-/// data (shlib.so) RW (default) size 8
-// CHECK-PIE-NEXT:  206d0 00000000 00000000 08000000 00000002
+// CHECK-PIE-NEXT:  206b0 00000000 00000000 00000000 00000000
+/// rodata (shlib.so) undef
+// CHECK-PIE-NEXT:  206c0 00000000 00000000 00000000 00000000
+/// data (shlib.so) undef
+// CHECK-PIE-NEXT:  206d0 00000000 00000000 00000000 00000000
 /// _start 10431 exec size 4
 // CHECK-PIE-NEXT:  206e0 40020000 00000000 40050300 00000004
 /// appdata 0x30700 rw size 8

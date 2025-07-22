@@ -982,12 +982,10 @@ void AArch64::relocateAlloc(InputSectionBase &sec, uint8_t *buf) const {
     case R_MORELLO_RELAX_TLS_IE_TO_LE_ADD_LO12:
       relaxTlsIeToLe(loc, rel, val);
       continue;
-    case R_MORELLO_CAPFRAG_ALIGNED_BASE:
-    case R_MORELLO_CAPFRAG_UNALIGNED_BASE:
+    case R_MORELLO_CAPFRAG_BASE:
       writeFragmentAddress(loc, val);
       continue;
-    case R_MORELLO_CAPFRAG_ALIGNED_SIZE_AND_PERM:
-    case R_MORELLO_CAPFRAG_UNALIGNED_SIZE_AND_PERM:
+    case R_MORELLO_CAPFRAG_SIZE_AND_PERM:
       writeFragmentSizeAndPermissions(loc, val);
       continue;
     case R_MORELLO_TLSIE_OFFSET_AND_SIZE:

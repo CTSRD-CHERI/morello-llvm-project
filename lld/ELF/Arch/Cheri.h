@@ -403,11 +403,11 @@ void addCapabilityRelocation(
 
 // Emit either a dynamic relocation or __cap_reloc entry to initialize a
 // GOT slot.
-void addMorelloC64GotRelocation(RelType dynType, Symbol *sym,
-                                InputSectionBase *sec, uint64_t offset,
-                                int64_t addend);
+void addMorelloRelativeRelocation(RelType dynType, Symbol *sym,
+                                  InputSectionBase *sec, uint64_t offset,
+                                  int64_t addend);
 void addMorelloCapabilityFragment(InputSectionBase *sec, Symbol *sym,
-                                  uint64_t offset, bool isExecRel);
+                                  uint64_t offset);
 
 // Calculate the size of linker defined capabilities such as the PCC
 // capability. These lengths may result in increased alignment requirements
@@ -415,15 +415,14 @@ void addMorelloCapabilityFragment(InputSectionBase *sec, Symbol *sym,
 // Return true if we have to modify the alignment of any OutputSection.
 bool morelloLinkerDefinedCapabilityAlign();
 
-// Resolve the R_MORELLO_CAPFRAG_AND_BASE internal relocation to write
+// Resolve the R_MORELLO_CAPFRAG_SIZE_AND_PERM internal relocation to write
 // | 56-bits length | 8-bits permission |
 uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
                                       const InputSectionBase *isec,
-                                      uint64_t offset, bool isExecRel);
+                                      uint64_t offset);
 
 uint64_t getMorelloBaseAddress(int64_t a, const Symbol &sym,
-                               const InputSectionBase *isec, uint64_t offset,
-                               bool isExecRel);
+                               const InputSectionBase *isec, uint64_t offset);
 
 uint64_t getMorelloExecBaseAddress();
 uint64_t getMorelloExecSizeAndPermissions();
