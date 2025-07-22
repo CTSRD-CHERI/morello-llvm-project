@@ -397,6 +397,9 @@ void addCapabilityRelocation(
     bool isCallExpr, llvm::function_ref<std::string()> referencedBy,
     RelocationBaseSection *dynRelSec = nullptr);
 
+void addNullDerivedCapability(Symbol &sym, InputSectionBase &sec,
+                              uint64_t offset, int64_t addend);
+
 // Emit either a dynamic relocation or __cap_reloc entry to initialize a
 // GOT slot.
 void addMorelloRelativeRelocation(RelType dynType, Symbol *sym,
