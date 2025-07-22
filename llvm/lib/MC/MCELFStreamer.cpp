@@ -881,6 +881,20 @@ void MCELFStreamer::createAttributesSection(
 }
 
 void MCELFStreamer::emitCHERINotes() {
+  unsigned Type = llvm::ELF::NT_CHERI_GLOBALS_ABI;
+  unsigned Variant;
+  switch (MCTargetOptions::cheriCapabilityTableABI()) {
+  case CheriCapabilityTableABI::Pcrel:
+    Variant = llvm::ELF::CHERI_GLOBALS_ABI_PCREL;
+    break;
+  case CheriCapabilityTableABI::PLT:
+    Variant = llvm::ELF::CHERI_GLOBALS_ABI_PLT_FPTR;
+    break;
+  case CheriCapabilityTableABI::FunctionDescriptor:
+    Variant = llvm::ELF::CHERI_GLOBALS_ABI_FDESC;
+    break;
+  }
+  emitCHERINote(Type, Variant);
 }
 
 void MCELFStreamer::createCHERINotesSection() {
