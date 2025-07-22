@@ -698,7 +698,8 @@ void MCELFStreamer::finishImpl() {
                             DummyAttributeSection, GNUAttributes);
   }
 
-  if (getContext().getAsmInfo()->isCheriPurecapABI())
+  if (getContext().getAsmInfo()->isCheriPurecapABI() &&
+      getContext().getAsmInfo()->supportsCheriNotes())
     emitCHERINotes();
 
   if (!CHERINotes.empty())
@@ -901,6 +902,8 @@ void MCELFStreamer::createCHERINotesSection() {
   MCContext &Ctx = getContext();
   assert(Ctx.getAsmInfo()->isCheriPurecapABI() &&
          ".note.cheri sections valid only for purecap objects");
+  assert(Ctx.getAsmInfo()->supportsCheriNotes() &&
+         ".note.cheri sections not supported");
 
   MCSection *Nt =
       Ctx.getELFSection(".note.cheri", ELF::SHT_NOTE, ELF::SHF_ALLOC);

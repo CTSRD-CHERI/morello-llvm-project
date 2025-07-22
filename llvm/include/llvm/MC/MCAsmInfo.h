@@ -233,6 +233,9 @@ protected:
   /// This is true if a CHERI pure capability ABI is in use.
   bool IsCheriPurecapABI = false;
 
+  /// This is true if the target supports .note.cheri
+  bool SupportsCheriNotes = false;
+
   /// True if the target supports LEB128 directives.
   bool HasLEB128Directives = true;
 
@@ -704,6 +707,8 @@ public:
   bool isCheriPurecapABI() const {
     return IsCheriPurecapABI;
   }
+
+  bool supportsCheriNotes() const { return SupportsCheriNotes; }
 
   bool hasLEB128Directives() const { return HasLEB128Directives; }
 

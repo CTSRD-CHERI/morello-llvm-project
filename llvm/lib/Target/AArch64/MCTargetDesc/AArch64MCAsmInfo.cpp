@@ -68,6 +68,7 @@ const MCExpr *AArch64MCAsmInfoDarwin::getExprForPersonalitySymbol(
 AArch64MCAsmInfoELF::AArch64MCAsmInfoELF(const Triple &T, bool IsPureCap,
                                          bool IsPurecapBenchmark) {
   IsCheriPurecapABI = IsPureCap;
+  SupportsCheriNotes = true;
   IsPurecapBenchmarkABI = IsPurecapBenchmark;
   NeedsLocalForSize = IsPureCap;
   if (T.getArch() == Triple::aarch64_be)

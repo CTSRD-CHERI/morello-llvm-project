@@ -2722,7 +2722,11 @@ static uint32_t getAndFeatures() {
 }
 
 template <class ELFT> static void readCheriVariants() {
-  if (!config->isCheriAbi && !config->morelloC64Plt)
+  if (!config->isCheriAbi)
+    return;
+
+  // Only implemented for Morello for now
+  if (config->emachine != EM_AARCH64)
     return;
 
   for (InputFile *f : ctx.objectFiles) {
