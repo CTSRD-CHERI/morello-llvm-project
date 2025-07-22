@@ -1157,6 +1157,7 @@ public:
   void writePlt(uint8_t *buf, const Symbol &sym,
                 uint64_t pltEntryAddr) const override;
   void writeGotPlt(uint8_t *buf, const Symbol &s) const override;
+  void writeIgotPlt(uint8_t *buf, const Symbol &s) const override;
 private:
   void relaxTlsGdToLe(uint8_t *loc, const Relocation &rel,
                     uint64_t val) const override;
@@ -1249,6 +1250,11 @@ void AArch64C64::writeGotPlt(uint8_t *buf, const Symbol &) const {
   if (!config->morelloPurecapBenchmarkABI)
     va |= 1;
   writeFragmentAddress(buf, va);
+}
+
+void AArch64C64::writeIgotPlt(uint8_t *buf, const Symbol &sym) const {
+  writeFragmentAddress(buf, getMorelloExecBaseAddress());
+  writeFragmentSizeAndPermissions(buf + 8, getMorelloExecSizeAndPermissions());
 }
 
 void AArch64C64::relaxTlsGdToLe(uint8_t *loc, const Relocation &rel,

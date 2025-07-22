@@ -919,7 +919,6 @@ static void addPltEntry(PltSection &plt, GotPltSection &gotPlt,
                   sym.isPreemptible ? DynamicReloc::AgainstSymbol
                                     : DynamicReloc::AArch64ExecRel,
                   sym, 0, R_ABS});
-    addMorelloCapabilityFragment(&gotPlt, &sym, sym.getGotPltOffset(), true);
     return;
   }
 

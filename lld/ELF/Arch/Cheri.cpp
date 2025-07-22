@@ -849,6 +849,14 @@ uint64_t getMorelloBaseAddress(int64_t a, const Symbol &sym,
   return targetVA;
 }
 
+uint64_t getMorelloExecBaseAddress() { return config->morelloPCCBase; }
+
+uint64_t getMorelloExecSizeAndPermissions() {
+  uint64_t size = config->morelloPCCLimit - config->morelloPCCBase;
+  uint64_t perm = Permissions::func(Permissions::Type::DYNAMIC);
+  return perm | (size << 8);
+}
+
 // Helper function that if required, increases the alignment of First and
 // rounds up the size of last. Returns true if any modifications made to
 // either first or last.

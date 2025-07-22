@@ -424,6 +424,9 @@ uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
 uint64_t getMorelloBaseAddress(int64_t a, const Symbol &sym,
                                const InputSectionBase *isec, uint64_t offset,
                                bool isExecRel);
+
+uint64_t getMorelloExecBaseAddress();
+uint64_t getMorelloExecSizeAndPermissions();
 } // namespace elf
 } // namespace lld
 

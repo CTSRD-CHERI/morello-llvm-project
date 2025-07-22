@@ -1278,11 +1278,6 @@ size_t IgotPltSection::getSize() const {
 }
 
 void IgotPltSection::writeTo(uint8_t *buf) {
-  if (config->morelloC64Plt) {
-    target->relocateAlloc(*this, buf);
-    return;
-  }
-
   for (const Symbol *b : entries) {
     target->writeIgotPlt(buf, *b);
     buf += target->gotEntrySize;
