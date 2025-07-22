@@ -30,7 +30,7 @@ func:  bl func2
 // CHECK-NEXT:                 ret
 
 // CHECK-LABEL: <__C64ADRPThunk_func2>:
-// CHECK-NEXT:   2101a4:       adrp    c16, 0x210000 <__C64ADRPThunk_func2>
+// CHECK-NEXT:   2101a4:       adrp    c16, 0x210000
 // CHECK-NEXT:                 add     c16, c16, #408
 // CHECK-NEXT:                 br      c16
 
@@ -38,7 +38,7 @@ func:  bl func2
 // CHECK-NEXT:   2101b0:       bx      #4
 // CHECK-EMPTY:
 // CHECK-LABEL:   <$c>:
-// CHECK-NEXT:   2101b4:       adrp    c16, 0x210000 <$c>
+// CHECK-NEXT:   2101b4:       adrp    c16, 0x210000
 // CHECK-NEXT:                 add     c16, c16, #405
 // CHECK-NEXT:                 br      c16
 
@@ -46,7 +46,7 @@ func:  bl func2
 // CHECK-NEXT:   2101c0:       bx      #4
 // CHECK-EMPTY:
 // CHECK-LABEL:   <$c>:
-// CHECK-NEXT:   2101c4:       adrp    c16, 0x210000 <$c>
+// CHECK-NEXT:   2101c4:       adrp    c16, 0x210000
 // CHECK-NEXT:                 add     c16, c16, #401
 // CHECK-NEXT:                 br      c16
 
