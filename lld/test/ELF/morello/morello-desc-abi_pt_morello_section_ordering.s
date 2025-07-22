@@ -44,7 +44,7 @@
 // CHECK: 0000000000230000    32 NOTYPE  GLOBAL DEFAULT    {{.*}} __desc_start
 // CHECK: 0000000000240140     0 NOTYPE  GLOBAL DEFAULT    {{.*}} __desc_end
 // CHECK: 0000000000230000    32 NOTYPE  GLOBAL DEFAULT    {{.*}} __desc_ro_start
-// CHECK: 00000000002400a0    32 NOTYPE  GLOBAL DEFAULT    {{.*}} __desc_ro_end
+// CHECK: 00000000002400c0    32 NOTYPE  GLOBAL DEFAULT    {{.*}} __desc_ro_end
 
 
 // GOTPLT_RELRO: Section Headers:
@@ -75,7 +75,7 @@
 
 /// __desc_ro_end points to end of .got (or start of .data)
 // GOTPLT_RELRO: 0000000000230000    32 NOTYPE  GLOBAL DEFAULT    {{.*}} __desc_ro_start
-// GOTPLT_RELRO: 00000000002400c0    64 NOTYPE  GLOBAL DEFAULT    {{.*}} __desc_ro_end
+// GOTPLT_RELRO: 0000000000240100    64 NOTYPE  GLOBAL DEFAULT    {{.*}} __desc_ro_end
 
   .data
   .zero 0x20
@@ -120,4 +120,3 @@
 
   .bss
   .zero 0x20
-

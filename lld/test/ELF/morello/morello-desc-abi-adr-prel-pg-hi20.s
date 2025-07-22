@@ -126,7 +126,7 @@ _start:
 
 /// Immediate of adrp = Page(foo) - Page(location) =
 /// Page(0x224280) - Page(2122ac) =
-// DIS: 21027c: adrp	c7, 0x222000 <_start+0x54>
+// DIS: 21027c: adrp	c7, 0x222000
 
 /// Immediate of adrdp = Page(bar) - Page(PT_MORELLO_DESC) =
 /// Page(0x232000) - Page(0x230000) =
