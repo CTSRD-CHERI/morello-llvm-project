@@ -55,28 +55,28 @@ _start: ret
 // CHECK: CHERI __cap_relocs [
 // CHECK-NEXT: Relocation {
 // CHECK-NEXT:   Location: 0x25AC80 ($d.2)
-// CHECK-NEXT:   Base: <unknown symbol> (0x213A80)
-// CHECK-NEXT:   Offset: 60
-// CHECK-NEXT:   Length: 160128
+// CHECK-NEXT:   Base: <unknown symbol> (0x213AC0)
+// CHECK-NEXT:   Offset: 20
+// CHECK-NEXT:   Length: 160064
 // CHECK-NEXT:   Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT: }
 // CHECK-NEXT: Relocation {
 // CHECK-NEXT:   Location: 0x25AC90
-// CHECK-NEXT:   Base: __eh_frame_end (0x23ABD0)
+// CHECK-NEXT:   Base: __eh_frame_end (0x23ABE8)
 // CHECK-NEXT:   Offset: 0
 // CHECK-NEXT:   Length: 0
 // CHECK-NEXT:   Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT: }
 // CHECK-NEXT: Relocation {
 // CHECK-NEXT:   Location: 0x25ACA0
-// CHECK-NEXT:   Base: {{.*}} (0x200220)
-// CHECK-NEXT:   Offset: 16
+// CHECK-NEXT:   Base: {{.*}} (0x200240)
+// CHECK-NEXT:   Offset: 8
 // CHECK-NEXT:   Length: 80032
 // CHECK-NEXT:   Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT: }
 // CHECK-NEXT: Relocation {
 // CHECK-NEXT:   Location: 0x25ACB0
-// CHECK-NEXT:   Base: __eh_frame_start (0x213ABC)
+// CHECK-NEXT:   Base: __eh_frame_start (0x213AD4)
 // CHECK-NEXT:   Offset: 0
 // CHECK-NEXT:   Length: 0
 // CHECK-NEXT:   Permissions: (RODATA) (0x1BFBE)

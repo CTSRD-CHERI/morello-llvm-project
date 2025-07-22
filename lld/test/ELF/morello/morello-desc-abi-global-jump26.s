@@ -20,28 +20,28 @@ _start:
 // SEC-NEXT:     SHF_ALLOC
 // SEC-NEXT:     SHF_EXECINSTR
 // SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x103D8
+// SEC-NEXT:   Address: 0x103F0
 // SEC:   Name: function
 // SEC-NEXT:   Type: SHT_PROGBITS
 // SEC-NEXT:   Flags [
 // SEC-NEXT:     SHF_ALLOC
 // SEC-NEXT:     SHF_EXECINSTR
 // SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x103E4
+// SEC-NEXT:   Address: 0x103FC
 // SEC:   Name: ifunction
 // SEC-NEXT:   Type: SHT_PROGBITS
 // SEC-NEXT:   Flags [
 // SEC-NEXT:     SHF_ALLOC
 // SEC-NEXT:     SHF_EXECINSTR
 // SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x103E8
+// SEC-NEXT:   Address: 0x10400
 // SEC:   Name: .plt
 // SEC-NEXT:   Type: SHT_PROGBITS
 // SEC-NEXT:   Flags [
 // SEC-NEXT:     SHF_ALLOC
 // SEC-NEXT:     SHF_EXECINSTR
 // SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x103F0
+// SEC-NEXT:   Address: 0x10410
 // SEC-NEXT:   Offset:
 // SEC-NEXT:   Size: 48
 // SEC-NEXT:   Link: 0
@@ -102,31 +102,31 @@ _start:
 // SYM-NEXT:     Other: 0
 // SYM-NEXT:     Section: .data
 // SYM:     Name: func
-// SYM-NEXT:     Value: 0x103E5
+// SYM-NEXT:     Value: 0x103FD
 // SYM-NEXT:     Size: 3
 // SYM-NEXT:     Binding: Global
 // SYM-NEXT:     Type: Function
 // SYM-NEXT:     Other: 0
 // SYM-NEXT:     Section: function
 // SYM:     Name: ifunc
-// SYM-NEXT:     Value: 0x103E9
+// SYM-NEXT:     Value: 0x10401
 // SYM-NEXT:     Size: 3
 // SYM-NEXT:     Binding: Global
 // SYM-NEXT:     Type: GNU_IFunc
 // SYM-NEXT:     Other: 0
 // SYM-NEXT:     Section: ifunction
 
-// DIS: 00000000000103d8 <_start>:
-// DIS-NEXT:   103d8:  b 0x10410
-// DIS-NEXT:   103dc:  b 0x10410
+// DIS: 00000000000103f0 <_start>:
+// DIS-NEXT:   103f0:  b 0x10430
+// DIS-NEXT:   103f4:  b 0x10430
 
-// DIS: 00000000000103e4 <func>:
-// DIS: 00000000000103e9 <ifunc>:
+// DIS: 00000000000103fc <func>:
+// DIS: 0000000000010401 <ifunc>:
 
 // Address of PT_MORELLO_DESC is 0x30000
 
-// DIS: 00000000000103f0 <.plt>:
-// DIS-NEXT:   103f0: stp c16, c30, [csp, #-0x20]!
+// DIS: 0000000000010410 <.plt>:
+// DIS-NEXT:   10410: stp c16, c30, [csp, #-0x20]!
 // DIS-NEXT:          adrdp c16, 0x10000
 // DIS-NEXT:          ldr c17, [c16, #0x100]
 // DIS-NEXT:          add c16, c16, #0x100

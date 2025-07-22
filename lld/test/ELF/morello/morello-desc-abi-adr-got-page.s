@@ -37,14 +37,14 @@ _start:
 // SEC-NEXT:       SHF_ALLOC
 // SEC-NEXT:       SHF_EXECINSTR
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x10458
+// SEC-NEXT:     Address: 0x10470
 // SEC:     Name: .data.rel.ro
 // SEC-NEXT:     Type: SHT_PROGBITS
 // SEC-NEXT:     Flags [
 // SEC-NEXT:       SHF_ALLOC
 // SEC-NEXT:       SHF_WRITE
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x20478
+// SEC-NEXT:     Address: 0x20490
 // SEC:     Name: .desc.data.rel.ro
 // SEC-NEXT:     Type: SHT_PROGBITS
 // SEC-NEXT:     Flags [
@@ -93,7 +93,7 @@ _start:
 // SYM-NEXT:  }
 // SYM-NEXT:  Symbol {
 // SYM-NEXT:    Name: foo
-// SYM-NEXT:    Value: 0x22478
+// SYM-NEXT:    Value: 0x22490
 // SYM-NEXT:    Size: 4
 // SYM-NEXT:    Binding: Global
 // SYM-NEXT:    Type: Object
@@ -122,11 +122,11 @@ _start:
 // GOT: Hex dump of section '.got'
 // GOT-NEXT: 0x000320b0 14210400 00000000 0c000000 00000002
 // GOT-NEXT: 0x000320c0 20410400 00000000 0a000000 00000002
-// GOT-NEXT: 0x000320d0 78240200 00000000 04000000 00000001
+// GOT-NEXT: 0x000320d0 90240200 00000000 04000000 00000001
 // GOT-NEXT: 0x000320e0 00200300 00000000 04000000 00000001
 // GOT-NEXT: 0x000320f0 00000000 00000000 00000000 00000000
 
-// DIS: 0000000000010458 <_start>:
+// DIS: 0000000000010470 <_start>:
 
 /// Immediate of adrdp = Page(GOT(Sym)) - Page(PT_MORELLO_DESC)
 /// Page(PT_MORELLO_DESC) = 0x30000

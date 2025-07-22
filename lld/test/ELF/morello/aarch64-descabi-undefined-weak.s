@@ -19,6 +19,6 @@ _start:
 
 // CHECK: Disassembly of section .text:
 // CHECK-EMPTY:
-// CHECK:         210190:       mov     c28, c29
-// CHECK:         210194:       b       0x210198 <_start+0x8>
-// CHECK-NEXT:    210198:       bl      0x21019c <_start+0xc>
+// CHECK:         2101a8:       mov     c28, c29
+// CHECK:         2101ac:       b       0x2101b0 <_start+0x8>
+// CHECK-NEXT:    2101b0:       bl      0x2101b4 <_start+0xc>

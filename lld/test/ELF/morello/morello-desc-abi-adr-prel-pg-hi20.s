@@ -41,7 +41,7 @@ _start:
 // SEC-NEXT:       SHF_ALLOC
 // SEC-NEXT:       SHF_EXECINSTR
 // SEC-NEXT:     ]
-// SEC-NEXT:     Address: 0x210270
+// SEC-NEXT:     Address: 0x210288
 // SEC:     Name: .data.rel.ro
 // SEC-NEXT:     Type: SHT_PROGBITS
 // SEC-NEXT:     Flags [
@@ -114,23 +114,23 @@ _start:
 // SYM-NEXT:  }
 
 
-// DIS: 0000000000210270 <_start>:
+// DIS: 0000000000210288 <_start>:
 
 /// Immediate of adrdp = Page(hello) - Page(PT_MORELLO_DESC) =
 /// Page(0x242018) - Page(0x230000) = 0x232000 - 0x230000 - 0x12000
-// DIS: 210274: adrdp	c5, 0x12000
+// DIS: 21028c: adrdp	c5, 0x12000
 
 /// Immediate of adrdp = Page(bye) - Page(location) =
 /// Page(0x244024) - Page(230000) = 0x244000 - 0x230000 = 0x14000
-// DIS: 210278: adrdp	c6, 0x14000
+// DIS: 210290: adrdp	c6, 0x14000
 
 /// Immediate of adrp = Page(foo) - Page(location) =
 /// Page(0x224280) - Page(2122ac) =
-// DIS: 21027c: adrp	c7, 0x222000
+// DIS: 210294: adrp	c7, 0x222000
 
 /// Immediate of adrdp = Page(bar) - Page(PT_MORELLO_DESC) =
 /// Page(0x232000) - Page(0x230000) =
-// DIS: 210280: adrdp	c8, 0x2000
+// DIS: 210298: adrdp	c8, 0x2000
 
 // STATIC_UNDEF: error: undefined symbol: hello
 // SHARED_UNDEF: error: relocation R_MORELLO_DESC_ADR_PREL_PG_HI20 cannot be used against symbol 'hello'; recompile with -fPIC

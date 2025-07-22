@@ -20,28 +20,28 @@ _start:
 // SEC-NEXT:     SHF_ALLOC
 // SEC-NEXT:     SHF_EXECINSTR
 // SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x103D8
+// SEC-NEXT:   Address: 0x103F0
 // SEC:   Name: function
 // SEC-NEXT:   Type: SHT_PROGBITS
 // SEC-NEXT:   Flags [
 // SEC-NEXT:     SHF_ALLOC
 // SEC-NEXT:     SHF_EXECINSTR
 // SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x103E4
+// SEC-NEXT:   Address: 0x103FC
 // SEC:   Name: ifunction
 // SEC-NEXT:   Type: SHT_PROGBITS
 // SEC-NEXT:   Flags [
 // SEC-NEXT:     SHF_ALLOC
 // SEC-NEXT:     SHF_EXECINSTR
 // SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x103E8
+// SEC-NEXT:   Address: 0x10400
 // SEC:   Name: .plt
 // SEC-NEXT:   Type: SHT_PROGBITS
 // SEC-NEXT:   Flags [
 // SEC-NEXT:     SHF_ALLOC
 // SEC-NEXT:     SHF_EXECINSTR
 // SEC-NEXT:   ]
-// SEC-NEXT:   Address: 0x103F0
+// SEC-NEXT:   Address: 0x10410
 // SEC-NEXT:   Offset:
 // SEC-NEXT:   Size: 48
 // SEC-NEXT:   Link: 0
@@ -102,37 +102,37 @@ _start:
 // SYM-NEXT:     Other: 0
 // SYM-NEXT:     Section: .data
 // SYM:     Name: func
-// SYM-NEXT:     Value: 0x103E5
+// SYM-NEXT:     Value: 0x103FD
 // SYM-NEXT:     Size: 3
 // SYM-NEXT:     Binding: Global
 // SYM-NEXT:     Type: Function
 // SYM-NEXT:     Other: 0
 // SYM-NEXT:     Section: function
 // SYM:     Name: ifunc
-// SYM-NEXT:     Value: 0x103E9
+// SYM-NEXT:     Value: 0x10401
 // SYM-NEXT:     Size: 3
 // SYM-NEXT:     Binding: Global
 // SYM-NEXT:     Type: GNU_IFunc
 // SYM-NEXT:     Other: 0
 // SYM-NEXT:     Section: ifunction
 
-// DIS: 00000000000103d8 <_start>:
-// DIS-NEXT:   103d8:  bl 0x10410
-// DIS-NEXT:   103dc:  bl 0x10410
+// DIS: 00000000000103f0 <_start>:
+// DIS-NEXT:   103f0:  bl 0x10430
+// DIS-NEXT:   103f4:  bl 0x10430
 
-// DIS: 00000000000103e4 <func>:
-// DIS: 00000000000103e9 <ifunc>:
+// DIS: 00000000000103fc <func>:
+// DIS: 0000000000010401 <ifunc>:
 
-// DIS: 00000000000103f0 <.plt>:
-// DIS-NEXT:   103f0: stp c16, c30, [csp, #-0x20]!
-// DIS-NEXT:   103f4: adrdp c16, 0x10000
-// DIS-NEXT:   103f8: ldr c17, [c16, #0x100]
-// DIS-NEXT:   103fc: add c16, c16, #0x100
-// DIS-NEXT:   10400: ldpbr c29, [c16]
-// DIS-NEXT:   10404: nop
-// DIS-NEXT:   10408: nop
-// DIS-NEXT:   1040c: nop
-// DIS-NEXT:   10410: adrdp c16, 0x10000
-// DIS-NEXT:   10414: add c16, c16, #0x110
-// DIS-NEXT:   10418: ldr c29, [c16, #0x0]
-// DIS-NEXT:   1041c: ldpbr c29, [c29]
+// DIS: 0000000000010410 <.plt>:
+// DIS-NEXT:   10410: stp c16, c30, [csp, #-0x20]!
+// DIS-NEXT:   10414: adrdp c16, 0x10000
+// DIS-NEXT:   10418: ldr c17, [c16, #0x100]
+// DIS-NEXT:   1041c: add c16, c16, #0x100
+// DIS-NEXT:   10420: ldpbr c29, [c16]
+// DIS-NEXT:   10424: nop
+// DIS-NEXT:   10428: nop
+// DIS-NEXT:   1042c: nop
+// DIS-NEXT:   10430: adrdp c16, 0x10000
+// DIS-NEXT:   10434: add c16, c16, #0x110
+// DIS-NEXT:   10438: ldr c29, [c16, #0x0]
+// DIS-NEXT:   1043c: ldpbr c29, [c29]

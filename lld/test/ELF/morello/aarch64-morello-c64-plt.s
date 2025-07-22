@@ -44,39 +44,39 @@ preemptible: .xword 2
 hidden:  .xword 3
 
 // DIS-LABEL: <_start>:
-// DIS-NEXT: 10400: adrp  c1, 0x20000
-// DIS-NEXT:        ldr   c1, [c1, #1360]
+// DIS-NEXT: 10418: adrp  c1, 0x20000
+// DIS-NEXT:        ldr   c1, [c1, #1376]
 // DIS-NEXT:        adrp  c2, 0x20000
-// DIS-NEXT:        ldr   c2, [c2, #1376]
+// DIS-NEXT:        ldr   c2, [c2, #1392]
 // DIS-NEXT:        adrp  c3, 0x20000
-// DIS-NEXT:        ldr   c3, [c3, #1392]
+// DIS-NEXT:        ldr   c3, [c3, #1408]
 // DIS-NEXT:        adrp  c4, 0x20000
-// DIS-NEXT:        ldr   c4, [c4, #1408]
-// DIS-NEXT:        bl  0x10450
+// DIS-NEXT:        ldr   c4, [c4, #1424]
+// DIS-NEXT:        bl  0x10460
 
 // DIS-LABEL: <.plt>:
-// DIS-NEXT: 10430: stp  c16, c30, [csp, #-32]!
+// DIS-NEXT: 10440: stp  c16, c30, [csp, #-32]!
 // DIS-NEXT:        adrp c16, 0x30000
-// DIS-NEXT:        ldr  c17, [c16, #1488]
-// DIS-NEXT:        add  c16, c16, #1488
+// DIS-NEXT:        ldr  c17, [c16, #1504]
+// DIS-NEXT:        add  c16, c16, #1504
 // DIS-NEXT:        br  c17
 // DIS-NEXT:        nop
 // DIS-NEXT:        nop
 // DIS-NEXT:        nop
 
 // DIS-LABEL: <imported@plt>:
-// DIS-NEXT: 10450: adrp c16, 0x30000
-// DIS-NEXT:        add  c16, c16, #1504
+// DIS-NEXT: 10460: adrp c16, 0x30000
+// DIS-NEXT:        add  c16, c16, #1520
 // DIS-NEXT:        ldr  c17, [c16, #0]
 // DIS-NEXT:        br   c17
 
 // GOTPLT: Contents of section .got.plt:
-// GOTPLT-NEXT:  305b0 00000000 00000000 00000000 00000000
 // GOTPLT-NEXT:  305c0 00000000 00000000 00000000 00000000
 // GOTPLT-NEXT:  305d0 00000000 00000000 00000000 00000000
+// GOTPLT-NEXT:  305e0 00000000 00000000 00000000 00000000
 /// Initial contents should be address of .plt[0], as plt[0] is C64 the bottom
 /// bit should be set.
-// GOTPLT-NEXT:  305e0 31040100 00000000 00000000 00000000
+// GOTPLT-NEXT:  305f0 41040100 00000000 00000000 00000000
 
 // CHECK:     Name: .got
 // CHECK-NEXT:     Type: SHT_PROGBITS (0x1)
@@ -84,8 +84,8 @@ hidden:  .xword 3
 // CHECK-NEXT:       SHF_ALLOC (0x2)
 // CHECK-NEXT:       SHF_WRITE (0x1)
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x20550
-// CHECK-NEXT:     Offset: 0x550
+// CHECK-NEXT:     Address: 0x20560
+// CHECK-NEXT:     Offset: 0x560
 // CHECK-NEXT:     Size: 64
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
@@ -97,21 +97,21 @@ hidden:  .xword 3
 // CHECK-NEXT:       SHF_ALLOC (0x2)
 // CHECK-NEXT:       SHF_WRITE (0x1)
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x305B0
-// CHECK-NEXT:     Offset: 0x5B0
-// CHECK-NEXT:     Size: 80
+// CHECK-NEXT:     Address: 0x305C0
+// CHECK-NEXT:     Offset: 0x5C0
+// CHECK-NEXT:     Size: 64
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
 // CHECK-NEXT:     AddressAlignment: 16
 
-// CHECK:      0x20570 R_MORELLO_RELATIVE - 0x0
-// CHECK-NEXT: 0x20550 R_MORELLO_GLOB_DAT foo 0x0
-// CHECK-NEXT: 0x20560 R_MORELLO_GLOB_DAT bar 0x0
-// CHECK-NEXT: 0x20580 R_MORELLO_GLOB_DAT preemptible 0x0
-// CHECK:      0x305E0 R_MORELLO_JUMP_SLOT imported 0x0
+// CHECK:      0x20580 R_MORELLO_RELATIVE - 0x0
+// CHECK-NEXT: 0x20560 R_MORELLO_GLOB_DAT foo 0x0
+// CHECK-NEXT: 0x20570 R_MORELLO_GLOB_DAT bar 0x0
+// CHECK-NEXT: 0x20590 R_MORELLO_GLOB_DAT preemptible 0x0
+// CHECK:      0x305F0 R_MORELLO_JUMP_SLOT imported 0x0
 
 // GOT: Contents of section .got:
-// GOT-NEXT: 20550 00000000 00000000 00000000 00000002
 // GOT-NEXT: 20560 00000000 00000000 00000000 00000002
-// GOT-NEXT: 20570 a0050300 00000000 08000000 00000002
-// GOT-NEXT: 20580 98050300 00000000 08000000 00000002
+// GOT-NEXT: 20570 00000000 00000000 00000000 00000002
+// GOT-NEXT: 20580 b0050300 00000000 08000000 00000002
+// GOT-NEXT: 20590 a8050300 00000000 08000000 00000002

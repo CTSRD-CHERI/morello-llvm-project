@@ -6,7 +6,7 @@
 // RUN: llvm-readelf --section-headers app.o | FileCheck %s --check-prefix=OBJ-NOTE-ALIGN
 // RUN: llvm-readelf --section-headers lib.o | FileCheck %s --check-prefix=OBJ-NOTE-ALIGN
 // OBJ-NOTE-ALIGN: Name              Type            Address          Off    Size   ES Flg Lk Inf Al
-// OBJ-NOTE-ALIGN: .note.cheri       NOTE            0000000000000000 000044 000030 00   A  0   0  4{{$}}
+// OBJ-NOTE-ALIGN: .note.cheri       NOTE            0000000000000000 000044 000048 00   A  0   0  4{{$}}
 // RUN: llvm-mc -filetype=obj -triple aarch64 -target-abi purecap -cheri-cap-table-abi=pcrel lib.s -o lib1.o
 // RUN: llvm-mc -filetype=obj -triple aarch64 -target-abi purecap -cheri-cap-table-abi=pcrel app.s -o app1.o
 // RUN: llvm-mc -filetype=obj -triple aarch64 -target-abi purecap -cheri-cap-table-abi=fn-desc lib.s -o lib2.o
@@ -23,7 +23,7 @@
 /// aligning it to 32 bytes. But we should not be adjusting the sh_addralign member
 /// since that is used for parsing the notes section.
 // EXE-NOTE-ALIGN: [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
-// EXE-NOTE-ALIGN: [ 1] .note.cheri       NOTE            [[#]]            000160 000030 00   A  0   0 4{{$}}
+// EXE-NOTE-ALIGN: [ 1] .note.cheri       NOTE            [[#]]            000160 000048 00   A  0   0 4{{$}}
 // EXE-NOTE-ALIGN: [ 2] .text
 // RUN: llvm-readobj -h --notes app | FileCheck %s --check-prefix=NT-PCREL
 // RUN: ld.lld app1.o lib1.o -o app1 2>&1 | FileCheck %s --check-prefix=NOERROR --allow-empty
@@ -43,12 +43,18 @@
 // NT-PCREL: NoteSection {
 // NT-PCREL-NEXT:   Name: .note.cheri
 // NT-PCREL-NEXT:   Offset:
-// NT-PCREL-NEXT:   Size: 0x30
+// NT-PCREL-NEXT:   Size: 0x48
 // NT-PCREL-NEXT:   Note {
 // NT-PCREL-NEXT:     Owner: CHERI
 // NT-PCREL-NEXT:     Data size: 0x4
 // NT-PCREL-NEXT:     Type: NT_CHERI_GLOBALS_ABI (CHERI globals ABI)
 // NT-PCREL-NEXT:     Globals ABI: CHERI_GLOBALS_ABI_PCREL (PC-relative)
+// NT-PCREL-NEXT:   }
+// NT-PCREL-NEXT:   Note {
+// NT-PCREL-NEXT:     Owner: CHERI
+// NT-PCREL-NEXT:     Data size: 0x4
+// NT-PCREL-NEXT:     Type: NT_CHERI_TLS_ABI (CHERI thread-local storage ABI)
+// NT-PCREL-NEXT:     TLS ABI: CHERI_TLS_ABI_TRAD (traditional)
 // NT-PCREL-NEXT:   }
 // NT-PCREL-NEXT:   Note {
 // NT-PCREL-NEXT:     Owner: CHERI
@@ -60,12 +66,18 @@
 // NT-FDESC: NoteSection {
 // NT-FDESC-NEXT:   Name: .note.cheri
 // NT-FDESC-NEXT:   Offset:
-// NT-FDESC-NEXT:   Size: 0x30
+// NT-FDESC-NEXT:   Size: 0x48
 // NT-FDESC-NEXT:   Note {
 // NT-FDESC-NEXT:     Owner: CHERI
 // NT-FDESC-NEXT:     Data size: 0x4
 // NT-FDESC-NEXT:     Type: NT_CHERI_GLOBALS_ABI (CHERI globals ABI)
 // NT-FDESC-NEXT:     Globals ABI: CHERI_GLOBALS_ABI_FDESC (function descriptor-based)
+// NT-FDESC-NEXT:   }
+// NT-FDESC-NEXT:   Note {
+// NT-FDESC-NEXT:     Owner: CHERI
+// NT-FDESC-NEXT:     Data size: 0x4
+// NT-FDESC-NEXT:     Type: NT_CHERI_TLS_ABI (CHERI thread-local storage ABI)
+// NT-FDESC-NEXT:     TLS ABI: CHERI_TLS_ABI_TRAD (traditional)
 // NT-FDESC-NEXT:   }
 // NT-FDESC-NEXT:   Note {
 // NT-FDESC-NEXT:     Owner: CHERI
@@ -77,12 +89,18 @@
 // NT-PCREL-BENCHMARK:      NoteSection {
 // NT-PCREL-BENCHMARK-NEXT:   Name: .note.cheri
 // NT-PCREL-BENCHMARK-NEXT:   Offset:
-// NT-PCREL-BENCHMARK-NEXT:   Size: 0x30
+// NT-PCREL-BENCHMARK-NEXT:   Size: 0x48
 // NT-PCREL-BENCHMARK-NEXT:   Note {
 // NT-PCREL-BENCHMARK-NEXT:     Owner: CHERI
 // NT-PCREL-BENCHMARK-NEXT:     Data size: 0x4
 // NT-PCREL-BENCHMARK-NEXT:     Type: NT_CHERI_GLOBALS_ABI (CHERI globals ABI)
 // NT-PCREL-BENCHMARK-NEXT:     Globals ABI: CHERI_GLOBALS_ABI_PCREL (PC-relative)
+// NT-PCREL-BENCHMARK-NEXT:   }
+// NT-PCREL-BENCHMARK-NEXT:   Note {
+// NT-PCREL-BENCHMARK-NEXT:     Owner: CHERI
+// NT-PCREL-BENCHMARK-NEXT:     Data size: 0x4
+// NT-PCREL-BENCHMARK-NEXT:     Type: NT_CHERI_TLS_ABI (CHERI thread-local storage ABI)
+// NT-PCREL-BENCHMARK-NEXT:     TLS ABI: CHERI_TLS_ABI_TRAD (traditional)
 // NT-PCREL-BENCHMARK-NEXT:   }
 // NT-PCREL-BENCHMARK-NEXT:   Note {
 // NT-PCREL-BENCHMARK-NEXT:     Owner: CHERI
