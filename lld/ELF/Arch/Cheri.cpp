@@ -442,7 +442,7 @@ static uint64_t getTargetSize(const CheriCapRelocLocation &location,
       // For dynamic relocations, the linker breaks the 16-byte frag into two
       // 8-byte locations (see addMorelloCapabilityFragment()) and obtains the
       // size from the second of these locations when processing the
-      // R_MORELLO_CAPFRAG_SIZE_AND_PERM internal  static relocation (see
+      // R_MORELLO_CAPFRAG_SIZE_AND_PERM internal static relocation (see
       // getMorelloSizeAndPermissions()). So (buf) can be used because it
       // already has the 8 byte offset built into it.
       assert(!location.section->compressed);
@@ -817,36 +817,24 @@ void MorelloCapRelocsSection::writeTo(uint8_t *buf) {
 // | 56-bits size | 8-bits permission | of the inplace data layout.
 uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
                                       const InputSectionBase *isec,
-                                      uint64_t offset, bool isExecRel) {
-  uint64_t sizeAndPerm = Permissions::rwdata(Permissions::Type::DYNAMIC);
-  if (const SharedSymbol *shared = dyn_cast<SharedSymbol>(&sym)) {
-    // If the symbol is defined in a shared library then we can take the size
-    // and permission information from the shared library.
-    if (shared->isFunc())
-      sizeAndPerm = Permissions::func(Permissions::Type::DYNAMIC);
-    return sizeAndPerm | (shared->size << 8);
-  } else if (const Defined *definedSym = dyn_cast<Defined>(&sym)) {
-    sizeAndPerm = getPermissions(*definedSym, Permissions::Type::DYNAMIC);
-    uint64_t size =
-        getTargetSize<ELF64LE>({const_cast<InputSectionBase *>(isec), offset},
-                               SymbolAndOffset(const_cast<Symbol *>(&sym), 0));
-    // Increase bounds of executable capabilities.
-    if (isExecRel)
-      size = config->morelloPCCLimit - config->morelloPCCBase;
+                                      uint64_t offset) {
+  if (sym.isFunc() || sym.isGnuIFunc())
+    return getMorelloExecSizeAndPermissions();
 
-    return sizeAndPerm | (size << 8);
-  }
-  return 2;
+  const Defined *definedSym = cast<Defined>(&sym);
+  uint64_t perms = getPermissions(*definedSym, Permissions::Type::DYNAMIC);
+  uint64_t size =
+      getTargetSize<ELF64LE>({const_cast<InputSectionBase *>(isec), offset},
+                             SymbolAndOffset(const_cast<Symbol *>(&sym), 0));
+  return perms | (size << 8);
 }
 
 uint64_t getMorelloBaseAddress(int64_t a, const Symbol &sym,
-                               const InputSectionBase *isec, uint64_t offset,
-                               bool isExecRel) {
-  uint64_t targetVA = sym.getVA(a);
-  // Increase bounds of executable capabilities.
-  if (isExecRel)
-    targetVA = config->morelloPCCBase;
-  return targetVA;
+                               const InputSectionBase *isec, uint64_t offset) {
+  if (sym.isFunc() || sym.isGnuIFunc())
+    return getMorelloExecBaseAddress();
+
+  return sym.getVA(a);
 }
 
 uint64_t getMorelloExecBaseAddress() { return config->morelloPCCBase; }
@@ -981,24 +969,15 @@ bool MorelloCapRelocsSection::linkerDefinedCapabilityAlign() {
 // Address and the second for size and permissions.
 void addMorelloCapabilityFragment(InputSectionBase *sec, Symbol *sym,
                                   uint64_t offset, bool isExecRel) {
-  RelExpr fragBaseType = isExecRel ? R_MORELLO_CAPFRAG_ALIGNED_BASE
-                                   : R_MORELLO_CAPFRAG_UNALIGNED_BASE;
-  RelExpr fragSizePermType = isExecRel
-                                 ? R_MORELLO_CAPFRAG_ALIGNED_SIZE_AND_PERM
-                                 : R_MORELLO_CAPFRAG_UNALIGNED_SIZE_AND_PERM;
   sec->relocations.push_back(
-      {fragBaseType, target->symbolicRel, offset, 0, sym});
-  sec->relocations.push_back(
-      {fragSizePermType, target->symbolicRel, offset + 8, 0, sym});
+      {R_MORELLO_CAPFRAG_BASE, target->symbolicRel, offset, 0, sym});
+  sec->relocations.push_back({R_MORELLO_CAPFRAG_SIZE_AND_PERM,
+                              target->symbolicRel, offset + 8, 0, sym});
 }
 static void addCapDynamicRelocation(RelType dynType, Symbol *sym,
                                     InputSectionBase *sec, uint64_t offset,
                                     int64_t addend) {
-  bool isExecRel =
-      (sym->isFunc() || sym->isGnuIFunc()) &&
-      (dynType == R_MORELLO_RELATIVE || dynType == R_MORELLO_FUNC_RELATIVE ||
-       dynType == target->iRelativeRel);
-
+  bool isExecRel = sym->isFunc() || sym->isGnuIFunc();
   RelType realDynType = dynType;
 
   if (dynType == R_MORELLO_RELATIVE && config->isCheriFnDesc) {
@@ -1043,9 +1022,9 @@ static void addCapDynamicRelocation(RelType dynType, Symbol *sym,
 // Relocation arising from addGotEntry() or addPltEntry().
 // This can happen for both static and dynamic linking as capabilities can only
 // be initialized at run-time.
-void addMorelloC64GotRelocation(RelType dynType, Symbol *sym,
-                                InputSectionBase *sec, uint64_t offset,
-                                int64_t addend) {
+void addMorelloRelativeRelocation(RelType dynType, Symbol *sym,
+                                  InputSectionBase *sec, uint64_t offset,
+                                  int64_t addend) {
   // If there is a Dynamic Symbol Table, there cannot be a caprelocs section.
   // R_MORELLO_IRELATIVE can be present even without a Dynamic Symbol Table
   // being present.
@@ -1079,16 +1058,17 @@ static void addMorelloCapabilityRelocation(Symbol *sym, RelType type,
     if (config->cheriEmitCodePtrRelocs && type == R_MORELLO_CODE_CAPINIT)
       error("Cannot relocate code capability to preemptible symbol: " +
             verboseToString(sym));
-    else
-      dynType = R_MORELLO_CAPINIT;
+    mainPart->relaDyn->addReloc({R_MORELLO_CAPINIT, sec, offset,
+                                 DynamicReloc::AgainstSymbol, *sym, addend,
+                                 R_ABS});
   } else {
     if (config->cheriEmitCodePtrRelocs && type != R_MORELLO_CODE_CAPINIT &&
         sym->isFunc())
       dynType = R_MORELLO_FUNC_RELATIVE;
     else
       dynType = R_MORELLO_RELATIVE;
+    addMorelloRelativeRelocation(dynType, sym, sec, offset, addend);
   }
-  addMorelloC64GotRelocation(dynType, sym, sec, offset, addend);
 }
 
 MorelloTLSLEDataSection::MorelloTLSLEDataSection()

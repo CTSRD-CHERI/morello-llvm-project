@@ -33,20 +33,20 @@ from_app:
  .chericap from_app
 
 // CHECK: Contents of section .data.rel.ro:
-/// rodata (shlib.so) rw (default) size 8
-// CHECK-NEXT:  2203c0 00000000 00000000 08000000 00000002
-/// data (shlib.so) rw (default) size 8
-// CHECK-NEXT:  2203d0 00000000 00000000 08000000 00000002
+/// rodata (shlib.so) undef
+// CHECK-NEXT:  2203c0 00000000 00000000 00000000 00000000
+/// data (shlib.so) undef
+// CHECK-NEXT:  2203d0 00000000 00000000 00000000 00000000
 /// appdata 0x2304d0 rw size 8
 // CHECK-NEXT:  2203e0 d0042300 00000000 08000000 00000002
 /// from_app 21032c exec size 4
 // CHECK-NEXT:  2203f0 40022000 00000000 80010100 00000004
 
 // CHECK-PIE: Contents of section .data.rel.ro:
-/// rodata (shlib.so) rw (default) size 8
-// CHECK-PIE-NEXT:  203c0 00000000 00000000 08000000 00000002
-/// data (shlib.so) rw (default) size 8
-// CHECK-PIE-NEXT:  203d0 00000000 00000000 08000000 00000002
+/// rodata (shlib.so) undef
+// CHECK-PIE-NEXT:  203c0 00000000 00000000 00000000 00000000
+/// data (shlib.so) undef
+// CHECK-PIE-NEXT:  203d0 00000000 00000000 00000000 00000000
 /// appdata 0x304e0 rw size 8
 // CHECK-PIE-NEXT:  203e0 e0040300 00000000 08000000 00000002
 /// from_app 1032c exec size 4

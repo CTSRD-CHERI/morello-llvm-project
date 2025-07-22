@@ -939,25 +939,20 @@ static void addGotEntry(Symbol &sym) {
   in.got->addEntry(sym);
   uint64_t off = sym.getGotOffset();
 
-  if (config->morelloC64Plt) {
-    // There are additional static relocations needed to initialize the GOT
-    // entry. Delegate this to addMorelloC64GotRelocation.
-    RelType reltype;
-    if (sym.isPreemptible)
-      reltype = target->gotRel;
-    else if (config->cheriEmitCodePtrRelocs && sym.isFunc() &&
-        target->relativeFuncRel.has_value())
-      reltype = *target->relativeFuncRel;
-    else
-      reltype = target->relativeRel;
-    addMorelloC64GotRelocation(reltype, &sym, in.got.get(), off, 0);
-    return;
-  }
-
   // If preemptible, emit a GLOB_DAT relocation.
   if (sym.isPreemptible) {
     mainPart->relaDyn->addReloc({target->gotRel, in.got.get(), off,
                                  DynamicReloc::AgainstSymbol, sym, 0, R_ABS});
+    return;
+  }
+
+  if (config->isCheriAbi && config->emachine == EM_AARCH64) {
+    // There are additional static relocations needed to initialize the GOT
+    // entry. Delegate this to addMorelloRelativeRelocation.
+    RelType type = config->cheriEmitCodePtrRelocs && sym.isFunc()
+                       ? *target->relativeFuncRel
+                       : target->relativeRel;
+    addMorelloRelativeRelocation(type, &sym, in.got.get(), off, 0);
     return;
   }
 
