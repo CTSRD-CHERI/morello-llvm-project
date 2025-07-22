@@ -913,25 +913,23 @@ static void addPltEntry(PltSection &plt, GotPltSection &gotPlt,
       !config->zCheriRiscvJumpSlot)
     return;
 
-  if (config->isCheriAbi && config->emachine == EM_AARCH64) {
-    gotPlt.addEntry(sym);
-    rel.addReloc({type, &gotPlt, sym.getGotPltOffset(),
-                  sym.isPreemptible ? DynamicReloc::AgainstSymbol
-                                    : DynamicReloc::AArch64ExecRel,
-                  sym, 0, R_ABS});
-    return;
-  }
-
-  if (config->isCheriAbi && !sym.isPreemptible)
+  if (config->isCheriAbi && !sym.isPreemptible &&
+      config->emachine != EM_AARCH64)
     error("cannot create non-preemptible PLT entry on CHERI against symbol: " +
           toString(sym));
 
   gotPlt.addEntry(sym);
-  rel.addReloc({type, &gotPlt, sym.getGotPltOffset(),
-                sym.isPreemptible ? DynamicReloc::AgainstSymbol
-                                  : DynamicReloc::AddendOnlyWithTargetVA,
-                sym, 0, R_ABS});
-  if (config->isCheriAbi)
+  if (config->isCheriAbi && config->emachine == EM_AARCH64)
+    rel.addReloc({type, &gotPlt, sym.getGotPltOffset(),
+                  sym.isPreemptible ? DynamicReloc::AgainstSymbol
+                                    : DynamicReloc::AArch64ExecRel,
+                  sym, 0, R_ABS});
+  else
+    rel.addReloc({type, &gotPlt, sym.getGotPltOffset(),
+                  sym.isPreemptible ? DynamicReloc::AgainstSymbol
+                                    : DynamicReloc::AddendOnlyWithTargetVA,
+                  sym, 0, R_ABS});
+  if (config->isCheriAbi && config->emachine != EM_AARCH64)
     invokeELFT(addCapabilityRelocation, &plt, *target->cheriCapRel, &gotPlt,
                sym.getGotPltOffset(), R_CHERI_CAPABILITY, 0, false,
                [] { return ""; });
