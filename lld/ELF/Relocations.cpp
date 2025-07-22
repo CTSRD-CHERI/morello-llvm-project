@@ -921,10 +921,11 @@ static void addPltEntry(PltSection &plt, GotPltSection &gotPlt,
   gotPlt.addEntry(sym);
   if (config->isCheriAbi && config->emachine == EM_AARCH64)
     rel.addReloc({type, &gotPlt, sym.getGotPltOffset(),
-                  sym.isPreemptible ? DynamicReloc::AgainstSymbol
+                  sym.isPreemptible ? DynamicReloc::AgainstSymbolWithTargetVA
                                     : DynamicReloc::AddendOnlyWithTargetVA,
                   sym, 0,
-                  sym.isPreemptible ? R_ABS : R_MORELLO_CAPFRAG_ADDEND});
+                  sym.isPreemptible ? R_MORELLO_PLT_CAPFRAG_ADDEND
+                                    : R_MORELLO_CAPFRAG_ADDEND});
   else
     rel.addReloc({type, &gotPlt, sym.getGotPltOffset(),
                   sym.isPreemptible ? DynamicReloc::AgainstSymbol

@@ -97,7 +97,7 @@ foo:
 // SHARED-NEXT:     0x204D0 R_MORELLO_GLOB_DAT foo 0x0
 // SHARED-NEXT:   }
 // SHARED-NEXT:   Section {{.*}} .rela.plt {
-// SHARED-NEXT:     0x30520 R_MORELLO_JUMP_SLOT target 0x0
+// SHARED-NEXT:     0x30520 R_MORELLO_JUMP_SLOT target 0x10171
 // SHARED-NEXT:   }
 // SHARED-NEXT:   Section {{.*}} .rela.text {
 // SHARED-NEXT:     0x10398 R_MORELLO_CALL26 target 0x0

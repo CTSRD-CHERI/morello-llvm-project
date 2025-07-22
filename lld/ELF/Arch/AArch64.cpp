@@ -1243,12 +1243,8 @@ void AArch64C64::writePlt(uint8_t *buf, const Symbol &sym,
 }
 
 void AArch64C64::writeGotPlt(uint8_t *buf, const Symbol &) const {
-  // The PLT header is C64 and we transfer control to it via an indirect jump
-  // so we must set the bottom bit.
-  uint64_t va = in.plt->getVA();
-  if (!config->morelloPurecapBenchmarkABI)
-    va |= 1;
-  writeFragmentAddress(buf, va);
+  writeFragmentAddress(buf, getMorelloExecBaseAddress());
+  writeFragmentSizeAndPermissions(buf + 8, getMorelloExecSizeAndPermissions());
 }
 
 void AArch64C64::writeIgotPlt(uint8_t *buf, const Symbol &sym) const {

@@ -911,6 +911,12 @@ uint64_t InputSectionBase::getRelocTargetVA(const InputFile *file, RelType type,
     return in.mipsCheriCapTable->getTlsOffset(sym);
   case R_MORELLO_CAPFRAG_ADDEND:
     return sym.getVA(a) - getMorelloBaseAddress(a, sym, isec, offset);
+  case R_MORELLO_PLT_CAPFRAG_ADDEND: {
+    uint64_t va = in.plt->getVA() - getMorelloExecBaseAddress();
+    if (!config->morelloPurecapBenchmarkABI)
+      va |= 1;
+    return va;
+  }
   case R_MORELLO_CAPFRAG_BASE:
     return getMorelloBaseAddress(a, sym, isec, offset);
   case R_MORELLO_CAPFRAG_SIZE_AND_PERM:
