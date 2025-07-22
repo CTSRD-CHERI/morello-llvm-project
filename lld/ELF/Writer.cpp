@@ -275,7 +275,7 @@ void elf::addReservedSymbols() {
   ElfSym::descStart = add("__desc_start", 0);
   ElfSym::descEnd = add("__desc_end", -1);
   ElfSym::descROStart = add("__desc_ro_start", 0);
-  ElfSym::descROEnd = add("__desc_ro_end", 0);
+  ElfSym::descROEnd = add("__desc_ro_end", -1);
 }
 
 static OutputSection *findSection(StringRef name, unsigned partition = 1) {
