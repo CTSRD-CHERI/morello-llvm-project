@@ -8,9 +8,7 @@ target triple = "aarch64-none-unknown-elf"
 
 define void @foo() local_unnamed_addr addrspace(200) align 2 {
 ; CHECK-LABEL: foo:
-; CHECK:       .Lfunc_begin0:
-; CHECK-NEXT:    .cfi_startproc
-; CHECK-NEXT:  // %bb.0: // %entry
+; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    cmp xzr, x8
 ; CHECK-NEXT:    cset w8, hi
 ; CHECK-NEXT:    sbfx x8, x8, #0, #1
@@ -23,7 +21,7 @@ define void @foo() local_unnamed_addr addrspace(200) align 2 {
 ; CHECK-NEXT:    cbnz wzr, .LBB0_4
 ; CHECK-NEXT:  // %bb.2: // %entry
 ; CHECK-NEXT:    cbnz wzr, .LBB0_4
-; CHECK-NEXT:    .p2align 5, 0x0, 16
+; CHECK-NEXT:    .p2align 5, , 16
 ; CHECK-NEXT:  .LBB0_3: // %vector.body
 ; CHECK-NEXT:    // =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    b .LBB0_3
