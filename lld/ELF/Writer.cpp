@@ -990,6 +990,19 @@ static unsigned getSectionRank(const OutputSection &osec) {
   bool isExec = osec.flags & SHF_EXECINSTR;
   bool isWrite = osec.flags & SHF_WRITE;
 
+  // The PT_MORELLO_DESC segment
+  if (isMorelloDescSection(&osec)) {
+    rank |= RF_MORELLO_DESCDATA;
+    if (!isRelroSection(&osec))
+      rank |= RF_MORELLO_DESCDATA_NOT_RO;
+    // Start with .desc.data.rel.ro
+    if (osec.name == ".desc.data.rel.ro")
+      return rank;
+    // End with .got*
+    if (osec.name == ".got.plt")
+      return rank;
+  }
+
   if (!isWrite && !isExec) {
     // Make PROGBITS sections (e.g .rodata .eh_frame) closer to .text to
     // alleviate relocation overflow pressure. Large special sections such as
@@ -1013,19 +1026,6 @@ static unsigned getSectionRank(const OutputSection &osec) {
     // relocation overflow pressure.
     if (osec.flags & SHF_X86_64_LARGE && config->emachine == EM_X86_64)
       rank |= RF_LARGE;
-  }
-
-  // The PT_MORELLO_DESC segment
-  if (isMorelloDescSection(&osec)) {
-    rank |= RF_MORELLO_DESCDATA;
-    if (!isRelroSection(&osec))
-      rank |= RF_MORELLO_DESCDATA_NOT_RO;
-    // Start with .desc.data.rel.ro
-    if (osec.name == ".desc.data.rel.ro")
-      return rank;
-    // End with .got*
-    if (osec.name == ".got.plt")
-      return rank;
   }
 
   // Within TLS sections, or within other RelRo sections, or within non-RelRo
