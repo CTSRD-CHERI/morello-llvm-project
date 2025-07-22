@@ -18,4 +18,4 @@ _start:
 	nop
 
 // CHECK: Flags: 0x10000
-// ERROR-MSG: error: {{.+}}: cannot link object files with different EF_AARCH64_CHERI_PURECAP
+// ERROR-MSG: error: {{.+}}tmp_hybrid.o is incompatible with {{.+}}tmp_purecap.o

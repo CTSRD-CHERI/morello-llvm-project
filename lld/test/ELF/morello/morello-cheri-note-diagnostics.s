@@ -23,7 +23,7 @@
 // RUN: not ld.lld mismatched-globals-abi-pcrel-fdesc.o -o mismatched-globals-abi-pcrel-fdesc 2>&1 | FileCheck %s --check-prefix=MISMATCHED-GLOBALS-ABI-FDESC
 
 // INVALID-HEADER: header size too short: 0x8
-// INVALID-DATA: data size too short. Expected: 0x18 Actual: 0xc
+// INVALID-DATA: data size too short. Expected: 0x16 Actual: 0xc
 // INVALID-DESC: invalid desc size: 0x3
 // INVALID-NAME: unexpected name CHERY
 // UNKNOWN-ABI: error: {{.*}} unknown type: 0xff
