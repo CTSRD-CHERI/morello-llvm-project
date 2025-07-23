@@ -801,8 +801,7 @@ static void addCapDynamicRelocation(RelType dynType, Symbol *sym,
   }
 
   assert(dynType == R_MORELLO_RELATIVE || dynType == R_MORELLO_FUNC_RELATIVE);
-  assert(config->localCapRelocsMode == CapRelocsMode::ElfReloc ||
-         config->hasDynSymTab);
+  assert(config->useRelativeCheriRelocs || config->hasDynSymTab);
 
   RelocationBaseSection &relaDyn =
       !config->hasDynSymTab ? *in.relaDyn : *mainPart->relaDyn;
@@ -818,7 +817,7 @@ static void addCapDynamicRelocation(RelType dynType, Symbol *sym,
 void addMorelloRelativeRelocation(RelType dynType, Symbol *sym,
                                   InputSectionBase *sec, uint64_t offset,
                                   int64_t addend) {
-  if (config->localCapRelocsMode == CapRelocsMode::ElfReloc) {
+  if (config->useRelativeCheriRelocs) {
     addCapDynamicRelocation(dynType, sym, sec, offset, addend);
   } else {
     in.morelloCapRelocs->addCapReloc({sec, offset}, {sym, 0u}, sym->isPreemptible,
@@ -1414,7 +1413,7 @@ void addCapabilityRelocation(
   // For local symbols we can also emit the untagged capability bits and
   // instruct csu/rtld to run CBuildCap
   if ((!sym || !sym->isPreemptible) && !needTrampoline) {
-    assert(config->localCapRelocsMode == CapRelocsMode::Legacy &&
+    assert(!config->useRelativeCheriRelocs &&
            "relative ELF capability relocations not currently implemented");
     in.capRelocs->addCapReloc({sec, offset}, {symOrSec, 0u}, addend);
     return;

@@ -430,7 +430,7 @@ static void checkOptions() {
       error("-r and --export-dynamic may not be used together");
   }
   if (config->emachine != EM_AARCH64)
-    if (config->localCapRelocsMode == CapRelocsMode::ElfReloc)
+    if (config->useRelativeCheriRelocs)
       error("local-cap-relocs=elf is not implemented yet");
 
   if (config->executeOnly) {
@@ -791,19 +791,6 @@ static CapTableScopePolicy getCapTableScope(opt::InputArgList &args) {
     return CapTableScopePolicy::File;
   } else if (arg->getOption().getID() == OPT_captable_scope_function) {
     return CapTableScopePolicy::Function;
-  }
-  llvm_unreachable("Invalid arg");
-}
-
-static CapRelocsMode getLocalCapRelocsMode(opt::InputArgList &args) {
-  auto *arg =
-      args.getLastArg(OPT_local_caprelocs_legacy, OPT_local_caprelocs_elf);
-  if (!arg) // TODO: change default to ElfReloc
-    return CapRelocsMode::Legacy;
-  if (arg->getOption().getID() == OPT_local_caprelocs_legacy) {
-    return CapRelocsMode::Legacy;
-  } else if (arg->getOption().getID() == OPT_local_caprelocs_elf) {
-    return CapRelocsMode::ElfReloc;
   }
   llvm_unreachable("Invalid arg");
 }
@@ -1189,7 +1176,6 @@ static void readConfigs(opt::InputArgList &args) {
                    /* Default */ true);
   config->allowUndefinedCapRelocs = args.hasArg(OPT_allow_undefined_cap_relocs);
   config->forceMorelloC64Plt = args.hasArg(OPT_morello_c64_plt);
-  config->localCapRelocsMode = getLocalCapRelocsMode(args);
   config->androidMemtagHeap =
       args.hasFlag(OPT_android_memtag_heap, OPT_no_android_memtag_heap, false);
   config->androidMemtagStack = args.hasFlag(OPT_android_memtag_stack,
@@ -1265,7 +1251,9 @@ static void readConfigs(opt::InputArgList &args) {
   config->ignoreFunctionAddressEquality =
       args.hasArg(OPT_ignore_function_address_equality);
   config->init = args.getLastArgValue(OPT_init, "_init");
-  config->localCapRelocsMode = getLocalCapRelocsMode(args);
+  // TODO: change default to true
+  config->useRelativeCheriRelocs =
+      args.hasFlag(OPT_local_caprelocs_elf, OPT_local_caprelocs_legacy, false);
   config->ltoAAPipeline = args.getLastArgValue(OPT_lto_aa_pipeline);
   config->ltoCSProfileGenerate = args.hasArg(OPT_lto_cs_profile_generate);
   config->ltoCSProfileFile = args.getLastArgValue(OPT_lto_cs_profile_file);
@@ -3066,10 +3054,10 @@ void LinkerDriver::link(opt::InputArgList &args) {
     config->isCheriFnDesc =
         (config->cheriVariants.lookup(NT_CHERI_GLOBALS_ABI) == CHERI_GLOBALS_ABI_FDESC);
     if (config->isCheriFnDesc)
-      config->localCapRelocsMode = CapRelocsMode::ElfReloc;
+      config->useRelativeCheriRelocs = true;
   }
   if (config->emachine == EM_AARCH64 && config->hasDynSymTab)
-    config->localCapRelocsMode = CapRelocsMode::ElfReloc;
+    config->useRelativeCheriRelocs = true;
 
   // The Target instance handles target-specific stuff, such as applying
   // relocations or writing a PLT section. It also contains target-dependent
