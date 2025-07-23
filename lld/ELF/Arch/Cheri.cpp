@@ -191,7 +191,6 @@ std::string CheriCapRelocLocation::toString() const {
  return SymbolAndOffset(section, offset).verboseToString();
 }
 
-template <class ELFT>
 void CheriCapRelocsSection::addCapReloc(CheriCapRelocLocation loc,
                                         const SymbolAndOffset &target,
                                         int64_t capabilityOffset,
@@ -227,7 +226,6 @@ void CheriCapRelocsSection::addCapReloc(CheriCapRelocLocation loc,
   addEntry(loc, {target, capabilityOffset});
 }
 
-template <typename ELFT>
 static uint64_t getTargetSize(const CheriCapRelocLocation &location,
                               const SymbolAndOffset &target) {
   if (InputSectionBase *isec = dyn_cast<InputSectionBase *>(target.symOrSec))
@@ -389,7 +387,7 @@ void CheriCapRelocsSection::writeToImpl(uint8_t *buf) {
       isTls = isec->type == STT_TLS;
       os = isec->getOutputSection();
     }
-    uint64_t targetSize = getTargetSize<ELFT>(location, realTarget);
+    uint64_t targetSize = getTargetSize(location, realTarget);
     uint64_t targetOffset = reloc.capabilityOffset + realTarget.offset;
     uint64_t permissions = 0;
     // Fow now Function implies ReadOnly so don't add the flag
@@ -570,7 +568,7 @@ void MorelloCapRelocsSection::writeTo(uint8_t *buf) {
     uint64_t locationVA =
         location.section->getOutputSection()->addr + outSecOffset;
     uint64_t targetVA = reloc.target.sym()->getVA(reloc.target.offset);
-    uint64_t targetSize = getTargetSize<ELF64LE>(location, reloc.target);
+    uint64_t targetSize = getTargetSize(location, reloc.target);
     uint64_t targetOffset = reloc.capabilityOffset;
     uint64_t permissions = getPermissions(*reloc.target.sym(), Permissions::Type::STATIC);
 
@@ -622,7 +620,7 @@ uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
 
   const Defined *definedSym = cast<Defined>(&sym);
   uint64_t perms = getPermissions(*definedSym, Permissions::Type::DYNAMIC);
-  uint64_t size = getTargetSize<ELF64LE>(
+  uint64_t size = getTargetSize(
       {const_cast<InputSectionBase *>(isec), offset - config->wordsize},
       SymbolAndOffset(const_cast<Symbol *>(&sym), 0));
   return (perms << 56) | size;
@@ -1054,7 +1052,6 @@ uint32_t MipsCheriCapTableSection::getTlsOffset(const Symbol &sym) const {
   return *it->second.index * config->wordsize;
 }
 
-template <class ELFT>
 uint64_t MipsCheriCapTableSection::assignIndices(uint64_t startIndex,
                                                  CaptableMap &entries,
                                                  const Twine &symContext) {
@@ -1162,7 +1159,7 @@ uint64_t MipsCheriCapTableSection::assignIndices(uint64_t startIndex,
     if (!targetSym->isPreemptible && targetSym->isUndefWeak())
       addNullDerivedCapability(*targetSym, *this, off, 0);
     else
-      addCapabilityRelocation<ELFT>(
+      addCapabilityRelocation(
           targetSym, elfCapabilityReloc, this, off, R_CHERI_CAPABILITY, 0,
           it.second.usedInCallExpr,
           [&]() {
@@ -1176,10 +1173,9 @@ uint64_t MipsCheriCapTableSection::assignIndices(uint64_t startIndex,
   return assignedSmallIndexes + assignedLargeIndexes;
 }
 
-template <class ELFT>
 void MipsCheriCapTableSection::assignValuesAndAddCapTableSymbols() {
   // First assign the global indices (which will usually be the only ones)
-  uint64_t assignedEntries = assignIndices<ELFT>(0, globalEntries, "");
+  uint64_t assignedEntries = assignIndices(0, globalEntries, "");
   if (LLVM_UNLIKELY(config->capTableScope != CapTableScopePolicy::All)) {
     assert(assignedEntries == 0 && "Should not have any global entries in"
                                    " per-file/per-function captable mode");
@@ -1187,12 +1183,12 @@ void MipsCheriCapTableSection::assignValuesAndAddCapTableSymbols() {
       std::string fullContext = toString(it.first);
       auto lastSlash = StringRef(fullContext).find_last_of("/\\") + 1;
       StringRef context = StringRef(fullContext).substr(lastSlash);
-      assignedEntries += assignIndices<ELFT>(assignedEntries, it.second,
-                                             "@" + context);
+      assignedEntries +=
+          assignIndices(assignedEntries, it.second, "@" + context);
     }
     for (auto &it : perFunctionEntries)
-      assignedEntries += assignIndices<ELFT>(assignedEntries, it.second,
-                                             "@" + toString(*it.first));
+      assignedEntries +=
+          assignIndices(assignedEntries, it.second, "@" + toString(*it.first));
   }
   assert(assignedEntries == nonTlsEntryCount());
 
@@ -1263,15 +1259,6 @@ void MipsCheriCapTableSection::assignValuesAndAddCapTableSymbols() {
 
   valuesAssigned = true;
 }
-
-template void
-MipsCheriCapTableSection::assignValuesAndAddCapTableSymbols<ELF32LE>();
-template void
-MipsCheriCapTableSection::assignValuesAndAddCapTableSymbols<ELF32BE>();
-template void
-MipsCheriCapTableSection::assignValuesAndAddCapTableSymbols<ELF64LE>();
-template void
-MipsCheriCapTableSection::assignValuesAndAddCapTableSymbols<ELF64BE>();
 
 MipsCheriCapTableMappingSection::MipsCheriCapTableMappingSection()
     : SyntheticSection(SHF_ALLOC, SHT_PROGBITS, 8, ".captable_mapping") {
@@ -1363,6 +1350,11 @@ void MipsCheriCapTableMappingSection::writeTo(uint8_t *buf) {
 }
 
 template <typename ELFT>
+static void getMipsCheriAbiVariant(std::optional<unsigned> &abi,
+                                   SyntheticSection &sec) {
+  abi = static_cast<MipsAbiFlagsSection<ELFT> &>(sec).getCheriAbiVariant();
+}
+
 void addCapabilityRelocation(
     llvm::PointerUnion<Symbol *, InputSectionBase *> symOrSec, RelType type,
     InputSectionBase *sec, uint64_t offset, RelExpr expr, int64_t addend,
@@ -1407,8 +1399,8 @@ void addCapabilityRelocation(
         message("Do not need function pointer trampoline for " +
                 toString(*sym) + " in static binary");
     } else if (in.mipsAbiFlags) {
-      auto abi = static_cast<MipsAbiFlagsSection<ELFT> &>(*in.mipsAbiFlags)
-                     .getCheriAbiVariant();
+      std::optional<unsigned> abi;
+      invokeELFT(getMipsCheriAbiVariant, abi, *in.mipsAbiFlags);
       if (abi && (*abi == llvm::ELF::DF_MIPS_CHERI_ABI_PLT ||
                   *abi == llvm::ELF::DF_MIPS_CHERI_ABI_FNDESC))
         needTrampoline = true;
@@ -1483,7 +1475,7 @@ void addCapabilityRelocation(
         /* Relocation type for the addend = */ target->symbolicRel);
 
   } else if (capRelocMode == CapRelocsMode::Legacy) {
-    in.capRelocs->addCapReloc<ELFT>({sec, offset}, {symOrSec, 0u}, addend);
+    in.capRelocs->addCapReloc({sec, offset}, {symOrSec, 0u}, addend);
   } else {
     assert(config->localCapRelocsMode == CapRelocsMode::CBuildCap);
     error("CBuildCap method not implemented yet!");
@@ -1514,20 +1506,3 @@ void addNullDerivedCapability(Symbol &sym, InputSectionBase &sec,
 
 } // namespace elf
 } // namespace lld
-
-template void lld::elf::addCapabilityRelocation<ELF32LE>(
-    llvm::PointerUnion<Symbol *, InputSectionBase *>, RelType,
-    InputSectionBase *, uint64_t, RelExpr, int64_t, bool,
-    llvm::function_ref<std::string()>, RelocationBaseSection *);
-template void lld::elf::addCapabilityRelocation<ELF32BE>(
-    llvm::PointerUnion<Symbol *, InputSectionBase *>, RelType,
-    InputSectionBase *, uint64_t, RelExpr, int64_t, bool,
-    llvm::function_ref<std::string()>, RelocationBaseSection *);
-template void lld::elf::addCapabilityRelocation<ELF64LE>(
-    llvm::PointerUnion<Symbol *, InputSectionBase *>, RelType,
-    InputSectionBase *, uint64_t, RelExpr, int64_t, bool,
-    llvm::function_ref<std::string()>, RelocationBaseSection *);
-template void lld::elf::addCapabilityRelocation<ELF64BE>(
-    llvm::PointerUnion<Symbol *, InputSectionBase *>, RelType,
-    InputSectionBase *, uint64_t, RelExpr, int64_t, bool,
-    llvm::function_ref<std::string()>, RelocationBaseSection *);
