@@ -348,12 +348,9 @@ struct Config {
   UnresolvedPolicy unresolvedSymbols;
   UnresolvedPolicy unresolvedSymbolsInShlib;
   Target2Policy target2;
-  // Method used for capability relocations for preemptible symbols
-  CapRelocsMode preemptibleCapRelocsMode;
   // Method used for capability relocations for non-preemptible symbols
   CapRelocsMode localCapRelocsMode;
   CapTableScopePolicy capTableScope;
-  bool relativeCapRelocsOnly;
   // True to emit relocations for code pointers differently from function
   // pointers.
   bool cheriEmitCodePtrRelocs = false;
