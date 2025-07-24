@@ -903,16 +903,6 @@ static void addPltEntry(PltSection &plt, GotPltSection &gotPlt,
                         RelocationBaseSection &rel, RelType type, Symbol &sym) {
   plt.addEntry(sym);
 
-  // For CHERI-RISC-V if JUMP_SLOT relocations are disabled (to be compatible
-  // with old CheriBSD) we mark the symbol NEEDS_GOT so it will end up in .got
-  // as a function pointer, and uses .rela.dyn rather than .rela.plt, so no
-  // rtld changes are needed.
-  //
-  // TODO: Remove this option.
-  if (config->emachine == EM_RISCV && config->isCheriAbi &&
-      !config->zCheriRiscvJumpSlot)
-    return;
-
   if (config->isCheriAbi && !sym.isPreemptible &&
       config->emachine != EM_AARCH64)
     error("cannot create non-preemptible PLT entry on CHERI against symbol: " +
@@ -1192,10 +1182,6 @@ void RelocationScanner::processAux(RelExpr expr, RelType type, uint64_t offset,
     }
   } else if (needsPlt(expr)) {
     sym.setFlags(NEEDS_PLT);
-    // See addPltEntry
-    if (config->emachine == EM_RISCV && config->isCheriAbi &&
-        !config->zCheriRiscvJumpSlot)
-      sym.setFlags(NEEDS_GOT);
   } else if (LLVM_UNLIKELY(isIfunc)) {
     sym.setFlags(HAS_DIRECT_RELOC);
   }
@@ -1339,10 +1325,6 @@ void RelocationScanner::processAux(RelExpr expr, RelType type, uint64_t offset,
                     "' cannot be preempted; recompile with -fPIE" +
                     getLocation(*sec, sym, offset));
       sym.setFlags(NEEDS_COPY | NEEDS_PLT);
-      // See addPltEntry
-      if (config->emachine == EM_RISCV && config->isCheriAbi &&
-          !config->zCheriRiscvJumpSlot)
-        sym.setFlags(NEEDS_GOT);
       sec->addReloc({expr, type, offset, addend, &sym});
       return;
     }
