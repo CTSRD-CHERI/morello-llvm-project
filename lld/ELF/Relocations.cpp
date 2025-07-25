@@ -902,13 +902,16 @@ template <class PltSection, class GotPltSection>
 static void addPltEntry(PltSection &plt, GotPltSection &gotPlt,
                         RelocationBaseSection &rel, RelType type, Symbol &sym) {
   plt.addEntry(sym);
+  gotPlt.addEntry(sym);
 
   if (config->isCheriAbi && !sym.isPreemptible &&
-      config->emachine != EM_AARCH64)
-    error("cannot create non-preemptible PLT entry on CHERI against symbol: " +
-          toString(sym));
+      config->emachine != EM_AARCH64) {
+    addCapabilityRelocation(&sym, *target->cheriCapRel, &gotPlt,
+                            sym.getGotPltOffset(), R_CHERI_CAPABILITY, 0, false,
+                            [] { return ""; });
+    return;
+  }
 
-  gotPlt.addEntry(sym);
   if (config->isCheriAbi && config->emachine == EM_AARCH64)
     rel.addReloc({type, &gotPlt, sym.getGotPltOffset(),
                   sym.isPreemptible ? DynamicReloc::AgainstSymbolWithTargetVA

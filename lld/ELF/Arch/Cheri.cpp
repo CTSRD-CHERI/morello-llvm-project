@@ -376,6 +376,12 @@ void CheriCapRelocsSection::writeToImpl(uint8_t *buf) {
     bool isFunc, isTls;
     OutputSection *os;
     if (Symbol *s = dyn_cast<Symbol *>(realTarget.symOrSec)) {
+      if (s->isGnuIFunc())
+        error("cannot reference non-preemptible IFUNC as a capability, "
+              "needed for symbol " +
+              realTarget.verboseToString() + "\n>>> referenced by " +
+              location.toString());
+
       targetVA = realTarget.sym()->getVA(0);
       isFunc = s->isFunc();
       isTls = s->isTls();
@@ -564,6 +570,13 @@ void MorelloCapRelocsSection::writeTo(uint8_t *buf) {
     const CheriCapRelocLocation &location = i.first;
     const CheriCapReloc &reloc = i.second;
     assert(location.offset <= location.section->getSize());
+
+    if (reloc.target.sym()->isGnuIFunc())
+      error("cannot reference non-preemptible IFUNC as a capability, "
+            "needed for symbol " +
+            reloc.target.verboseToString() + "\n>>> referenced by " +
+            location.toString());
+
     uint64_t outSecOffset = location.section->getOffset(location.offset);
     uint64_t locationVA =
         location.section->getOutputSection()->addr + outSecOffset;
