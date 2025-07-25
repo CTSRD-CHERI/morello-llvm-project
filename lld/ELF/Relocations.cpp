@@ -904,12 +904,17 @@ static void addPltEntry(PltSection &plt, GotPltSection &gotPlt,
   plt.addEntry(sym);
   gotPlt.addEntry(sym);
 
-  if (config->isCheriAbi && !sym.isPreemptible &&
-      config->emachine != EM_AARCH64) {
-    addCapabilityRelocation(&sym, *target->cheriCapRel, &gotPlt,
+  if (config->isCheriAbi && config->emachine != EM_AARCH64) {
+    if (!sym.isPreemptible) {
+      addCapabilityRelocation(&sym, *target->cheriCapRel, &gotPlt,
+                              sym.getGotPltOffset(), R_CHERI_CAPABILITY, 0,
+                              false, [] { return ""; });
+      return;
+    }
+
+    addCapabilityRelocation(&plt, *target->cheriCapRel, &gotPlt,
                             sym.getGotPltOffset(), R_CHERI_CAPABILITY, 0, false,
                             [] { return ""; });
-    return;
   }
 
   if (config->isCheriAbi && config->emachine == EM_AARCH64)
@@ -924,10 +929,6 @@ static void addPltEntry(PltSection &plt, GotPltSection &gotPlt,
                   sym.isPreemptible ? DynamicReloc::AgainstSymbol
                                     : DynamicReloc::AddendOnlyWithTargetVA,
                   sym, 0, R_ABS});
-  if (config->isCheriAbi && config->emachine != EM_AARCH64)
-    addCapabilityRelocation(&plt, *target->cheriCapRel, &gotPlt,
-                            sym.getGotPltOffset(), R_CHERI_CAPABILITY, 0, false,
-                            [] { return ""; });
 }
 
 static void addGotEntry(Symbol &sym) {
