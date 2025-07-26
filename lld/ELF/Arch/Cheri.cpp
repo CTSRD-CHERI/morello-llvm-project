@@ -448,8 +448,7 @@ static uint64_t getTargetSize(const CheriCapRelocLocation &location,
       assert(!location.section->compressed);
       const uint8_t *buf =
           location.section->content().begin() + location.offset;
-      targetSize = ((config->localCapRelocsMode == CapRelocsMode::Legacy) &&
-                    !config->shared)
+      targetSize = config->localCapRelocsMode == CapRelocsMode::Legacy
                        ? read64le(buf + 8)
                        : read64le(buf);
       if (targetSize != 0) {
@@ -1021,9 +1020,7 @@ static void addCapDynamicRelocation(RelType dynType, Symbol *sym,
 void addMorelloRelativeRelocation(RelType dynType, Symbol *sym,
                                   InputSectionBase *sec, uint64_t offset,
                                   int64_t addend) {
-  // If there is a Dynamic Symbol Table, there cannot be a caprelocs section.
-  if (config->localCapRelocsMode == CapRelocsMode::ElfReloc ||
-      config->hasDynSymTab) {
+  if (config->localCapRelocsMode == CapRelocsMode::ElfReloc) {
     addCapDynamicRelocation(dynType, sym, sec, offset, addend);
   } else {
     in.morelloCapRelocs->addCapReloc({sec, offset}, {sym, 0u}, sym->isPreemptible,

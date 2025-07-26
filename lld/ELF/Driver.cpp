@@ -3108,6 +3108,8 @@ void LinkerDriver::link(opt::InputArgList &args) {
     if (config->isCheriFnDesc)
       config->localCapRelocsMode = CapRelocsMode::ElfReloc;
   }
+  if (config->emachine == EM_AARCH64 && config->hasDynSymTab)
+    config->localCapRelocsMode = CapRelocsMode::ElfReloc;
 
   // The Target instance handles target-specific stuff, such as applying
   // relocations or writing a PLT section. It also contains target-dependent
