@@ -856,6 +856,13 @@ static void addMorelloCapabilityRelocation(Symbol *sym, RelType type,
     if (config->cheriEmitCodePtrRelocs && type == R_MORELLO_CODE_CAPINIT)
       error("Cannot relocate code capability to preemptible symbol: " +
             verboseToString(sym));
+
+    if (sym->isFunc() && addend != 0)
+      warn("capability relocation with non-zero addend (0x" +
+           llvm::utohexstr(addend) + ") against preemptible function " +
+           toString(*sym) + "; this may not be supported by the runtime linker" +
+           getLocationMessage(*sec, *sym, offset));
+
     mainPart->relaDyn->addReloc({R_MORELLO_CAPINIT, sec, offset,
                                  DynamicReloc::AgainstSymbol, *sym, addend,
                                  R_ABS});
@@ -1421,6 +1428,12 @@ void addCapabilityRelocation(
     in.capRelocs->addCapReloc({sec, offset}, {symOrSec, 0u}, addend);
     return;
   }
+
+  if (sym->isFunc() && addend != 0)
+    warn("capability relocation with non-zero addend (0x" +
+         llvm::utohexstr(addend) + ") against preemptible function " +
+         toString(*sym) + "; this may not be supported by the runtime linker" +
+         getLocationMessage(*sec, *sym, offset));
 
   // We don't use a R_MIPS_CHERI_CAPABILITY relocation for the input but
   // instead need to use an absolute pointer size relocation to write
