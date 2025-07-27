@@ -834,7 +834,8 @@ uint64_t getMorelloBaseAddress(int64_t a, const Symbol &sym,
   if (sym.isFunc() || sym.isGnuIFunc())
     return getMorelloExecBaseAddress();
 
-  return sym.getVA(a);
+  // NB: Addend is omitted; part of the offset, not the base
+  return sym.getVA();
 }
 
 uint64_t getMorelloExecBaseAddress() { return config->morelloPCCBase; }
