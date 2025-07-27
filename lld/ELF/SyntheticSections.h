@@ -429,8 +429,6 @@ public:
     /// This is used by the MIPS multi-GOT implementation. It relocates
     /// addresses of 64kb pages that lie inside the output section.
     MipsMultiGotPage,
-    /// Used to adjust addends for aarch64 executable relative relocations.
-    AArch64ExecRel,
   };
   /// This constructor records a relocation against a symbol.
   DynamicReloc(RelType type, const InputSectionBase *inputSec,

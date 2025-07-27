@@ -978,7 +978,6 @@ void addMorelloCapabilityFragment(InputSectionBase *sec, Symbol *sym,
 static void addCapDynamicRelocation(RelType dynType, Symbol *sym,
                                     InputSectionBase *sec, uint64_t offset,
                                     int64_t addend) {
-  bool isExecRel = sym->isFunc() || sym->isGnuIFunc();
   RelType realDynType = dynType;
 
   if (dynType == R_MORELLO_RELATIVE && config->isCheriFnDesc) {
@@ -1010,10 +1009,9 @@ static void addCapDynamicRelocation(RelType dynType, Symbol *sym,
 
   RelocationBaseSection &relaDyn =
       !config->hasDynSymTab ? *in.relaDyn : *mainPart->relaDyn;
-  relaDyn.addReloc(
-      {realDynType, sec, offset,
-       isExecRel ? DynamicReloc::AArch64ExecRel : DynamicReloc::AgainstSymbol,
-       *sym, addend, R_ABS});
+  relaDyn.addReloc({realDynType, sec, offset,
+                    DynamicReloc::AddendOnlyWithTargetVA, *sym, addend,
+                    R_MORELLO_CAPFRAG_ADDEND});
   addMorelloCapabilityFragment(sec, sym, offset);
 }
 

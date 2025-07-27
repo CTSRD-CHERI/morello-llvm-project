@@ -1686,21 +1686,6 @@ template <class ELFT> void DynamicSection<ELFT>::writeTo(uint8_t *buf) {
   }
 }
 
-static uint64_t calcAddend(int64_t va, const Symbol &sym) {
-  if (config->emachine != EM_AARCH64)
-    return va;
-
-  if (!config->isCheriAbi)
-    return va;
-
-  if (sym.isTls())
-    return va;
-
-  // Change addend of Morello executable capabilities to account for the
-  // aligned base.
-  return va - config->morelloPCCBase;
-}
-
 uint64_t DynamicReloc::getOffset() const {
   return inputSec->getVA(offsetInSec);
 }
@@ -1723,8 +1708,6 @@ int64_t DynamicReloc::computeAddend() const {
   case MipsMultiGotPage:
     assert(sym == nullptr);
     return getMipsPageAddr(outputSec->addr) + addend;
-  case AArch64ExecRel:
-    return calcAddend(sym->getVA(addend), *sym);
   }
   llvm_unreachable("Unknown DynamicReloc::Kind enum");
 }
