@@ -530,12 +530,7 @@ template <class ELFT> void elf::createSyntheticSections() {
       /*threadCount=*/1);
   add(*in.relaPlt);
 
-  if (config->emachine == EM_AARCH64 &&
-      config->localCapRelocsMode == CapRelocsMode::ElfReloc) {
-    in.relaDyn =
-        std::make_unique<RelocationSection<ELFT>>(relaDynName, /*sort=*/false,
-                                                  /*threadCount=*/1);
-  } else if (config->androidPackDynRelocs)
+  if (config->androidPackDynRelocs)
     in.relaDyn = std::make_unique<AndroidPackedRelocationSection<ELFT>>(
         relaDynName, /*threadCount=*/1);
   else
