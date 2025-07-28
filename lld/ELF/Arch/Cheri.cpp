@@ -1418,14 +1418,6 @@ void addCapabilityRelocation(
   if (config->emachine == EM_AARCH64 && type == R_MORELLO_DESC_CAPINIT)
     type = R_MORELLO_CAPINIT;
 
-  if (sym->isFunc() && addend != 0)
-    warn("capability relocation with non-zero addend (0x" +
-         llvm::utohexstr(addend) + ") against preemptible function " +
-         toString(*sym) + "; this may not be supported by the runtime linker" +
-         getLocationMessage(*sec, *sym, offset));
-
-  if (!dynRelSec)
-    dynRelSec = mainPart->relaDyn.get();
   if (needTrampoline && config->verboseCapRelocs)
     message("Using trampoline for function pointer against " +
             verboseToString(sym));
@@ -1440,13 +1432,9 @@ void addCapabilityRelocation(
     assert(newSym->visibility() == llvm::ELF::STV_HIDDEN);
     sym = newSym; // Make the relocation point to the newly added symbol
   }
-  // .chericap initialises the memory to 0xcacacaca not 0, so if writing
-  // addends we still need to write even it if zero. Morello leaves it 0,
-  // however.
-  // TODO: Stop doing this in the assembler and drop this hack
-  dynRelSec->addReloc(DynamicReloc::AgainstSymbol, type, *sec, offset, *sym,
-                      addend, R_ADDEND, /*addendRelType=*/type,
-                      /*writeZero=*/config->emachine != EM_AARCH64);
+  if (!dynRelSec)
+    dynRelSec = mainPart->relaDyn.get();
+  dynRelSec->addSymbolReloc(type, *sec, offset, *sym, addend, type);
 }
 
 void addNullDerivedCapability(Symbol &sym, InputSectionBase &sec,
