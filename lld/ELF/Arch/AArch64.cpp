@@ -85,6 +85,7 @@ AArch64::AArch64() {
   gotRel = R_AARCH64_GLOB_DAT;
   pltRel = R_AARCH64_JUMP_SLOT;
   symbolicRel = R_AARCH64_ABS64;
+  cheriCapRel = R_MORELLO_CAPINIT;
   tlsDescRel = R_AARCH64_TLSDESC;
   tlsGotRel = R_AARCH64_TLS_TPREL64;
   pltHeaderSize = 32;
