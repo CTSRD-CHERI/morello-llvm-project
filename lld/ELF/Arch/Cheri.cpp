@@ -1181,7 +1181,6 @@ uint64_t MipsCheriCapTableSection::assignIndices(uint64_t startIndex,
     else
       addCapabilityRelocation(
           targetSym, elfCapabilityReloc, this, off, R_ABS_CAP, 0,
-          it.second.usedInCallExpr,
           [&]() {
             return ("\n>>> referenced by " + refName + "\n>>> first used in " +
                     it.second.firstUse->verboseToString())
@@ -1378,7 +1377,7 @@ static void getMipsCheriAbiVariant(std::optional<unsigned> &abi,
 void addCapabilityRelocation(
     llvm::PointerUnion<Symbol *, InputSectionBase *> symOrSec, RelType type,
     InputSectionBase *sec, uint64_t offset, RelExpr expr, int64_t addend,
-    bool isCallExpr, llvm::function_ref<std::string()> referencedBy,
+    llvm::function_ref<std::string()> referencedBy,
     RelocationBaseSection *dynRelSec) {
   Symbol *sym = dyn_cast<Symbol *>(symOrSec);
   if (config->emachine == EM_AARCH64) {
@@ -1392,8 +1391,8 @@ void addCapabilityRelocation(
   // In the PLT ABI (and fndesc?) we have to use an elf relocation for function
   // pointers to ensure that the runtime linker adds the required trampolines
   // that sets $cgp:
-  if (!isCallExpr && config->emachine == llvm::ELF::EM_MIPS && sym &&
-      sym->isFunc()) {
+  if (config->emachine == llvm::ELF::EM_MIPS && sym && sym->isFunc() &&
+      type != *target->cheriCapCallRel) {
     if (!lld::elf::hasDynamicLinker()) {
       // In static binaries we do not need PLT stubs for function pointers since
       // all functions share the same $cgp
