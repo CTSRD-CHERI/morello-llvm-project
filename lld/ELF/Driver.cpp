@@ -430,7 +430,7 @@ static void checkOptions() {
       error("-r and --export-dynamic may not be used together");
   }
   if (config->emachine != EM_AARCH64)
-    if (config->useRelativeCheriRelocs)
+    if (config->useRelativeElfCheriRelocs)
       error("local-cap-relocs=elf is not implemented yet");
 
   if (config->executeOnly) {
@@ -1250,7 +1250,7 @@ static void readConfigs(opt::InputArgList &args) {
       args.hasArg(OPT_ignore_function_address_equality);
   config->init = args.getLastArgValue(OPT_init, "_init");
   // TODO: change default to true
-  config->useRelativeCheriRelocs =
+  config->useRelativeElfCheriRelocs =
       args.hasFlag(OPT_local_caprelocs_elf, OPT_local_caprelocs_legacy, false);
   config->ltoAAPipeline = args.getLastArgValue(OPT_lto_aa_pipeline);
   config->ltoCSProfileGenerate = args.hasArg(OPT_lto_cs_profile_generate);
@@ -3051,10 +3051,10 @@ void LinkerDriver::link(opt::InputArgList &args) {
     config->isCheriFnDesc =
         (config->cheriVariants.lookup(NT_CHERI_GLOBALS_ABI) == CHERI_GLOBALS_ABI_FDESC);
     if (config->isCheriFnDesc)
-      config->useRelativeCheriRelocs = true;
+      config->useRelativeElfCheriRelocs = true;
   }
   if (config->emachine == EM_AARCH64 && config->hasDynSymTab)
-    config->useRelativeCheriRelocs = true;
+    config->useRelativeElfCheriRelocs = true;
 
   // The Target instance handles target-specific stuff, such as applying
   // relocations or writing a PLT section. It also contains target-dependent

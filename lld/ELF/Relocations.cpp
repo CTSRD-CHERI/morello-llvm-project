@@ -910,7 +910,7 @@ static void addPltEntry(PltSection &plt, GotPltSection &gotPlt,
   plt.addEntry(sym);
   gotPlt.addEntry(sym);
 
-  if (config->isCheriAbi && !config->useRelativeCheriRelocs &&
+  if (config->isCheriAbi && !config->useRelativeElfCheriRelocs &&
       config->emachine != EM_AARCH64) {
     if (!sym.isPreemptible) {
       addRelativeCapabilityRelocation(gotPlt, sym.getGotPltOffset(), &sym, 0,

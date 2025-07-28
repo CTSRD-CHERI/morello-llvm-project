@@ -815,7 +815,7 @@ static void addMorelloRelativeElfReloc(RelType dynType, Symbol *sym,
   }
 
   assert(dynType == R_MORELLO_RELATIVE || dynType == R_MORELLO_FUNC_RELATIVE);
-  assert(config->useRelativeCheriRelocs || config->hasDynSymTab);
+  assert(config->useRelativeElfCheriRelocs || config->hasDynSymTab);
 
   RelocationBaseSection &relaDyn =
       !config->hasDynSymTab ? *in.relaDyn : *mainPart->relaDyn;
@@ -1372,14 +1372,14 @@ void addRelativeCapabilityRelocation(
       dynType = R_MORELLO_FUNC_RELATIVE;
     else
       dynType = R_MORELLO_RELATIVE;
-    if (config->useRelativeCheriRelocs)
+    if (config->useRelativeElfCheriRelocs)
       addMorelloRelativeElfReloc(dynType, sym, &isec, offsetInSec, addend);
     else
       in.morelloCapRelocs->addCapReloc({&isec, offsetInSec}, {sym, 0u},
                                        sym->isPreemptible, addend);
     return;
   }
-  assert(!config->useRelativeCheriRelocs &&
+  assert(!config->useRelativeElfCheriRelocs &&
          "relative ELF capability relocations not currently implemented");
   in.capRelocs->addCapReloc({&isec, offsetInSec}, {symOrSec, 0u}, addend);
 }
