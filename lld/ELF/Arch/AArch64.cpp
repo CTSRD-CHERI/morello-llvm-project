@@ -230,7 +230,7 @@ RelExpr AArch64::getRelExpr(RelType type, const Symbol &s,
     return R_NONE;
   case R_MORELLO_CAPINIT:
   case R_MORELLO_CODE_CAPINIT:
-    return R_CHERI_CAPABILITY;
+    return R_ABS_CAP;
   case R_MORELLO_DESC_CAPINIT:
     return R_MORELLO_DESC_CAPABILITY;
   case R_MORELLO_LD_PREL_LO17:

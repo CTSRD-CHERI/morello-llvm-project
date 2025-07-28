@@ -867,7 +867,7 @@ template <bool shard = false>
 static void addRelativeReloc(InputSectionBase &isec, uint64_t offsetInSec,
                              Symbol &sym, int64_t addend, RelExpr expr,
                              RelType type) {
-  if (expr == R_CHERI_CAPABILITY) {
+  if (expr == R_ABS_CAP) {
     assert(!sym.isPreemptible);
     addCapabilityRelocation(&sym, type, &isec, offsetInSec,
                             expr, addend, false, [] { return ""; });
@@ -915,13 +915,13 @@ static void addPltEntry(PltSection &plt, GotPltSection &gotPlt,
       config->emachine != EM_AARCH64) {
     if (!sym.isPreemptible) {
       addCapabilityRelocation(&sym, *target->cheriCapRel, &gotPlt,
-                              sym.getGotPltOffset(), R_CHERI_CAPABILITY, 0,
-                              false, [] { return ""; });
+                              sym.getGotPltOffset(), R_ABS_CAP, 0, false,
+                              [] { return ""; });
       return;
     }
 
     addCapabilityRelocation(&plt, *target->cheriCapRel, &gotPlt,
-                            sym.getGotPltOffset(), R_CHERI_CAPABILITY, 0, false,
+                            sym.getGotPltOffset(), R_ABS_CAP, 0, false,
                             [] { return ""; });
   }
 
@@ -942,7 +942,7 @@ static void addPltEntry(PltSection &plt, GotPltSection &gotPlt,
 static void addGotEntry(Symbol &sym) {
   in.got->addEntry(sym);
   uint64_t off = sym.getGotOffset();
-  RelExpr expr = config->isCheriAbi ? R_CHERI_CAPABILITY : R_ABS;
+  RelExpr expr = config->isCheriAbi ? R_ABS_CAP : R_ABS;
 
   // If preemptible, emit a GLOB_DAT relocation.
   if (sym.isPreemptible) {
@@ -1043,7 +1043,7 @@ bool RelocationScanner::isStaticLinkTimeConstant(RelExpr e, RelType type,
   // there is no way to store the tag bit
   // The exception is for non-preemptible undef weak symbols, which are
   // NULL-derived constants.
-  if (e == R_CHERI_CAPABILITY)
+  if (e == R_ABS_CAP)
     return !sym.isPreemptible && sym.isUndefWeak();
 
   // These never do, except if the entire file is position dependent or if
@@ -1154,7 +1154,7 @@ void RelocationScanner::processAux(RelExpr expr, RelType type, uint64_t offset,
   }
 
   if (expr == R_MORELLO_DESC_CAPABILITY)
-    expr = R_CHERI_CAPABILITY;
+    expr = R_ABS_CAP;
 
   if (oneof<R_MIPS_CHERI_CAPTAB_INDEX,
             R_MIPS_CHERI_CAPTAB_INDEX_SMALL_IMMEDIATE,
@@ -1214,7 +1214,7 @@ void RelocationScanner::processAux(RelExpr expr, RelType type, uint64_t offset,
   // handling of GOT-generating relocations.
   if (isStaticLinkTimeConstant(expr, type, sym, offset) ||
       (!config->isPic && sym.isUndefWeak())) {
-    if (expr == R_CHERI_CAPABILITY)
+    if (expr == R_ABS_CAP)
       addNullDerivedCapability(sym, *sec, offset, addend);
     else
       sec->addReloc({expr, type, offset, addend, &sym});
@@ -1231,7 +1231,7 @@ void RelocationScanner::processAux(RelExpr expr, RelType type, uint64_t offset,
                   !(config->zText ||
                     (isa<EhInputSection>(sec) && config->emachine != EM_MIPS));
 
-  if (expr == R_CHERI_CAPABILITY) {
+  if (expr == R_ABS_CAP) {
     std::lock_guard<std::mutex> lock(relocMutex);
     static auto getRelocTargetLocation = [&]() -> std::string {
       return "\n>>> referenced by " +
