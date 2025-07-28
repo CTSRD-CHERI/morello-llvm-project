@@ -1424,9 +1424,6 @@ void addCapabilityRelocation(
          toString(*sym) + "; this may not be supported by the runtime linker" +
          getLocationMessage(*sec, *sym, offset));
 
-  // We don't use a R_*_CHERI_CAPABILITY relocation for the input but
-  // instead need to use an absolute pointer size relocation to write
-  // the offset addend
   if (!dynRelSec)
     dynRelSec = mainPart->relaDyn.get();
   if (needTrampoline && config->verboseCapRelocs)
@@ -1448,8 +1445,7 @@ void addCapabilityRelocation(
   // however.
   // TODO: Stop doing this in the assembler and drop this hack
   dynRelSec->addReloc(DynamicReloc::AgainstSymbol, type, *sec, offset, *sym,
-                      addend, R_ADDEND,
-                      /*addendRelType=*/target->symbolicRel,
+                      addend, R_ADDEND, /*addendRelType=*/type,
                       /*writeZero=*/config->emachine != EM_AARCH64);
 }
 

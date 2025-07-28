@@ -690,6 +690,12 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
     // Setting the immediate is same as the ADRP
     relocateNoSym(loc, R_MORELLO_ADR_PREL_PG_HI20, val);
     break;
+  case R_MORELLO_CAPINIT:
+  case R_MORELLO_CODE_CAPINIT:
+  case R_MORELLO_DESC_CAPINIT:
+    // Write a word within the capability
+    write64(loc, val);
+    break;
   default:
     llvm_unreachable("unknown relocation");
   }
