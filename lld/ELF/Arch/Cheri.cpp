@@ -1175,8 +1175,7 @@ void MipsCheriCapTableSection::assignValuesAndAddCapTableSymbols() {
     uint64_t offset = *cti.index * config->wordsize;
     if (s == nullptr) {
       if (!config->shared)
-        this->relocations.push_back(
-            {R_ADDEND, target->symbolicRel, offset, 1, s});
+        addConstant({R_ADDEND, target->symbolicRel, offset, 1, s});
       else
         mainPart->relaDyn->addReloc({target->tlsModuleIndexRel, this, offset});
     } else {
@@ -1185,8 +1184,7 @@ void MipsCheriCapTableSection::assignValuesAndAddCapTableSymbols() {
       // s->isPreemptible is not sufficient (this happens e.g. for
       // thread-locals that have been marked as local through a linker script)
       if (!s->isPreemptible && !config->shared)
-        this->relocations.push_back(
-            {R_ADDEND, target->symbolicRel, offset, 1, s});
+        addConstant({R_ADDEND, target->symbolicRel, offset, 1, s});
       else
         mainPart->relaDyn->addSymbolReloc(target->tlsModuleIndexRel, *this,
                                           offset, *s);
@@ -1196,8 +1194,7 @@ void MipsCheriCapTableSection::assignValuesAndAddCapTableSymbols() {
       // However, we can skip writing the TLS offset reloc for non-preemptible
       // symbols since it is known even in shared libraries
       if (!s->isPreemptible)
-        this->relocations.push_back(
-            {R_ABS, target->tlsOffsetRel, offset, 0, s});
+        addConstant({R_ABS, target->tlsOffsetRel, offset, 0, s});
       else
         mainPart->relaDyn->addSymbolReloc(target->tlsOffsetRel, *this, offset,
                                           *s);
@@ -1214,7 +1211,7 @@ void MipsCheriCapTableSection::assignValuesAndAddCapTableSymbols() {
     // for the TP-relative offset as we don't know how much other data will
     // be allocated before us in the static TLS block.
     if (!s->isPreemptible && !config->shared)
-      this->relocations.push_back({R_TPREL, target->symbolicRel, offset, 0, s});
+      addConstant({R_TPREL, target->symbolicRel, offset, 0, s});
     else
       mainPart->relaDyn->addAddendOnlyRelocIfNonPreemptible(
           target->tlsGotRel, *this, offset, *s, target->symbolicRel);
