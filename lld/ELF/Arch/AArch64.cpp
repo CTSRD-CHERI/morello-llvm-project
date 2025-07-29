@@ -42,9 +42,6 @@ public:
   void writeGotPlt(uint8_t *buf, const Symbol &s) const override;
   void writeIgotPlt(uint8_t *buf, const Symbol &s) const override;
   void writePltHeader(uint8_t *buf) const override;
-  void writeFragmentAddress(uint8_t *buf, uint64_t val) const override;
-  void writeFragmentSizeAndPermissions(uint8_t *buf,
-                                       uint64_t val) const override;
   void writePlt(uint8_t *buf, const Symbol &sym,
                 uint64_t pltEntryAddr) const override;
   bool needsThunk(RelExpr expr, RelType type, const InputFile *file,
@@ -698,23 +695,6 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
   }
 }
 
-void AArch64::writeFragmentAddress(uint8_t *buf, uint64_t val) const {
-  write64le(buf, val);
-}
-
-void AArch64::writeFragmentSizeAndPermissions(uint8_t *buf,
-                                              uint64_t val) const {
-  struct FragmentSizeAndPerms {
-    uint64_t length: 56;
-    uint64_t permissions: 8;
-  } sizeAndPerms;
-  assert(sizeof(sizeAndPerms) == 8 && "sizeAndPerms size not 8 bytes");
-
-  sizeAndPerms.permissions = getBits(val, 0, 7);
-  sizeAndPerms.length = getBits(val, 8, 63);
-  memcpy(buf, &sizeAndPerms, sizeof(sizeAndPerms));
-}
-
 void AArch64::relaxTlsGdToLe(uint8_t *loc, const Relocation &rel,
                              uint64_t val) const {
   // TLSDESC Global-Dynamic relocation are in the form:
@@ -982,12 +962,6 @@ void AArch64::relocateAlloc(InputSectionBase &sec, uint8_t *buf) const {
     case R_MORELLO_RELAX_TLS_IE_TO_LE_ADD_LO12:
       relaxTlsIeToLe(loc, rel, val);
       continue;
-    case R_MORELLO_CAPFRAG_BASE:
-      writeFragmentAddress(loc, val);
-      continue;
-    case R_MORELLO_CAPFRAG_SIZE_AND_PERM:
-      writeFragmentSizeAndPermissions(loc, val);
-      continue;
     case R_MORELLO_TLSIE_OFFSET_AND_SIZE:
       break;
     default:
@@ -1243,13 +1217,13 @@ void AArch64C64::writePlt(uint8_t *buf, const Symbol &sym,
 }
 
 void AArch64C64::writeGotPlt(uint8_t *buf, const Symbol &) const {
-  writeFragmentAddress(buf, getMorelloExecBaseAddress());
-  writeFragmentSizeAndPermissions(buf + 8, getMorelloExecSizeAndPermissions());
+  write64(buf, getMorelloExecBaseAddress());
+  write64(buf + 8, getMorelloExecSizeAndPermissions());
 }
 
 void AArch64C64::writeIgotPlt(uint8_t *buf, const Symbol &sym) const {
-  writeFragmentAddress(buf, getMorelloExecBaseAddress());
-  writeFragmentSizeAndPermissions(buf + 8, getMorelloExecSizeAndPermissions());
+  write64(buf, getMorelloExecBaseAddress());
+  write64(buf + 8, getMorelloExecSizeAndPermissions());
 }
 
 void AArch64C64::relaxTlsGdToLe(uint8_t *loc, const Relocation &rel,

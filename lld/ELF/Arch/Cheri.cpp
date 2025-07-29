@@ -814,7 +814,7 @@ uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
   uint64_t size = getTargetSize<ELF64LE>(
       {const_cast<InputSectionBase *>(isec), offset - config->wordsize},
       SymbolAndOffset(const_cast<Symbol *>(&sym), 0));
-  return perms | (size << 8);
+  return (perms << 56) | size;
 }
 
 uint64_t getMorelloBaseAddress(int64_t a, const Symbol &sym,
@@ -831,7 +831,7 @@ uint64_t getMorelloExecBaseAddress() { return config->morelloPCCBase; }
 uint64_t getMorelloExecSizeAndPermissions() {
   uint64_t size = config->morelloPCCLimit - config->morelloPCCBase;
   uint64_t perm = Permissions::func(Permissions::Type::DYNAMIC);
-  return perm | (size << 8);
+  return (perm << 56) | size;
 }
 
 // Helper function that if required, increases the alignment of First and
