@@ -1220,7 +1220,6 @@ void RelocationScanner::processAux(RelExpr expr, RelType type, uint64_t offset,
   bool canWrite = (sec->flags & SHF_WRITE) ||
                   !(config->zText ||
                     (isa<EhInputSection>(sec) && config->emachine != EM_MIPS));
-
   if (canWrite) {
     RelType rel = target->getDynRel(type);
     bool isMorelloCodeCapinit = config->emachine == EM_AARCH64 &&
