@@ -786,9 +786,9 @@ void addMorelloCapabilityFragment(InputSectionBase *sec, Symbol *sym,
   sec->relocations.push_back({R_MORELLO_CAPFRAG_SIZE_AND_PERM,
                               target->symbolicRel, offset + 8, 0, sym});
 }
-static void addCapDynamicRelocation(RelType dynType, Symbol *sym,
-                                    InputSectionBase *sec, uint64_t offset,
-                                    int64_t addend) {
+static void addMorelloRelativeElfReloc(RelType dynType, Symbol *sym,
+                                       InputSectionBase *sec, uint64_t offset,
+                                       int64_t addend) {
   RelType realDynType = dynType;
 
   if (dynType == R_MORELLO_RELATIVE && config->isCheriFnDesc) {
@@ -823,58 +823,6 @@ static void addCapDynamicRelocation(RelType dynType, Symbol *sym,
                     DynamicReloc::AddendOnlyWithTargetVA, *sym, addend,
                     R_MORELLO_CAPFRAG_ADDEND});
   addMorelloCapabilityFragment(sec, sym, offset);
-}
-
-// Relocation arising from addGotEntry() or addPltEntry().
-// This can happen for both static and dynamic linking as capabilities can only
-// be initialized at run-time.
-void addMorelloRelativeRelocation(RelType dynType, Symbol *sym,
-                                  InputSectionBase *sec, uint64_t offset,
-                                  int64_t addend) {
-  if (config->useRelativeCheriRelocs) {
-    addCapDynamicRelocation(dynType, sym, sec, offset, addend);
-  } else {
-    in.morelloCapRelocs->addCapReloc({sec, offset}, {sym, 0u}, sym->isPreemptible,
-                              addend);
-  }
-}
-
-// For the .capinit R_MORELLO_CAPINIT relocation. Called from the
-// CHERI entry point addCapabilityRelocation().
-static void addMorelloCapabilityRelocation(Symbol *sym, RelType type,
-                                         InputSectionBase *sec, uint64_t offset,
-                                         int64_t addend) {
-  // Non-preemptible undef weak symbols are link-time constants and should use
-  // addNullDerivedCapability
-  assert(sym->isPreemptible || !sym->isUndefWeak());
-
-  // When dynamic linking we propagate the R_MORELLO_CAPINIT if the symbol is
-  // preemptible, otherwise we use R_MORELLO_RELATIVE or
-  // R_MORELLO_FUNC_RELATIVE.
-  bool dynamic = sym->includeInDynsym() && sym->isPreemptible;
-  RelType dynType{};
-  if (dynamic) {
-    if (config->cheriEmitCodePtrRelocs && type == R_MORELLO_CODE_CAPINIT)
-      error("Cannot relocate code capability to preemptible symbol: " +
-            verboseToString(sym));
-
-    if (sym->isFunc() && addend != 0)
-      warn("capability relocation with non-zero addend (0x" +
-           llvm::utohexstr(addend) + ") against preemptible function " +
-           toString(*sym) + "; this may not be supported by the runtime linker" +
-           getLocationMessage(*sec, *sym, offset));
-
-    mainPart->relaDyn->addReloc({R_MORELLO_CAPINIT, sec, offset,
-                                 DynamicReloc::AgainstSymbol, *sym, addend,
-                                 R_ABS});
-  } else {
-    if (config->cheriEmitCodePtrRelocs && type != R_MORELLO_CODE_CAPINIT &&
-        sym->isFunc())
-      dynType = R_MORELLO_FUNC_RELATIVE;
-    else
-      dynType = R_MORELLO_RELATIVE;
-    addMorelloRelativeRelocation(dynType, sym, sec, offset, addend);
-  }
 }
 
 MorelloTLSLEDataSection::MorelloTLSLEDataSection()
@@ -1416,6 +1364,21 @@ void addRelativeCapabilityRelocation(
     assert(!needsCheriMipsTrampoline(type, *sym));
     assert(!sym->isPreemptible);
   }
+  if (config->emachine == EM_AARCH64) {
+    assert(sym);
+    RelType dynType;
+    if (config->cheriEmitCodePtrRelocs && type != R_MORELLO_CODE_CAPINIT &&
+        sym->isFunc())
+      dynType = R_MORELLO_FUNC_RELATIVE;
+    else
+      dynType = R_MORELLO_RELATIVE;
+    if (config->useRelativeCheriRelocs)
+      addMorelloRelativeElfReloc(dynType, sym, &isec, offsetInSec, addend);
+    else
+      in.morelloCapRelocs->addCapReloc({&isec, offsetInSec}, {sym, 0u},
+                                       sym->isPreemptible, addend);
+    return;
+  }
   assert(!config->useRelativeCheriRelocs &&
          "relative ELF capability relocations not currently implemented");
   in.capRelocs->addCapReloc({&isec, offsetInSec}, {symOrSec, 0u}, addend);
@@ -1427,11 +1390,6 @@ void addCapabilityRelocation(
     llvm::function_ref<std::string()> referencedBy,
     RelocationBaseSection *dynRelSec) {
   Symbol *sym = dyn_cast<Symbol *>(symOrSec);
-  if (config->emachine == EM_AARCH64) {
-    // Delegate to Morello specific routine.
-    addMorelloCapabilityRelocation(sym, type, sec, offset, addend);
-    return;
-  }
   assert(expr == R_ABS_CAP);
 
   // Non-preemptible undef weak symbols are link-time constants and should use
@@ -1449,6 +1407,16 @@ void addCapabilityRelocation(
     addRelativeCapabilityRelocation(*sec, offset, symOrSec, addend, expr, type);
     return;
   }
+
+  if (config->emachine == EM_AARCH64 && config->cheriEmitCodePtrRelocs &&
+      type == R_MORELLO_CODE_CAPINIT)
+    error("Cannot relocate code capability to preemptible symbol: " +
+          verboseToString(sym));
+
+  // XXX: R_MORELLO_DESC_CAPINIT was not previously emitted, so maintain that
+  // historic behaviour. This seems highly dubious.
+  if (config->emachine == EM_AARCH64 && type == R_MORELLO_DESC_CAPINIT)
+    type = R_MORELLO_CAPINIT;
 
   if (sym->isFunc() && addend != 0)
     warn("capability relocation with non-zero addend (0x" +
@@ -1476,11 +1444,13 @@ void addCapabilityRelocation(
     sym = newSym; // Make the relocation point to the newly added symbol
   }
   // .chericap initialises the memory to 0xcacacaca not 0, so if writing
-  // addends we still need to write even it if zero.
+  // addends we still need to write even it if zero. Morello leaves it 0,
+  // however.
   // TODO: Stop doing this in the assembler and drop this hack
-  dynRelSec->addReloc(
-      DynamicReloc::AgainstSymbol, type, *sec, offset, *sym, addend, R_ADDEND,
-      /*addendRelType=*/target->symbolicRel, /*writeZero=*/true);
+  dynRelSec->addReloc(DynamicReloc::AgainstSymbol, type, *sec, offset, *sym,
+                      addend, R_ADDEND,
+                      /*addendRelType=*/target->symbolicRel,
+                      /*writeZero=*/config->emachine != EM_AARCH64);
 }
 
 void addNullDerivedCapability(Symbol &sym, InputSectionBase &sec,

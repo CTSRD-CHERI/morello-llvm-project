@@ -951,17 +951,6 @@ static void addGotEntry(Symbol &sym) {
     return;
   }
 
-  if (config->isCheriAbi && config->emachine == EM_AARCH64 &&
-      !sym.isUndefWeak()) {
-    // There are additional static relocations needed to initialize the GOT
-    // entry. Delegate this to addMorelloRelativeRelocation.
-    RelType type = config->cheriEmitCodePtrRelocs && sym.isFunc()
-                       ? *target->relativeFuncRel
-                       : target->relativeRel;
-    addMorelloRelativeRelocation(type, &sym, in.got.get(), off, 0);
-    return;
-  }
-
   RelType type = config->isCheriAbi ? *target->cheriCapRel : target->symbolicRel;
 
   // Otherwise, the value is either a link-time constant or the load base
