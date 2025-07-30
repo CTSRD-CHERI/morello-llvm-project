@@ -3459,22 +3459,45 @@ template <class ELFT> void ELFDumper<ELFT>::printCheriCapRelocs() {
     uint64_t Perms =
         support::endian::read<TargetUint, ELFT::TargetEndianness, 1>(
                 entry + 4*sizeof(TargetUint));
-    const char *PermStr;
+    StringRef PermStr;
     if (Obj.getHeader().e_machine == EM_AARCH64) {
       // AArch64 C64 capabilities are encoded differently to CHERI
       // Check for Morello Capability Permission Encodings
-      bool isFunction = (Perms == 0x8000000000013dbc);
-      bool isReadWrite = (Perms == 0x8fbe);
-      PermStr =
-        isFunction ? "(FUNC)" : (isReadWrite ? "(RWDATA)" : "(RODATA)");
+      const uint64_t Function = 0x8000000000013dbc;
+      const uint64_t Constant = 0x1bfbe;
+      const uint64_t Writable = 0x8fbe;
+      switch (Perms) {
+      case Writable:
+        PermStr = "(RWDATA)";
+        break;
+      case Constant:
+        PermStr = "(RODATA)";
+        break;
+      case Function:
+        PermStr = "(FUNC)";
+        break;
+      default:
+        PermStr = "(UNKNOWN)";
+        break;
+      }
+    } else {
+      const uint64_t Function = UINT64_C(1) << ((sizeof(TargetUint) * 8) - 1);
+      const uint64_t Constant = UINT64_C(1) << ((sizeof(TargetUint) * 8) - 2);
+      switch (Perms) {
+      case 0:
+        PermStr = "Object";
+        break;
+      case Constant:
+        PermStr = "Constant";
+        break;
+      case Function:
+        PermStr = "Function";
+        break;
+      default:
+        PermStr = "Unknown";
+        break;
+      }
     }
-    else {
-      bool isFunction = Perms & (UINT64_C(1) << ((sizeof(TargetUint) * 8) - 1));
-      bool isReadOnly = Perms & (UINT64_C(1) << ((sizeof(TargetUint) * 8) - 2));
-      PermStr =
-        isFunction ? "Function" : (isReadOnly ? "Constant" : "Object");
-    }
-    // Perms &= 0xffffffff;
     std::string BaseSymbol;
     if (Base == 0) {
       // Base is 0 -> either it is really NULL or (more likely) there is a
