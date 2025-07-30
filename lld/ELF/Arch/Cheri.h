@@ -385,9 +385,6 @@ void addSymbolCapabilityRelocation(RelType dynType, RelocationBaseSection &rel,
                                    InputSectionBase &isec, uint64_t offsetInSec,
                                    Symbol &sym, int64_t addend = 0);
 
-void addNullDerivedCapability(Symbol &sym, InputSectionBase &sec,
-                              uint64_t offset, int64_t addend);
-
 void addMorelloCapabilityFragment(InputSectionBase *sec, Symbol *sym,
                                   uint64_t offset);
 
