@@ -115,7 +115,7 @@ _start:
 // SYM-NEXT:   Section: function
 // SYM:   Name: ifunc
 // SYM-NEXT:   Value: 0x2102C1
-// SYM-NEXT:   Size: 0
+// SYM-NEXT:   Size: 16
 // SYM-NEXT:   Binding: Global
 // SYM-NEXT:   Type: Function
 // SYM-NEXT:   Other: 0

@@ -1782,7 +1782,10 @@ static bool handleNonPreemptibleIfunc(Symbol &sym, uint16_t flags) {
     if (config->emachine == EM_AARCH64 && config->isCheriAbi &&
         !config->morelloPurecapBenchmarkABI)
       d.value |= 1;
-    d.setSize(0);
+    if (config->isCheriAbi)
+      d.setSize(target->ipltEntrySize);
+    else
+      d.setSize(0);
     // It's important to set the symbol type here so that dynamic loaders
     // don't try to call the PLT as if it were an ifunc resolver.
     d.type = STT_FUNC;
