@@ -54,13 +54,7 @@ static const __SIZE_TYPE__ function_pointer_permissions_mask =
                      __CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__ |
                      __CHERI_CAP_PERMISSION_PERMIT_STORE__);
 #ifdef __aarch64__
-/*
- * Morello capreloc permission encoding (inverse of capability
- * permisisons for use with clearperm):
- *   Executable       0x8000000000013DBCULL
- *   Read-Write Data  0x8FBEULL
- *   Read-Only Data   0x1BFBEULL
- */
+/* See Morello comment below */
 static const __SIZE_TYPE__ constant_reloc_flag =
     __CHERI_CAP_PERMISSION_PERMIT_STORE__;
 #else
@@ -76,6 +70,23 @@ static const __SIZE_TYPE__ constant_pointer_permissions_mask =
 static const __SIZE_TYPE__ global_pointer_permissions_mask =
     ~(__SIZE_TYPE__)(__CHERI_CAP_PERMISSION_PERMIT_SEAL__ |
                      __CHERI_CAP_PERMISSION_PERMIT_EXECUTE__);
+
+#ifdef __aarch64__
+/*
+ * Morello capreloc permission encoding (inverse of capability
+ * permisisons for use with clearperm):
+ *   Executable       0x8000000000013DBCULL
+ *   Read-Write Data  0x8FBEULL
+ *   Read-Only Data   0x1BFBEULL
+ */
+static const __SIZE_TYPE__ function_reloc_permissions = 0x8000000000013DBCULL;
+static const __SIZE_TYPE__ data_reloc_permissions = 0x8FBEULL;
+static const __SIZE_TYPE__ constant_reloc_permissions = 0x1BFBEULL;
+#else
+static const __SIZE_TYPE__ function_reloc_permissions = function_reloc_flag;
+static const __SIZE_TYPE__ data_reloc_permissions = 0;
+static const __SIZE_TYPE__ constant_reloc_permissions = constant_reloc_flag;
+#endif
 
 __attribute__((weak)) extern struct capreloc __start___cap_relocs[];
 __attribute__((weak)) extern struct capreloc __stop___cap_relocs[];
@@ -193,15 +204,16 @@ cheri_init_globals_impl(const struct capreloc *start_relocs,
             data_cap, reloc->capability_location + base_addr);
     const void *__capability base_cap;
     bool can_set_bounds = true;
-    if ((reloc->permissions & function_reloc_flag) == function_reloc_flag) {
+    if (reloc->permissions == function_reloc_permissions) {
       base_cap = code_cap; /* code pointer */
       /* Do not set tight bounds for functions (unless we are in the plt ABI) */
       can_set_bounds = tight_code_bounds;
-    } else if ((reloc->permissions & constant_reloc_flag) ==
-               constant_reloc_flag) {
+    } else if (reloc->permissions == constant_reloc_permissions) {
       base_cap = rodata_cap; /* read-only data pointer */
-    } else {
+    } else if (reloc->permissions == data_reloc_permissions) {
       base_cap = data_cap; /* read-write data */
+    } else {
+      __builtin_trap(); /* unknown permissions */
     }
     const void *__capability src =
         cheri_address_or_offset_set(base_cap, reloc->object + base_addr);
