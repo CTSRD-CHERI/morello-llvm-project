@@ -3483,6 +3483,7 @@ template <class ELFT> void ELFDumper<ELFT>::printCheriCapRelocs() {
     } else {
       const uint64_t Function = UINT64_C(1) << ((sizeof(TargetUint) * 8) - 1);
       const uint64_t Constant = UINT64_C(1) << ((sizeof(TargetUint) * 8) - 2);
+      const uint64_t Indirect = UINT64_C(1) << ((sizeof(TargetUint) * 8) - 3);
       switch (Perms) {
       case 0:
         PermStr = "Object";
@@ -3492,6 +3493,9 @@ template <class ELFT> void ELFDumper<ELFT>::printCheriCapRelocs() {
         break;
       case Function:
         PermStr = "Function";
+        break;
+      case Function | Indirect:
+        PermStr = "GNU Indirect Function";
         break;
       default:
         PermStr = "Unknown";
