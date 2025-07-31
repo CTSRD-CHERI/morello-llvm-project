@@ -78,7 +78,7 @@ _start:
 // RELOCS-NEXT:   .rela.dyn {
 // RELOCS-NEXT:     [[#%#X,FUNCPTR1_ADDR:]] R_MORELLO_DESC_FUNC_RELATIVE - 0x100B1
 // RELOCS-NEXT:     [[#%#X,FUNCPTR2_ADDR:]] R_MORELLO_DESC_FUNC_RELATIVE - 0x100B1
-// RELOCS-NEXT:     [[#%#X,IFUNCPTR_ADDR:]] R_MORELLO_DESC_FUNC_RELATIVE - 0x100C0
+// RELOCS-NEXT:     [[#%#X,IFUNCPTR_ADDR:]] R_MORELLO_DESC_FUNC_RELATIVE - 0x100C1
 // RELOCS-NEXT:     [[#%#X,GOT_PLT_ADDR]] R_MORELLO_DESC_IRELATIVE - 0x100B5
 // RELOCS-NEXT:   }
 // RELOCS-NEXT: ]
@@ -114,7 +114,7 @@ _start:
 // SYM-NEXT:   Other: 0
 // SYM-NEXT:   Section: function
 // SYM:   Name: ifunc
-// SYM-NEXT:   Value: 0x2102C0
+// SYM-NEXT:   Value: 0x2102C1
 // SYM-NEXT:   Size: 0
 // SYM-NEXT:   Binding: Global
 // SYM-NEXT:   Type: Function

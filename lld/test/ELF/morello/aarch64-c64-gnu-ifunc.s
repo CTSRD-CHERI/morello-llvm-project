@@ -47,8 +47,7 @@ _start:
 // CHECK-LABEL: <_start>:
 // CHECK-NEXT:   21025c:  bl      0x210270
 // CHECK-NEXT:            bl      0x210280
-/// TODO: Missing C64 bit
-// CHECK-NEXT:            adr     c0, 0x210290
+// CHECK-NEXT:            adr     c0, 0x210291
 // CHECK-NEXT:            add     x2, x2, #0x208
 // CHECK-NEXT:            add     x2, x2, #0x250
 
