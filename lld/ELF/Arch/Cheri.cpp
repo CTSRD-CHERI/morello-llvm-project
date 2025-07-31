@@ -436,21 +436,10 @@ static uint64_t getTargetSize(const CheriCapRelocLocation &location,
 
     if (config->emachine == EM_AARCH64 &&
         location.section->kind() != InputSectionBase::Synthetic) {
-      // For caprelocs, the Morello linker obtains the symbol size from the
-      // lower 8-bytes of a 16-byte frag reserved by .capinit (buf+8).
-
-      // For dynamic relocations, the linker breaks the 16-byte frag into two
-      // 8-byte locations (see addMorelloCapabilityFragment()) and obtains the
-      // size from the second of these locations when processing the
-      // R_MORELLO_CAPFRAG_SIZE_AND_PERM internal static relocation (see
-      // getMorelloSizeAndPermissions()). So (buf) can be used because it
-      // already has the 8 byte offset built into it.
       assert(!location.section->compressed);
       const uint8_t *buf =
           location.section->content().begin() + location.offset;
-      targetSize = config->localCapRelocsMode == CapRelocsMode::Legacy
-                       ? read64le(buf + 8)
-                       : read64le(buf);
+      targetSize = read64le(buf + 8);
       if (targetSize != 0) {
         errorOrWarn(
             "setting the symbol size in .capinit is no longer supported; saw " +
@@ -822,9 +811,9 @@ uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
 
   const Defined *definedSym = cast<Defined>(&sym);
   uint64_t perms = getPermissions(*definedSym, Permissions::Type::DYNAMIC);
-  uint64_t size =
-      getTargetSize<ELF64LE>({const_cast<InputSectionBase *>(isec), offset},
-                             SymbolAndOffset(const_cast<Symbol *>(&sym), 0));
+  uint64_t size = getTargetSize<ELF64LE>(
+      {const_cast<InputSectionBase *>(isec), offset - config->wordsize},
+      SymbolAndOffset(const_cast<Symbol *>(&sym), 0));
   return perms | (size << 8);
 }
 
