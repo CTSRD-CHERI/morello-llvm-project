@@ -76,6 +76,8 @@ static const __SIZE_TYPE__ global_pointer_permissions_mask =
 #ifndef __aarch64__
 static const __SIZE_TYPE__ indirect_reloc_flag = (__SIZE_TYPE__)1
                                                  << (__SIZE_WIDTH__ - 3);
+static const __SIZE_TYPE__ code_reloc_flag = (__SIZE_TYPE__)1
+                                             << (__SIZE_WIDTH__ - 4);
 #endif
 
 #ifdef __aarch64__
@@ -225,7 +227,11 @@ cheri_init_globals_impl(const struct capreloc *start_relocs,
 #endif
     }
 #endif
-    if (reloc->permissions == function_reloc_permissions) {
+    if (reloc->permissions == function_reloc_permissions
+#ifndef __aarch64__
+        || reloc->permissions == (function_reloc_flag | code_reloc_flag)
+#endif
+    ) {
       base_cap = code_cap; /* code pointer */
       /* Do not set tight bounds for functions (unless we are in the plt ABI) */
       can_set_bounds = tight_code_bounds;
