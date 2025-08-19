@@ -10,10 +10,8 @@ define i32 @nneg_nneg(ptr addrspace(200) %p, i16 %x) {
 ; PURECAP-LABEL: nneg_nneg:
 ; PURECAP:       // %bb.0:
 ; PURECAP-NEXT:    // kill: def $w1 killed $w1 def $x1
-; PURECAP-NEXT:    and x8, x1, #0xffff
-; PURECAP-NEXT:    lsl x8, x8, #2
-; PURECAP-NEXT:    add x8, x8, #4
-; PURECAP-NEXT:    ldr w0, [c0, x8]
+; PURECAP-NEXT:    add c0, c0, w1, uxth #2
+; PURECAP-NEXT:    ldr w0, [c0, #4]
 ; PURECAP-NEXT:    ret c30
 ;
 ; HYBRID-LABEL: nneg_nneg:
@@ -33,10 +31,11 @@ define i32 @nneg_nneg(ptr addrspace(200) %p, i16 %x) {
 define i32 @neg_neg(ptr addrspace(200) %p, i16 %x) {
 ; PURECAP-LABEL: neg_neg:
 ; PURECAP:       // %bb.0:
-; PURECAP-NEXT:    mvn w8, w1
-; PURECAP-NEXT:    orr x8, x8, #0x3fffffffffff0000
-; PURECAP-NEXT:    and x8, x8, #0x3ffffffffffffffe
-; PURECAP-NEXT:    ldr w0, [c0, x8, lsl #2]
+; PURECAP-NEXT:    orr w8, w1, #0x1
+; PURECAP-NEXT:    mov x9, xzr
+; PURECAP-NEXT:    sub x8, x9, w8, uxth
+; PURECAP-NEXT:    add c0, c0, x8, uxtx #2
+; PURECAP-NEXT:    ldur w0, [c0, #-4]
 ; PURECAP-NEXT:    ret c30
 ;
 ; HYBRID-LABEL: neg_neg:
