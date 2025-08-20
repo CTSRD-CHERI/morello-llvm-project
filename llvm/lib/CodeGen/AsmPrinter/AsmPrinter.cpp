@@ -3712,7 +3712,8 @@ static void emitGlobalConstantCHERICap(const DataLayout &DL, const Constant *CV,
       // For block addresses we emit `.chericap FN@code+(.LtmpN - FN)`
       // NB: Must use a non-preemptible symbol
       auto FnStart = AP.getSymbolPreferLocal(*BA->getFunction(), true);
-      const MCExpr *DiffToStart = MCBinaryExpr::createSub(Expr, MCSymbolRefExpr::create(FnStart, AP.OutContext), AP.OutContext);
+      const MCExpr *DiffToStart = MCBinaryExpr::createSub(
+          Expr, MCSymbolRefExpr::create(FnStart, AP.OutContext), AP.OutContext);
       AP.OutStreamer->EmitCheriCapability(FnStart, DiffToStart, CapWidth,
                                           CheriEmitCodePtrRelocs);
       return;
