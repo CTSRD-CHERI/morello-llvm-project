@@ -137,6 +137,7 @@ public:
   std::optional<RelType> sizeRel;
   std::optional<RelType> symbolicCapRel;
   std::optional<RelType> symbolicCapCallRel;
+  std::optional<RelType> symbolicCodeCapRel;
   unsigned gotEntrySize = config->wordsize;
   unsigned pltEntrySize;
   unsigned pltHeaderSize;

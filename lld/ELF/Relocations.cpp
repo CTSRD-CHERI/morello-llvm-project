@@ -907,16 +907,17 @@ static void addRelativeReloc(InputSectionBase &isec, uint64_t offsetInSec,
   }
   // Currently, relative capability relocations are not added through this
   // function, so all relocations processed here are against integers.
-  RelType reltype = target->relativeRel;
+  RelType relativeType = target->relativeRel;
   if (target->relativeIntRel.has_value()) {
     if (config->cheriEmitCodePtrRelocs &&
         sym.isFunc() && target->relativeIntFuncRel.has_value())
-      reltype = *target->relativeIntFuncRel;
+      relativeType = *target->relativeIntFuncRel;
     else
-      reltype = *target->relativeIntRel;
-  }
-  part.relaDyn->addRelativeReloc<shard>(reltype, isec, offsetInSec,
-                                        sym, addend, type, expr);
+      relativeType = *target->relativeIntRel;
+  } else if (target->relativeFuncRel && sym.isFunc())
+    relativeType = *target->relativeFuncRel;
+  part.relaDyn->addRelativeReloc<shard>(relativeType, isec, offsetInSec, sym,
+                                        addend, type, expr);
 }
 
 template <class PltSection, class GotPltSection>
@@ -934,7 +935,7 @@ static void addPltEntry(PltSection &plt, GotPltSection &gotPlt,
     }
 
     addRelativeCapabilityRelocation(gotPlt, sym.getGotPltOffset(), &plt, 0,
-                                    R_ABS_CAP, *target->symbolicCapRel);
+                                    R_ABS_CAP, *target->symbolicCodeCapRel);
   }
 
   if (config->isCheriAbi && config->emachine == EM_AARCH64)
@@ -1221,12 +1222,9 @@ void RelocationScanner::processAux(RelExpr expr, RelType type, uint64_t offset,
                     (isa<EhInputSection>(sec) && config->emachine != EM_MIPS));
   if (canWrite) {
     RelType rel = target->getDynRel(type);
-    bool isMorelloCodeCapinit = config->emachine == EM_AARCH64 &&
-                                config->cheriEmitCodePtrRelocs &&
-                                type == R_MORELLO_CODE_CAPINIT;
     if (oneof<R_GOT, R_LOONGARCH_GOT>(expr) ||
         ((rel == target->symbolicRel || rel == target->symbolicCapRel ||
-          isMorelloCodeCapinit) &&
+          type == target->symbolicCodeCapRel) &&
          !sym.isPreemptible)) {
       addRelativeReloc<true>(*sec, offset, sym, addend, expr, type);
       return;
@@ -1257,9 +1255,12 @@ void RelocationScanner::processAux(RelExpr expr, RelType type, uint64_t offset,
       if (config->emachine == EM_MIPS && expr != R_ABS_CAP)
         in.mipsGot->addEntry(*sec->file, sym, addend, expr);
       return;
-    } else if (isMorelloCodeCapinit)
-      error("Cannot relocate code capability to preemptible symbol: " +
-            verboseToString(&sym));
+    } else if (type == target->symbolicCodeCapRel) {
+      errorOrWarn("relocation " + toString(type) +
+                  " cannot be used against preemptible symbol '" +
+                  toString(sym) + "'" + getLocation(*sec, sym, offset));
+      return;
+    }
   }
 
   if (expr == R_ABS_CAP) {

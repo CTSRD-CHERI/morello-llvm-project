@@ -13,4 +13,6 @@ func:
 ptr:
  .chericap func@code
 
-// ERROR: error: Cannot relocate code capability to preemptible symbol: function func
+// ERROR: error: relocation R_MORELLO_CODE_CAPINIT cannot be used against preemptible symbol 'func'
+// ERROR-NEXT: >>> defined in {{.*}}/morello-capinit-codeptr-global-error.s.tmp.o
+// ERROR-NEXT: >>> referenced by {{.*}}/morello-capinit-codeptr-global-error.s.tmp.o:(.data+0x0)
