@@ -23,6 +23,12 @@
 using namespace llvm;
 using namespace dwarf;
 
+cl::opt<bool> CheriEmitCodePtrRelocs(
+    "cheri-codeptr-relocs",
+    cl::desc("Emit different relocations for code pointers compared to function"
+             "pointers"),
+    cl::init(false));
+
 void AArch64_ELFTargetObjectFile::Initialize(MCContext &Ctx,
                                              const TargetMachine &TM) {
   TargetLoweringObjectFileELF::Initialize(Ctx, TM);
@@ -44,6 +50,17 @@ getAlignmentForPreciseBounds(uint64_t Size, const TargetMachine &TM) const {
   if (!LogAlign)
     return Align();
   return Align(1 << LogAlign);
+}
+
+const MCExpr *AArch64_ELFTargetObjectFile::lowerCheriCodeReference(
+    const MCSymbol *Sym, const MCExpr *Addend) const {
+  MCSymbolRefExpr::VariantKind VK = CheriEmitCodePtrRelocs
+                                        ? MCSymbolRefExpr::VK_CHERI_CODE
+                                        : MCSymbolRefExpr::VK_None;
+  const MCExpr *Expr = MCSymbolRefExpr::create(Sym, VK, getContext());
+  if (Addend != nullptr)
+    Expr = MCBinaryExpr::createAdd(Expr, Addend, getContext());
+  return Expr;
 }
 
 AArch64_MachoTargetObjectFile::AArch64_MachoTargetObjectFile() {

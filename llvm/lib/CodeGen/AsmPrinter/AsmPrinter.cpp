@@ -158,8 +158,6 @@ const char PPGroupDescription[] = "Pseudo Probe Emission";
 
 STATISTIC(EmittedInsts, "Number of machine instrs printed");
 
-extern cl::opt<bool> CheriEmitCodePtrRelocs;
-
 char AsmPrinter::ID = 0;
 
 namespace {
@@ -3718,15 +3716,14 @@ static void emitGlobalConstantCHERICap(const DataLayout &DL, const Constant *CV,
 
   if (SRE) {
     if (auto BA = dyn_cast<BlockAddress>(CV)) {
-      // For block addresses we emit `.chericap FN@code+(.LtmpN - FN)`
+      // For block addresses we emit `.chericap FN+(.LtmpN - FN)` as a code
+      // capability.
       // NB: Must use a non-preemptible symbol
       auto FnStart = AP.getSymbolPreferLocal(*BA->getFunction(), true);
       const MCExpr *Start = MCSymbolRefExpr::create(FnStart, Ctx);
       const MCExpr *DiffToStart = MCBinaryExpr::createSub(Expr, Start, Ctx);
-      if (CheriEmitCodePtrRelocs)
-        Start = MCSymbolRefExpr::create(FnStart, MCSymbolRefExpr::VK_CHERI_CODE,
-                                        Ctx);
-      const MCExpr *CapExpr = MCBinaryExpr::createAdd(Start, DiffToStart, Ctx);
+      const MCExpr *CapExpr =
+          AP.getObjFileLowering().lowerCheriCodeReference(FnStart, DiffToStart);
       AP.OutStreamer->emitCheriCapability(CapExpr, CapWidth);
       return;
     }

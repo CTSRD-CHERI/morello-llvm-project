@@ -27,12 +27,6 @@
 #include <cstdint>
 using namespace llvm;
 
-cl::opt<bool> CheriEmitCodePtrRelocs(
-    "cheri-codeptr-relocs",
-    cl::desc("Emit different relocations for code pointers compared to function"
-             "pointers"),
-    cl::init(false));
-
 #define DEBUG_TYPE "asm-printer"
 
 //===----------------------------------------------------------------------===//
@@ -224,12 +218,8 @@ void AsmPrinter::emitCallSiteCheriCapability(const MCSymbol *Hi,
   // this would result in emitCheriCapability() creating a relocation against
   // section plus offset rather than function + offset. We need the right
   // bounds and permissions info and need to use a non-preemptible alias.
-  MCSymbolRefExpr::VariantKind VK = CheriEmitCodePtrRelocs
-                                        ? MCSymbolRefExpr::VK_CHERI_CODE
-                                        : MCSymbolRefExpr::VK_None;
   const MCExpr *Expr =
-      MCSymbolRefExpr::create(CurrentFnBeginLocal, VK, OutContext);
-  Expr = MCBinaryExpr::createAdd(Expr, DiffToStart, OutContext);
+      TLOF.lowerCheriCodeReference(CurrentFnBeginLocal, DiffToStart);
   OutStreamer->emitCheriCapability(Expr, TLOF.getCheriCapabilitySize(TM));
 }
 

@@ -25,6 +25,9 @@ public:
                                      const TargetMachine &TM) const override;
   int getCheriCapabilitySize(const TargetMachine &TM) const override { return 16; }
 
+  const MCExpr *lowerCheriCodeReference(const MCSymbol *Sym,
+                                        const MCExpr *Addend) const override;
+
   AArch64_ELFTargetObjectFile() {
     PLTRelativeVariantKind = MCSymbolRefExpr::VK_PLT;
   }
