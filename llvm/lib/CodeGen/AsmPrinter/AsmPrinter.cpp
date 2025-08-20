@@ -2317,7 +2317,8 @@ bool AsmPrinter::doFinalization(Module &M) {
       for (const auto &Stub : Stubs) {
         OutStreamer->emitLabel(Stub.first);
         if (DL.isFatPointer(AS))
-          OutStreamer->EmitCheriCapability(Stub.second.getPointer(), Size);
+          OutStreamer->emitSymbolCheriCapability(Stub.second.getPointer(),
+                                                 Size);
         else
           OutStreamer->emitSymbolValue(Stub.second.getPointer(), Size);
       }
@@ -2345,8 +2346,11 @@ bool AsmPrinter::doFinalization(Module &M) {
 
         emitAlignment(Align(Size));
         OutStreamer->emitLabel(Stub.first);
-        OutStreamer->EmitCheriCapability(Stub.second.first, Stub.second.second,
-                                         Size);
+        const MCExpr *Start =
+            MCSymbolRefExpr::create(Stub.second.first, OutContext);
+        const MCExpr *CapExpr =
+            MCBinaryExpr::createAdd(Start, Stub.second.second, OutContext);
+        OutStreamer->emitCheriCapability(CapExpr, Size);
       }
     }
   }
@@ -3688,11 +3692,16 @@ static void emitGlobalConstantCHERICap(const DataLayout &DL, const Constant *CV,
     return;
   }
   GlobalValue *GV;
-  APInt Addend;
-  if (IsConstantOffsetFromGlobal(const_cast<Constant *>(CV), GV, Addend, DL,
+  APInt Offset;
+  MCContext &Ctx = AP.OutContext;
+  if (IsConstantOffsetFromGlobal(const_cast<Constant *>(CV), GV, Offset, DL,
                                  true)) {
-    AP.OutStreamer->EmitCheriCapability(AP.getSymbol(GV), Addend.getSExtValue(),
-                                        CapWidth);
+    const MCExpr *CapExpr = MCSymbolRefExpr::create(AP.getSymbol(GV), Ctx);
+    int64_t Addend = Offset.getSExtValue();
+    if (Addend != 0)
+      CapExpr = MCBinaryExpr::createAdd(
+          CapExpr, MCConstantExpr::create(Addend, Ctx), Ctx);
+    AP.OutStreamer->emitCheriCapability(CapExpr, CapWidth);
     return;
   }
 
@@ -3712,10 +3721,13 @@ static void emitGlobalConstantCHERICap(const DataLayout &DL, const Constant *CV,
       // For block addresses we emit `.chericap FN@code+(.LtmpN - FN)`
       // NB: Must use a non-preemptible symbol
       auto FnStart = AP.getSymbolPreferLocal(*BA->getFunction(), true);
-      const MCExpr *DiffToStart = MCBinaryExpr::createSub(
-          Expr, MCSymbolRefExpr::create(FnStart, AP.OutContext), AP.OutContext);
-      AP.OutStreamer->EmitCheriCapability(FnStart, DiffToStart, CapWidth,
-                                          CheriEmitCodePtrRelocs);
+      const MCExpr *Start = MCSymbolRefExpr::create(FnStart, Ctx);
+      const MCExpr *DiffToStart = MCBinaryExpr::createSub(Expr, Start, Ctx);
+      if (CheriEmitCodePtrRelocs)
+        Start = MCSymbolRefExpr::create(FnStart, MCSymbolRefExpr::VK_CHERI_CODE,
+                                        Ctx);
+      const MCExpr *CapExpr = MCBinaryExpr::createAdd(Start, DiffToStart, Ctx);
+      AP.OutStreamer->emitCheriCapability(CapExpr, CapWidth);
       return;
     }
     // Emit capability for label whose address is stored in a global variable
@@ -3724,8 +3736,11 @@ static void emitGlobalConstantCHERICap(const DataLayout &DL, const Constant *CV,
       report_fatal_error(
           "Cannot emit a global .chericap referring to a temporary since this "
           "will result in the wrong value at runtime!");
-      AP.OutStreamer->EmitCheriCapability(&SRE->getSymbol(),
-                                          ExtraAddend.value_or(0), CapWidth);
+      const MCExpr *CapExpr = MCSymbolRefExpr::create(&SRE->getSymbol(), Ctx);
+      if (int64_t Addend = ExtraAddend.value_or(0))
+        CapExpr = MCBinaryExpr::createAdd(
+            CapExpr, MCConstantExpr::create(Addend, Ctx), Ctx);
+      AP.OutStreamer->emitCheriCapability(CapExpr, CapWidth);
       return;
     }
   }

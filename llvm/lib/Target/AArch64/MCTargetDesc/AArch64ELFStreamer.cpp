@@ -272,7 +272,7 @@ public:
   }
 
 protected:
-  void EmitCheriCapability(const MCExpr *Value, unsigned CapSize,
+  void emitCheriCapability(const MCExpr *Value, unsigned CapSize,
                            SMLoc Loc) override;
   void emitCheriIntcap(const MCExpr *Expr, unsigned CapSize,
                        SMLoc Loc) override;
@@ -380,7 +380,7 @@ void AArch64ELFStreamer::emitCapInit(const MCExpr *Value) {
       MCFixup::create(DF->getContents().size(), Value, MCFixupKind::FK_Cap_16));
 }
 
-void AArch64ELFStreamer::EmitCheriCapability(const MCExpr *Value,
+void AArch64ELFStreamer::emitCheriCapability(const MCExpr *Value,
                                              unsigned CapSize, SMLoc Loc) {
   assert(CapSize == 16 && "Unexpected capability size");
   visitUsedExpr(*Value);

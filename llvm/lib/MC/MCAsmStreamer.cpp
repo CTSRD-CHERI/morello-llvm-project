@@ -391,7 +391,7 @@ public:
   void emitBundleLock(bool AlignToEnd) override;
   void emitBundleUnlock() override;
 
-  void EmitCheriCapability(const MCExpr *Value, unsigned CapSize,
+  void emitCheriCapability(const MCExpr *Value, unsigned CapSize,
                            SMLoc Loc = SMLoc()) override;
   void emitCheriIntcap(const MCExpr *Expr, unsigned CapSize,
                        SMLoc Loc = SMLoc()) override;
@@ -2461,7 +2461,7 @@ void MCAsmStreamer::emitBundleUnlock() {
   EmitEOL();
 }
 
-void MCAsmStreamer::EmitCheriCapability(const MCExpr *Value, unsigned CapSize,
+void MCAsmStreamer::emitCheriCapability(const MCExpr *Value, unsigned CapSize,
                                         SMLoc Loc) {
   OS << "\t.chericap\t";
   if (MCTargetStreamer *TS = getTargetStreamer()) {

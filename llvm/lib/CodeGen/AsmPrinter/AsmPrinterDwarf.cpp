@@ -210,7 +210,10 @@ void AsmPrinter::emitCallSiteValue(uint64_t Value, unsigned Encoding) const {
 
 void AsmPrinter::emitCallSiteCheriCapability(const MCSymbol *Hi,
                                              const MCSymbol *Lo) const {
+  assert(CurrentFnBeginLocal && "Missing local function entry alias for EH!");
+
   const TargetLoweringObjectFile &TLOF = getObjFileLowering();
+
   // Get the Hi-Lo expression. We use (and need) Lo since the offset needs to
   // be a constant expression, whereas CurrentFnSym is preemptible.
   const MCExpr *DiffToStart = MCBinaryExpr::createSub(
@@ -218,13 +221,16 @@ void AsmPrinter::emitCallSiteCheriCapability(const MCSymbol *Hi,
       MCSymbolRefExpr::create(Lo, OutContext),
       OutContext);
   // Note: we cannot use Lo here since that is an assembler-local symbol and
-  // this would result in EmitCheriCapability() creating a relocation against
+  // this would result in emitCheriCapability() creating a relocation against
   // section plus offset rather than function + offset. We need the right
   // bounds and permissions info and need to use a non-preemptible alias.
-  assert(CurrentFnBeginLocal && "Missing local function entry alias for EH!");
-  OutStreamer->EmitCheriCapability(CurrentFnBeginLocal, DiffToStart,
-                                   TLOF.getCheriCapabilitySize(TM),
-                                   CheriEmitCodePtrRelocs);
+  MCSymbolRefExpr::VariantKind VK = CheriEmitCodePtrRelocs
+                                        ? MCSymbolRefExpr::VK_CHERI_CODE
+                                        : MCSymbolRefExpr::VK_None;
+  const MCExpr *Expr =
+      MCSymbolRefExpr::create(CurrentFnBeginLocal, VK, OutContext);
+  Expr = MCBinaryExpr::createAdd(Expr, DiffToStart, OutContext);
+  OutStreamer->emitCheriCapability(Expr, TLOF.getCheriCapabilitySize(TM));
 }
 
 //===----------------------------------------------------------------------===//
