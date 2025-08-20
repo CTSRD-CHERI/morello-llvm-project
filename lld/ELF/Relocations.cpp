@@ -929,12 +929,12 @@ static void addPltEntry(PltSection &plt, GotPltSection &gotPlt,
       config->emachine != EM_AARCH64) {
     if (!sym.isPreemptible) {
       addRelativeCapabilityRelocation(gotPlt, sym.getGotPltOffset(), &sym, 0,
-                                      R_ABS_CAP, *target->cheriCapRel);
+                                      R_ABS_CAP, *target->symbolicCapRel);
       return;
     }
 
     addRelativeCapabilityRelocation(gotPlt, sym.getGotPltOffset(), &plt, 0,
-                                    R_ABS_CAP, *target->cheriCapRel);
+                                    R_ABS_CAP, *target->symbolicCapRel);
   }
 
   if (config->isCheriAbi && config->emachine == EM_AARCH64)
@@ -963,7 +963,8 @@ static void addGotEntry(Symbol &sym) {
     return;
   }
 
-  RelType type = config->isCheriAbi ? *target->cheriCapRel : target->symbolicRel;
+  RelType type =
+      config->isCheriAbi ? *target->symbolicCapRel : target->symbolicRel;
 
   // Otherwise, the value is either a link-time constant or the load base
   // plus a constant. For CHERI it always requires run-time initialisation,
@@ -1224,7 +1225,7 @@ void RelocationScanner::processAux(RelExpr expr, RelType type, uint64_t offset,
                                 config->cheriEmitCodePtrRelocs &&
                                 type == R_MORELLO_CODE_CAPINIT;
     if (oneof<R_GOT, R_LOONGARCH_GOT>(expr) ||
-        ((rel == target->symbolicRel || rel == target->cheriCapRel ||
+        ((rel == target->symbolicRel || rel == target->symbolicCapRel ||
           isMorelloCodeCapinit) &&
          !sym.isPreemptible)) {
       addRelativeReloc<true>(*sec, offset, sym, addend, expr, type);
