@@ -291,7 +291,11 @@ bool AArch64::usesOnlyLowPageBits(RelType type) const {
 }
 
 RelType AArch64::getDynRel(RelType type) const {
-  if (type == R_AARCH64_ABS64)
+  // XXX: R_MORELLO_DESC_CAPINIT was not previously emitted, so maintain that
+  // historic behaviour. This seems highly dubious.
+  if (type == R_MORELLO_DESC_CAPINIT)
+    return R_MORELLO_CAPINIT;
+  if (type == R_AARCH64_ABS64 || type == R_MORELLO_CAPINIT)
     return type;
   return R_AARCH64_NONE;
 }
