@@ -801,7 +801,7 @@ static void addMorelloRelativeElfReloc(RelType dynType, Symbol *sym,
                                        InputSectionBase *sec, uint64_t offset,
                                        int64_t addend) {
   assert(dynType == R_MORELLO_RELATIVE || dynType == R_MORELLO_FUNC_RELATIVE);
-  assert(config->useRelativeElfCheriRelocs || config->hasDynSymTab);
+  assert(config->useRelativeElfCheriRelocs);
 
   if (dynType == R_MORELLO_RELATIVE && config->isCheriFnDesc) {
     bool isDescSym = false;
