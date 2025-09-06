@@ -1787,14 +1787,13 @@ void RelocationBaseSection::partitionRels() {
     return;
   const RelType relativeRel = target->relativeRel;
   const std::optional<RelType> relativeFuncRel = target->relativeFuncRel;
+  const std::optional<RelType> relativeCapRel = target->relativeCapRel;
+  const std::optional<RelType> relativeCapFuncRel = target->relativeCapFuncRel;
   const auto *firstNonRelativeReloc = llvm::partition(relocs, [=](auto &r) {
     return r.type == relativeRel || r.type == relativeFuncRel ||
+           r.type == relativeCapRel || r.type == relativeCapFuncRel ||
            (config->emachine == EM_AARCH64 &&
-            (r.type == R_MORELLO_RELATIVE ||
-             r.type == R_MORELLO_FUNC_RELATIVE ||
-             r.type == R_AARCH64_RELATIVE ||
-             r.type == R_AARCH64_FUNC_RELATIVE ||
-             r.type == R_MORELLO_DESC_RELATIVE ||
+            (r.type == R_MORELLO_DESC_RELATIVE ||
              r.type == R_MORELLO_DESC_DAT_RELATIVE ||
              r.type == R_MORELLO_DESC_FUNC_RELATIVE));
   });

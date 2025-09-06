@@ -908,13 +908,7 @@ static void addRelativeReloc(InputSectionBase &isec, uint64_t offsetInSec,
   // Currently, relative capability relocations are not added through this
   // function, so all relocations processed here are against integers.
   RelType relativeType = target->relativeRel;
-  if (target->relativeIntRel.has_value()) {
-    if (config->cheriEmitCodePtrRelocs &&
-        sym.isFunc() && target->relativeIntFuncRel.has_value())
-      relativeType = *target->relativeIntFuncRel;
-    else
-      relativeType = *target->relativeIntRel;
-  } else if (target->relativeFuncRel && sym.isFunc())
+  if (target->relativeFuncRel && sym.isFunc())
     relativeType = *target->relativeFuncRel;
   part.relaDyn->addRelativeReloc<shard>(relativeType, isec, offsetInSec, sym,
                                         addend, type, expr);

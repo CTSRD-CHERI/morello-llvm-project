@@ -1394,10 +1394,10 @@ void addRelativeCapabilityRelocation(
   if (config->emachine == EM_AARCH64) {
     assert(sym);
     RelType dynType;
-    if (config->cheriEmitCodePtrRelocs && !isCode && sym->isFunc())
-      dynType = R_MORELLO_FUNC_RELATIVE;
+    if (target->relativeCapFuncRel && !isCode && sym->isFunc())
+      dynType = *target->relativeCapFuncRel;
     else
-      dynType = R_MORELLO_RELATIVE;
+      dynType = *target->relativeCapRel;
     if (config->useRelativeElfCheriRelocs)
       addMorelloRelativeElfReloc(dynType, sym, &isec, offsetInSec, addend);
     else

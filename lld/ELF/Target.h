@@ -125,8 +125,6 @@ public:
   RelType pltRel;
   RelType relativeRel;
   std::optional<RelType> relativeFuncRel;
-  std::optional<RelType> relativeIntRel;
-  std::optional<RelType> relativeIntFuncRel;
   RelType iRelativeRel;
   RelType symbolicRel;
   RelType tlsDescRel;
@@ -135,6 +133,8 @@ public:
   RelType tlsOffsetRel;
   std::optional<RelType> absPointerRel; // TODO: remove the optional
   std::optional<RelType> sizeRel;
+  std::optional<RelType> relativeCapRel;
+  std::optional<RelType> relativeCapFuncRel;
   std::optional<RelType> symbolicCapRel;
   std::optional<RelType> symbolicCapCallRel;
   std::optional<RelType> symbolicCodeCapRel;

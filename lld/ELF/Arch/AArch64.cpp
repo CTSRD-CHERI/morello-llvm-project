@@ -78,6 +78,7 @@ struct AArch64Relaxer {
 AArch64::AArch64() {
   copyRel = R_AARCH64_COPY;
   relativeRel = R_AARCH64_RELATIVE;
+  relativeCapRel = R_MORELLO_RELATIVE;
   iRelativeRel = R_AARCH64_IRELATIVE;
   gotRel = R_AARCH64_GLOB_DAT;
   pltRel = R_AARCH64_JUMP_SLOT;
@@ -1162,10 +1163,10 @@ public:
 } // namespace
 
 AArch64C64::AArch64C64() {
-  relativeRel = R_MORELLO_RELATIVE;
-  relativeFuncRel = R_MORELLO_FUNC_RELATIVE;
-  relativeIntRel = R_AARCH64_RELATIVE;
-  relativeIntFuncRel = R_AARCH64_FUNC_RELATIVE;
+  if (config->cheriEmitCodePtrRelocs) {
+    relativeFuncRel = R_AARCH64_FUNC_RELATIVE;
+    relativeCapFuncRel = R_MORELLO_FUNC_RELATIVE;
+  }
   iRelativeRel = R_MORELLO_IRELATIVE;
   gotRel = R_MORELLO_GLOB_DAT;
   pltRel = R_MORELLO_JUMP_SLOT;
