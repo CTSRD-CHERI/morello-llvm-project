@@ -1388,24 +1388,22 @@ void addRelativeCapabilityRelocation(
   }
   bool isCode = type == target->symbolicCodeCapRel;
   assert(!sym || !sym->isPreemptible);
-  if (config->emachine == EM_AARCH64) {
+  if (config->useRelativeElfCheriRelocs) {
+    assert(config->emachine == EM_AARCH64 &&
+           "relative ELF capability relocations not currently implemented");
     assert(sym);
     RelType dynType;
     if (target->relativeCapFuncRel && !isCode && sym->isFunc())
       dynType = *target->relativeCapFuncRel;
     else
       dynType = *target->relativeCapRel;
-    if (config->useRelativeElfCheriRelocs)
-      addMorelloRelativeElfReloc(dynType, sym, &isec, offsetInSec, addend);
-    else
-      in.morelloCapRelocs->addCapReloc({&isec, offsetInSec}, {sym, 0u},
-                                       sym->isPreemptible, addend);
-    return;
-  }
-  assert(!config->useRelativeElfCheriRelocs &&
-         "relative ELF capability relocations not currently implemented");
-  in.capRelocs->addCapReloc(isCode, {&isec, offsetInSec}, {symOrSec, 0u},
-                            addend);
+    addMorelloRelativeElfReloc(dynType, sym, &isec, offsetInSec, addend);
+  } else if (config->emachine == EM_AARCH64)
+    in.morelloCapRelocs->addCapReloc({&isec, offsetInSec}, {sym, 0u},
+                                     sym->isPreemptible, addend);
+  else
+    in.capRelocs->addCapReloc(isCode, {&isec, offsetInSec}, {symOrSec, 0u},
+                              addend);
 }
 
 } // namespace elf
