@@ -797,9 +797,10 @@ void addMorelloCapabilityFragment(InputSectionBase *sec, Symbol *sym,
   sec->relocations.push_back({R_MORELLO_CAPFRAG_SIZE_AND_PERM,
                               target->symbolicRel, offset + 8, 0, sym});
 }
-static void addMorelloRelativeElfReloc(RelType dynType, Symbol *sym,
-                                       InputSectionBase *sec, uint64_t offset,
-                                       int64_t addend) {
+
+static RelType getMorelloRelativeRelType(RelType dynType, Symbol *sym,
+                                         InputSectionBase *sec,
+                                         int64_t addend) {
   assert(dynType == R_MORELLO_RELATIVE || dynType == R_MORELLO_FUNC_RELATIVE);
   assert(config->useRelativeElfCheriRelocs);
 
@@ -815,16 +816,22 @@ static void addMorelloRelativeElfReloc(RelType dynType, Symbol *sym,
                           !sec->name.startswith(".gcc_except_table");
     if ((sym->isFunc() || sym->isGnuIFunc()) && addend == 0) {
       assert(isDescFragment && "invalid function relocation");
-      dynType = R_MORELLO_DESC_FUNC_RELATIVE;
+      return R_MORELLO_DESC_FUNC_RELATIVE;
     } else if (isDescSym && isDescFragment) {
-      dynType = R_MORELLO_DESC_DAT_RELATIVE;
+      return R_MORELLO_DESC_DAT_RELATIVE;
     } else if (isDescFragment && !isDescSym) {
-      dynType = R_MORELLO_DESC_RELATIVE;
+      return R_MORELLO_DESC_RELATIVE;
     } else if (isDescSym & !isDescFragment) {
       llvm_unreachable("invalid relocation");
     }
   }
 
+  return dynType;
+}
+
+static void addMorelloRelativeElfReloc(RelType dynType, Symbol *sym,
+                                       InputSectionBase *sec, uint64_t offset,
+                                       int64_t addend) {
   RelocationBaseSection &relaDyn =
       !config->hasDynSymTab ? *in.relaDyn : *mainPart->relaDyn;
   relaDyn.addReloc({dynType, sec, offset,
@@ -1397,6 +1404,7 @@ void addRelativeCapabilityRelocation(
       dynType = *target->relativeCapFuncRel;
     else
       dynType = *target->relativeCapRel;
+    dynType = getMorelloRelativeRelType(dynType, sym, &isec, addend);
     addMorelloRelativeElfReloc(dynType, sym, &isec, offsetInSec, addend);
   } else if (config->emachine == EM_AARCH64)
     in.morelloCapRelocs->addCapReloc({&isec, offsetInSec}, {sym, 0u},
