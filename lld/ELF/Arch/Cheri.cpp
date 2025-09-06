@@ -800,7 +800,8 @@ void addMorelloCapabilityFragment(InputSectionBase *sec, Symbol *sym,
 static void addMorelloRelativeElfReloc(RelType dynType, Symbol *sym,
                                        InputSectionBase *sec, uint64_t offset,
                                        int64_t addend) {
-  RelType realDynType = dynType;
+  assert(dynType == R_MORELLO_RELATIVE || dynType == R_MORELLO_FUNC_RELATIVE);
+  assert(config->useRelativeElfCheriRelocs || config->hasDynSymTab);
 
   if (dynType == R_MORELLO_RELATIVE && config->isCheriFnDesc) {
     bool isDescSym = false;
@@ -812,25 +813,21 @@ static void addMorelloRelativeElfReloc(RelType dynType, Symbol *sym,
     bool isDescFragment = (sec->flags & SHF_WRITE) &&
                           !sec->name.startswith(".data.rel.ro") &&
                           !sec->name.startswith(".gcc_except_table");
-    realDynType = R_MORELLO_RELATIVE;
     if ((sym->isFunc() || sym->isGnuIFunc()) && addend == 0) {
-      realDynType = R_MORELLO_DESC_FUNC_RELATIVE;
       assert(isDescFragment && "invalid function relocation");
+      dynType = R_MORELLO_DESC_FUNC_RELATIVE;
     } else if (isDescSym && isDescFragment) {
-      realDynType = R_MORELLO_DESC_DAT_RELATIVE;
+      dynType = R_MORELLO_DESC_DAT_RELATIVE;
     } else if (isDescFragment && !isDescSym) {
-      realDynType = R_MORELLO_DESC_RELATIVE;
+      dynType = R_MORELLO_DESC_RELATIVE;
     } else if (isDescSym & !isDescFragment) {
       llvm_unreachable("invalid relocation");
     }
   }
 
-  assert(dynType == R_MORELLO_RELATIVE || dynType == R_MORELLO_FUNC_RELATIVE);
-  assert(config->useRelativeElfCheriRelocs || config->hasDynSymTab);
-
   RelocationBaseSection &relaDyn =
       !config->hasDynSymTab ? *in.relaDyn : *mainPart->relaDyn;
-  relaDyn.addReloc({realDynType, sec, offset,
+  relaDyn.addReloc({dynType, sec, offset,
                     DynamicReloc::AddendOnlyWithTargetVA, *sym, addend,
                     R_MORELLO_CAPFRAG_ADDEND});
   addMorelloCapabilityFragment(sec, sym, offset);
