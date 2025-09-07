@@ -1370,15 +1370,14 @@ void addRelativeCapabilityRelocation(
   bool isCode = type == target->symbolicCodeCapRel;
   assert(!sym || !sym->isPreemptible);
   if (config->useRelativeElfCheriRelocs) {
-    assert(config->emachine == EM_AARCH64 &&
-           "relative ELF capability relocations not currently implemented");
     assert(sym);
     RelType dynType;
     if (target->relativeCapFuncRel && !isCode && sym->isFunc())
       dynType = *target->relativeCapFuncRel;
     else
       dynType = *target->relativeCapRel;
-    dynType = getMorelloRelativeRelType(dynType, sym, &isec, addend);
+    if (config->emachine == EM_AARCH64)
+      dynType = getMorelloRelativeRelType(dynType, sym, &isec, addend);
     RelocationBaseSection &relaDyn =
         !config->hasDynSymTab ? *in.relaDyn : *mainPart->relaDyn;
     relaDyn.addReloc(DynamicReloc::AddendOnlyWithTargetVA, dynType, isec,
