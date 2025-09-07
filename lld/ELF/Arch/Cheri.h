@@ -392,9 +392,6 @@ void addRelativeCapabilityRelocation(
     llvm::PointerUnion<Symbol *, InputSectionBase *> symOrSec, int64_t addend,
     RelExpr expr, RelType type);
 
-void addMorelloCapabilityFragment(InputSectionBase *sec, Symbol *sym,
-                                  uint64_t offset);
-
 // Calculate the size of linker defined capabilities such as the PCC
 // capability. These lengths may result in increased alignment requirements
 // for some OutputSections so that CHERI concentrate requirements are met.

@@ -783,21 +783,6 @@ bool MorelloCapRelocsSection::linkerDefinedCapabilityAlign() {
   return changed;
 }
 
-// When we add a dynamic relocation for the dynamic loader to initialize a
-// capability, we must also place information for the dynamic loader in the
-// fragment (the place of the relocation).
-// We need to write a total of 128 bits:
-// | 64-bit Address | 56-bit size | 8-bit permissions |
-// We use 2 64-bit static relocations to accomplish this. The first for the
-// Address and the second for size and permissions.
-void addMorelloCapabilityFragment(InputSectionBase *sec, Symbol *sym,
-                                  uint64_t offset) {
-  sec->relocations.push_back(
-      {R_MORELLO_CAPFRAG_BASE, target->symbolicRel, offset, 0, sym});
-  sec->relocations.push_back({R_MORELLO_CAPFRAG_SIZE_AND_PERM,
-                              target->symbolicRel, offset + 8, 0, sym});
-}
-
 static RelType getMorelloRelativeRelType(RelType dynType, Symbol *sym,
                                          InputSectionBase *sec,
                                          int64_t addend) {
@@ -827,17 +812,6 @@ static RelType getMorelloRelativeRelType(RelType dynType, Symbol *sym,
   }
 
   return dynType;
-}
-
-static void addMorelloRelativeElfReloc(RelType dynType, Symbol *sym,
-                                       InputSectionBase *sec, uint64_t offset,
-                                       int64_t addend) {
-  RelocationBaseSection &relaDyn =
-      !config->hasDynSymTab ? *in.relaDyn : *mainPart->relaDyn;
-  relaDyn.addReloc({dynType, sec, offset,
-                    DynamicReloc::AddendOnlyWithTargetVA, *sym, addend,
-                    R_MORELLO_CAPFRAG_ADDEND});
-  addMorelloCapabilityFragment(sec, sym, offset);
 }
 
 MorelloTLSLEDataSection::MorelloTLSLEDataSection()
@@ -1405,7 +1379,10 @@ void addRelativeCapabilityRelocation(
     else
       dynType = *target->relativeCapRel;
     dynType = getMorelloRelativeRelType(dynType, sym, &isec, addend);
-    addMorelloRelativeElfReloc(dynType, sym, &isec, offsetInSec, addend);
+    RelocationBaseSection &relaDyn =
+        !config->hasDynSymTab ? *in.relaDyn : *mainPart->relaDyn;
+    relaDyn.addReloc(DynamicReloc::AddendOnlyWithTargetVA, dynType, isec,
+                     offsetInSec, *sym, addend, expr, type);
   } else if (config->emachine == EM_AARCH64)
     in.morelloCapRelocs->addCapReloc({&isec, offsetInSec}, {sym, 0u},
                                      sym->isPreemptible, addend);

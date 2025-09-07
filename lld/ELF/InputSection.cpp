@@ -951,10 +951,25 @@ uint64_t InputSectionBase::getRelocTargetVA(const InputFile *file, RelType type,
   }
 }
 
-void InputSectionBase::addRelocCap(const Relocation &r) {
+void InputSectionBase::addRelocCap(const Relocation &r, RelExpr *expr) {
   assert(r.expr == R_ABS_CAP);
+  assert(expr == nullptr || *expr == r.expr);
 
   RelExpr exprLo = R_ABS_CAP_ADDR, exprHi = R_ABS_CAP_META;
+  if (expr != nullptr) {
+    assert(config->emachine == EM_AARCH64 &&
+           "can only encode capability addends for Morello");
+    // When we add a dynamic relocation for the dynamic loader to initialize a
+    // capability, we must also place information for the dynamic loader in the
+    // fragment (the place of the relocation).
+    // We need to write a total of 128 bits:
+    // | 64-bit Address | 56-bit size | 8-bit permissions |
+    // We use 2 64-bit static relocations to accomplish this. The first for the
+    // Address and the second for size and permissions.
+    exprLo = R_MORELLO_CAPFRAG_BASE;
+    exprHi = R_MORELLO_CAPFRAG_SIZE_AND_PERM;
+    *expr = R_MORELLO_CAPFRAG_ADDEND;
+  }
   if (!config->isLE)
     std::swap(exprLo, exprHi);
 
