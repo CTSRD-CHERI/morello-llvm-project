@@ -429,7 +429,8 @@ static void checkOptions() {
     if (config->exportDynamic)
       error("-r and --export-dynamic may not be used together");
   }
-  if (config->emachine != EM_AARCH64)
+  // NB: Allow no-op flag for EM_ARM due to -m32/lib32
+  if (config->emachine != EM_AARCH64 && config->emachine != EM_ARM)
     if (config->useRelativeElfCheriRelocs)
       error("local-cap-relocs=elf is not implemented yet");
 
