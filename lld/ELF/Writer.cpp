@@ -333,7 +333,7 @@ template <class ELFT> void elf::createSyntheticSections() {
     if (config->emachine == EM_AARCH64) {
       in.morelloCapRelocs = std::make_unique<MorelloCapRelocsSection>();
       add(*in.morelloCapRelocs);
-      if (config->morelloC64Plt) {
+      if (config->isCheriAbi) {
         in.tlsLEData = std::make_unique<MorelloTLSLEDataSection>();
         add(*in.tlsLEData);
       }
@@ -1783,7 +1783,7 @@ template <class ELFT> void Writer<ELFT>::finalizeAddressDependentContent() {
       break;
     }
 
-    if (config->morelloC64Plt && !config->relocatable) {
+    if (config->emachine == EM_AARCH64 && config->isCheriAbi && !config->relocatable) {
       if (changed)
         script->assignAddresses();
       changed |= morelloLinkerDefinedCapabilityAlign();

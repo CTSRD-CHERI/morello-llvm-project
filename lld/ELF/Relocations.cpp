@@ -975,7 +975,7 @@ static void addTpOffsetGotEntry(Symbol &sym) {
   in.got->addEntry(sym);
   uint64_t off = sym.getGotOffset();
 
-  if (config->morelloC64Plt && !sym.isPreemptible)
+  if (config->emachine == EM_AARCH64 && config->isCheriAbi && !sym.isPreemptible)
     in.got->relocations.push_back({R_SIZE, R_AARCH64_ABS64, off + 8, 0, &sym});
 
   if (!sym.isPreemptible && !config->isPic) {
@@ -1151,7 +1151,7 @@ void RelocationScanner::processAux(RelExpr expr, RelType type, uint64_t offset,
   if (expr == R_MORELLO_DESC_CAPABILITY)
     expr = R_ABS_CAP;
 
-  if (config->emachine == EM_AARCH64 && !config->morelloC64Plt &&
+  if (config->emachine == EM_AARCH64 && !config->isCheriAbi &&
     (needsGot(expr) || needsPlt(expr)) &&
     (type == R_MORELLO_CALL26 || type == R_MORELLO_JUMP26 ||
      type == R_MORELLO_LD128_GOT_LO12_NC ||
@@ -1469,7 +1469,7 @@ static unsigned handleTlsRelocation(RelType type, Symbol &sym,
       c.addReloc({target->adjustTlsExpr(type, R_RELAX_TLS_GD_TO_IE), type,
                   offset, addend, &sym});
     } else {
-      if (config->emachine == EM_AARCH64 && config->morelloC64Plt)
+      if (config->emachine == EM_AARCH64 && config->isCheriAbi)
         in.tlsLEData->addTLSLEData(&sym);
       c.addReloc({target->adjustTlsExpr(type, R_RELAX_TLS_GD_TO_LE), type,
                   offset, addend, &sym});
@@ -1483,7 +1483,7 @@ static unsigned handleTlsRelocation(RelType type, Symbol &sym,
     // Initial-Exec relocs can be relaxed to Local-Exec if the symbol is locally
     // defined.
     if (toExecRelax && isLocalInExecutable) {
-      if (config->emachine == EM_AARCH64 && config->morelloC64Plt) {
+      if (config->emachine == EM_AARCH64 && config->isCheriAbi) {
         in.tlsLEData->addTLSLEData(&sym);
       }
       c.addReloc({target->adjustTlsExpr(type, R_RELAX_TLS_IE_TO_LE), type, offset,
@@ -1842,7 +1842,7 @@ void elf::postScanRelocations() {
       mainPart->relaDyn->addAddendOnlyRelocIfNonPreemptible(
           target->tlsDescRel, *got, got->getTlsDescOffset(sym), sym,
           target->tlsDescRel);
-      if (config->morelloC64Plt && sym.isTls() && !sym.isPreemptible)
+      if (config->emachine == EM_AARCH64 && config->isCheriAbi && sym.isTls() && !sym.isPreemptible)
         in.got->relocations.push_back({R_SIZE, R_AARCH64_ABS64,
             in.got->getTlsDescOffset(sym) + 24, 0, &sym});
     }

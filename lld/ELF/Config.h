@@ -215,7 +215,6 @@ struct Config {
   bool armHasMovtMovw = false;
   bool armJ1J2BranchEncoding = false;
   bool armCMSESupport = false;
-  bool morelloC64Plt = false;
   bool morelloPurecapBenchmarkABI = false;
   bool forceMorelloC64Plt = false;
   llvm::DenseMap<unsigned, unsigned> cheriVariants;

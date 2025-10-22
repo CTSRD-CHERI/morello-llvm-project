@@ -128,7 +128,7 @@ static lto::Config createConfig() {
   c.MAttrs = getMAttrs();
 
   // FIXME: There should be a better way of inferring the ABI.
-  if (config->emachine == EM_AARCH64 && config->morelloC64Plt) {
+  if (config->emachine == EM_AARCH64 && config->isCheriAbi) {
     c.Options.MCOptions.ABIName = "purecap";
     // We also have to enable the morello and c64 feature otherwise we get
     // "LLVM ERROR: purecap ABI code generation only supported with C64".

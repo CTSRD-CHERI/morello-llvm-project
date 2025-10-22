@@ -456,6 +456,19 @@ static void checkOptions() {
   if (config->emachine != EM_386 && config->emachine != EM_X86_64 &&
       config->zCetReport != "none")
     error("-z cet-report only supported on X86 and X86_64");
+
+  if (config->forceMorelloC64Plt) {
+    if (config->emachine != EM_AARCH64)
+      error("--morello-c64-plt only supported on AArch64");
+    else if (!config->isCheriAbi)
+      error("Cannot force purecap ABI with --morello-c64-plt."
+           " The purecap ABI should be inferred through e_flags."
+           " Use a recent toolchain to rebuild this object and build"
+           " it with the purecap ABI.");
+    else
+      warn("--morello-c64-plt is deprecated and should be removed."
+           " The purecap ABI is now inferred through e_flags.");
+  }
 }
 
 static const char *getReproduceOption(opt::InputArgList &args) {
@@ -1599,7 +1612,6 @@ static void readConfigs(opt::InputArgList &args) {
         parseEmulation(s);
     config->mipsN32Abi =
         (s.starts_with("elf32btsmipn32") || s.starts_with("elf32ltsmipn32"));
-    config->morelloC64Plt = config->isCheriAbi && (config->emachine == EM_AARCH64);
     config->emulation = s;
   }
 
@@ -1893,32 +1905,8 @@ void LinkerDriver::createFiles(opt::InputArgList &args) {
 
 // If -m <machine_type> was not given, infer it from object files.
 void LinkerDriver::inferMachineType() {
-  auto inferMorelloC64Plt = [&]() {
-    if (config->emachine != EM_AARCH64)
-      return;
-    if (config->forceMorelloC64Plt)
-      config->morelloC64Plt = true;
-    for (InputFile *file : files) {
-      if (file->ekind == ELFNoneKind)
-        continue;
-      bool IsPurecap = file->eflags & EF_AARCH64_CHERI_PURECAP;
-      if (config->forceMorelloC64Plt && !IsPurecap)
-        warn(toString(file) + ": Forcing purecap ABI because "
-             "--morello-c64-plt was passed. This option is deprecated and "
-             "should be removed. The purecap ABI should be infered through "
-             "e_flags. Use a recent toolchain to rebuild this object and build "
-             "it with the purecap ABI.");
-      if (IsPurecap)
-        config->morelloC64Plt = true;
-    }
-  };
-
-  if (config->ekind != ELFNoneKind) {
-    // Even if -m <machine_type> was passed, still try to infer the ABI
-    // from object files.
-    inferMorelloC64Plt();
+  if (config->ekind != ELFNoneKind)
     return;
-  }
 
   for (InputFile *f : files) {
     if (f->ekind == ELFNoneKind)
@@ -1927,7 +1915,6 @@ void LinkerDriver::inferMachineType() {
     config->emachine = f->emachine;
     config->osabi = f->osabi;
     config->mipsN32Abi = f->emachine == EM_MIPS && isMipsN32Abi(f);
-    inferMorelloC64Plt();
     return;
   }
   error("target emulation unknown: -m or at least one .o file required");
@@ -3045,7 +3032,7 @@ void LinkerDriver::link(opt::InputArgList &args) {
   // contain a hint to tweak linker's and loader's behaviors.
   config->andFeatures = getAndFeatures();
 
-  if (config->morelloC64Plt) {
+  if (config->emachine == EM_AARCH64 && config->isCheriAbi) {
     // We need to read the Cheri notes in order to properly create the target.
     invokeELFT(readCheriVariants);
     config->isCheriFnDesc =
@@ -3062,7 +3049,7 @@ void LinkerDriver::link(opt::InputArgList &args) {
   target = getTarget();
 
   config->eflags = target->calcEFlags();
-  if (!config->morelloC64Plt)
+  if (config->emachine != EM_AARCH64 || !config->isCheriAbi)
     invokeELFT(readCheriVariants);
   if (config->isCheriAbi)
     config->isCheriFnDesc =

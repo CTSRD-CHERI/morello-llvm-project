@@ -1375,7 +1375,7 @@ void AArch64C64DescABI::writePlt(uint8_t *buf, const Symbol &sym,
 }
 
 static TargetInfo *getTargetInfo() {
-  if (config->morelloC64Plt) {
+  if (config->isCheriAbi) {
     if (config->isCheriFnDesc) {
       static AArch64C64DescABI t;
       return &t;

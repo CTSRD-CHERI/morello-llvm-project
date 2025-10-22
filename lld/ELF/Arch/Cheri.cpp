@@ -722,10 +722,10 @@ bool morelloLinkerDefinedCapabilityAlign() {
     if (!(os->flags & SHF_ALLOC))
       continue;
     if (!(os->flags & SHF_WRITE) ||
-        (config->morelloC64Plt && in.gotPlt && os == in.gotPlt->getParent()) ||
-        (config->morelloC64Plt && in.igotPlt &&
+        (config->isCheriAbi && in.gotPlt && os == in.gotPlt->getParent()) ||
+        (config->isCheriAbi && in.igotPlt &&
          os == in.igotPlt->getParent()) ||
-        (config->morelloC64Plt && in.got && os == in.got->getParent())) {
+        (config->isCheriAbi && in.got && os == in.got->getParent())) {
       if (os->getVA() < morelloPCCBase) {
         morelloPCCBase = os->getVA();
         first = os;
