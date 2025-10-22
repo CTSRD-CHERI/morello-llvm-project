@@ -1,5 +1,5 @@
 // REQUIRES: aarch64
-// RUN: llvm-mc --triple=aarch64-none-elf -mattr=+c64 -filetype=obj %s -o %t.o
+// RUN: llvm-mc --triple=aarch64-none-elf -mattr=+c64 -target-abi=purecap -filetype=obj %s -o %t.o
 // RUN: ld.lld -v --morello-c64-plt %t.o -o %t  2>&1 | FileCheck %s --check-prefix=WARN
 
 /// Check for no "warning: Could not find a real symbol for .data.rel.ro.*"
