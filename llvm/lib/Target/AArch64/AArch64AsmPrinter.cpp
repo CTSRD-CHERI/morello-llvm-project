@@ -1605,8 +1605,7 @@ void AArch64AsmPrinter::emitInstruction(const MachineInstr *MI) {
     EmitToStreamer(*OutStreamer, TmpInst);
     return;
   }
-  case AArch64::CTCRETURNr:
-  case AArch64::CTCRETURNDescr: {
+  case AArch64::CTCRETURNr: {
     MCInst TmpInst;
     if (STI->hasPurecapBenchmarkABI()) {
       TmpInst.setOpcode(AArch64::BR);
@@ -1630,25 +1629,6 @@ void AArch64AsmPrinter::emitInstruction(const MachineInstr *MI) {
     return;
   }
   case AArch64::BaseRegRestore: {
-    RestoreBaseReg();
-    return;
-  }
-  case AArch64::CFnDescBranchLink:
-  case AArch64::DescBL: {
-    if (MI->getOpcode() == AArch64::DescBL) {
-      MCOperand Dest;
-      MCInstLowering.lowerOperand(MI->getOperand(0), Dest);
-      MCInst TmpInst;
-      TmpInst.setOpcode(AArch64::BL);
-      TmpInst.addOperand(Dest);
-      EmitToStreamer(*OutStreamer, TmpInst);
-    } else {
-      MCInst TmpInst;
-      TmpInst.setOpcode(AArch64::CapLoadPairBranchLink);
-      TmpInst.addOperand(MCOperand::createReg(AArch64::CFP));
-      TmpInst.addOperand(MCOperand::createReg(MI->getOperand(0).getReg()));
-      EmitToStreamer(*OutStreamer, TmpInst);
-    }
     RestoreBaseReg();
     return;
   }

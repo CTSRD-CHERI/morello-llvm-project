@@ -220,7 +220,6 @@ public:
   void emitInstruction(const MCInst &Inst,
                        const MCSubtargetInfo &STI) override {
     emitCodeMappingSymbol(STI);
-    checkDescABIFuncStart(Inst);
     adjustCurrentLabels(STI);
     MCELFStreamer::emitInstruction(Inst, STI);
   }
@@ -305,22 +304,6 @@ private:
       return;
     emitMappingSymbol("$c");
     LastEMS = EMS_C64;
-  }
-
-  void checkDescABIFuncStart(const MCInst &Inst) {
-    if (MCTargetOptions::cheriCapabilityTableABI() !=
-        CheriCapabilityTableABI::FunctionDescriptor)
-      return;
-
-    if (Inst.getOpcode() == AArch64::CapCopy &&
-        Inst.getOperand(0).getReg() == AArch64::C28 &&
-        Inst.getOperand(1).getReg() == AArch64::CFP)
-      return;
-
-    if (llvm::any_of(CurrentLabels, [](MCSymbol *Symb) {
-            return cast<MCSymbolELF>(Symb)->getType() == ELF::STT_FUNC; }))
-      getContext().reportWarning(Inst.getLoc(),
-          "Function should start with mov c28, c29");
   }
 
   void adjustCurrentLabels(const MCSubtargetInfo &STI) {

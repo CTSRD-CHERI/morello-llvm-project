@@ -1439,9 +1439,6 @@ static StringRef segmentTypeToString(unsigned Arch, unsigned Type) {
   case ELF::EM_ARM:
     switch (Type) { LLVM_READOBJ_ENUM_CASE(ELF, PT_ARM_EXIDX); }
     break;
-  case ELF::EM_AARCH64:
-    switch (Type) { LLVM_READOBJ_ENUM_CASE(ELF, PT_MORELLO_DESC); }
-    break;
   case ELF::EM_MIPS:
   case ELF::EM_MIPS_RS3_LE:
     switch (Type) {

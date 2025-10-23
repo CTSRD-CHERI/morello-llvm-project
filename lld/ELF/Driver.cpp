@@ -3033,31 +3033,18 @@ void LinkerDriver::link(opt::InputArgList &args) {
   // contain a hint to tweak linker's and loader's behaviors.
   config->andFeatures = getAndFeatures();
 
-  if (config->emachine == EM_AARCH64 && config->isCheriAbi) {
-    // We need to read the Cheri notes in order to properly create the target.
-    invokeELFT(readCheriVariants);
-    config->isCheriFnDesc =
-        (config->cheriVariants.lookup(NT_CHERI_GLOBALS_ABI) == CHERI_GLOBALS_ABI_FDESC);
-    if (config->isCheriFnDesc)
-      config->useRelativeElfCheriRelocs = true;
-  }
-  if (config->emachine == EM_AARCH64 && config->hasDynSymTab)
-    config->useRelativeElfCheriRelocs = true;
-
   // The Target instance handles target-specific stuff, such as applying
   // relocations or writing a PLT section. It also contains target-dependent
   // values such as a default image base address.
   target = getTarget();
 
   config->eflags = target->calcEFlags();
-  if (config->emachine != EM_AARCH64 || !config->isCheriAbi)
-    invokeELFT(readCheriVariants);
-  if (config->isCheriAbi)
-    config->isCheriFnDesc =
-        (config->cheriVariants.lookup(NT_CHERI_GLOBALS_ABI) == CHERI_GLOBALS_ABI_FDESC);
+  invokeELFT(readCheriVariants);
   if (config->emachine == EM_AARCH64) {
     config->morelloPurecapBenchmarkABI = static_cast<bool>(
         config->cheriVariants.lookup(NT_CHERI_MORELLO_PURECAP_BENCHMARK_ABI));
+    if (config->hasDynSymTab)
+      config->useRelativeElfCheriRelocs = true;
   }
 
   // maxPageSize (sometimes called abi page size) is the maximum page size that

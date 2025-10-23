@@ -277,7 +277,6 @@ static int64_t getArgumentStackToRestore(MachineFunction &MF,
     unsigned RetOpcode = MBBI->getOpcode();
     IsTailCallReturn = RetOpcode == AArch64::TCRETURNdi ||
                        RetOpcode == AArch64::CTCRETURNr ||
-                       RetOpcode == AArch64::CTCRETURNDescr ||
                        RetOpcode == AArch64::TCRETURNri ||
                        RetOpcode == AArch64::TCRETURNriBTI;
   }
@@ -3211,9 +3210,6 @@ void AArch64FrameLowering::determineCalleeSaves(MachineFunction &MF,
   unsigned UnspilledCSGPRPaired = AArch64::NoRegister;
   const bool HasCapRegs = MF.getSubtarget<AArch64Subtarget>().hasMorello();
   const bool HasPureCap = MF.getSubtarget<AArch64Subtarget>().hasPureCap();
-  bool IsDescABI =
-      (MCTargetOptions::cheriCapabilityTableABI() ==
-       CheriCapabilityTableABI::FunctionDescriptor);
 
   MachineFrameInfo &MFI = MF.getFrameInfo();
   const MCPhysReg *CSRegs = MF.getRegInfo().getCalleeSavedRegs();
@@ -3233,19 +3229,6 @@ void AArch64FrameLowering::determineCalleeSaves(MachineFunction &MF,
       SavedRegs.set(Reg);
 
     bool RegUsed = SavedRegs.test(Reg);
-
-    if (IsDescABI &&
-        (AFI->hasNonLocalCall() || !MF.getLandingPads().empty()) &&
-        !RegUsed && AArch64::CapRegClass.contains(Reg) &&
-        AFI->getBaseReg() == AArch64::NoRegister &&
-        !RegInfo->isReservedReg(MF, Reg)) {
-      if (!MF.getRegInfo().isPhysRegUsed(Reg)) {
-        SavedRegs.set(Reg);
-        RegUsed = true;
-        AFI->setBaseReg(Reg);
-      }
-    }
-
     unsigned PairedReg = AArch64::NoRegister;
     if (AArch64::GPR64RegClass.contains(Reg) ||
         AArch64::FPR64RegClass.contains(Reg) ||
@@ -3310,7 +3293,7 @@ void AArch64FrameLowering::determineCalleeSaves(MachineFunction &MF,
       windowsRequiresStackProbe(MF, EstimatedStackSize + CSStackSize + 16)) {
     if (HasPureCap) {
       AFI->setFrameRecordSize(32);
-      SavedRegs.set(IsDescABI ? AArch64::C17 : AArch64::CFP);
+      SavedRegs.set(AArch64::CFP);
       SavedRegs.set(AArch64::CLR);
     } else {
       AFI->setFrameRecordSize(16);
@@ -3356,16 +3339,6 @@ void AArch64FrameLowering::determineCalleeSaves(MachineFunction &MF,
   // The CSR spill slots have not been allocated yet, so estimateStackSize
   // won't include them.
   unsigned EstimatedStackSizeLimit = estimateRSStackSizeLimit(MF);
-
-  if (IsDescABI && (AFI->hasNonLocalCall() || !MF.getLandingPads().empty()) &&
-      AFI->getBaseReg() == AArch64::NoRegister) {
-    const TargetRegisterClass &RC = AArch64::CapRegClass;
-    unsigned Size = TRI->getSpillSize(RC);
-    Align Alignment = TRI->getSpillAlign(RC);
-    int FI = MFI.CreateStackObject(Size, Alignment, false);
-    AFI->setHasBaseRegisterSpill(true);
-    AFI->setBaseRegisterFI(FI);
-  }
 
   // We may address some of the stack above the canonical frame address, either
   // for our own arguments or during a call. Include that in calculating whether

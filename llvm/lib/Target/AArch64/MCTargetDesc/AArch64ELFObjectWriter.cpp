@@ -20,7 +20,6 @@
 #include "llvm/MC/MCFixup.h"
 #include "llvm/MC/MCObjectWriter.h"
 #include "llvm/MC/MCValue.h"
-#include "llvm/MC/MCTargetOptions.h"
 #include "llvm/Support/ErrorHandling.h"
 #include <cassert>
 #include <cstdint>
@@ -54,7 +53,6 @@ bool AArch64ELFObjectWriter::needsRelocateWithSymbol(const MCSymbol &Sym,
     return false;
 
   case ELF::R_MORELLO_CAPINIT:
-  case ELF::R_MORELLO_DESC_CAPINIT:
   case ELF::R_MORELLO_CODE_CAPINIT:
     return true;
   }
@@ -131,9 +129,6 @@ unsigned AArch64ELFObjectWriter::getRelocType(MCContext &Ctx,
       static_cast<AArch64MCExpr::VariantKind>(Target.getRefKind());
   AArch64MCExpr::VariantKind SymLoc = AArch64MCExpr::getSymbolLoc(RefKind);
   bool IsNC = AArch64MCExpr::isNotChecked(RefKind);
-  bool IsDescABI =
-      (MCTargetOptions::cheriCapabilityTableABI() ==
-       CheriCapabilityTableABI::FunctionDescriptor);
 
   assert((!Target.getSymA() ||
           Target.getSymA()->getKind() == MCSymbolRefExpr::VK_None ||
@@ -177,17 +172,11 @@ unsigned AArch64ELFObjectWriter::getRelocType(MCContext &Ctx,
         return ELF::R_AARCH64_NONE;
       }
       if (SymLoc == AArch64MCExpr::VK_ABS && !IsNC)
-        return IsDescABI
-            ? ELF::R_MORELLO_DESC_ADR_PREL_PG_HI20
-            : ELF::R_MORELLO_ADR_PREL_PG_HI20;
+        return ELF::R_MORELLO_ADR_PREL_PG_HI20;
       if (SymLoc == AArch64MCExpr::VK_ABS && IsNC)
-        return IsDescABI
-            ? ELF::R_MORELLO_DESC_ADR_PREL_PG_HI20_NC
-            : ELF::R_MORELLO_ADR_PREL_PG_HI20_NC;
+        return ELF::R_MORELLO_ADR_PREL_PG_HI20_NC;
       if (SymLoc == AArch64MCExpr::VK_GOT && !IsNC)
-        return IsDescABI
-            ? ELF::R_MORELLO_DESC_ADR_GOT_PAGE
-            : ELF::R_MORELLO_ADR_GOT_PAGE;
+        return ELF::R_MORELLO_ADR_GOT_PAGE;
       if (SymLoc == AArch64MCExpr::VK_TLSDESC && !IsNC)
         return ELF::R_MORELLO_TLSDESC_ADR_PAGE20;
       if (SymLoc == AArch64MCExpr::VK_GOTTPREL && !IsNC)
@@ -218,21 +207,13 @@ unsigned AArch64ELFObjectWriter::getRelocType(MCContext &Ctx,
                       "invalid symbol kind for ADRP relocation");
       return ELF::R_AARCH64_NONE;
     case AArch64::fixup_aarch64_pcrel_branch26:
-      return IsDescABI
-          ? ELF::R_AARCH64_DESC_GLOBAL_JUMP26
-          : R_CLS(JUMP26);
+      return R_CLS(JUMP26);
     case AArch64::fixup_aarch64_pcrel_call26:
-      return IsDescABI
-          ? ELF::R_AARCH64_DESC_GLOBAL_CALL26
-          : R_CLS(CALL26);
+      return R_CLS(CALL26);
     case AArch64::fixup_morello_pcrel_branch26:
-      return IsDescABI
-          ? ELF::R_MORELLO_DESC_GLOBAL_JUMP26
-          : ELF::R_MORELLO_JUMP26;
+      return ELF::R_MORELLO_JUMP26;
     case AArch64::fixup_morello_pcrel_call26:
-      return IsDescABI
-          ? ELF::R_MORELLO_DESC_GLOBAL_CALL26
-          : ELF::R_MORELLO_CALL26;
+      return ELF::R_MORELLO_CALL26;
     case AArch64::fixup_aarch64_ldr_pcrel_imm17_scale16:
       if (SymLoc == AArch64MCExpr::VK_GOTTPREL ||
           SymLoc == AArch64MCExpr::VK_GOT) {
@@ -450,9 +431,7 @@ unsigned AArch64ELFObjectWriter::getRelocType(MCContext &Ctx,
       if (SymLoc == AArch64MCExpr::VK_TPREL && IsNC)
         return R_CLS(TLSLE_LDST128_TPREL_LO12_NC);
       if (SymLoc == AArch64MCExpr::VK_GOT && IsNC)
-        return IsDescABI
-            ? ELF::R_MORELLO_DESC_LD128_GOT_LO12_NC
-            : ELF::R_MORELLO_LD128_GOT_LO12_NC;
+        return ELF::R_MORELLO_LD128_GOT_LO12_NC;
       if (SymLoc == AArch64MCExpr::VK_TLSDESC)
         return ELF::R_MORELLO_TLSDESC_LD128_LO12;
 
@@ -541,9 +520,7 @@ unsigned AArch64ELFObjectWriter::getRelocType(MCContext &Ctx,
     case FK_Cap_16:
       if (Target.getAccessVariant() == MCSymbolRefExpr::VK_CHERI_CODE)
         return ELF::R_MORELLO_CODE_CAPINIT;
-      return IsDescABI
-          ? ELF::R_MORELLO_DESC_CAPINIT
-          : ELF::R_MORELLO_CAPINIT;
+      return ELF::R_MORELLO_CAPINIT;
     default:
       Ctx.reportError(Fixup.getLoc(), "Unknown ELF relocation type");
       return ELF::R_AARCH64_NONE;

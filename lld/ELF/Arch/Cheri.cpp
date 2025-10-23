@@ -783,37 +783,6 @@ bool MorelloCapRelocsSection::linkerDefinedCapabilityAlign() {
   return changed;
 }
 
-static RelType getMorelloRelativeRelType(RelType dynType, Symbol *sym,
-                                         InputSectionBase *sec,
-                                         int64_t addend) {
-  assert(dynType == R_MORELLO_RELATIVE || dynType == R_MORELLO_FUNC_RELATIVE);
-  assert(config->useRelativeElfCheriRelocs);
-
-  if (dynType == R_MORELLO_RELATIVE && config->isCheriFnDesc) {
-    bool isDescSym = false;
-    if (sym->getOutputSection())
-      isDescSym =
-          (sym->getOutputSection()->getPhdrFlags() & PF_W) != 0 &&
-          !sym->getOutputSection()->name.startswith(".data.rel.ro") &&
-          !sym->getOutputSection()->name.startswith(".gcc_except_table");
-    bool isDescFragment = (sec->flags & SHF_WRITE) &&
-                          !sec->name.startswith(".data.rel.ro") &&
-                          !sec->name.startswith(".gcc_except_table");
-    if ((sym->isFunc() || sym->isGnuIFunc()) && addend == 0) {
-      assert(isDescFragment && "invalid function relocation");
-      return R_MORELLO_DESC_FUNC_RELATIVE;
-    } else if (isDescSym && isDescFragment) {
-      return R_MORELLO_DESC_DAT_RELATIVE;
-    } else if (isDescFragment && !isDescSym) {
-      return R_MORELLO_DESC_RELATIVE;
-    } else if (isDescSym & !isDescFragment) {
-      llvm_unreachable("invalid relocation");
-    }
-  }
-
-  return dynType;
-}
-
 MorelloTLSLEDataSection::MorelloTLSLEDataSection()
     : SyntheticSection(SHF_ALLOC, SHT_PROGBITS, 16, ".rodata.purecap.tlsie") {
   this->entsize = relocSize;
@@ -1376,8 +1345,6 @@ void addRelativeCapabilityRelocation(
       dynType = *target->relativeCapFuncRel;
     else
       dynType = *target->relativeCapRel;
-    if (config->emachine == EM_AARCH64)
-      dynType = getMorelloRelativeRelType(dynType, sym, &isec, addend);
     RelocationBaseSection &relaDyn =
         !config->hasDynSymTab ? *in.relaDyn : *mainPart->relaDyn;
     relaDyn.addReloc(DynamicReloc::AddendOnlyWithTargetVA, dynType, isec,

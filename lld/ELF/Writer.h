@@ -46,7 +46,6 @@ struct PhdrEntry {
 };
 
 void addReservedSymbols();
-bool isMorelloDescSection(const OutputSection *sec);
 
 bool isCheriAbi(const InputFile *f);
 

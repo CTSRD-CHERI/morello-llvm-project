@@ -288,7 +288,7 @@ RegisterInfoPOSIX_arm64::RegisterInfoPOSIX_arm64(
       m_per_regset_regnum_range[m_register_set_count++] =
           std::make_pair(sve_vg, sve_ffr + 1);
     } else {
-      SetupFP(target_arch.IsAArch64MorelloDescriptorABI());
+      SetupFP();
       m_register_info_p = g_register_infos_arm64_le;
       m_register_info_count = exc_far; // We're ignoring the exc and dbg registers.
     }

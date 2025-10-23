@@ -381,9 +381,6 @@ AArch64Subtarget::ClassifyGlobalReference(const GlobalValue *GV,
 
   bool IsFat = GV->getParent()->getDataLayout().isFatPointer(GV->getType());
   bool GOTMatch = (IsFat == hasCapGOT() || !IsFat);
-  bool IsDescABI =
-      (MCTargetOptions::cheriCapabilityTableABI() ==
-       CheriCapabilityTableABI::FunctionDescriptor);
 
   unsigned Flags = GV->hasDLLImportStorageClass() ? AArch64II::MO_DLLIMPORT
                                                   : AArch64II::MO_NO_FLAG;
@@ -400,8 +397,7 @@ AArch64Subtarget::ClassifyGlobalReference(const GlobalValue *GV,
   }
 
   if (IsFat && hasCapGOT() && !GV->hasLocalLinkage() &&
-      !GV->hasProtectedVisibility() &&
-      (IsDescABI || !isa<Function>(GV)))
+      !GV->hasProtectedVisibility() && !isa<Function>(GV))
     return AArch64II::MO_GOT | Flags;
 
   // The small code model's direct accesses use ADRP, which cannot

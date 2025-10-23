@@ -38,14 +38,11 @@ using namespace lld::elf;
 
 uint8_t *Out::bufferStart;
 PhdrEntry *Out::tlsPhdr;
-PhdrEntry *Out::descPhdr;
 OutputSection *Out::elfHeader;
 OutputSection *Out::programHeaders;
 OutputSection *Out::preinitArray;
 OutputSection *Out::initArray;
 OutputSection *Out::finiArray;
-OutputSection *Out::descROStart;
-OutputSection *Out::descROEnd;
 
 SmallVector<OutputSection *, 0> elf::outputSections;
 

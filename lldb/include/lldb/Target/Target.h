@@ -171,8 +171,6 @@ public:
 
   lldb::CapabilityFormat GetCapabilityFormat() const;
 
-  bool GetAArch64MorelloDescriptorABI() const;
-
   void SetCapabilityFormat(lldb::CapabilityFormat format);
 
   uint32_t GetMaxZeroPaddingInFloatFormat() const;
@@ -1523,12 +1521,6 @@ protected:
 
     const ArchSpec &GetSpec() const { return m_spec; }
     Architecture *GetPlugin() const { return m_plugin_up.get(); }
-
-    void SetAArch64MorelloDescriptorABI(bool is_desc_abi) {
-      assert(m_spec.GetTriple().isAArch64() &&
-             "Can't force descriptor ABI on non-AArc64 target");
-      m_spec.SetAArch64MorelloDescriptorABI(is_desc_abi);
-    }
 
   private:
     ArchSpec m_spec;

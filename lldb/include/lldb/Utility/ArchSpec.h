@@ -329,13 +329,6 @@ public:
   /// Returns true for the AArch64 Morello Pure Capability ABI.
   bool IsAArch64MorelloPureCapABI() const;
 
-  /// Returns true for the AArch64 Morello Descriptor ABI.
-  bool IsAArch64MorelloDescriptorABI() const;
-
-  // Convenience function for setting or resetting the AArch64 Morello
-  // descriptor ABI. Does nothing for non-AArch64 architectures.
-  void SetAArch64MorelloDescriptorABI(bool is_desc_abi);
-
   /// Returns a string representing current architecture as a target CPU for
   /// tools like compiler, disassembler etc.
   ///

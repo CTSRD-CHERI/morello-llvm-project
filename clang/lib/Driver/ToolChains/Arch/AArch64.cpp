@@ -310,8 +310,7 @@ getAArch64EncodingModeFromAbi(const Driver &D, const ArgList &Args,
   // If Morello support has not been enabled, validate that a purecap ABI has
   // not been requested.
   if ((ItExtFeature == Features.rend() || *ItExtFeature == "-morello") &&
-      (Abi == "purecap" || Abi == "purecap-benchmark" ||
-       Abi == "purecap-desc")) {
+      (Abi == "purecap" || Abi == "purecap-benchmark")) {
       D.Diag(clang::diag::err_target_feature_unsupported_abi)
           << Abi << "morello";
       return false;
@@ -328,8 +327,7 @@ getAArch64EncodingModeFromAbi(const Driver &D, const ArgList &Args,
     if (WarnOnDeprecatedFeature)
       D.Diag(clang::diag::warn_deprecated_c64_usage);
     if ((*ItModeFeature == "+c64") !=
-        (Abi == "purecap" || Abi == "purecap-benchmark" ||
-         Abi == "purecap-desc")) {
+        (Abi == "purecap" || Abi == "purecap-benchmark")) {
       StringRef Mode = *ItModeFeature == "+c64" ? "C64" : "A64";
       D.Diag(clang::diag::err_invalid_c64_abi_combination) << Mode << Abi;
       return false;
@@ -340,7 +338,7 @@ getAArch64EncodingModeFromAbi(const Driver &D, const ArgList &Args,
   // If we don't have an explicit mode set, infer it if an explicit ABI is
   // requested.
   if (MabiArg || Triple.isPurecap()) {
-    if (Abi == "purecap" || Abi == "purecap-benchmark" || Abi == "purecap-desc")
+    if (Abi == "purecap" || Abi == "purecap-benchmark")
       Features.push_back("+c64");
     else
       Features.push_back("-c64");
@@ -360,8 +358,7 @@ bool aarch64::isPurecap(const llvm::opt::ArgList &Args, const llvm::Triple &Trip
     StringRef Abi = A->getValue();
     if (IsPurecapBenchmarkABI)
       *IsPurecapBenchmarkABI = Abi == "purecap-benchmark";
-    return Abi == "purecap" || Abi == "purecap-benchmark" ||
-           Abi == "purecap-desc";
+    return Abi == "purecap" || Abi == "purecap-benchmark";
   }
   return false;
 }
@@ -370,21 +367,18 @@ void aarch64::getMorelloMode(const Driver &D, const llvm::Triple &Triple,
                              const ArgList &Args,
                              bool &A64C,
                              bool &C64, bool &PureCap,
-                             bool &ReducedCapRegs, bool &FnDesc) {
+                             bool &ReducedCapRegs) {
   A64C = false;
   C64 = false;
   PureCap = false;
   ReducedCapRegs = false;
-  FnDesc = false;
 
   if (Triple.isPurecap())
     PureCap = true;
 
   if (Arg *A = Args.getLastArg(options::OPT_mabi_EQ)) {
     StringRef Abi = A->getValue();
-    PureCap = Abi == "purecap" || Abi == "purecap-benchmark" ||
-              Abi == "purecap-desc";
-    FnDesc = Abi == "purecap-desc";
+    PureCap = Abi == "purecap" || Abi == "purecap-benchmark";
   }
 
   if (Arg *A = Args.getLastArg(options::OPT_m16_cap_regs))

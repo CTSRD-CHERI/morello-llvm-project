@@ -691,8 +691,7 @@ bool CommandObjectExpression::DoExecute(llvm::StringRef command,
 
   Target &target = GetSelectedOrDummyTarget();
   const auto &arch = target.GetArchitecture();
-  if ((arch.IsAArch64MorelloPureCapABI() ||
-       arch.IsAArch64MorelloDescriptorABI()) &&
+  if ((arch.IsAArch64MorelloPureCapABI()) &&
       !target.GetForceExpressionEvaluation()) {
     // Disable expression evaluation for AArch64 since we do not yet have ptrace
     // support for restoring the capability registers.

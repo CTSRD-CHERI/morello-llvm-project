@@ -880,10 +880,6 @@ void AArch64PassConfig::addPreEmitPass() {
 
   addPass(createAArch64A53Fix835769());
 
-  if (MCTargetOptions::cheriCapabilityTableABI() ==
-      CheriCapabilityTableABI::FunctionDescriptor)
-    addPass(createAArch64DescSetupPass());
-
   if (EnableBranchTargets)
     addPass(createAArch64BranchTargetsPass());
 

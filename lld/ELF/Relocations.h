@@ -125,9 +125,6 @@ enum RelExpr {
   R_MORELLO_RELAX_TLS_GD_TO_LE_PAGE_PC,
   R_MORELLO_RELAX_TLS_IE_TO_LE_ADD_LO12,
   R_MORELLO_RELAX_TLS_IE_TO_LE_PAGE_PC,
-  R_MORELLO_DESC_PAGE_PC,
-  R_MORELLO_DESC_GOT_PAGE_PC,
-  R_MORELLO_DESC_CAPABILITY,
   // Same as R_PC but with page-aligned semantics.
   R_LOONGARCH_PAGE_PC,
   // Same as R_PLT_PC but with page-aligned semantics.

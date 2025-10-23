@@ -39,9 +39,6 @@
 // RUN: %clang -target aarch64-none-elf -march=morello -mabi=purecap-benchmark %s -### 2>&1 \
 // RUN:   | FileCheck --check-prefixes=CPU-GENERIC,CHECK-BENCHMARK %s --implicit-check-not=-target-feature
 
-// RUN: %clang -target aarch64-none-elf -march=morello -mabi=purecap-desc %s -### 2>&1 \
-// RUN:   | FileCheck --check-prefixes=CPU-GENERIC,CHECK-DESC %s --implicit-check-not=-target-feature
-
 // CPU-GENERIC: "-target-cpu" "generic"
 // CPU-RAINIER: "-target-cpu" "rainier"
 
@@ -90,7 +87,3 @@
 
 // CHECK-BENCHMARK: "-target-feature" "+neon" "-target-feature" "+morello" "-target-feature" "+v8.2a" "-target-feature" "+c64"
 // CHECK-BENCHMARK-SAME: "-target-abi" "purecap-benchmark"
-
-// CHECK-DESC: "-target-feature" "+neon" "-target-feature" "+morello" "-target-feature" "+v8.2a" "-target-feature" "+c64"
-// CHECK-DESC-SAME: "-target-abi" "purecap"
-// CHECK-DESC-SAME: "-cheri-cap-table-abi=fn-desc"

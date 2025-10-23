@@ -108,7 +108,7 @@ RegisterContextDarwin_arm64::RegisterContextDarwin_arm64(
     fpu_errs[i] = -1;
     exc_errs[i] = -1;
   }
-  SetupFP(/*is_desc_abi=*/false);
+  SetupFP();
 }
 
 RegisterContextDarwin_arm64::~RegisterContextDarwin_arm64() = default;

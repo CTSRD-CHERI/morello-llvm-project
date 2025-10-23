@@ -568,7 +568,6 @@ void DynamicRegisterInfo::Finalize(const ArchSpec &arch) {
     }
   }
 
-  bool is_desc_abi = arch.IsAArch64MorelloDescriptorABI();
   if (!generic_regs_specified) {
     switch (arch.GetMachine()) {
     case llvm::Triple::aarch64:
@@ -683,8 +682,8 @@ void DynamicRegisterInfo::Finalize(const ArchSpec &arch) {
       }
     }
     if (!explicit_fp || !explicit_cfp) {
-      const char *fp = is_desc_abi ? "x17" : "x29";
-      const char *cfp = is_desc_abi ? "c17" : "c29";
+      const char *fp = "x29";
+      const char *cfp = "c29";
       for (auto &reg : m_regs) {
         if (explicit_fp == nullptr && strcmp(reg.name, fp) == 0) {
           MarkAsFP(reg, /*is_capability*/ false);

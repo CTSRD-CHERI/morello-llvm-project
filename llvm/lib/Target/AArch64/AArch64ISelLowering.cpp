@@ -2376,7 +2376,6 @@ const char *AArch64TargetLowering::getTargetNodeName(unsigned Opcode) const {
     MAKE_CASE(AArch64ISD::CCALL)
     MAKE_CASE(AArch64ISD::ClearCALL)
     MAKE_CASE(AArch64ISD::ClearCCALL)
-    MAKE_CASE(AArch64ISD::DescCALL)
     MAKE_CASE(AArch64ISD::ADRP)
     MAKE_CASE(AArch64ISD::ADRPC)
     MAKE_CASE(AArch64ISD::ADR)
@@ -7520,17 +7519,6 @@ bool AArch64TargetLowering::isEligibleForTailCallOptimization(
   const SmallVector<SDValue, 32> &OutVals = CLI.OutVals;
   const SmallVector<ISD::InputArg, 32> &Ins = CLI.Ins;
   const SelectionDAG &DAG = CLI.DAG;
-  if (MCTargetOptions::cheriCapabilityTableABI() ==
-      CheriCapabilityTableABI::FunctionDescriptor) {
-    // If the callee is not DSO-local the call will clobber some callee-saved
-    // registers.
-    bool IsLocal = false;
-    if (GlobalAddressSDNode *G = dyn_cast<GlobalAddressSDNode>(Callee.getNode()))
-      IsLocal = G->getGlobal()->isDSOLocal();
-
-    if (!IsLocal)
-      return false;
-  }
 
   MachineFunction &MF = DAG.getMachineFunction();
   const Function &CallerF = MF.getFunction();
@@ -8402,32 +8390,11 @@ AArch64TargetLowering::LowerCall(CallLoweringInfo &CLI,
     return Ret;
   }
 
-  bool IsDescABI =
-     (MCTargetOptions::cheriCapabilityTableABI() ==
-      CheriCapabilityTableABI::FunctionDescriptor);
-  bool IsLocal = false;
-  if (IsDescABI) {
-    if (GlobalAddressSDNode *G = dyn_cast<GlobalAddressSDNode>(CLI.Callee))
-      IsLocal = G->getGlobal()->isDSOLocal();
-
-    if (!IsLocal) {
-      AArch64FunctionInfo *FI =
-          DAG.getMachineFunction().getInfo<AArch64FunctionInfo>();
-      FI->setHasNonLocalCall(true);
-    }
-  }
-
   unsigned CallOpc = AArch64ISD::CALL;
   if (IsCapabilityCall)
     CallOpc = ClearRegs ? AArch64ISD::ClearCCALL : AArch64ISD::CCALL;
   else
     CallOpc = ClearRegs ? AArch64ISD::ClearCALL : AArch64ISD::CALL;
-
-  if (IsDescABI) {
-    assert(!ClearRegs && "Register clearing not supported");
-    CallOpc = (IsDescABI && !IsLocal) ? AArch64ISD::DescCALL
-                                      : AArch64ISD::CCALL;
-  }
 
   // Calls with operand bundle "clang.arc.attachedcall" are special. They should
   // be expanded to the call, directly followed by a special marker sequence and
@@ -8839,11 +8806,8 @@ SDValue AArch64TargetLowering::LowerGlobalAddress(SDValue Op,
   // Dervive function addresses from PCC, unless we distinguish between function
   // and code pointers, in which case the function pointer must be obtained from
   // the GOT instead.
-  bool IsDescABI =
-     (MCTargetOptions::cheriCapabilityTableABI() ==
-      CheriCapabilityTableABI::FunctionDescriptor);
   if (Op.getSimpleValueType() == MVT::c128 && dyn_cast<Function>(GV) &&
-      !IsDescABI && !CheriEmitCodePtrRelocs)
+      !CheriEmitCodePtrRelocs)
     return DAG.getNode(AArch64ISD::CapSealImm, DL, MVT::c128,
                        getFatAddr(GN, DAG, OpFlags),
                        DAG.getConstant(1, DL, MVT::i32));
@@ -10921,10 +10885,7 @@ SDValue AArch64TargetLowering::LowerFRAMEADDR(SDValue Op,
   unsigned Depth = cast<ConstantSDNode>(Op.getOperand(0))->getZExtValue();
   const AArch64RegisterInfo *TRI = Subtarget->getRegisterInfo();
   unsigned FP = TRI->getFramePointerRegister(MF);
-  bool IsDescABI =
-      (MCTargetOptions::cheriCapabilityTableABI() ==
-       CheriCapabilityTableABI::FunctionDescriptor);
-  if (FP == (IsDescABI ? AArch64::C17 : AArch64::CFP)) {
+  if (FP == AArch64::CFP) {
     assert(VT == MVT::c128);
   }
   SDValue FrameAddr = DAG.getCopyFromReg(DAG.getEntryNode(), DL, FP, VT);

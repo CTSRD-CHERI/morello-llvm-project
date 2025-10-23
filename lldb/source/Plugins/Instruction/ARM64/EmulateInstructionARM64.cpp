@@ -140,7 +140,7 @@ EmulateInstructionARM64::CreateInstance(const ArchSpec &arch,
           inst_type)) {
     if (arch.GetTriple().getArch() == llvm::Triple::aarch64 ||
         arch.GetTriple().getArch() == llvm::Triple::aarch64_32) {
-      SetupFP(arch.IsAArch64MorelloDescriptorABI());
+      SetupFP();
       return new EmulateInstructionARM64(arch);
     }
   }

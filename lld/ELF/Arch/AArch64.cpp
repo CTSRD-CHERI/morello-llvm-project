@@ -185,10 +185,6 @@ RelExpr AArch64::getRelExpr(RelType type, const Symbol &s,
   case R_AARCH64_CONDBR19:
   case R_AARCH64_JUMP26:
   case R_AARCH64_TSTBR14:
-  case R_MORELLO_DESC_GLOBAL_CALL26:
-  case R_MORELLO_DESC_GLOBAL_JUMP26:
-  case R_AARCH64_DESC_GLOBAL_CALL26:
-  case R_AARCH64_DESC_GLOBAL_JUMP26:
     return R_PLT_PC;
   case R_AARCH64_PLT32:
     const_cast<Symbol &>(s).thunkAccessed = true;
@@ -211,13 +207,10 @@ RelExpr AArch64::getRelExpr(RelType type, const Symbol &s,
   case R_MORELLO_ADR_PREL_PG_HI20:
   case R_MORELLO_ADR_PREL_PG_HI20_NC:
     return R_AARCH64_PAGE_PC;
-  case R_MORELLO_DESC_ADR_PREL_PG_HI20:
-    return s.isDefined() ? R_MORELLO_DESC_PAGE_PC : R_AARCH64_PAGE_PC;
   case R_AARCH64_LD64_GOT_LO12_NC:
   case R_AARCH64_TLSIE_LD64_GOTTPREL_LO12_NC:
   case R_MORELLO_LD128_GOT_LO12_NC:
   case R_MORELLO_TLSIE_ADD_LO12:
-  case R_MORELLO_DESC_LD128_GOT_LO12_NC:
     return R_GOT;
   case R_AARCH64_LD64_GOTPAGE_LO15:
     return R_AARCH64_GOT_PAGE;
@@ -226,15 +219,11 @@ RelExpr AArch64::getRelExpr(RelType type, const Symbol &s,
   case R_AARCH64_TLSIE_ADR_GOTTPREL_PAGE21:
   case R_MORELLO_TLSIE_ADR_GOTTPREL_PAGE20:
     return R_AARCH64_GOT_PAGE_PC;
-  case R_MORELLO_DESC_ADR_GOT_PAGE:
-    return R_MORELLO_DESC_GOT_PAGE_PC;
   case R_AARCH64_NONE:
     return R_NONE;
   case R_MORELLO_CAPINIT:
   case R_MORELLO_CODE_CAPINIT:
     return R_ABS_CAP;
-  case R_MORELLO_DESC_CAPINIT:
-    return R_MORELLO_DESC_CAPABILITY;
   case R_MORELLO_LD_PREL_LO17:
     return R_MORELLO_VADREF;
   default:
@@ -287,16 +276,11 @@ bool AArch64::usesOnlyLowPageBits(RelType type) const {
   case R_MORELLO_TLSIE_ADD_LO12:
   case R_MORELLO_LD128_GOT_LO12_NC:
   case R_MORELLO_TLSDESC_LD128_LO12:
-  case R_MORELLO_DESC_LD128_GOT_LO12_NC:
     return true;
   }
 }
 
 RelType AArch64::getDynRel(RelType type) const {
-  // XXX: R_MORELLO_DESC_CAPINIT was not previously emitted, so maintain that
-  // historic behaviour. This seems highly dubious.
-  if (type == R_MORELLO_DESC_CAPINIT)
-    return R_MORELLO_CAPINIT;
   if (type == R_AARCH64_ABS64 || type == R_MORELLO_CAPINIT)
     return type;
   return R_AARCH64_NONE;
@@ -524,14 +508,6 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
     checkInt(loc, val, 21, rel);
     write32Addr(loc, val, 0x1FFFFC);
     break;
-  case R_MORELLO_DESC_GLOBAL_CALL26:
-  case R_MORELLO_DESC_GLOBAL_JUMP26:
-  case R_AARCH64_DESC_GLOBAL_CALL26:
-  case R_AARCH64_DESC_GLOBAL_JUMP26:
-    // if not in PLT jump over the first instruction for the desc relocations
-    if (rel.sym && rel.sym->type == STT_FUNC && !rel.sym->hasFlag(NEEDS_PLT))
-      val += 4;
-    LLVM_FALLTHROUGH;
   case R_MORELLO_CALL26:
   case R_MORELLO_JUMP26:
     // If bit 0 is clear then our target is in A64 state, interworking thunks
@@ -607,7 +583,6 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
   case R_AARCH64_TLSLE_LDST128_TPREL_LO12_NC:
   case R_MORELLO_LD128_GOT_LO12_NC:
   case R_MORELLO_TLSDESC_LD128_LO12:
-  case R_MORELLO_DESC_LD128_GOT_LO12_NC:
     checkAlignment(loc, val, 16, rel);
     or32AArch64Imm(loc, getBits(val, 4, 11));
     break;
@@ -689,16 +664,8 @@ void AArch64::relocate(uint8_t *loc, const Relocation &rel,
     // For R_AARCH64_TLSDESC the addend is stored in the second 64-bit word.
     write64(loc + 8, val);
     break;
-  case R_MORELLO_DESC_ADR_PREL_PG_HI20:
-  case R_MORELLO_DESC_ADR_GOT_PAGE:
-    // Reset bit 23 (P) to convert the ADRP to ADRDP
-    write32le(loc, (read32le(loc) & ~(1 << 23)));
-    // Setting the immediate is same as the ADRP
-    relocateNoSym(loc, R_MORELLO_ADR_PREL_PG_HI20, val);
-    break;
   case R_MORELLO_CAPINIT:
   case R_MORELLO_CODE_CAPINIT:
-  case R_MORELLO_DESC_CAPINIT:
     // Write a word within the capability
     write64(loc, val);
     break;
@@ -1135,7 +1102,7 @@ void AArch64BtiPac::writePlt(uint8_t *buf, const Symbol &sym,
 }
 
 namespace {
-class AArch64C64 : public AArch64 {
+class AArch64C64 final : public AArch64 {
 public:
   AArch64C64();
   void writePltHeader(uint8_t *buf) const override;
@@ -1151,14 +1118,6 @@ private:
   void relaxTlsIeToLe(uint8_t *loc, const Relocation &rel,
                       uint64_t val) const override;
   const uint8_t *getPltBranchR17() const;
-};
-
-class AArch64C64DescABI final : public AArch64C64 {
-public:
-  AArch64C64DescABI();
-  void writePltHeader(uint8_t *buf) const override;
-  void writePlt(uint8_t *buf, const Symbol &sym,
-                uint64_t pltEntryAddr) const override;
 };
 } // namespace
 
@@ -1331,58 +1290,10 @@ void AArch64C64::relaxTlsIeToLe(uint8_t *loc, const Relocation &rel,
   }
 }
 
-AArch64C64DescABI::AArch64C64DescABI() {
-  pltRel = R_MORELLO_DESC_JUMP_SLOT;
-  gotRel = R_MORELLO_DESC_GLOB_DAT;
-  iRelativeRel = R_MORELLO_DESC_IRELATIVE;
-}
-
-void AArch64C64DescABI::writePltHeader(uint8_t *buf) const {
-  const uint8_t pltData[] = {
-      0xf0, 0x7b, 0xbf, 0x62, // stp  c16, c30, [csp, #-32]!
-      0x10, 0x00, 0x80, 0x90, // adrp c16, Page(&(.plt.got[2]))
-      0x11, 0x02, 0x40, 0xc2, // ldr  c29, [c16, Offset(&(.plt.got[2]))]
-      0x10, 0x02, 0x00, 0x02, // add  c16, c16, Offset(&(.plt.got[2]))
-      0x1d, 0x12, 0xc4, 0xc2, // ldpbr	c29, [c16]
-      0x1f, 0x20, 0x03, 0xd5, // nop
-      0x1f, 0x20, 0x03, 0xd5, // nop
-      0x1f, 0x20, 0x03, 0xd5, // nop
-  };
-
-  memcpy(buf, pltData, sizeof(pltData));
-
-  uint64_t got = in.gotPlt->getVA();
-  relocateNoSym(buf + 4, R_MORELLO_DESC_ADR_PREL_PG_HI20,
-                getAArch64Page(got + 32) - Out::descPhdr->firstSec->addr);
-  relocateNoSym(buf + 8, R_AARCH64_LDST128_ABS_LO12_NC, got + 32);
-  relocateNoSym(buf + 12, R_AARCH64_ADD_ABS_LO12_NC, got + 32);
-}
-
-void AArch64C64DescABI::writePlt(uint8_t *buf, const Symbol &sym,
-                                 uint64_t pltEntryAddr) const {
-  const uint8_t pltData[] = {
-      0x10, 0x00, 0x00, 0x90, // adrdp  c16, :got:foo
-      0x10, 0x02, 0x00, 0x02, // add   c16, c16, :got_lo12:foo
-      0x1d, 0x02, 0x40, 0xc2, // ldr   c29, [c16]
-      0xbd, 0x13, 0xc4, 0xc2, // ldpbr c29, [c29]
-  };
-  memcpy(buf, pltData, sizeof(pltData));
-
-  uint64_t gotPltEntryAddr = sym.getGotPltVA();
-  relocateNoSym(buf + 0, R_MORELLO_DESC_ADR_PREL_PG_HI20,
-                getAArch64Page(gotPltEntryAddr) - Out::descPhdr->firstSec->addr);
-  relocateNoSym(buf + 4, R_AARCH64_ADD_ABS_LO12_NC, gotPltEntryAddr);
-}
-
 static TargetInfo *getTargetInfo() {
   if (config->isCheriAbi) {
-    if (config->isCheriFnDesc) {
-      static AArch64C64DescABI t;
-      return &t;
-    } else {
-      static AArch64C64 t;
-      return &t;
-    }
+    static AArch64C64 t;
+    return &t;
   }
   if ((config->andFeatures & GNU_PROPERTY_AARCH64_FEATURE_1_BTI) ||
       config->zPacPlt) {

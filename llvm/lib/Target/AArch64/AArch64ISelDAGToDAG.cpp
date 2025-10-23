@@ -587,7 +587,7 @@ private:
 
   bool SelectCMP_SWAP(SDNode *N);
 
-  bool SelectCapabilityBranch(SDNode *N, bool Clear, bool Tail, bool DescCall);
+  bool SelectCapabilityBranch(SDNode *N, bool Clear, bool Tail);
 
   bool SelectSVEAddSubImm(SDValue N, MVT VT, SDValue &Imm, SDValue &Shift);
   bool SelectSVECpyDupImm(SDValue N, MVT VT, SDValue &Imm, SDValue &Shift);
@@ -4977,30 +4977,20 @@ bool AArch64DAGToDAGISel::SelectCMP_SWAP(SDNode *N) {
 }
 
 bool AArch64DAGToDAGISel::
-SelectCapabilityBranch(SDNode *N, bool Clear, bool Tail, bool DescCall) {
+SelectCapabilityBranch(SDNode *N, bool Clear, bool Tail) {
   SDLoc dl(N);
   SDValue CalleeNode = N->getOperand(1);
-  bool IsDescABI =
-      (MCTargetOptions::cheriCapabilityTableABI() ==
-       CheriCapabilityTableABI::FunctionDescriptor);
 
   unsigned Opcode =
       Clear ? AArch64::CBranchLinkClear
             : (Subtarget->hasPurecapBenchmarkABI() ? AArch64::FakeCapBranchLink
                                                    : AArch64::CapBranchLink);
-  if (IsDescABI)
-    Opcode = Clear ? AArch64::CFnDescBranchLinkClear
-                   : AArch64::CFnDescBranchLink;
-
   if (CalleeNode.getOpcode() == ISD::TargetGlobalAddress ||
       CalleeNode.getOpcode() == ISD::TargetExternalSymbol)
-    Opcode = Clear ? AArch64::PBLClear : (DescCall ? AArch64::DescBL
-                                                   : AArch64::BL);
+    Opcode = Clear ? AArch64::PBLClear : AArch64::BL;
 
   if (Tail) {
-    Opcode = Clear ?
-        (IsDescABI ? AArch64::ClearCTCRETURNDescr : AArch64::ClearCTCRETURNr) :
-        (IsDescABI ? AArch64::CTCRETURNDescr : AArch64::CTCRETURNr);
+    Opcode = Clear ? AArch64::ClearCTCRETURNr : AArch64::CTCRETURNr;
     if (CalleeNode.getOpcode() == ISD::TargetGlobalAddress ||
         CalleeNode.getOpcode() == ISD::TargetExternalSymbol)
       Opcode = Clear ? AArch64::ClearTCRETURNdi : AArch64::TCRETURNdi;
@@ -6692,15 +6682,13 @@ void AArch64DAGToDAGISel::Select(SDNode *Node) {
   case AArch64ISD::CTC_RETURN:
   case AArch64ISD::ClearCTC_RETURN: {
     bool Clear = (Node->getOpcode() == AArch64ISD::ClearCTC_RETURN);
-    SelectCapabilityBranch(Node, Clear, /*Tail=*/true, /*DescCall=*/false);
+    SelectCapabilityBranch(Node, Clear, /*Tail=*/true);
     return;
   }
   case AArch64ISD::CCALL:
-  case AArch64ISD::ClearCCALL:
-  case AArch64ISD::DescCALL: {
+  case AArch64ISD::ClearCCALL: {
     bool Clear = (Node->getOpcode() == AArch64ISD::ClearCCALL);
-    bool DescCall = (Node->getOpcode() == AArch64ISD::DescCALL);
-    SelectCapabilityBranch(Node, Clear, /*Tail=*/false, DescCall);
+    SelectCapabilityBranch(Node, Clear, /*Tail=*/false);
     return;
   }
   case AArch64ISD::SVE_LD2_MERGE_ZERO: {

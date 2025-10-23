@@ -117,8 +117,6 @@ Target::Target(Debugger &debugger, const ArchSpec &target_arch,
   LLDB_LOG(GetLog(LLDBLog::Object), "{0} Target::Target()",
            static_cast<void *>(this));
   if (target_arch.IsValid()) {
-    if (target_arch.GetTriple().isAArch64())
-      m_arch.SetAArch64MorelloDescriptorABI(GetAArch64MorelloDescriptorABI());
     LLDB_LOG(GetLog(LLDBLog::Target),
              "Target::Target created with architecture {0} ({1})",
              target_arch.GetArchitectureName(),
@@ -1547,9 +1545,6 @@ bool Target::SetArchitecture(const ArchSpec &arch_spec, bool set_platform,
              "is now {0} ({1})",
              m_arch.GetSpec().GetArchitectureName(),
              m_arch.GetSpec().GetTriple().getTriple());
-    // Make sure we're using the right ABI for Morello AArch64
-    if (m_arch.GetSpec().GetTriple().isAArch64())
-      m_arch.SetAArch64MorelloDescriptorABI(GetAArch64MorelloDescriptorABI());
     return true;
   }
 
@@ -1563,9 +1558,6 @@ bool Target::SetArchitecture(const ArchSpec &arch_spec, bool set_platform,
       m_arch.GetSpec().GetArchitectureName(),
       m_arch.GetSpec().GetTriple().getTriple().c_str());
   m_arch = other;
-  // Make sure we're using the right ABI for Morello AArch64
-  if (m_arch.GetSpec().GetTriple().isAArch64())
-    m_arch.SetAArch64MorelloDescriptorABI(GetAArch64MorelloDescriptorABI());
   ModuleSP executable_sp = GetExecutableModule();
 
   ClearModules(true);
@@ -4685,12 +4677,6 @@ lldb::CapabilityFormat TargetProperties::GetCapabilityFormat() const {
 void TargetProperties::SetCapabilityFormat(lldb::CapabilityFormat format) {
   const uint32_t idx = ePropertyCapabilityFormat;
   SetPropertyAtIndex(idx, format);
-}
-
-bool TargetProperties::GetAArch64MorelloDescriptorABI() const {
-  const uint32_t idx = ePropertyAArch64MorelloDescriptorABI;
-  return GetPropertyAtIndexAs<bool>(
-      idx, g_target_properties[idx].default_uint_value != 0);
 }
 
 uint32_t TargetProperties::GetMaxZeroPaddingInFloatFormat() const {

@@ -512,8 +512,6 @@ static uint64_t getAArch64UndefinedRelativeWeakVA(uint64_t type, uint64_t p) {
   // instruction, this is 4 bytes on from P.
   case R_MORELLO_CALL26:
   case R_MORELLO_JUMP26:
-  case R_MORELLO_DESC_GLOBAL_CALL26:
-  case R_MORELLO_DESC_GLOBAL_JUMP26:
     // FIXME: return 5 rather than 4 bytes so that the relocation code
     // identifies the address as C64 and not AArch64. When relocateNoSym() can
     // examine the Symbol type we can remove this line.
@@ -713,11 +711,6 @@ uint64_t InputSectionBase::getRelocTargetVA(const InputFile *file, RelType type,
     return getAArch64Page(sym.getGotVA() + a) - getAArch64Page(p);
   case R_AARCH64_GOT_PAGE:
     return sym.getGotVA() + a - getAArch64Page(in.got->getVA());
-  case R_MORELLO_DESC_GOT_PAGE_PC:
-    // return value is Page(G(GDAT(S+A)))-Page(D)
-    // D is the address of section .descdata, where "sym" is located.
-    return getAArch64Page(sym.getGotVA() + a) -
-           getAArch64Page(Out::descPhdr->firstSec->addr);
   case R_GOT_PC:
   case R_RELAX_TLS_GD_TO_IE:
     return sym.getGotVA() + a - p;
@@ -766,12 +759,6 @@ uint64_t InputSectionBase::getRelocTargetVA(const InputFile *file, RelType type,
   case R_AARCH64_PAGE_PC: {
     uint64_t val = sym.isUndefWeak() ? p + a : sym.getVA(a);
     return getAArch64Page(val) - getAArch64Page(p);
-  }
-  case R_MORELLO_DESC_PAGE_PC: {
-    // return value is Page(S+A)-Page(D)
-    // D is the address of section where "sym" is located.
-    uint64_t val = sym.isUndefWeak() ? p + a : sym.getVA(a);
-    return getAArch64Page(val) - getAArch64Page(Out::descPhdr->firstSec->addr);
   }
   case R_RISCV_PC_INDIRECT: {
     if (const Relocation *hiRel = getRISCVPCRelHi20(&sym, a))

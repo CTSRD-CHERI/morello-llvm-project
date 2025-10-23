@@ -74,7 +74,6 @@ add_llvm_target(AArch64CodeGen
   AArch64GlobalsAddressing.cpp
   AArch64SandboxMemOpLowering.cpp
   MorelloRangeChecker.cpp
-  AArch64DescSetup.cpp
   AArch64PromoteConstant.cpp
   AArch64PBQPRegAlloc.cpp
   AArch64RegisterInfo.cpp

@@ -560,13 +560,6 @@ bool ArchSpec::IsMIPS() const { return GetTriple().isMIPS(); }
 bool ArchSpec::IsAArch64MorelloPureCapABI() const {
   return GetTriple().isAArch64() && GetFlags() == eAArch64_cheri_purecap;
 }
-bool ArchSpec::IsAArch64MorelloDescriptorABI() const {
-  return GetTriple().isAArch64() && GetFlags() == eAArch64_abi_descabi;
-}
-void ArchSpec::SetAArch64MorelloDescriptorABI(bool is_desc_abi) {
-  if (GetTriple().isAArch64() && is_desc_abi)
-    SetFlags(eAArch64_abi_descabi);
-}
 
 std::string ArchSpec::GetTargetABI() const {
 

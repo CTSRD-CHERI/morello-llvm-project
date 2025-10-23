@@ -432,10 +432,6 @@ void ProcessGDBRemote::BuildDynamicRegisterInfo(bool force) {
   if (!arch_to_use.IsValid())
     arch_to_use = target_arch;
 
-  if (arch_to_use.IsValid() && arch_to_use.GetTriple().isAArch64())
-    arch_to_use.SetAArch64MorelloDescriptorABI(
-        GetTarget().GetAArch64MorelloDescriptorABI());
-
   if (GetGDBServerRegisterInfo(arch_to_use))
     return;
 
