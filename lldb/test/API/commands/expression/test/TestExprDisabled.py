@@ -33,8 +33,12 @@ class ExprAArch64CommandsTestCase(TestBase):
             lambda: self.dbg.SetSelectedPlatform(self.original_platform))
 
     def test_expr_disabled_for_aarch64_purecap(self):
-        self.runCmd("settings set target.aarch64-morello-desc-abi true")
-        target = self.dbg.CreateTargetWithFileAndArch(None, 'aarch64')
+        src_dir = self.getSourceDir()
+        obj_yaml_path = os.path.join(src_dir, "morello-purecap.yaml")
+        obj_path = self.getBuildArtifact("morello-purecap.o")
+        self.yaml2obj(obj_yaml_path, obj_path)
+
+        target = self.dbg.CreateTarget(obj_path)
         self.assertTrue(target, VALID_TARGET)
         self.expect("settings show target.force-expr-evaluation",
                 substrs=["target.force-expr-evaluation (boolean) = false"])
