@@ -4,35 +4,35 @@
 # RUN: llvm-readobj --cap-relocs %t | FileCheck %s
 # RUN: llvm-readobj --cap-relocs --expand-relocs %t | FileCheck %s --check-prefix=EXPAND
 
-# CHECK: CHERI __cap_relocs [
-# CHECK-NEXT:   0x010008 ($d.1)          Base: 0x10000 ($c.0+1) Length: 8 Perms: (FUNC)
-# CHECK-NEXT:   0x010018 Base: 0x10004 (ro+0) Length: 4 Perms: (RODATA)
-# CHECK-NEXT:   0x010028 Base: 0x100b0 (rw+0) Length: 4 Perms: (RWDATA)
-# CHECK-NEXT: ]
+# CHECK: __cap_relocs {
+# CHECK-NEXT:   0x10008 FUNC - 0x10001 [0x10000-0x10008]
+# CHECK-NEXT:   0x10018 RODATA - 0x10004 [0x10004-0x10008]
+# CHECK-NEXT:   0x10028 DATA - 0x100B0 [0x100B0-0x100B4]
+# CHECK-NEXT: }
 
-# EXPAND: CHERI __cap_relocs [
+# EXPAND: __cap_relocs {
 # EXPAND-NEXT:   Relocation {
-# EXPAND-NEXT:     Location: 0x10008 ($d.1)
-# EXPAND-NEXT:     Base: $c.0 (0x10000)
-# EXPAND-NEXT:     Offset: 1
+# EXPAND-NEXT:     Offset: 0x10008
+# EXPAND-NEXT:     Type: FUNC (0x8000000000013DBC)
+# EXPAND-NEXT:     Address: 0x10001
+# EXPAND-NEXT:     Base: 0x10000
 # EXPAND-NEXT:     Length: 8
-# EXPAND-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 # EXPAND-NEXT:   }
 # EXPAND-NEXT:   Relocation {
-# EXPAND-NEXT:     Location: 0x10018
-# EXPAND-NEXT:     Base: ro (0x10004)
-# EXPAND-NEXT:     Offset: 0
+# EXPAND-NEXT:     Offset: 0x10018
+# EXPAND-NEXT:     Type: RODATA (0x1BFBE)
+# EXPAND-NEXT:     Address: 0x10004
+# EXPAND-NEXT:     Base: 0x10004
 # EXPAND-NEXT:     Length: 4
-# EXPAND-NEXT:     Permissions: (RODATA) (0x1BFBE)
 # EXPAND-NEXT:   }
 # EXPAND-NEXT:   Relocation {
-# EXPAND-NEXT:     Location: 0x10028
-# EXPAND-NEXT:     Base: rw (0x100B0)
-# EXPAND-NEXT:     Offset: 0
+# EXPAND-NEXT:     Offset: 0x10028
+# EXPAND-NEXT:     Type: DATA (0x8FBE)
+# EXPAND-NEXT:     Address: 0x100B0
+# EXPAND-NEXT:     Base: 0x100B0
 # EXPAND-NEXT:     Length: 4
-# EXPAND-NEXT:     Permissions: (RWDATA) (0x8FBE)
 # EXPAND-NEXT:   }
-# EXPAND-NEXT: ]
+# EXPAND-NEXT: }
 
 --- !ELF
 FileHeader:

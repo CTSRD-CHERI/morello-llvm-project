@@ -55,4 +55,5 @@ bye:
 // CHECK-NEXT:     ]
 // CHECK-NEXT:     Section: other
 
-// CHECK: There is no __cap_relocs section in the file
+// CHECK-LABEL: CHERI Capability Relocations [
+// CHECK-NEXT:  ]

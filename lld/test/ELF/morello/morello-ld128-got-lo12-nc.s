@@ -75,25 +75,25 @@ foo:
 /// Check 3 locations in the .got are referred to by __cap_relocs
 /// Note the length of of the executable capability is aligned end of .got -
 /// aligned base of .rodata.
-// CHECK: CHERI __cap_relocs [
+// CHECK: __cap_relocs {
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x2202F0
-// CHECK-NEXT:     Base: foo (0x230340)
-// CHECK-NEXT:     Offset: 0
+// CHECK-NEXT:     Offset: 0x2202F0
+// CHECK-NEXT:     Type: DATA (0x8FBE)
+// CHECK-NEXT:     Address: 0x230340
+// CHECK-NEXT:     Base: 0x230340
 // CHECK-NEXT:     Length: 8
-// CHECK-NEXT:     Permissions: (RWDATA) (0x8FBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x220300
-// CHECK-NEXT:     Base: {{.*}} (0x200200)
-// CHECK-NEXT:     Offset: 65625
+// CHECK-NEXT:     Offset: 0x220300
+// CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
+// CHECK-NEXT:     Address: 0x210259
+// CHECK-NEXT:     Base: 0x200200
 // CHECK-NEXT:     Length: 131392
-// CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x220310
-// CHECK-NEXT:     Base: bar (0x200250)
-// CHECK-NEXT:     Offset: 0
+// CHECK-NEXT:     Offset: 0x220310
+// CHECK-NEXT:     Type: RODATA (0x1BFBE)
+// CHECK-NEXT:     Address: 0x200250
+// CHECK-NEXT:     Base: 0x200250
 // CHECK-NEXT:     Length: 8
-// CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }

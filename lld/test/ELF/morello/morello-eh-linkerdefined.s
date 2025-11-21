@@ -52,32 +52,32 @@ _start: ret
 // FIXME: capabilities to sections should be made representable through
 // padding.
 
-// CHECK: CHERI __cap_relocs [
+// CHECK: __cap_relocs {
 // CHECK-NEXT: Relocation {
-// CHECK-NEXT:   Location: 0x25AC80 ($d.2)
-// CHECK-NEXT:   Base: <unknown symbol> (0x213AC0)
-// CHECK-NEXT:   Offset: 20
+// CHECK-NEXT:   Offset: 0x25AC80
+// CHECK-NEXT:   Type: RODATA (0x1BFBE)
+// CHECK-NEXT:   Address: 0x213AD4
+// CHECK-NEXT:   Base: 0x213AC0
 // CHECK-NEXT:   Length: 160064
-// CHECK-NEXT:   Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT: }
 // CHECK-NEXT: Relocation {
-// CHECK-NEXT:   Location: 0x25AC90
-// CHECK-NEXT:   Base: __eh_frame_end (0x23ABE8)
-// CHECK-NEXT:   Offset: 0
+// CHECK-NEXT:   Offset: 0x25AC90
+// CHECK-NEXT:   Type: RODATA (0x1BFBE)
+// CHECK-NEXT:   Address: 0x23ABE8
+// CHECK-NEXT:   Base: 0x23ABE8
 // CHECK-NEXT:   Length: 0
-// CHECK-NEXT:   Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT: }
 // CHECK-NEXT: Relocation {
-// CHECK-NEXT:   Location: 0x25ACA0
-// CHECK-NEXT:   Base: {{.*}} (0x200240)
-// CHECK-NEXT:   Offset: 8
+// CHECK-NEXT:   Offset: 0x25ACA0
+// CHECK-NEXT:   Type: RODATA (0x1BFBE)
+// CHECK-NEXT:   Address: 0x200248
+// CHECK-NEXT:   Base: 0x200240
 // CHECK-NEXT:   Length: 80032
-// CHECK-NEXT:   Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT: }
 // CHECK-NEXT: Relocation {
-// CHECK-NEXT:   Location: 0x25ACB0
-// CHECK-NEXT:   Base: __eh_frame_start (0x213AD4)
-// CHECK-NEXT:   Offset: 0
+// CHECK-NEXT:   Offset: 0x25ACB0
+// CHECK-NEXT:   Type: RODATA (0x1BFBE)
+// CHECK-NEXT:   Address: 0x213AD4
+// CHECK-NEXT:   Base: 0x213AD4
 // CHECK-NEXT:   Length: 0
-// CHECK-NEXT:   Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT: }

@@ -87,59 +87,13 @@ _start: ret
 // CHECK-NEXT: [[#%.16x,FINI_START+8]]    0 NOTYPE  LOCAL  HIDDEN      [[#]] __fini_array_end
 // CHECK-NEXT: [[#%.16x,MY_START:]]       0 NOTYPE  LOCAL  HIDDEN      [[#]] __start_mysection
 // CHECK-NEXT: [[#%.16x,MY_START+8]]      0 NOTYPE  LOCAL  HIDDEN      [[#]] __stop_mysection
-// CHECK: CHERI __cap_relocs [
-// CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x211010
-// CHECK-NEXT:     Base: __preinit_array_start (0x210800)
-// CHECK-NEXT:     Offset: 0
-// CHECK-NEXT:     Length: 8
-// CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
-// CHECK-NEXT:   }
-// CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x211020
-// CHECK-NEXT:     Base: __preinit_array_end (0x210808)
-// CHECK-NEXT:     Offset: 0
-// CHECK-NEXT:     Length: 0
-// CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
-// CHECK-NEXT:   }
-// CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x211030
-// CHECK-NEXT:     Base: __init_array_start (0x210C00)
-// CHECK-NEXT:     Offset: 0
-// CHECK-NEXT:     Length: 8
-// CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
-// CHECK-NEXT:   }
-// CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x211040
-// CHECK-NEXT:     Base: __init_array_end (0x210C08)
-// CHECK-NEXT:     Offset: 0
-// CHECK-NEXT:     Length: 0
-// CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
-// CHECK-NEXT:   }
-// CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x211050
-// CHECK-NEXT:     Base: __fini_array_start (0x211000)
-// CHECK-NEXT:     Offset: 0
-// CHECK-NEXT:     Length: 8
-// CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
-// CHECK-NEXT:   }
-// CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x211060
-// CHECK-NEXT:     Base: __fini_array_end (0x211008)
-// CHECK-NEXT:     Offset: 0
-// CHECK-NEXT:     Length: 0
-// CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
-// CHECK-NEXT:   }
-// CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x211070
-// CHECK-NEXT:     Base: __start_mysection (0x210400)
-// CHECK-NEXT:     Offset: 0
-// CHECK-NEXT:     Length: 8
-// CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
-// CHECK-NEXT:   }
-// CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x211080
-// CHECK-NEXT:     Base: __stop_mysection (0x210408)
-// CHECK-NEXT:     Offset: 0
-// CHECK-NEXT:     Length: 0
-// CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
+// CHECK:      CHERI capability relocation section '__cap_relocs' at offset {{.+}} contains 8 entries:
+// CHECK-NEXT:     Offset             Info         Type        Value
+// CHECK-NEXT: 0000000000211010  000000000001bfbe RODATA  [[#PREINIT_START]] {{\[}}[[#PREINIT_START]]-[[#PREINIT_START+8]]]
+// CHECK-NEXT: 0000000000211020  000000000001bfbe RODATA  [[#PREINIT_START+8]] {{\[}}[[#PREINIT_START+8]]-[[#PREINIT_START+8]]]
+// CHECK-NEXT: 0000000000211030  000000000001bfbe RODATA  [[#INIT_START]] {{\[}}[[#INIT_START]]-[[#INIT_START+8]]]
+// CHECK-NEXT: 0000000000211040  000000000001bfbe RODATA  [[#INIT_START+8]] {{\[}}[[#INIT_START+8]]-[[#INIT_START+8]]]
+// CHECK-NEXT: 0000000000211050  000000000001bfbe RODATA  [[#FINI_START]] {{\[}}[[#FINI_START]]-[[#FINI_START+8]]]
+// CHECK-NEXT: 0000000000211060  000000000001bfbe RODATA  [[#FINI_START+8]] {{\[}}[[#FINI_START+8]]-[[#FINI_START+8]]]
+// CHECK-NEXT: 0000000000211070  000000000001bfbe RODATA  [[#MY_START]] {{\[}}[[#MY_START]]-[[#MY_START+8]]]
+// CHECK-NEXT: 0000000000211080  000000000001bfbe RODATA  [[#MY_START+8]] {{\[}}[[#MY_START+8]]-[[#MY_START+8]]]

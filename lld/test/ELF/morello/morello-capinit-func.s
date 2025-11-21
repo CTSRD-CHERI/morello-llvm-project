@@ -162,48 +162,48 @@ bss:
 /// would access pc-relative via an ADRP. In effect the .rodata and .text in
 /// this example.
 
-// CHECK: CHERI __cap_relocs [
+// CHECK: __cap_relocs {
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x240040
-// CHECK-NEXT:     Base: ro (0x210000)
-// CHECK-NEXT:     Offset: 0
+// CHECK-NEXT:     Offset: 0x240040
+// CHECK-NEXT:     Type: RODATA (0x1BFBE)
+// CHECK-NEXT:     Address: 0x210000
+// CHECK-NEXT:     Base: 0x210000
 // CHECK-NEXT:     Length: 4
-// CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x240050
-// CHECK-NEXT:     Base: ro2 (0x210004)
-// CHECK-NEXT:     Offset: 0
+// CHECK-NEXT:     Offset: 0x240050
+// CHECK-NEXT:     Type: RODATA (0x1BFBE)
+// CHECK-NEXT:     Address: 0x210004
+// CHECK-NEXT:     Base: 0x210004
 // CHECK-NEXT:     Length: 4
-// CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x240060
-// CHECK-NEXT:     Base: {{.*}} (0x200200)
-// CHECK-NEXT:     Offset: 196097
+// CHECK-NEXT:     Offset: 0x240060
+// CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
+// CHECK-NEXT:     Address: 0x230001
+// CHECK-NEXT:     Base: 0x200200
 // CHECK-NEXT:     Length: 196160
-// CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x240070
-// CHECK-NEXT:     Base: {{.*}} (0x200200)
-// CHECK-NEXT:     Offset: 196101
+// CHECK-NEXT:     Offset: 0x240070
+// CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
+// CHECK-NEXT:     Address: 0x230005
+// CHECK-NEXT:     Base: 0x200200
 // CHECK-NEXT:     Length: 196160
-// CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x240080
-// CHECK-NEXT:     Base: rw (0x260000)
-// CHECK-NEXT:     Offset: 0
+// CHECK-NEXT:     Offset: 0x240080
+// CHECK-NEXT:     Type: DATA (0x8FBE)
+// CHECK-NEXT:     Address: 0x260000
+// CHECK-NEXT:     Base: 0x260000
 // CHECK-NEXT:     Length: 4
-// CHECK-NEXT:     Permissions: (RWDATA) (0x8FBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x240090
-// CHECK-NEXT:     Base: bss (0x260004)
-// CHECK-NEXT:     Offset: 0
+// CHECK-NEXT:     Offset: 0x240090
+// CHECK-NEXT:     Type: DATA (0x8FBE)
+// CHECK-NEXT:     Address: 0x260004
+// CHECK-NEXT:     Base: 0x260004
 // CHECK-NEXT:     Length: 4
-// CHECK-NEXT:     Permissions: (RWDATA) (0x8FBE)
 
 /// Rerun the test with .rodata after the .text, we would still expect to
 /// see the same bounds for the capability.
@@ -217,45 +217,45 @@ bss:
 // RUN: ld.lld %t.o -o %t2 --script=%t.script
 // RUN: llvm-readobj --cap-relocs --expand-relocs %t2 | FileCheck %s --check-prefix=CHECK-SCRIPT
 
-// CHECK-SCRIPT: CHERI __cap_relocs [
+// CHECK-SCRIPT: __cap_relocs {
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220400 ($d.2)
-// CHECK-SCRIPT-NEXT:     Base: ro (0x220000)
-// CHECK-SCRIPT-NEXT:     Offset: 0
+// CHECK-SCRIPT-NEXT:     Offset: 0x220400
+// CHECK-SCRIPT-NEXT:     Type: RODATA (0x1BFBE)
+// CHECK-SCRIPT-NEXT:     Address: 0x220000
+// CHECK-SCRIPT-NEXT:     Base: 0x220000
 // CHECK-SCRIPT-NEXT:     Length: 4
-// CHECK-SCRIPT-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220410
-// CHECK-SCRIPT-NEXT:     Base: ro2 (0x220004)
-// CHECK-SCRIPT-NEXT:     Offset: 0
+// CHECK-SCRIPT-NEXT:     Offset: 0x220410
+// CHECK-SCRIPT-NEXT:     Type: RODATA (0x1BFBE)
+// CHECK-SCRIPT-NEXT:     Address: 0x220004
+// CHECK-SCRIPT-NEXT:     Base: 0x220004
 // CHECK-SCRIPT-NEXT:     Length: 4
-// CHECK-SCRIPT-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220420
-// CHECK-SCRIPT-NEXT:     Base: <unknown symbol> (0x0)
-// CHECK-SCRIPT-NEXT:     Offset: 2162689
+// CHECK-SCRIPT-NEXT:     Offset: 0x220420
+// CHECK-SCRIPT-NEXT:     Type: FUNC (0x8000000000013DBC)
+// CHECK-SCRIPT-NEXT:     Address: 0x210001
+// CHECK-SCRIPT-NEXT:     Base: 0x0
 // CHECK-SCRIPT-NEXT:     Length: 2229248
-// CHECK-SCRIPT-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220430
-// CHECK-SCRIPT-NEXT:     Base: <unknown symbol> (0x0)
-// CHECK-SCRIPT-NEXT:     Offset: 2162693
+// CHECK-SCRIPT-NEXT:     Offset: 0x220430
+// CHECK-SCRIPT-NEXT:     Type: FUNC (0x8000000000013DBC)
+// CHECK-SCRIPT-NEXT:     Address: 0x210005
+// CHECK-SCRIPT-NEXT:     Base: 0x0
 // CHECK-SCRIPT-NEXT:     Length: 2229248
-// CHECK-SCRIPT-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220440
-// CHECK-SCRIPT-NEXT:     Base: rw (0x230000)
-// CHECK-SCRIPT-NEXT:     Offset: 0
+// CHECK-SCRIPT-NEXT:     Offset: 0x220440
+// CHECK-SCRIPT-NEXT:     Type: DATA (0x8FBE)
+// CHECK-SCRIPT-NEXT:     Address: 0x230000
+// CHECK-SCRIPT-NEXT:     Base: 0x230000
 // CHECK-SCRIPT-NEXT:     Length: 4
-// CHECK-SCRIPT-NEXT:     Permissions: (RWDATA) (0x8FBE)
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
-// CHECK-SCRIPT-NEXT:     Location: 0x220450
-// CHECK-SCRIPT-NEXT:     Base: bss (0x230004)
-// CHECK-SCRIPT-NEXT:     Offset: 0
+// CHECK-SCRIPT-NEXT:     Offset: 0x220450
+// CHECK-SCRIPT-NEXT:     Type: DATA (0x8FBE)
+// CHECK-SCRIPT-NEXT:     Address: 0x230004
+// CHECK-SCRIPT-NEXT:     Base: 0x230004
 // CHECK-SCRIPT-NEXT:     Length: 4
-// CHECK-SCRIPT-NEXT:     Permissions: (RWDATA) (0x8FBE)

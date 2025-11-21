@@ -87,46 +87,46 @@ _start:
 // the entire .init_array section. This seems to be related to setting
 // isCheriABI?
 
-// CHECK: CHERI __cap_relocs [
+// CHECK: __cap_relocs {
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x230000 ($d.4)
-// CHECK-NEXT:     Base: small (0x200230)
-// CHECK-NEXT:     Offset: 0
+// CHECK-NEXT:     Offset: 0x230000
+// CHECK-NEXT:     Type: RODATA (0x1BFBE)
+// CHECK-NEXT:     Address: 0x200230
+// CHECK-NEXT:     Base: 0x200230
 // CHECK-NEXT:     Length: 1
-// CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x230010
-// CHECK-NEXT:     Base: no_alignment (0x200231)
-// CHECK-NEXT:     Offset: 0
+// CHECK-NEXT:     Offset: 0x230010
+// CHECK-NEXT:     Type: RODATA (0x1BFBE)
+// CHECK-NEXT:     Address: 0x200231
+// CHECK-NEXT:     Base: 0x200231
 // CHECK-NEXT:     Length: 16383
-// CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x230020
-// CHECK-NEXT:     Base: rodata2_start (0x204230)
-// CHECK-NEXT:     Offset: 4
+// CHECK-NEXT:     Offset: 0x230020
+// CHECK-NEXT:     Type: RODATA (0x1BFBE)
+// CHECK-NEXT:     Address: 0x204234
+// CHECK-NEXT:     Base: 0x204230
 // CHECK-NEXT:     Length: 16392
-// CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x230030
-// CHECK-NEXT:     Base: {{.*}} (0x2001E0)
-// CHECK-NEXT:     Offset: 130592
+// CHECK-NEXT:     Offset: 0x230030
+// CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
+// CHECK-NEXT:     Address: 0x220000
+// CHECK-NEXT:     Base: 0x2001E0
 // CHECK-NEXT:     Length: 130592
-// CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x230040
-// CHECK-NEXT:     Base: _start (0x220000)
-// CHECK-NEXT:     Offset: 8
+// CHECK-NEXT:     Offset: 0x230040
+// CHECK-NEXT:     Type: RODATA (0x1BFBE)
+// CHECK-NEXT:     Address: 0x220008
+// CHECK-NEXT:     Base: 0x220000
 // CHECK-NEXT:     Length: 32784
-// CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x230050
-// CHECK-NEXT:     Base: __fini_array_end (0x228008)
-// CHECK-NEXT:     Offset: 0
+// CHECK-NEXT:     Offset: 0x230050
+// CHECK-NEXT:     Type: RODATA (0x1BFBE)
+// CHECK-NEXT:     Address: 0x228008
+// CHECK-NEXT:     Base: 0x228008
 // CHECK-NEXT:     Length: 0
-// CHECK-NEXT:     Permissions: (RODATA) (0x1BFBE)
 // CHECK-NEXT:   }

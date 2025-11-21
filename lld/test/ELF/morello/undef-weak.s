@@ -7,7 +7,8 @@
 
 # RELOC:      Relocations [
 # RELOC-NEXT: ]
-# RELOC-NEXT: There is no __cap_relocs section in the file.
+# RELOC-NEXT: CHERI Capability Relocations [
+# RELOC-NEXT: ]
 
 # HEX-LABEL: section '.data':
 # HEX-NEXT:  [[#%x,]] 00000000 00000000 00000000 00000000

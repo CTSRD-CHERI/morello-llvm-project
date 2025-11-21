@@ -33,6 +33,13 @@ str:
  .xword __cap_relocs_start
  .xword __cap_relocs_end
 
+// CHECK:          Name: ptr1
+// CHECK-NEXT:     Value: 0x[[#%X,PTR1:]]
+// CHECK:          Name: str
+// CHECK-NEXT:     Value: 0x[[#%X,STR:]]
+// CHECK:          Name: ptr2
+// CHECK-NEXT:     Value: 0x[[#%X,PTR2:]]
+
 // CHECK:          Name: __cap_relocs_start
 // CHECK-NEXT:     Value: 0x2201C8
 // CHECK-NEXT:     Size: 0
@@ -55,6 +62,6 @@ str:
 // CHECK-NEXT:     Section: __cap_relocs
 // CHECK-NEXT:   }
 
-// CHECK: CHERI __cap_relocs [
-// CHECK-NEXT:    0x230220 (ptr1)          Base: 0x230240 (str+8) Length: 12 Perms: (RWDATA)
-// CHECK-NEXT:    0x230230 (ptr2)          Base: 0x230240 (str+0) Length: 12 Perms: (RWDATA)
+// CHECK: __cap_relocs {
+// CHECK-NEXT:    0x[[#PTR1]] DATA - 0x[[#STR+8]] [0x[[#STR]]-0x[[#STR+12]]]
+// CHECK-NEXT:    0x[[#PTR2]] DATA - 0x[[#STR]] [0x[[#STR]]-0x[[#STR+12]]]

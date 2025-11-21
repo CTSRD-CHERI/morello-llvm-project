@@ -34,31 +34,31 @@ _start:
 // CHECK-NEXT:     Offset:
 // CHECK-NEXT:     Size: 160
 
-// CHECK: CHERI __cap_relocs [
+// CHECK: __cap_relocs {
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x220260 ($d.1)
-// CHECK-NEXT:     Base: {{.*}} (0x200200)
-// CHECK-NEXT:     Offset: 97793
+// CHECK-NEXT:     Offset: 0x220260
+// CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
+// CHECK-NEXT:     Address: 0x218001
+// CHECK-NEXT:     Base: 0x200200
 // CHECK-NEXT:     Length: 131392
-// CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x220270
-// CHECK-NEXT:     Base: bar (0x400000)
-// CHECK-NEXT:     Offset: 0
+// CHECK-NEXT:     Offset: 0x220270
+// CHECK-NEXT:     Type: DATA (0x8FBE)
+// CHECK-NEXT:     Address: 0x400000
+// CHECK-NEXT:     Base: 0x400000
 // CHECK-NEXT:     Length: 8
-// CHECK-NEXT:     Permissions: (RWDATA) (0x8FBE)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x220320
-// CHECK-NEXT:     Base: {{.*}} (0x200200)
-// CHECK-NEXT:     Offset: 97793
+// CHECK-NEXT:     Offset: 0x220320
+// CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
+// CHECK-NEXT:     Address: 0x218001
+// CHECK-NEXT:     Base: 0x200200
 // CHECK-NEXT:     Length: 131392
-// CHECK-NEXT:     Permissions: (FUNC) (0x8000000000013DBC)
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Location: 0x220330
-// CHECK-NEXT:     Base: bar (0x400000)
-// CHECK-NEXT:     Offset: 0
+// CHECK-NEXT:     Offset: 0x220330
+// CHECK-NEXT:     Type: DATA (0x8FBE)
+// CHECK-NEXT:     Address: 0x400000
+// CHECK-NEXT:     Base: 0x400000
 // CHECK-NEXT:     Length: 8
-// CHECK-NEXT:     Permissions: (RWDATA) (0x8FBE)

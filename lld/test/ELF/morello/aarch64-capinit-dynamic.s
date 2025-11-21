@@ -128,4 +128,5 @@ foo:
 // CHECK-NEXT:   }
 // CHECK-NEXT: ]
 
-// CHECK-NEXT: There is no __cap_relocs section in the file.
+// CHECK-LABEL: CHERI Capability Relocations [
+// CHECK-NEXT:  ]
