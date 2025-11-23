@@ -81,6 +81,8 @@ public:
   bool isNeeded() const override { return !relocsMap.empty(); }
   size_t getSize() const override { return relocsMap.size() * entsize; }
   void writeTo(uint8_t *buf) override;
+  void finalizeContents() override;
+  bool linkerDefinedCapabilityAlign();
   void addCapReloc(bool isCode, CheriCapRelocLocation loc,
                    const SymbolAndOffset &target, int64_t capabilityOffset,
                    Symbol *sourceSymbol = nullptr);
@@ -103,63 +105,6 @@ private:
     return it.second;
   }
 
-protected:
-  llvm::MapVector<CheriCapRelocLocation, CheriCapReloc> relocsMap;
-};
-
-// The Morello implementation of CapRelocs is similar in concept and structure to
-// CheriCapRelocsSection defined above. There are sufficient differences to
-// make a separate class worthwhile:
-// - Morello is ELF64LE only, this class does not need to be templated, which
-// simplifies the implementation.
-// - Morello does not support legacy compiler generate __cap_relocs sections.
-// This means that we only add CheriCapRelocs with SymbolAndOffset as {Sym, 0}
-// - Morello does not output the __cap_relocs section when dynamic linking so we
-// never add dynamic relocations to the section.
-// - The Morello dynamic linking model requires information that we use to write
-// out the __cap_relocs in the static case. The calculation of that information
-// has been split out so that it can be called without having to store
-// information in an instance of this class.
-//
-// Alternatives:
-// - There is scope for combining MorelloCapRelocsSection and
-// CheriCapRelocsSection however this should be co-designed with CUCL to avoid
-// merge conflicts from CHERI.
-// - We use CheriCapRelocLocation and CheriCapReloc. Not all fields of these
-// are relevant to Morello and should the decision be made to further separate
-// CHERI and Morello then Morello specific types could be used.
-class MorelloCapRelocsSection : public SyntheticSection {
-public:
-  static constexpr size_t fieldSize = 8;
-  static constexpr size_t relocSize = fieldSize * 5;
-
-  MorelloCapRelocsSection();
-
-  void addCapReloc(CheriCapRelocLocation loc, const SymbolAndOffset &target,
-                   bool targetNeedsDynReloc, int64_t capabilityOffset,
-                   Symbol *sourceSymbol = nullptr);
-
-  void writeTo(uint8_t *buf) override;
-  bool linkerDefinedCapabilityAlign();
-  bool isNeeded() const override { return !relocsMap.empty(); }
-  size_t getSize() const override { return relocsMap.size() * entsize; }
-  void finalizeContents() override;
-
-private:
-  bool addEntry(CheriCapRelocLocation loc, CheriCapReloc relocation) {
-    auto it = relocsMap.insert(std::make_pair(loc, relocation));
-    if (!(it.first->second == relocation)) {
-      error("Newly inserted relocation at " + loc.toString() +
-            " does not match existing one:\n>   Existing: " +
-            it.first->second.target.verboseToString() +
-            ", cap offset=" + Twine(it.first->second.capabilityOffset) +
-            ", is code=" + Twine(it.first->second.isCode) +
-            "\n>   New:     " + relocation.target.verboseToString() +
-            ", cap offset=" + Twine(relocation.capabilityOffset) +
-            ", is code=" + Twine(relocation.isCode));
-    }
-    return it.second;
-  }
   llvm::MapVector<CheriCapRelocLocation, CheriCapReloc> relocsMap;
 };
 

@@ -345,6 +345,19 @@ enum class CapRelocType {
   CODE,
 };
 
+bool isCapRelocTypeExec(CapRelocType type) {
+  switch (type) {
+  case CapRelocType::DATA:
+  case CapRelocType::RODATA:
+    return false;
+  case CapRelocType::FUNC:
+  case CapRelocType::IFUNC:
+  case CapRelocType::CODE:
+    return true;
+  }
+  llvm_unreachable("unknown CapRelocType");
+}
+
 static CapRelocType getTargetType(const SymbolAndOffset &target) {
   bool isFunc, isGnuIFunc, isTls;
   OutputSection *os;
@@ -376,18 +389,48 @@ static CapRelocType getTargetType(const SymbolAndOffset &target) {
   return CapRelocType::DATA;
 }
 
+// Morello Capability Permissions Bits relevant for Static Linking are
+//   bit 17 : Load
+//   bit 16 : Store
+//   bit 15 : Execute
+//   bit 14 : LoadCap
+//   bit 13 : StoreCap
+//   bit 12 : StoreLocalCap
+//   bit 9 : System
+//   bit 6 : MutableLoad
+//   bit 1 : Executive
+//   bit 0 : Global
+// Because the Morello clrperm instruction clears permission bits, the
+// permission bits in the __cap_relocs section are inverted. The MSB (bit 64)
+// means use the PCC to construct the Capability. This is set for the EXEC case
+// as well.
+// RO = ~(Load|LoadCap|MutableLoad|Global)
+// RW = ~(Load|Store|LoadCap|StoreCap|StoreLocalCap|MutableLoad|Global)
+// EXEC = MSB | ~(Load|Execute|LoadCap|System|MutableLoad|Executive|Global)
 template <class ELFT> struct CapRelocPermission {
   static uint64_t encodeType(CapRelocType type) {
     switch (type) {
     case CapRelocType::DATA:
+      if (config->emachine == EM_AARCH64)
+        return 0x8fbe;
       return 0;
     case CapRelocType::RODATA:
+      if (config->emachine == EM_AARCH64)
+        return 0x1bfbe;
       return readOnlyFlag;
     case CapRelocType::FUNC:
+      if (config->emachine == EM_AARCH64)
+        return 0x8000000000013dbc;
       return functionFlag;
     case CapRelocType::IFUNC:
+      assert(config->emachine != EM_AARCH64 &&
+             "Morello IFUNCs should always use ELF relocations");
       return functionFlag | indirectFlag;
     case CapRelocType::CODE:
+      // NB: Same as FUNC, Morello's caprelocs does not distinguish, only
+      // supported for ELF relocations.
+      if (config->emachine == EM_AARCH64)
+        return 0x8000000000013dbc;
       return functionFlag | codeFlag;
     }
     llvm_unreachable("unknown CapRelocType");
@@ -452,7 +495,34 @@ void CheriCapRelocsSection::writeToImpl(uint8_t *buf) {
                     location.toString());
       targetType = CapRelocType::CODE;
     }
+    if (config->emachine == EM_AARCH64 && targetType == CapRelocType::IFUNC)
+      error("cannot reference non-preemptible IFUNC as a capability, "
+            "needed for symbol " +
+            reloc.target.verboseToString() + "\n>>> referenced by " +
+            location.toString());
     uint64_t permissions = CapRelocPermission<ELFT>::encodeType(targetType);
+
+    // Increase bounds of executable capabilities.
+    if (config->emachine == EM_AARCH64 && isCapRelocTypeExec(targetType)) {
+      targetOffset += targetVA - config->morelloPCCBase;
+      targetVA = config->morelloPCCBase;
+      targetSize = config->morelloPCCLimit - config->morelloPCCBase;
+    }
+
+    // Ensure that the base and limit of the capabilities are representable
+    // in the CHERI Concentrate Encoding.
+    // FIXME: This can lead to more imprecise capability bounds. In an ideal
+    // world we'd increase Section alignment and post-pad sizes to limit
+    // this, but it is too late to do this here.
+    if (config->emachine == EM_AARCH64) {
+      uint64_t alignReq = getMorelloRequiredAlignment(targetSize);
+      uint64_t targetLimit = targetVA + targetSize;
+      uint64_t alignedTargetVA = alignDown(targetVA, alignReq);
+      uint64_t alignedTargetLimit = alignTo(targetLimit, alignReq);
+      targetSize = alignedTargetLimit - alignedTargetVA;
+      targetOffset += targetVA - alignedTargetVA;
+      targetVA = alignedTargetVA;
+    }
 
     // TODO: should we warn about symbols that are out-of-bounds?
     // mandoc seems to do it so I guess we need it
@@ -478,44 +548,10 @@ void CheriCapRelocsSection::writeToImpl(uint8_t *buf) {
   assert(offset == getSize() && "Not all data written?");
 }
 
-MorelloCapRelocsSection::MorelloCapRelocsSection()
-    : SyntheticSection(SHF_ALLOC, SHT_PROGBITS, 8, "__cap_relocs") {
-  this->entsize = relocSize;
-}
-
-void MorelloCapRelocsSection::addCapReloc(CheriCapRelocLocation loc,
-                                        const SymbolAndOffset &target,
-                                        bool targetNeedsDynReloc,
-                                        int64_t capabilityOffset,
-                                        Symbol *sourceSymbol) {
-
-  std::string sourceMsg =
-      sourceSymbol ? verboseToString(sourceSymbol) : loc.toString();
-  if (target.sym()->isUndefined() && !target.sym()->isUndefWeak()) {
-    std::string msg =
-        "cap_reloc against undefined symbol: " + toString(*target.sym()) +
-        "\n>>> referenced by " + sourceMsg;
-    if (config->unresolvedSymbols == UnresolvedPolicy::ReportError)
-      error(msg);
-    else
-      nonFatalWarning(msg);
-  }
-
-  if (errorHandler().verbose && capabilityOffset < 0)
-    message("global capability offset " + Twine(capabilityOffset) +
-            " is less than 0:\n>>> Location: " + loc.toString() +
-            "\n>>> Target: " + target.verboseToString());
-
-  bool canWriteLoc = (loc.section->flags & SHF_WRITE) || !config->zText;
-  if (!canWriteLoc) {
-    readOnlyCapRelocsError(*target.sym(), "\n>>> referenced by " + sourceMsg);
+void CheriCapRelocsSection::finalizeContents() {
+  if (config->emachine != EM_AARCH64)
     return;
-  }
 
-  addEntry(loc, {false, target, capabilityOffset});
-}
-
-void MorelloCapRelocsSection::finalizeContents() {
   if (auto *r = symtab.find("__cap_relocs_start"))
     if (auto *d = dyn_cast<Defined>(r))
       d->value = this->outSecOff;
@@ -525,136 +561,18 @@ void MorelloCapRelocsSection::finalizeContents() {
       d->value = this->outSecOff + this->getSize();
 }
 
-// The Morello permissions are encoded differently in the __cap_relocs
-// section (static linking) or in the fragment (dynamic linking).
-//  Helper class to return the right one dependent on context.
-struct Perm {
-  uint64_t ro;
-  uint64_t rw;
-  uint64_t func;
-};
-// Static Permissions at index 0, Dynamic Permissions at index 1;
-struct Permissions {
-  enum Type {
-    STATIC = 0,
-    DYNAMIC = 1,
-    MAX
-  };
-  static Perm perms[Permissions::Type::MAX];
-  static uint64_t rodata(Permissions::Type idx) {
-    return perms[idx].ro;
-  };
-  static uint64_t rwdata(Permissions::Type idx) {
-    return perms[idx].rw;
-  };
-  static uint64_t func(Permissions::Type idx) {
-    return perms[idx].func;
-  };
-};
-static uint64_t getPermissions(const Symbol &sym, Permissions::Type type) {
-  uint64_t permissions = Permissions::rwdata(type);
-  if (sym.isFunc() || sym.isGnuIFunc())
-    permissions = Permissions::func(type);
-  else if (auto os = sym.getOutputSection()) {
-    assert(!sym.isTls());
-    assert((os->flags & SHF_TLS) == 0);
-    if (((os->flags & SHF_WRITE) == 0) || isRelroSection(os)) {
-      permissions = Permissions::rodata(type);
-    } else if (os->flags & SHF_EXECINSTR) {
-      warn("Non-function __cap_reloc against symbol in section with "
-           "SHF_EXECINSTR (" +
-           toString(os->name) + ") for symbol " + sym.getName().str());
-    } else if (os->flags & SHF_WRITE) {
-      permissions = Permissions::rwdata(type);
-    }
+static uint64_t getMorelloFragmentPermissions(CapRelocType type) {
+  switch (type) {
+  case CapRelocType::DATA:
+    return 0x2;
+  case CapRelocType::RODATA:
+    return 0x1;
+  case CapRelocType::FUNC:
+  case CapRelocType::IFUNC:
+  case CapRelocType::CODE:
+    return 0x4;
   }
-  return permissions;
-}
-
-// Morello Capability Permissions Bits relevant for Static Linking are
-//   bit 17 : Load
-//   bit 16 : Store
-//   bit 15 : Execute
-//   bit 14 : LoadCap
-//   bit 13 : StoreCap
-//   bit 12 : StoreLocalCap
-//   bit 9 : System
-//   bit 6 : MutableLoad
-//   bit 1 : Executive
-//   bit 0 : Global
-// Because the Morello clrperm instruction clears permission bits, the
-// permission bits in the __cap_relocs section are inverted. The MSB (bit 64)
-// means use the PCC to construct the Capability. This is set for the EXEC case
-// as well.
-// RO = ~(Load|LoadCap|MutableLoad|Global)
-// RW = ~(Load|Store|LoadCap|StoreCap|StoreLocalCap|MutableLoad|Global)
-// EXEC = MSB | ~(Load|Execute|LoadCap|System|MutableLoad|Executive|Global)
-Perm Permissions::perms[Permissions::Type::MAX] = {
-    {0x1bfbe, 0x8fbe, 0x8000000000013dbc},
-    {0x1, 0x2, 0x4}};
-
-void MorelloCapRelocsSection::writeTo(uint8_t *buf) {
-  static_assert(MorelloCapRelocsSection::relocSize ==
-                    sizeof(InMemoryCapRelocEntry<ELF64LE>),
-                "cap relocs size mismatch");
-  assert(config->emachine == EM_AARCH64);
-  uint64_t offset = 0;
-  for (const auto &i : this->relocsMap) {
-    const CheriCapRelocLocation &location = i.first;
-    const CheriCapReloc &reloc = i.second;
-    assert(location.offset <= location.section->getSize());
-    assert(!reloc.isCode &&
-           "unexpected code capreloc; not implemented for Morello");
-
-    if (reloc.target.sym()->isGnuIFunc())
-      error("cannot reference non-preemptible IFUNC as a capability, "
-            "needed for symbol " +
-            reloc.target.verboseToString() + "\n>>> referenced by " +
-            location.toString());
-
-    uint64_t outSecOffset = location.section->getOffset(location.offset);
-    uint64_t locationVA =
-        location.section->getOutputSection()->addr + outSecOffset;
-    uint64_t targetVA = reloc.target.sym()->getVA(reloc.target.offset);
-    uint64_t targetSize = getTargetSize(location, reloc.target);
-    uint64_t targetOffset = reloc.capabilityOffset;
-    uint64_t permissions = getPermissions(*reloc.target.sym(), Permissions::Type::STATIC);
-
-    // Increase bounds of executable capabilities.
-    if (permissions == Permissions::func(Permissions::Type::STATIC)) {
-      targetOffset += targetVA - config->morelloPCCBase;
-      targetVA = config->morelloPCCBase;
-      targetSize = config->morelloPCCLimit - config->morelloPCCBase;
-    }
-    // Ensure that the base and limit of the capabilities are representable
-    // in the CHERI Concentrate Encoding.
-    // FIXME: This can lead to more imprecise capability bounds. In an ideal
-    // world we'd increase Section alignment and post-pad sizes to limit
-    // this, but it is too late to do this here.
-    uint64_t alignReq = getMorelloRequiredAlignment(targetSize);
-    uint64_t targetLimit = targetVA + targetSize;
-    uint64_t alignedTargetVA = alignDown(targetVA, alignReq);
-    uint64_t alignedTargetLimit = alignTo(targetLimit, alignReq);
-    targetSize = alignedTargetLimit - alignedTargetVA;
-    targetOffset += targetVA - alignedTargetVA;
-    targetVA = alignedTargetVA;
-    InMemoryCapRelocEntry<ELF64LE> entry(locationVA, targetVA, targetOffset,
-                                         targetSize, permissions);
-    memcpy(buf + offset, &entry, sizeof(entry));
-    offset += this->relocSize;
-  }
-
-  // Sort the cap_relocs by target address for better cache and TLB locality
-  // It also makes it much easier to read the llvm-objdump -C output since it
-  // is sorted in a sensible order
-  std::stable_sort(
-      reinterpret_cast<InMemoryCapRelocEntry<ELF64LE> *>(buf),
-      reinterpret_cast<InMemoryCapRelocEntry<ELF64LE> *>(buf + offset),
-      [](const InMemoryCapRelocEntry<ELF64LE> &a,
-         const InMemoryCapRelocEntry<ELF64LE> &b) {
-        return a.capability_location < b.capability_location;
-      });
-  assert(offset == this->getSize() && "Not all data written?");
+  llvm_unreachable("unknown CapRelocType");
 }
 
 // Implementation of R_MORELLO_CAPFRAG_SIZE_AND_PERM static relocation. This is
@@ -666,8 +584,9 @@ uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
   if (sym.isFunc() || sym.isGnuIFunc())
     return getMorelloExecSizeAndPermissions();
 
-  const Defined *definedSym = cast<Defined>(&sym);
-  uint64_t perms = getPermissions(*definedSym, Permissions::Type::DYNAMIC);
+  SymbolAndOffset target(const_cast<Symbol *>(&sym), 0);
+  CapRelocType type = getTargetType(target);
+  uint64_t perms = getMorelloFragmentPermissions(type);
   uint64_t size = getTargetSize(
       {const_cast<InputSectionBase *>(isec), offset - config->wordsize},
       SymbolAndOffset(const_cast<Symbol *>(&sym), 0));
@@ -687,7 +606,7 @@ uint64_t getMorelloExecBaseAddress() { return config->morelloPCCBase; }
 
 uint64_t getMorelloExecSizeAndPermissions() {
   uint64_t size = config->morelloPCCLimit - config->morelloPCCBase;
-  uint64_t perm = Permissions::func(Permissions::Type::DYNAMIC);
+  uint64_t perm = getMorelloFragmentPermissions(CapRelocType::FUNC);
   return (perm << 56) | size;
 }
 
@@ -783,13 +702,15 @@ bool morelloLinkerDefinedCapabilityAlign() {
         changed |= alignToRequired(os, os, getMorelloRequiredAlignment(os->size));
       }
     }
-  } else if (in.morelloCapRelocs->isNeeded()) {
-    changed |= in.morelloCapRelocs->linkerDefinedCapabilityAlign();
+  } else if (in.capRelocs->isNeeded()) {
+    changed |= in.capRelocs->linkerDefinedCapabilityAlign();
   }
   return changed;
 }
 
-bool MorelloCapRelocsSection::linkerDefinedCapabilityAlign() {
+bool CheriCapRelocsSection::linkerDefinedCapabilityAlign() {
+  assert(config->emachine == EM_AARCH64);
+
   bool changed = false;
   for (const auto &i : this->relocsMap) {
     const CheriCapReloc &reloc = i.second;
@@ -1372,10 +1293,7 @@ void addRelativeCapabilityRelocation(
         !config->hasDynSymTab ? *in.relaDyn : *mainPart->relaDyn;
     relaDyn.addReloc(DynamicReloc::AddendOnlyWithTargetVA, dynType, isec,
                      offsetInSec, *sym, addend, expr, type);
-  } else if (config->emachine == EM_AARCH64)
-    in.morelloCapRelocs->addCapReloc({&isec, offsetInSec}, {sym, 0u},
-                                     sym->isPreemptible, addend);
-  else
+  } else
     in.capRelocs->addCapReloc(isCode, {&isec, offsetInSec}, {symOrSec, 0u},
                               addend);
 }

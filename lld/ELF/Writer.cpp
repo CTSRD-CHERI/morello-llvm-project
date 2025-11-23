@@ -325,15 +325,11 @@ template <class ELFT> void elf::createSyntheticSections() {
   add(*in.bssRelRo);
 
   if (config->capabilitySize > 0) {
-    if (config->emachine == EM_AARCH64) {
-      in.morelloCapRelocs = std::make_unique<MorelloCapRelocsSection>();
-      add(*in.morelloCapRelocs);
-      if (config->isCheriAbi) {
-        in.tlsLEData = std::make_unique<MorelloTLSLEDataSection>();
-        add(*in.tlsLEData);
-      }
-    } else
-      in.capRelocs = std::make_unique<CheriCapRelocsSection>("__cap_relocs");
+    in.capRelocs = std::make_unique<CheriCapRelocsSection>("__cap_relocs");
+    if (config->emachine == EM_AARCH64 && config->isCheriAbi) {
+      in.tlsLEData = std::make_unique<MorelloTLSLEDataSection>();
+      add(*in.tlsLEData);
+    }
 
     if (config->emachine == EM_MIPS) {
       in.mipsCheriCapTable = std::make_unique<MipsCheriCapTableSection>();
@@ -2076,7 +2072,7 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
 
     // Now handle __cap_relocs (must be before RelaDyn because it might
     // result in new dynamic relocations being added)
-    if (in.capRelocs) {
+    if (in.capRelocs && config->emachine != EM_AARCH64) {
       finalizeSynthetic(in.capRelocs.get());
     }
     if (in.plt && in.plt->isNeeded())
@@ -2304,7 +2300,8 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
     finalizeSynthetic(in.symTab.get());
     finalizeSynthetic(in.ppc64LongBranchTarget.get());
     finalizeSynthetic(in.armCmseSGSection.get());
-    finalizeSynthetic(in.morelloCapRelocs.get());
+    if (config->emachine == EM_AARCH64)
+      finalizeSynthetic(in.capRelocs.get());
     finalizeSynthetic(in.tlsLEData.get());
   }
 
@@ -2427,10 +2424,10 @@ template <class ELFT> void Writer<ELFT>::addStartEndSymbols() {
     define("__cap_table_start", "__cap_table_end",
            in.mipsCheriCapTable->getOutputSection());
 
-  if (config->emachine == EM_AARCH64 && in.morelloCapRelocs)
+  if (config->emachine == EM_AARCH64 && in.capRelocs)
     // These symbol values will be finalized in finalizeContents()
     define("__cap_relocs_start", "__cap_relocs_end",
-           in.morelloCapRelocs->getOutputSection());
+           in.capRelocs->getOutputSection());
 
   if (OutputSection *sec = findSection(".ARM.exidx"))
     define("__exidx_start", "__exidx_end", sec);
