@@ -503,7 +503,8 @@ void CheriCapRelocsSection::writeToImpl(uint8_t *buf) {
     uint64_t permissions = CapRelocPermission<ELFT>::encodeType(targetType);
 
     // Increase bounds of executable capabilities.
-    if (config->emachine == EM_AARCH64 && isCapRelocTypeExec(targetType)) {
+    if (config->emachine == EM_AARCH64 && config->isCheriAbi &&
+        isCapRelocTypeExec(targetType)) {
       targetOffset += targetVA - config->morelloPCCBase;
       targetVA = config->morelloPCCBase;
       targetSize = config->morelloPCCLimit - config->morelloPCCBase;
@@ -581,7 +582,7 @@ static uint64_t getMorelloFragmentPermissions(CapRelocType type) {
 uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
                                       const InputSectionBase *isec,
                                       uint64_t offset) {
-  if (sym.isFunc() || sym.isGnuIFunc())
+  if ((sym.isFunc() || sym.isGnuIFunc()) && config->isCheriAbi)
     return getMorelloExecSizeAndPermissions();
 
   SymbolAndOffset target(const_cast<Symbol *>(&sym), 0);
@@ -595,16 +596,20 @@ uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
 
 uint64_t getMorelloBaseAddress(int64_t a, const Symbol &sym,
                                const InputSectionBase *isec, uint64_t offset) {
-  if (sym.isFunc() || sym.isGnuIFunc())
+  if ((sym.isFunc() || sym.isGnuIFunc()) && config->isCheriAbi)
     return getMorelloExecBaseAddress();
 
   // NB: Addend is omitted; part of the offset, not the base
   return sym.getVA();
 }
 
-uint64_t getMorelloExecBaseAddress() { return config->morelloPCCBase; }
+uint64_t getMorelloExecBaseAddress() {
+  assert(config->isCheriAbi);
+  return config->morelloPCCBase;
+}
 
 uint64_t getMorelloExecSizeAndPermissions() {
+  assert(config->isCheriAbi);
   uint64_t size = config->morelloPCCLimit - config->morelloPCCBase;
   uint64_t perm = getMorelloFragmentPermissions(CapRelocType::FUNC);
   return (perm << 56) | size;
