@@ -91,22 +91,22 @@ _start:
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Offset: 0x230000
 // CHECK-NEXT:     Type: RODATA (0x1BFBE)
-// CHECK-NEXT:     Address: 0x200230
-// CHECK-NEXT:     Base: 0x200230
+// CHECK-NEXT:     Address: 0x200320
+// CHECK-NEXT:     Base: 0x200320
 // CHECK-NEXT:     Length: 1
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Offset: 0x230010
 // CHECK-NEXT:     Type: RODATA (0x1BFBE)
-// CHECK-NEXT:     Address: 0x200231
-// CHECK-NEXT:     Base: 0x200231
+// CHECK-NEXT:     Address: 0x200321
+// CHECK-NEXT:     Base: 0x200321
 // CHECK-NEXT:     Length: 16383
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Offset: 0x230020
 // CHECK-NEXT:     Type: RODATA (0x1BFBE)
-// CHECK-NEXT:     Address: 0x204234
-// CHECK-NEXT:     Base: 0x204230
+// CHECK-NEXT:     Address: 0x204324
+// CHECK-NEXT:     Base: 0x204320
 // CHECK-NEXT:     Length: 16392
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {

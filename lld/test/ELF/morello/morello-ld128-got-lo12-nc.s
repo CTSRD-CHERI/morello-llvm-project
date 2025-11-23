@@ -38,15 +38,15 @@ bar:
 foo:
  .xword 10
 
-// DIS: 0000000000210258 <_start>:
-// DIS-NEXT:   210258:        adrp    c0, 0x220000 <_start+0xfda8>
-// DIS-NEXT:   21025c:        ldr     c0, [c0, #768]
-// DIS-NEXT:   210260:        adrp    c1, 0x220000 <_start+0xfda8>
-// DIS-NEXT:   210264:        ldr     c1, [c1, #752]
-// DIS-NEXT:   210268:        adrp    c1, 0x220000 <_start+0xfda8>
-// DIS-NEXT:   21026c:        ldr     c1, [c1, #752]
-// DIS-NEXT:   210270:        adrp    c2, 0x220000 <_start+0xfda8>
-// DIS-NEXT:   210274:        ldr     c2, [c1, #784]
+// DIS: 00000000002102c8 <_start>:
+// DIS-NEXT:   2102c8:        adrp    c0, 0x220000 <_start+0xfd38>
+// DIS-NEXT:   2102cc:        ldr     c0, [c0, #768]
+// DIS-NEXT:   2102d0:        adrp    c1, 0x220000 <_start+0xfd38>
+// DIS-NEXT:   2102d4:        ldr     c1, [c1, #752]
+// DIS-NEXT:   2102d8:        adrp    c1, 0x220000 <_start+0xfd38>
+// DIS-NEXT:   2102dc:        ldr     c1, [c1, #752]
+// DIS-NEXT:   2102e0:        adrp    c2, 0x220000 <_start+0xfd38>
+// DIS-NEXT:   2102e4:        ldr     c2, [c1, #784]
 
 /// .rodata is the start of the executable capability range
 
@@ -55,7 +55,7 @@ foo:
 // CHECK-NEXT:     Flags [ (0x2)
 // CHECK-NEXT:       SHF_ALLOC (0x2)
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x200250
+// CHECK-NEXT:     Address: 0x2002C0
 
 /// Check that .got exists, has 16-byte entries and is 16-byte aligned.
 /// The executable capability should extend to the end of the .got
@@ -86,14 +86,14 @@ foo:
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Offset: 0x220300
 // CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
-// CHECK-NEXT:     Address: 0x210259
+// CHECK-NEXT:     Address: 0x2102C9
 // CHECK-NEXT:     Base: 0x200200
 // CHECK-NEXT:     Length: 131392
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Offset: 0x220310
 // CHECK-NEXT:     Type: RODATA (0x1BFBE)
-// CHECK-NEXT:     Address: 0x200250
-// CHECK-NEXT:     Base: 0x200250
+// CHECK-NEXT:     Address: 0x2002C0
+// CHECK-NEXT:     Base: 0x2002C0
 // CHECK-NEXT:     Length: 8
 // CHECK-NEXT:   }

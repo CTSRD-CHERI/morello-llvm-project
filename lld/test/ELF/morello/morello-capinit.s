@@ -41,7 +41,7 @@ str:
 // CHECK-NEXT:     Value: 0x[[#%X,PTR2:]]
 
 // CHECK:          Name: __cap_relocs_start
-// CHECK-NEXT:     Value: 0x2201C8
+// CHECK-NEXT:     Value: 0x200158
 // CHECK-NEXT:     Size: 0
 // CHECK-NEXT:     Binding: Local (0x0)
 // CHECK-NEXT:     Type: None (0x0)
@@ -52,7 +52,7 @@ str:
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Symbol {
 // CHECK-NEXT:     Name: __cap_relocs_end
-// CHECK-NEXT:     Value: 0x220218
+// CHECK-NEXT:     Value: 0x2001A8
 // CHECK-NEXT:     Size: 0
 // CHECK-NEXT:     Binding: Local (0x0)
 // CHECK-NEXT:     Type: None (0x0)

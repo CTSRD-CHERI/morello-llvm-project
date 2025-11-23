@@ -54,30 +54,30 @@ _start: ret
 
 // CHECK: __cap_relocs {
 // CHECK-NEXT: Relocation {
-// CHECK-NEXT:   Offset: 0x25AC80
+// CHECK-NEXT:   Offset: 0x25B080
 // CHECK-NEXT:   Type: RODATA (0x1BFBE)
-// CHECK-NEXT:   Address: 0x213AD4
-// CHECK-NEXT:   Base: 0x213AC0
-// CHECK-NEXT:   Length: 160064
+// CHECK-NEXT:   Address: 0x213B74
+// CHECK-NEXT:   Base: 0x213B40
+// CHECK-NEXT:   Length: 160128
 // CHECK-NEXT: }
 // CHECK-NEXT: Relocation {
-// CHECK-NEXT:   Offset: 0x25AC90
+// CHECK-NEXT:   Offset: 0x25B090
 // CHECK-NEXT:   Type: RODATA (0x1BFBE)
-// CHECK-NEXT:   Address: 0x23ABE8
-// CHECK-NEXT:   Base: 0x23ABE8
+// CHECK-NEXT:   Address: 0x23AC88
+// CHECK-NEXT:   Base: 0x23AC88
 // CHECK-NEXT:   Length: 0
 // CHECK-NEXT: }
 // CHECK-NEXT: Relocation {
-// CHECK-NEXT:   Offset: 0x25ACA0
+// CHECK-NEXT:   Offset: 0x25B0A0
 // CHECK-NEXT:   Type: RODATA (0x1BFBE)
-// CHECK-NEXT:   Address: 0x200248
-// CHECK-NEXT:   Base: 0x200240
+// CHECK-NEXT:   Address: 0x2002E8
+// CHECK-NEXT:   Base: 0x2002E0
 // CHECK-NEXT:   Length: 80032
 // CHECK-NEXT: }
 // CHECK-NEXT: Relocation {
-// CHECK-NEXT:   Offset: 0x25ACB0
+// CHECK-NEXT:   Offset: 0x25B0B0
 // CHECK-NEXT:   Type: RODATA (0x1BFBE)
-// CHECK-NEXT:   Address: 0x213AD4
-// CHECK-NEXT:   Base: 0x213AD4
+// CHECK-NEXT:   Address: 0x213B74
+// CHECK-NEXT:   Base: 0x213B74
 // CHECK-NEXT:   Length: 0
 // CHECK-NEXT: }

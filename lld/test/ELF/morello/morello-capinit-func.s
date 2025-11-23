@@ -67,7 +67,22 @@ bss:
 /// range is [0x210000, 0x230200) including alignment to CHERI concentrate
 /// boundary.
 
-// CHECK:          Name: .rodata
+// CHECK:          Name: __cap_relocs
+// CHECK-NEXT:     Type: SHT_PROGBITS
+// CHECK-NEXT:     Flags [
+// CHECK-NEXT:       SHF_ALLOC
+// CHECK-NEXT:     ]
+// CHECK-NEXT:     Address: 0x200248
+// CHECK-NEXT:     Offset: 0x248
+// CHECK-NEXT:     Size: 240
+// CHECK-NEXT:     Link: 0
+// CHECK-NEXT:     Info: 0
+// CHECK-NEXT:     AddressAlignment: 8
+// CHECK-NEXT:     EntrySize: 40
+// CHECK-NEXT:   }
+// CHECK-NEXT:   Section {
+// CHECK-NEXT:     Index:
+// CHECK-NEXT:     Name: .rodata
 // CHECK-NEXT:     Type: SHT_PROGBITS
 // CHECK-NEXT:     Flags [
 // CHECK-NEXT:       SHF_ALLOC
@@ -111,22 +126,6 @@ bss:
 // CHECK-NEXT:     Info: 0
 // CHECK-NEXT:     AddressAlignment: 16
 // CHECK-NEXT:     EntrySize: 0
-// CHECK-NEXT:   }
-// CHECK-NEXT:   Section {
-// CHECK-NEXT:     Index:
-// CHECK-NEXT:     Name: __cap_relocs
-// CHECK-NEXT:     Type: SHT_PROGBITS
-// CHECK-NEXT:     Flags [
-// CHECK-NEXT:       SHF_ALLOC
-// CHECK-NEXT:       SHF_WRITE
-// CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x2400A0
-// CHECK-NEXT:     Offset: 0x200A0
-// CHECK-NEXT:     Size: 240
-// CHECK-NEXT:     Link: 0
-// CHECK-NEXT:     Info: 0
-// CHECK-NEXT:     AddressAlignment: 8
-// CHECK-NEXT:     EntrySize: 40
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
 // CHECK-NEXT:     Index:
@@ -208,10 +207,10 @@ bss:
 /// Rerun the test with .rodata after the .text, we would still expect to
 /// see the same bounds for the capability.
 // RUN: echo "SECTIONS { \
+// RUN:       __cap_relocs : { *(__cap_relocs) } \
 // RUN:       .text 0x210000: { *(.text) } \
 // RUN:       .rodata : { *(.rodata) } \
 // RUN:       .data.rel.ro : { *(.data.rel.ro) } \
-// RUN:       __cap_relocs : { *(__cap_relocs) } \
 // RUN:       .data : { *(data) } \
 // RUN:       .bss : { *(.bss) } } " > %t.script
 // RUN: ld.lld %t.o -o %t2 --script=%t.script

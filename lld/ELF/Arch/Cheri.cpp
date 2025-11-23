@@ -454,9 +454,7 @@ void CheriCapRelocsSection::writeToImpl(uint8_t *buf) {
 }
 
 MorelloCapRelocsSection::MorelloCapRelocsSection()
-    // Morello __cap_relocs are always RELRO, even if they could be RO to match
-    // binutils.
-    : SyntheticSection(SHF_ALLOC | SHF_WRITE, SHT_PROGBITS, 8, "__cap_relocs") {
+    : SyntheticSection(SHF_ALLOC, SHT_PROGBITS, 8, "__cap_relocs") {
   this->entsize = relocSize;
 }
 
