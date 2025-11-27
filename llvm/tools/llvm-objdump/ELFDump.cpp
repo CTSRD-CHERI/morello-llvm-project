@@ -376,30 +376,52 @@ template <typename ELFT> void ELFDumper<ELFT>::printCheriCapRelocations() {
         Entry + 3 * sizeof(uintX_t));
     uintX_t Type = support::endian::read<uintX_t, ELFT::TargetEndianness, 1>(
         Entry + 4 * sizeof(uintX_t));
-    const uintX_t Function = uintX_t(1) << ((sizeof(uintX_t) * 8) - 1);
-    const uintX_t Constant = uintX_t(1) << ((sizeof(uintX_t) * 8) - 2);
-    const uintX_t Indirect = uintX_t(1) << ((sizeof(uintX_t) * 8) - 3);
-    const uintX_t Code = uintX_t(1) << ((sizeof(uintX_t) * 8) - 4);
     StringRef TypeName;
-    switch (Type) {
-    case 0:
-      TypeName = "DATA";
-      break;
-    case Constant:
-      TypeName = "RODATA";
-      break;
-    case Function:
-      TypeName = "FUNC";
-      break;
-    case Function | Indirect:
-      TypeName = "IFUNC";
-      break;
-    case Function | Code:
-      TypeName = "CODE";
-      break;
-    default:
-      TypeName = "Unknown";
-      break;
+    if (Obj.getELFFile().getHeader().e_machine == ELF::EM_AARCH64) {
+      // AArch64 C64 capabilities are encoded differently to CHERI
+      // Check for Morello Capability Permission Encodings
+      const uint64_t Function = 0x8000000000013dbc;
+      const uint64_t Constant = 0x1bfbe;
+      const uint64_t Writable = 0x8fbe;
+      switch ((uint64_t)Type) {
+      case Writable:
+        TypeName = "DATA";
+        break;
+      case Constant:
+        TypeName = "RODATA";
+        break;
+      case Function:
+        TypeName = "FUNC";
+        break;
+      default:
+        TypeName = "Unknown";
+        break;
+      }
+    } else {
+      const uintX_t Function = uintX_t(1) << ((sizeof(uintX_t) * 8) - 1);
+      const uintX_t Constant = uintX_t(1) << ((sizeof(uintX_t) * 8) - 2);
+      const uintX_t Indirect = uintX_t(1) << ((sizeof(uintX_t) * 8) - 3);
+      const uintX_t Code = uintX_t(1) << ((sizeof(uintX_t) * 8) - 4);
+      switch (Type) {
+      case 0:
+        TypeName = "DATA";
+        break;
+      case Constant:
+        TypeName = "RODATA";
+        break;
+      case Function:
+        TypeName = "FUNC";
+        break;
+      case Function | Indirect:
+        TypeName = "IFUNC";
+        break;
+      case Function | Code:
+        TypeName = "CODE";
+        break;
+      default:
+        TypeName = "Unknown";
+        break;
+      }
     }
     outs() << format(Fmt.data(), uint64_t(Offset)) << ' '
            << left_justify(TypeName, TypePadding) << ' '
