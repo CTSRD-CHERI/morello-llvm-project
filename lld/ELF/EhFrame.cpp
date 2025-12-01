@@ -188,8 +188,7 @@ bool EhReader::hasLSDA() {
       skipAugP();
     else if (c == 'R')
       readByte();
-    // TODO: Deprecate and remove purecap C augmentation
-    else if (c != 'B' && c != 'C' && c != 'S' && c != 'G')
+    else if (c != 'B' && c != 'S' && c != 'G')
       failOn(aug.data(), "unknown .eh_frame augmentation string: " + aug);
   }
   return false;
