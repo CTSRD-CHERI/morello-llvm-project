@@ -14,6 +14,7 @@
 #include "lld/Common/ErrorHandler.h"
 #include "llvm/BinaryFormat/ELF.h"
 #include "llvm/Support/Endian.h"
+#include "llvm/Support/Morello.h"
 #include "Cheri.h"
 
 using namespace llvm;
@@ -38,6 +39,9 @@ public:
                      const uint8_t *loc) const override;
   RelType getDynRel(RelType type) const override;
   int getCapabilitySize() const override { return 16; }
+  uint64_t getCheriRequiredAlignment(uint64_t len) const override {
+    return getMorelloRequiredAlignment(len);
+  }
   int64_t getImplicitAddend(const uint8_t *buf, RelType type) const override;
   void writeGotPlt(uint8_t *buf, const Symbol &s) const override;
   void writeIgotPlt(uint8_t *buf, const Symbol &s) const override;
