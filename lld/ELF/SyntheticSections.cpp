@@ -1409,8 +1409,6 @@ DynamicSection<ELFT>::DynamicSection()
 // - in.relaIplt: this is included if in.relaIplt is named .rela.dyn
 // - in.relaPlt: this is included if a linker script places .rela.plt inside
 //   .rela.dyn
-// - in.relaDyn: this is included if R_MORELLO_RELATIVE relocations are
-//   created.
 //
 // DT_RELASZ is the total size of the included sections.
 static uint64_t addRelaSz(const RelocationBaseSection &relaDyn) {
@@ -1419,8 +1417,6 @@ static uint64_t addRelaSz(const RelocationBaseSection &relaDyn) {
     size += in.relaIplt->getSize();
   if (in.relaPlt->getParent() == relaDyn.getParent())
     size += in.relaPlt->getSize();
-  if (in.relaDyn->getParent() == relaDyn.getParent())
-    size += in.relaDyn->getSize();
   return size;
 }
 
@@ -1523,9 +1519,7 @@ DynamicSection<ELFT>::computeContents() {
 
   if (part.relaDyn->isNeeded() ||
       (in.relaIplt->isNeeded() &&
-       part.relaDyn->getParent() == in.relaIplt->getParent()) ||
-      (in.relaDyn->isNeeded() &&
-       part.relaDyn->getParent() == in.relaDyn->getParent())) {
+       part.relaDyn->getParent() == in.relaIplt->getParent())) {
     addInSec(part.relaDyn->dynamicTag, *part.relaDyn);
     entries.emplace_back(part.relaDyn->sizeDynamicTag,
                          addRelaSz(*part.relaDyn));
@@ -1891,14 +1885,6 @@ void RelocationBaseSection::finalizeContents() {
       getParent()->info = in.mipsCheriCapTable->getParent()->sectionIndex;
     } else {
       getParent()->info = in.gotPlt->getParent()->sectionIndex;
-    }
-    if (in.relaDyn.get() == this) {
-      if (in.igotPlt && in.igotPlt->isNeeded())
-        getParent()->info = in.igotPlt->getParent()->sectionIndex;
-      else if (!config->hasDynSymTab)
-        // In Morello static linking, the relaDyn can be used without the GOT or
-        // PLTGOT
-        getParent()->info = 0;
     }
   }
   if (in.relaIplt.get() == this && in.igotPlt->getParent()) {
@@ -4140,7 +4126,6 @@ void InStruct::reset() {
   strTab.reset();
   symTab.reset();
   symTabShndx.reset();
-  relaDyn.reset();
   cheriBounds = nullptr;
 }
 

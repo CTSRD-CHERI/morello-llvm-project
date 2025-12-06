@@ -1232,10 +1232,8 @@ void addRelativeCapabilityRelocation(
       dynType = *target->relativeCapFuncRel;
     else
       dynType = *target->relativeCapRel;
-    RelocationBaseSection &relaDyn =
-        !config->hasDynSymTab ? *in.relaDyn : *mainPart->relaDyn;
-    relaDyn.addReloc(DynamicReloc::AddendOnlyWithTargetVA, dynType, isec,
-                     offsetInSec, *sym, addend, expr, type);
+    mainPart->relaDyn->addReloc(DynamicReloc::AddendOnlyWithTargetVA, dynType,
+                                isec, offsetInSec, *sym, addend, expr, type);
   } else
     in.capRelocs->addCapReloc(isCode, {&isec, offsetInSec}, {symOrSec, 0u},
                               addend);

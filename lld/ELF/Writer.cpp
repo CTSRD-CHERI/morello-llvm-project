@@ -430,8 +430,8 @@ template <class ELFT> void elf::createSyntheticSections() {
 
       add(*part.dynamic);
       add(*part.dynStrTab);
-      add(*part.relaDyn);
     }
+    add(*part.relaDyn);
 
     if (config->relrPackDynRelocs) {
       part.relrDyn = std::make_unique<RelrSection<ELFT>>(threadCount);
@@ -525,15 +525,6 @@ template <class ELFT> void elf::createSyntheticSections() {
       config->isRela ? ".rela.plt" : ".rel.plt", /*sort=*/false,
       /*threadCount=*/1);
   add(*in.relaPlt);
-
-  if (config->androidPackDynRelocs)
-    in.relaDyn = std::make_unique<AndroidPackedRelocationSection<ELFT>>(
-        relaDynName, /*threadCount=*/1);
-  else
-    in.relaDyn = std::make_unique<RelocationSection<ELFT>>(relaDynName,
-                                                           config->zCombreloc,
-                                                           /*threadCount=*/1);
-  add(*in.relaDyn);
 
   // The relaIplt immediately follows .rel[a].dyn to ensure that the IRelative
   // relocations are processed last by the dynamic loader. We cannot place the
@@ -1103,7 +1094,7 @@ template <class ELFT> void Writer<ELFT>::addRelDynSymbols() {
 
   // By default, __rela_dyn_{start,end} belong to a dummy section 0
   // because .rela.dyn might be empty and thus removed from output.
-  // We'll override Out::elfHeader with in.relaDyn later when we are
+  // We'll override Out::elfHeader with relaDyn later when we are
   // sure that .rela.dyn exists in output.
   ElfSym::relaDynStart = addOptionalRegular(
       config->isRela ? "__rela_dyn_start" : "__rel_dyn_start",
@@ -1138,11 +1129,11 @@ template <class ELFT> void Writer<ELFT>::setReservedSymbolSections() {
     ElfSym::relaIpltEnd->isSectionStartSymbol = false;
   }
 
-  //  __rela_dyn_{start,end} mark the start and the end of in.relaDyn.
-  if (ElfSym::relaDynStart && in.relaDyn->isNeeded()) {
-    ElfSym::relaDynStart->section = in.relaDyn.get();
-    ElfSym::relaDynEnd->section = in.relaDyn.get();
-    ElfSym::relaDynEnd->value = in.relaDyn->getSize();
+  // __rela_dyn_{start,end} mark the start and the end of relaDyn.
+  if (ElfSym::relaDynStart && mainPart->relaDyn->isNeeded()) {
+    ElfSym::relaDynStart->section = mainPart->relaDyn.get();
+    ElfSym::relaDynEnd->section = mainPart->relaDyn.get();
+    ElfSym::relaDynEnd->value = mainPart->relaDyn->getSize();
     ElfSym::relaDynEnd->isSectionStartSymbol = false;
   }
 
@@ -2418,7 +2409,6 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
     finalizeSynthetic(in.iplt.get());
     finalizeSynthetic(in.ppc32Got2.get());
     finalizeSynthetic(in.partIndex.get());
-    finalizeSynthetic(in.relaDyn.get());
 
     // Dynamic section must be the last one in this list and dynamic
     // symbol table section (dynSymTab) must be the first one.
