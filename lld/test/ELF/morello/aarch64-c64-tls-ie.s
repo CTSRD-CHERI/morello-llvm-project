@@ -39,12 +39,12 @@ _start:
  ldp x0, x1, [c0]
 
 // RELAX-LABEL: <_start>:
-// RELAX-NEXT: 2102a0: adrp c0, 0x200000
-// RELAX-NEXT: 2102a4: add  c0, c0, #0x280
-// RELAX-NEXT: 2102a8: ldp  x0, x1, [c0]
-// RELAX-NEXT: 2102ac: adrp c0, 0x200000
-// RELAX-NEXT: 2102b0: add  c0, c0, #0x290
-// RELAX-NEXT: 2102b4: ldp  x0, x1, [c0]
+// RELAX-NEXT: 210280: adrp c0, 0x220000
+// RELAX-NEXT: 210284: add  c0, c0, #0x2a0
+// RELAX-NEXT: 210288: ldp  x0, x1, [c0]
+// RELAX-NEXT: 21028c: adrp c0, 0x220000
+// RELAX-NEXT: 210290: add  c0, c0, #0x2b0
+// RELAX-NEXT: 210294: ldp  x0, x1, [c0]
 
 // NORELAX-LABEL: Sections:
 // NORELAX: .got 00000020 0000000000020490 DATA

@@ -108,26 +108,6 @@ private:
   llvm::MapVector<CheriCapRelocLocation, CheriCapReloc> relocsMap;
 };
 
-class MorelloTLSLEDataSection : public SyntheticSection {
-public:
-  static constexpr size_t fieldSize = 16;
-  static constexpr size_t relocSize = 16;
-
-  MorelloTLSLEDataSection();
-
-  void addTLSLEData(const Symbol *tlsSym);
-
-  void writeTo(uint8_t *buf) override;
-  bool isNeeded() const override { return !relocsMap.empty(); }
-  size_t getSize() const override { return relocsMap.size() * entsize; }
-  uint64_t getSymbolIndex(const Symbol *sym);
-private:
-  unsigned index = 0;
-  llvm::MapVector<const Symbol*, uint64_t> relocsMap;
-  std::mutex relocsMapMutex;
-};
-
-
 // General cap table structure (for CapSize = 2*WordSize):
 //
 // +-------------------------------+

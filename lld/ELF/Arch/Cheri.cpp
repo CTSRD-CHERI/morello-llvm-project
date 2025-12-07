@@ -663,39 +663,6 @@ bool CheriCapRelocsSection::linkerDefinedCapabilityAlign() {
   return changed;
 }
 
-MorelloTLSLEDataSection::MorelloTLSLEDataSection()
-    : SyntheticSection(SHF_ALLOC, SHT_PROGBITS, 16, ".rodata.purecap.tlsie") {
-  this->entsize = relocSize;
-}
-
-void MorelloTLSLEDataSection::writeTo(uint8_t *buf) {
-  PhdrEntry *tls = Out::tlsPhdr;
-  // This is always called from one thread, no need for locking.
-  for (const auto &i : this->relocsMap) {
-    uint64_t off = i.first->getVA(0) + target->gotEntrySize * 2 +
-           ((tls->p_vaddr - target->gotEntrySize * 2) & (tls->p_align - 1));
-    uint64_t sz = i.first->getSize();
-
-    write64(buf + i.second * 16, off);
-    write64(buf + i.second * 16 + 8, sz);
-  }
-}
-
-uint64_t MorelloTLSLEDataSection::getSymbolIndex(const Symbol *sym) {
-  // This is always called from one thread, no need for locking.
-  auto it = relocsMap.find(sym);
-  assert(it != relocsMap.end() && "Couldn't find symbol data");
-  return it->second;
-}
-
-void MorelloTLSLEDataSection::addTLSLEData(const Symbol *sym) {
-  std::lock_guard<std::mutex> lock(relocsMapMutex); // Called from parallelFor
-  if (relocsMap.find(sym) != relocsMap.end())
-    return;
-  relocsMap.insert(std::make_pair(sym, index));
-  index++;
-}
-
 void CheriCapRelocsSection::writeTo(uint8_t *buf) {
   invokeELFT(writeToImpl, buf);
 }

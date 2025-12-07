@@ -1507,8 +1507,11 @@ static unsigned handleTlsRelocation(RelType type, Symbol &sym,
 
     // Global-Dynamic relocs can be relaxed to Initial-Exec or Local-Exec
     // depending on the symbol being locally defined or not.
+    // Non-TGOT Morello does not support relaxing to Local-Exec.
     // TGOT can always relax to Local-Exec for executables.
-    if (sym.isPreemptible && !isTgot) {
+    if ((sym.isPreemptible ||
+         (config->emachine == EM_AARCH64 && config->isCheriAbi)) &&
+        !isTgot) {
       RelExpr relaxExpr;
       if (isTgot) {
         sym.setFlags(NEEDS_TGOT_GOT);
@@ -1520,8 +1523,6 @@ static unsigned handleTlsRelocation(RelType type, Symbol &sym,
       c.addReloc(
           {target->adjustTlsExpr(type, relaxExpr), type, offset, addend, &sym});
     } else {
-      if (config->emachine == EM_AARCH64 && config->isCheriAbi)
-        in.tlsLEData->addTLSLEData(&sym);
       RelExpr relaxExpr;
       if (isTgot)
         relaxExpr = R_RELAX_TGOT_TLS_GD_TO_LE;
@@ -1539,18 +1540,18 @@ static unsigned handleTlsRelocation(RelType type, Symbol &sym,
     ctx.hasTlsIe.store(true, std::memory_order_relaxed);
     // Initial-Exec relocs can be relaxed to Local-Exec if the symbol is locally
     // defined.
+    // Non-TGOT Morello does not support relaxing to Local-Exec.
     // TGOT can always relax Initial-Exec to Local-Exec for executables.
-    if (toExecRelax && (isLocalInExecutable || isTgot)) {
-      if (config->emachine == EM_AARCH64 && config->isCheriAbi) {
-        in.tlsLEData->addTLSLEData(&sym);
-      }
+    if (toExecRelax &&
+        ((isLocalInExecutable &&
+          (config->emachine != EM_AARCH64 || !config->isCheriAbi)) ||
+         isTgot)) {
       RelExpr relaxExpr;
       if (isTgot)
         relaxExpr = R_RELAX_TGOT_TLS_IE_TO_LE;
       else
         relaxExpr = R_RELAX_TLS_IE_TO_LE;
-      c.addReloc(
-          {target->adjustTlsExpr(type, relaxExpr), type, offset, addend, &sym});
+      c.addReloc({relaxExpr, type, offset, addend, &sym});
     } else if (expr != R_TLSIE_HINT) {
       if (isTgot)
         sym.setFlags(NEEDS_TGOT_GOT);

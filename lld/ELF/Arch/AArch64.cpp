@@ -244,22 +244,6 @@ RelExpr AArch64::adjustTlsExpr(RelType type, RelExpr expr) const {
       return R_AARCH64_RELAX_TLS_GD_TO_IE_PAGE_PC;
     return R_RELAX_TLS_GD_TO_IE_ABS;
   }
-  if (expr == R_RELAX_TLS_GD_TO_LE) {
-    if (type == R_MORELLO_TLSDESC_ADR_PAGE20) {
-      return R_MORELLO_RELAX_TLS_GD_TO_LE_PAGE_PC;
-    }
-    if (type == R_MORELLO_TLSDESC_LD128_LO12) {
-      return R_MORELLO_RELAX_TLS_GD_TO_LE_ADD_LO12;
-    }
-  }
-  if (expr == R_RELAX_TLS_IE_TO_LE) {
-    if (type == R_MORELLO_TLSIE_ADD_LO12) {
-      return R_MORELLO_RELAX_TLS_IE_TO_LE_ADD_LO12;
-    }
-    if (type == R_MORELLO_TLSIE_ADR_GOTTPREL_PAGE20) {
-      return R_MORELLO_RELAX_TLS_IE_TO_LE_PAGE_PC;
-    }
-  }
   return expr;
 }
 
@@ -936,13 +920,9 @@ void AArch64::relocateAlloc(InputSectionBase &sec, uint8_t *buf) const {
       relaxTlsGdToIe(loc, rel, val);
       continue;
     case R_RELAX_TLS_GD_TO_LE:
-    case R_MORELLO_RELAX_TLS_GD_TO_LE_PAGE_PC:
-    case R_MORELLO_RELAX_TLS_GD_TO_LE_ADD_LO12:
       relaxTlsGdToLe(loc, rel, val);
       continue;
     case R_RELAX_TLS_IE_TO_LE:
-    case R_MORELLO_RELAX_TLS_IE_TO_LE_PAGE_PC:
-    case R_MORELLO_RELAX_TLS_IE_TO_LE_ADD_LO12:
       relaxTlsIeToLe(loc, rel, val);
       continue;
     case R_MORELLO_TLSIE_OFFSET_AND_SIZE:

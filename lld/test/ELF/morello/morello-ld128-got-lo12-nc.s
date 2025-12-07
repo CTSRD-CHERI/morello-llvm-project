@@ -38,15 +38,15 @@ bar:
 foo:
  .xword 10
 
-// DIS: 0000000000210308 <_start>:
-// DIS-NEXT:   210308:        adrp    c0, 0x220000
-// DIS-NEXT:   21030c:        ldr     c0, [c0, #832]
+// DIS: 0000000000210300 <_start>:
+// DIS-NEXT:   210300:        adrp    c0, 0x220000
+// DIS-NEXT:   210304:        ldr     c0, [c0, #816]
+// DIS-NEXT:   210308:        adrp    c1, 0x220000
+// DIS-NEXT:   21030c:        ldr     c1, [c1, #800]
 // DIS-NEXT:   210310:        adrp    c1, 0x220000
-// DIS-NEXT:   210314:        ldr     c1, [c1, #816]
-// DIS-NEXT:   210318:        adrp    c1, 0x220000
-// DIS-NEXT:   21031c:        ldr     c1, [c1, #816]
-// DIS-NEXT:   210320:        adrp    c2, 0x220000
-// DIS-NEXT:   210324:        ldr     c2, [c1, #848]
+// DIS-NEXT:   210314:        ldr     c1, [c1, #800]
+// DIS-NEXT:   210318:        adrp    c2, 0x220000
+// DIS-NEXT:   21031c:        ldr     c2, [c1, #832]
 
 /// __cap_relocs is the start of the executable capability range
 
@@ -64,8 +64,8 @@ foo:
 // CHECK-NEXT:       SHF_ALLOC (0x2)
 // CHECK-NEXT:       SHF_WRITE (0x1)
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x220330
-// CHECK-NEXT:     Offset: 0x330
+// CHECK-NEXT:     Address: 0x220320
+// CHECK-NEXT:     Offset: 0x320
 // CHECK-NEXT:     Size: 48
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
@@ -78,9 +78,9 @@ foo:
 // CHECK-NEXT:       SHF_ALLOC (0x2)
 // CHECK-NEXT:       SHF_WRITE (0x1)
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x220360
-// CHECK-NEXT:     Offset: 0x360
-// CHECK-NEXT:     Size: 32
+// CHECK-NEXT:     Address: 0x220350
+// CHECK-NEXT:     Offset: 0x350
+// CHECK-NEXT:     Size: 48
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
 // CHECK-NEXT:     AddressAlignment: 1
@@ -90,23 +90,23 @@ foo:
 /// base of __cap_relocs.
 // CHECK: __cap_relocs {
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x220330
+// CHECK-NEXT:     Offset: 0x220320
 // CHECK-NEXT:     Type: DATA (0x8FBE)
 // CHECK-NEXT:     Address: 0x230380
 // CHECK-NEXT:     Base: 0x230380
 // CHECK-NEXT:     Length: 8
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x220340
+// CHECK-NEXT:     Offset: 0x220330
 // CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
-// CHECK-NEXT:     Address: 0x210309
+// CHECK-NEXT:     Address: 0x210301
 // CHECK-NEXT:     Base: 0x200280
 // CHECK-NEXT:     Length: 131328
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x220350
+// CHECK-NEXT:     Offset: 0x220340
 // CHECK-NEXT:     Type: RODATA (0x1BFBE)
-// CHECK-NEXT:     Address: 0x200300
-// CHECK-NEXT:     Base: 0x200300
+// CHECK-NEXT:     Address: 0x2002F8
+// CHECK-NEXT:     Base: 0x2002F8
 // CHECK-NEXT:     Length: 8
 // CHECK-NEXT:   }

@@ -1239,7 +1239,6 @@ private:
 };
 
 // Can only be forward declared here since it depends on SyntheticSection
-class MorelloTLSLEDataSection;
 class CheriCapRelocsSection;
 class MipsCheriCapTableSection;
 class MipsCheriCapTableMappingSection;
@@ -1363,7 +1362,6 @@ struct InStruct {
   std::unique_ptr<SyntheticSection> riscvAttributes;
   std::unique_ptr<BssSection> bss;
   std::unique_ptr<BssSection> bssRelRo;
-  std::unique_ptr<MorelloTLSLEDataSection> tlsLEData;
   std::unique_ptr<GotSection> got;
   std::unique_ptr<GotPltSection> gotPlt;
   std::unique_ptr<IgotPltSection> igotPlt;

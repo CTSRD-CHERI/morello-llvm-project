@@ -328,10 +328,6 @@ template <class ELFT> void elf::createSyntheticSections() {
 
   if (config->capabilitySize > 0) {
     in.capRelocs = std::make_unique<CheriCapRelocsSection>("__cap_relocs");
-    if (config->emachine == EM_AARCH64 && config->isCheriAbi) {
-      in.tlsLEData = std::make_unique<MorelloTLSLEDataSection>();
-      add(*in.tlsLEData);
-    }
 
     if (config->emachine == EM_MIPS) {
       in.mipsCheriCapTable = std::make_unique<MipsCheriCapTableSection>();
@@ -2474,7 +2470,6 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
     finalizeSynthetic(in.armCmseSGSection.get());
     if (config->emachine == EM_AARCH64)
       finalizeSynthetic(in.capRelocs.get());
-    finalizeSynthetic(in.tlsLEData.get());
   }
 
   // Relaxation to delete inter-basic block jumps created by basic block

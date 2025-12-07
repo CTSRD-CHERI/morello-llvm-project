@@ -940,19 +940,6 @@ uint64_t InputSectionBase::getRelocTargetVA(const InputFile *file, RelType type,
     return sym.getVA(a) - (p & ~0xF);
   case R_MORELLO_SIZE:
     return sym.getSize();
-  case R_MORELLO_RELAX_TLS_IE_TO_LE_PAGE_PC:
-  case R_MORELLO_RELAX_TLS_GD_TO_LE_PAGE_PC: {
-    assert(a == 0 && "should not have an addend");
-    uint64_t vaddr = in.tlsLEData->getVA() +
-        in.tlsLEData->getSymbolIndex(&sym) * 16;
-    return getAArch64Page(vaddr) - getAArch64Page(p);
-  }
-  case R_MORELLO_RELAX_TLS_IE_TO_LE_ADD_LO12:
-  case R_MORELLO_RELAX_TLS_GD_TO_LE_ADD_LO12: {
-    uint64_t vaddr = in.tlsLEData->getVA() +
-        in.tlsLEData->getSymbolIndex(&sym) * 16;
-    return vaddr;
-  }
   default:
     llvm_unreachable("invalid expression");
   }

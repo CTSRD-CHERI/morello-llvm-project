@@ -6,7 +6,7 @@
 // RUN: ld.lld %tmain.o %ttlsle.o -o %tout
 // RUN: llvm-objdump -d --mattr=+morello --print-imm-hex --no-show-raw-insn %tout | FileCheck %s
 // RUN: llvm-readobj -rS %tout | FileCheck --check-prefix=REL --check-prefix=SEC %s
-// RUN: llvm-readobj -x .rodata %tout | FileCheck %s --check-prefix=DATA
+// RUN: llvm-readobj -x .got %tout | FileCheck %s --check-prefix=DATA
 
   .globl _start
 _start:
@@ -31,12 +31,13 @@ _start:
   .tlsdesccall foo
   blr     c1
 
-// SEC:    Name: .rodata
+// SEC:    Name: .got
 // SEC-NEXT:    Type: SHT_PROGBITS
 // SEC-NEXT:    Flags [
 // SEC-NEXT:      SHF_ALLOC
+// SEC-NEXT:      SHF_WRITE
 // SEC-NEXT:    ]
-// SEC-NEXT:    Address: 0x202000
+// SEC-NEXT:    Address: 0x1DFFC40
 // SEC-NEXT:    Offset:
 // SEC-NEXT:    Size: 32
 
@@ -44,24 +45,24 @@ _start:
 // REL:      Relocations [
 // REL-NEXT: ]
 
-// The offset and size of foo and bar are encoded in .rodata.
-// DATA: Hex dump of section '.rodata':
-// DATA-NEXT: 0x00202000 20edfe00 00000000 00efbe00 00000000
-// DATA-NEXT: 0x00202010 20000000 00000000 00edfe00 00000000
+// The offset and size of foo and bar are encoded in .got.
+// DATA: Hex dump of section '.got':
+// DATA-NEXT: 0x01dffc40 20edfe00 00000000 00efbe00 00000000
+// DATA-NEXT: 0x01dffc50 20000000 00000000 00edfe00 00000000
 
 // CHECK-LABEL: <_start>:
-// CHECK-NEXT:  212020: adrp   c0, 0x202000
-// CHECK-NEXT:          add    c0, c0, #0x0
+// CHECK-NEXT:  212000: adrp   c0, 0x1dff000
+// CHECK-NEXT:          add    c0, c0, #0xc40
 // CHECK-NEXT:          ldp    x0, x1, [c0]
 // CHECK-NEXT:          add    c0, c2, x0, uxtx
 // CHECK-NEXT:          scbnds c0, c0, x1
-// CHECK-NEXT:          adrp   c0, 0x202000
-// CHECK-NEXT:          add    c0, c0, #0x10
+// CHECK-NEXT:          adrp   c0, 0x1dff000
+// CHECK-NEXT:          add    c0, c0, #0xc50
 // CHECK-NEXT:          ldp    x0, x1, [c0]
 // CHECK-NEXT:          add    c0, c2, x0, uxtx
 // CHECK-NEXT:          scbnds c0, c0, x1
-// CHECK-NEXT:          adrp   c0, 0x202000
-// CHECK-NEXT:          add    c0, c0, #0x0
+// CHECK-NEXT:          adrp   c0, 0x1dff000
+// CHECK-NEXT:          add    c0, c0, #0xc40
 // CHECK-NEXT:          ldp    x0, x1, [c0]
 // CHECK-NEXT:          add    c0, c2, x0, uxtx
 // CHECK-NEXT:          scbnds c0, c0, x1
