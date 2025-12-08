@@ -1909,9 +1909,10 @@ void elf::postScanRelocations() {
       mainPart->relaDyn->addAddendOnlyRelocIfNonPreemptible(
           target->tlsDescRel, *got, got->getTlsDescOffset(sym), sym,
           target->tlsDescRel);
-      if (config->emachine == EM_AARCH64 && config->isCheriAbi && sym.isTls() && !sym.isPreemptible)
-        in.got->relocations.push_back({R_SIZE, R_AARCH64_ABS64,
-            in.got->getTlsDescOffset(sym) + 24, 0, &sym});
+      if (config->emachine == EM_AARCH64 && config->isCheriAbi && sym.isTls() &&
+          !sym.isPreemptible)
+        got->relocations.push_back({R_SIZE, R_AARCH64_ABS64,
+                                    got->getTlsDescOffset(sym) + 24, 0, &sym});
     }
     if (flags & NEEDS_TLSGD) {
       got->addDynTlsEntry(sym);
