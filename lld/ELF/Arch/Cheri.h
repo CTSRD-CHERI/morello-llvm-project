@@ -84,7 +84,7 @@ public:
   void finalizeContents() override;
   bool linkerDefinedCapabilityAlign();
   void addCapReloc(bool isCode, CheriCapRelocLocation loc,
-                   const SymbolAndOffset &target, int64_t capabilityOffset);
+                   const SymbolAndOffset &target, int64_t addend);
 
 private:
   template <class ELFT> void writeToImpl(uint8_t *);
