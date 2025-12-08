@@ -1894,12 +1894,9 @@ void RelocationBaseSection::finalizeContents() {
         in.mipsCheriCapTable->isNeeded()) {
       assert(in.mipsCheriCapTable->getParent()->sectionIndex != UINT32_MAX);
       getParent()->info = in.mipsCheriCapTable->getParent()->sectionIndex;
-    } else if (in.igotPlt && in.igotPlt->isNeeded())
+    } else {
       getParent()->info = in.igotPlt->getParent()->sectionIndex;
-    else if (!config->hasDynSymTab)
-      // In Morello static linking, the relaDyn can be used without the GOT or
-      // PLTGOT
-      getParent()->info = 0;
+    }
   }
   if (in.relaTgot.get() == this && in.tgot->getParent()) {
     getParent()->flags |= ELF::SHF_INFO_LINK;
