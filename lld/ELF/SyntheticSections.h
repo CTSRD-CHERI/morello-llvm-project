@@ -1315,8 +1315,7 @@ template <typename ELFT> void writePhdrs(uint8_t *buf, Partition &part);
 
 Defined *addSyntheticLocal(StringRef name, uint8_t type, uint64_t value,
                            uint64_t size, InputSectionBase &section);
-Defined *addGlobalFunc(Symbol &sym, uint64_t value, uint64_t size,
-                       InputSectionBase &section);
+
 void addVerneed(Symbol *ss);
 
 // Linker generated per-partition sections.
