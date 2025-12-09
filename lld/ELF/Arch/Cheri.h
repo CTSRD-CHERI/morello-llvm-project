@@ -321,11 +321,6 @@ inline void readOnlyCapRelocsError(Symbol &sym, const Twine &sourceMsg) {
         sourceMsg);
 }
 
-void addRelativeCapabilityRelocation(
-    InputSectionBase &isec, uint64_t offsetInSec,
-    llvm::PointerUnion<Symbol *, InputSectionBase *> symOrSec, int64_t addend,
-    RelExpr expr, RelType type);
-
 // Resolve the R_MORELLO_CAPFRAG_SIZE_AND_PERM internal relocation to write
 // | 56-bits length | 8-bits permission |
 uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
