@@ -553,7 +553,7 @@ void CheriCapRelocsSection::writeToImpl(uint8_t *buf) {
 }
 
 void CheriCapRelocsSection::finalizeContents() {
-  if (config->emachine != EM_AARCH64)
+  if (config->emachine != EM_AARCH64 || partition != 1)
     return;
 
   if (auto *r = symtab.find("__cap_relocs_start"))
@@ -1177,6 +1177,7 @@ void addRelativeCapabilityRelocation(
     InputSectionBase &isec, uint64_t offsetInSec,
     llvm::PointerUnion<Symbol *, InputSectionBase *> symOrSec, int64_t addend,
     RelExpr expr, RelType type) {
+  Partition &part = isec.getPartition();
   Symbol *sym = dyn_cast<Symbol *>(symOrSec);
   assert(expr == R_ABS_CAP);
   if (sym && needsCheriMipsTrampoline(type, *sym)) {
@@ -1186,8 +1187,7 @@ void addRelativeCapabilityRelocation(
               verboseToString(sym));
 
     sym = &getCheriMipsTrampolineSym(type, *sym);
-    mainPart->relaDyn->addSymbolReloc(type, isec, offsetInSec, *sym, addend,
-                                      type);
+    part.relaDyn->addSymbolReloc(type, isec, offsetInSec, *sym, addend, type);
     return;
   }
   bool isCode = type == target->symbolicCodeCapRel;
@@ -1199,11 +1199,11 @@ void addRelativeCapabilityRelocation(
       dynType = *target->relativeCapFuncRel;
     else
       dynType = *target->relativeCapRel;
-    mainPart->relaDyn->addReloc(DynamicReloc::AddendOnlyWithTargetVA, dynType,
-                                isec, offsetInSec, *sym, addend, expr, type);
+    part.relaDyn->addReloc(DynamicReloc::AddendOnlyWithTargetVA, dynType, isec,
+                           offsetInSec, *sym, addend, expr, type);
   } else
-    in.capRelocs->addCapReloc(isCode, {&isec, offsetInSec}, {symOrSec, 0u},
-                              addend);
+    part.capRelocs->addCapReloc(isCode, {&isec, offsetInSec}, {symOrSec, 0u},
+                                addend);
 }
 
 // CHERI-MIPS using the PLT and fndesc ABIs uses a different mechanism for
