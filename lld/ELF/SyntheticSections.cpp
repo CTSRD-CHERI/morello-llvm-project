@@ -4098,11 +4098,13 @@ void InStruct::reset() {
   riscvAttributes.reset();
   bss.reset();
   bssRelRo.reset();
-  mipsCheriCapTableMapping.reset();
-  mipsCheriCapTableMapping.reset();
   got.reset();
   gotPlt.reset();
   igotPlt.reset();
+  tgot.reset();
+  mipsCheriCapTable.reset();
+  pccPadding.reset();
+  mipsCheriCapTableMapping.reset();
   armCmseSGSection.reset();
   ppc64LongBranchTarget.reset();
   mipsAbiFlags.reset();
@@ -4118,6 +4120,8 @@ void InStruct::reset() {
   ibtPlt.reset();
   relaPlt.reset();
   relaIplt.reset();
+  relaTgot.reset();
+  tgotCapRelocs.reset();
   shStrTab.reset();
   strTab.reset();
   symTab.reset();
