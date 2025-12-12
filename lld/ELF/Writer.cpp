@@ -2131,10 +2131,10 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
     // Define __rel[a]_iplt_{start,end} symbols if needed.
     addRelIpltSymbols();
 
-  // Define __rel[a]_dyn_{start,end} symbols if needed.
-  addRelDynSymbols();
+    // Define __rel[a]_dyn_{start,end} symbols if needed.
+    addRelDynSymbols();
 
-  // RISC-V's gp can address +/- 2 KiB, set it to .sdata + 0x800. This symbol
+    // RISC-V's gp can address +/- 2 KiB, set it to .sdata + 0x800. This symbol
     // should only be defined in an executable. If .sdata does not exist, its
     // value/section does not matter but it has to be relative, so set its
     // st_shndx arbitrarily to 1 (Out::elfHeader).
