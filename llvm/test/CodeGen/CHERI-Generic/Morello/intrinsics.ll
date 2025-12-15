@@ -512,13 +512,13 @@ declare i1 @llvm.cheri.cap.subset.test(i8 addrspace(200)* %cap1, i8 addrspace(20
 define i64 @subset_test(i8 addrspace(200)* %cap1, i8 addrspace(200)* %cap2) nounwind {
 ; PURECAP-LABEL: subset_test:
 ; PURECAP:       // %bb.0:
-; PURECAP-NEXT:    chkss c0, c1
+; PURECAP-NEXT:    chkss c1, c0
 ; PURECAP-NEXT:    cset w0, mi
 ; PURECAP-NEXT:    ret c30
 ;
 ; HYBRID-LABEL: subset_test:
 ; HYBRID:       // %bb.0:
-; HYBRID-NEXT:    chkss c0, c1
+; HYBRID-NEXT:    chkss c1, c0
 ; HYBRID-NEXT:    cset w0, mi
 ; HYBRID-NEXT:    ret
   %subset = call i1 @llvm.cheri.cap.subset.test(i8 addrspace(200)* %cap1, i8 addrspace(200)* %cap2)
