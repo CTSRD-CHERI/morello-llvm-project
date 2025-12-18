@@ -214,8 +214,10 @@ MCOperand AArch64MCInstLower::lowerSymbolOperandELF(const MachineOperand &MO,
   if (MO.getTargetFlags() & AArch64II::MO_NC)
     RefFlags |= AArch64MCExpr::VK_NC;
 
-  // Ignore if this is the address of a GOT entry.
-  if (MO.getTargetFlags() & AArch64II::MO_GOT)
+  // Ignore if this is the address of a GOT entry, or if we're using the
+  // purecap benchmark ABI which should never set the LSB.
+  if ((MO.getTargetFlags() & AArch64II::MO_GOT) ||
+      MF->getSubtarget<AArch64Subtarget>().hasPurecapBenchmarkABI())
     SetZeroBit = false;
 
   const MCExpr *Expr =

@@ -694,7 +694,12 @@ def : Pat<(cptradd Capsp:$Cn, (i64 (shl GPR64:$Rm, (i64 4)))),
 def : Pat<(ptrtoint Capsp:$Cn), (CapGetValue Capsp:$Cn)>;
 def : Pat<(i32 (ptrtoint Capsp:$Cn)),
            (EXTRACT_SUBREG (CapGetValue Capsp:$Cn), sub_32)>;
+
+let Predicates = [HasMorello, NotPurecapBenchmark] in
 def : Pat<(brind Cap:$Cn), (CapBranch Cap:$Cn)>;
+let Predicates = [HasMorello, HasPurecapBenchmark] in
+def : Pat<(brind Cap:$Cn), (BR (EXTRACT_SUBREG Cap:$Cn, sub_64))>;
+
 def : Pat<(AArch64call_bti Cap:$Rn),
           (BLR_BTI Cap:$Rn)>,
       Requires<[NoSLSBLRMitigation]>;

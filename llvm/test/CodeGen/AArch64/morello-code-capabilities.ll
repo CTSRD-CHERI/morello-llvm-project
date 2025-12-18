@@ -42,7 +42,7 @@ define ptr addrspace(200) @fun2() addrspace(200) nounwind {
 ; CHECK-BENCHMARK-NEXT:  .Ltmp0: // Block address taken
 ; CHECK-BENCHMARK-NEXT:  // %bb.1: // %newb
 ; CHECK-BENCHMARK-NEXT:    adrp c0, .Ltmp0
-; CHECK-BENCHMARK-NEXT:    add c0, c0, :lo12:.Ltmp0+1
+; CHECK-BENCHMARK-NEXT:    add c0, c0, :lo12:.Ltmp0
 ; CHECK-BENCHMARK-NEXT:    seal c0, c0, rb
 ; CHECK-BENCHMARK-NEXT:    and x30, x30, #0xfffffffffffffffe
 ; CHECK-BENCHMARK-NEXT:    ret x30
@@ -73,7 +73,7 @@ define i64 @blockaddress_in_global() addrspace(200) nounwind {
 ; CHECK-BENCHMARK-NEXT:    adrp c0, :got:addrof_label_in_global
 ; CHECK-BENCHMARK-NEXT:    ldr c0, [c0, :got_lo12:addrof_label_in_global]
 ; CHECK-BENCHMARK-NEXT:    ldr c0, [c0, #0]
-; CHECK-BENCHMARK-NEXT:    br c0
+; CHECK-BENCHMARK-NEXT:    br x0
 ; CHECK-BENCHMARK-NEXT:  .Ltmp1: // Block address taken
 ; CHECK-BENCHMARK-NEXT:  .LBB2_1: // %common.ret
 ; CHECK-BENCHMARK-NEXT:    mov w0, #2 // =0x2
@@ -103,11 +103,13 @@ indirectgoto:                                     ; preds = %entry
 ; UTC_ARGS: --disable
 @addrof_label_in_global = addrspace(200) global ptr addrspace(200) blockaddress(@blockaddress_in_global, %label1), align 16
 ; CHECK-LABEL: addrof_label_in_global:
-; CHECK-NEXT:  .chericap .Lblockaddress_in_global$local+((.Ltmp1+1)-.Lblockaddress_in_global$local)
+; CHECK-NORMAL-NEXT:  .chericap .Lblockaddress_in_global$local+((.Ltmp1+1)-.Lblockaddress_in_global$local)
+; CHECK-BENCHMARK-NEXT:  .chericap .Lblockaddress_in_global$local+(.Ltmp1-.Lblockaddress_in_global$local)
 ; CHECK-NEXT:  .size addrof_label_in_global, 16
 @addrof_label_in_global_2 = addrspace(200) global ptr addrspace(200) blockaddress(@blockaddress_in_global, %label2), align 16
 ; CHECK-LABEL: addrof_label_in_global_2:
-; CHECK-NEXT:  .chericap .Lblockaddress_in_global$local+((.Ltmp2+1)-.Lblockaddress_in_global$local)
+; CHECK-NORMAL-NEXT:  .chericap .Lblockaddress_in_global$local+((.Ltmp2+1)-.Lblockaddress_in_global$local)
+; CHECK-BENCHMARK-NEXT:  .chericap .Lblockaddress_in_global$local+(.Ltmp2-.Lblockaddress_in_global$local)
 ; CHECK-NEXT:  .size addrof_label_in_global_2, 16
 
 
@@ -120,19 +122,19 @@ indirectgoto:                                     ; preds = %entry
 ; RELOCS-NEXT:    R_AARCH64_ADD_ABS_LO12_NC fun1 0x0
 ; RELOCS-NORMAL-NEXT:    R_MORELLO_ADR_PREL_PG_HI20 .text 0x10
 ; RELOCS-BENCHMARK-NEXT: R_MORELLO_ADR_PREL_PG_HI20 .text 0x14
-;; Note: Extra addend since there is no symbol table entry with the LSB set
+;; Note: Extra addend since there is no symbol table entry with the LSB set,
+;; but we don't want it set for the benchmark ABI
 ; RELOCS-NORMAL-NEXT:    R_AARCH64_ADD_ABS_LO12_NC .text 0x11
-; RELOCS-BENCHMARK-NEXT: R_AARCH64_ADD_ABS_LO12_NC .text 0x15
+; RELOCS-BENCHMARK-NEXT: R_AARCH64_ADD_ABS_LO12_NC .text 0x14
 ; RELOCS-NEXT:    R_MORELLO_ADR_GOT_PAGE addrof_label_in_global 0x0
 ; RELOCS-NEXT:    R_MORELLO_LD128_GOT_LO12_NC addrof_label_in_global 0x0
 ; RELOCS-NEXT:  }
 ; RELOCS-LABEL: Section ({{.+}}) .rela.data {
 ;; Note: no extra addend since the symbol table already has the LSB set for
-;; normal compilation, but for the benchmark ABI we have to set it explicitly
-; RELOCS-NORMAL-NEXT:    0x0 R_MORELLO_CAPINIT .Lblockaddress_in_global$local 0x10
-; RELOCS-BENCHMARK-NEXT: 0x0 R_MORELLO_CAPINIT .Lblockaddress_in_global$local 0x11
+;; normal compilation, and for the benchmark ABI we don't use the LSB
+; RELOCS-NEXT:    0x0 R_MORELLO_CAPINIT .Lblockaddress_in_global$local 0x10
 ; RELOCS-NORMAL-NEXT:    0x10 R_MORELLO_CAPINIT .Lblockaddress_in_global$local 0x18
-; RELOCS-BENCHMARK-NEXT: 0x10 R_MORELLO_CAPINIT .Lblockaddress_in_global$local 0x1D
+; RELOCS-BENCHMARK-NEXT: 0x10 R_MORELLO_CAPINIT .Lblockaddress_in_global$local 0x1C
 ; RELOCS-NEXT:  }
 ; RELOCS-LABEL: Symbols [
 ; RELOCS:  Symbol {

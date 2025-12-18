@@ -109,6 +109,8 @@ def HasC64       : Predicate<"Subtarget->hasC64()">,
 def HasNotC64    : Predicate<"!Subtarget->hasC64()">,
                                  AssemblerPredicate<(all_of (not FeatureC64)),
                                                     "not in pure capability mode">;
+def HasPurecapBenchmark : Predicate<"Subtarget->hasPurecapBenchmarkABI()">;
+def NotPurecapBenchmark : Predicate<"!Subtarget->hasPurecapBenchmarkABI()">;
 
 def HasSM4           : Predicate<"Subtarget->hasSM4()">,
                                  AssemblerPredicateWithAll<(all_of FeatureSM4), "sm4">;

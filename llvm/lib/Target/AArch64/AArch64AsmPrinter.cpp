@@ -136,15 +136,16 @@ public:
     // Currently the compiler only sets C64 globally. Once functions
     // will be marked as C64, we will need to look at the function
     // instead.
-    bool HasC64 = static_cast<const AArch64TargetMachine&>(TM).IsC64();
-    if (HasC64)
+    const auto &ATM = static_cast<const AArch64TargetMachine &>(TM);
+    if (ATM.IsC64())
       if (const BlockAddress *BA = dyn_cast<BlockAddress>(CV)) {
         const MCExpr *Expr =
             MCSymbolRefExpr::create(GetBlockAddressSymbol(BA), OutContext);
 
-        return MCBinaryExpr::createAdd(Expr,
-                                       MCConstantExpr::create(1, OutContext),
-                                       OutContext);
+        if (!ATM.IsPurecapBenchmark())
+          Expr = MCBinaryExpr::createAdd(
+              Expr, MCConstantExpr::create(1, OutContext), OutContext);
+        return Expr;
       }
     return AsmPrinter::lowerConstant(CV);
   }
