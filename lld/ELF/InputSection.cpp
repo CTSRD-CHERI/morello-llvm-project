@@ -661,7 +661,7 @@ static int64_t getTlsTpOffset(const Symbol &s) {
   }
 }
 
-static int64_t getTlsTgotOffset(const Symbol &s) { return s.getTgotOffset(); }
+static int64_t getTlsTgotOffset(const Symbol &s) { return s.getTgotVA(); }
 
 uint64_t InputSectionBase::getRelocTargetVA(const InputFile *file, RelType type,
                                             int64_t a, uint64_t p,
@@ -877,7 +877,7 @@ uint64_t InputSectionBase::getRelocTargetVA(const InputFile *file, RelType type,
   case R_TLSLD_PC:
     return in.got->getTlsIndexVA() + a - p;
   case R_TGOT:
-    return sym.getTgotOffset() + a;
+    return sym.getTgotVA() + a;
   case R_TGOT_TP:
   case R_RELAX_TGOT_TLS_GD_TO_LE:
   case R_RELAX_TGOT_TLS_IE_TO_LE:
