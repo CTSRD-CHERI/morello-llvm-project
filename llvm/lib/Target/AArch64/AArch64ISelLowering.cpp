@@ -25793,6 +25793,10 @@ static bool isLegalAtomicType(Type *Ty, const DataLayout &DL) {
 
 TailPaddingAmount AArch64TargetLowering::
 getTailPaddingForPreciseBounds(uint64_t Size) const {
+  // XXX: Other CHERI architectures only pad for purecap, not hybrid
+  if (!Subtarget->hasMorello())
+    return TailPaddingAmount::None;
+
   uint64_t Pad =
       AArch64TargetStreamer::getTargetSizeAlignReq(Size).first - Size;
   return static_cast<TailPaddingAmount>(Pad);
@@ -25800,6 +25804,10 @@ getTailPaddingForPreciseBounds(uint64_t Size) const {
 
 Align AArch64TargetLowering::
 getAlignmentForPreciseBounds(uint64_t Size) const {
+  // XXX: Other CHERI architectures only align for purecap, not hybrid
+  if (!Subtarget->hasMorello())
+    return Align();
+
   unsigned LogAlign =
     AArch64TargetStreamer::getTargetSizeAlignReq(Size).second;
   if (!LogAlign)

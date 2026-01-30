@@ -39,12 +39,22 @@ void AArch64_ELFTargetObjectFile::Initialize(MCContext &Ctx,
 
 TailPaddingAmount AArch64_ELFTargetObjectFile::
 getTailPaddingForPreciseBounds(uint64_t Size, const TargetMachine &TM) const {
+  // XXX: Other CHERI architectures only pad for purecap, not hybrid
+  const auto &ATM = static_cast<const AArch64TargetMachine &>(TM);
+  if (!ATM.IsMorello())
+    return TailPaddingAmount::None;
+
   uint64_t Pad = AArch64TargetStreamer::getTargetSizeAlignReq(Size).first - Size;
   return static_cast<TailPaddingAmount>(Pad);
 }
 
 Align AArch64_ELFTargetObjectFile::
 getAlignmentForPreciseBounds(uint64_t Size, const TargetMachine &TM) const {
+  // XXX: Other CHERI architectures only align for purecap, not hybrid
+  const auto &ATM = static_cast<const AArch64TargetMachine &>(TM);
+  if (!ATM.IsMorello())
+    return Align();
+
   unsigned LogAlign =
       AArch64TargetStreamer::getTargetSizeAlignReq(Size).second;
   if (!LogAlign)
