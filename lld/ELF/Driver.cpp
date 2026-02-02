@@ -3059,7 +3059,7 @@ void LinkerDriver::link(opt::InputArgList &args) {
   target = getTarget();
 
   config->eflags = target->calcEFlags();
-  invokeELFT(readCheriVariants);
+  invokeELFT(readCheriVariants,);
   if (config->emachine == EM_AARCH64) {
     config->morelloPurecapBenchmarkABI = static_cast<bool>(
         config->cheriVariants.lookup(NT_CHERI_MORELLO_PURECAP_BENCHMARK_ABI));
