@@ -657,12 +657,12 @@ uint64_t getMorelloSizeAndPermissions(int64_t a, const Symbol &sym,
   if ((sym.isFunc() || sym.isGnuIFunc()) && config->isCheriAbi)
     return getMorelloExecSizeAndPermissions();
 
+  CheriCapRelocLocation location{const_cast<InputSectionBase *>(isec),
+                                 offset - config->wordsize};
   SymbolAndOffset target(const_cast<Symbol *>(&sym), 0);
   CapRelocType type = getTargetType(target);
   uint64_t perms = getMorelloFragmentPermissions(type);
-  uint64_t size = getTargetSize(
-      {const_cast<InputSectionBase *>(isec), offset - config->wordsize},
-      SymbolAndOffset(const_cast<Symbol *>(&sym), 0));
+  uint64_t size = getTargetSize(location, target);
   return (perms << 56) | size;
 }
 
