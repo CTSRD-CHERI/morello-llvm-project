@@ -1,6 +1,6 @@
-; RUN: llc -march=aarch64 -mattr=+morello,+c64 -mcpu=rainier -target-abi purecap %s -o - | \
+; RUN: llc -mtriple=aarch64 -mattr=+morello,+c64 -mcpu=rainier -target-abi purecap %s -o - | \
 ; RUN:   FileCheck --check-prefix=CHECK-ASM %s
-; RUN: llc -march=aarch64 -mattr=+morello,+c64 -mcpu=rainier -target-abi purecap %s -filetype=obj -o - | \
+; RUN: llc -mtriple=aarch64 -mattr=+morello,+c64 -mcpu=rainier -target-abi purecap %s -filetype=obj -o - | \
 ; RUN:   llvm-objdump --no-leading-addr --no-show-raw-insn -S --mcpu=rainier - | \
 ; RUN:   FileCheck --check-prefix=CHECK-OBJ %s
 
