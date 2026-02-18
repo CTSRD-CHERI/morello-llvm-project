@@ -96,7 +96,7 @@ foo:
 // SHARED-NEXT:     ]
 // SHARED-NEXT:     Address: 0x10400
 
-// SHARED:     Name: .data.rel.ro
+// SHARED:     Name: .got.plt
 // SHARED-NEXT:     Type: SHT_PROGBITS
 // SHARED-NEXT:     Flags [
 // SHARED-NEXT:       SHF_ALLOC
@@ -104,29 +104,29 @@ foo:
 // SHARED-NEXT:     ]
 // SHARED-NEXT:     Address: 0x20450
 
+// SHARED:     Name: .data.rel.ro
+// SHARED-NEXT:     Type: SHT_PROGBITS
+// SHARED-NEXT:     Flags [
+// SHARED-NEXT:       SHF_ALLOC
+// SHARED-NEXT:       SHF_WRITE
+// SHARED-NEXT:     ]
+// SHARED-NEXT:     Address: 0x30490
+
 // SHARED:     Name: .got
 // SHARED-NEXT:     Type: SHT_PROGBITS
 // SHARED-NEXT:     Flags [
 // SHARED-NEXT:       SHF_ALLOC
 // SHARED-NEXT:       SHF_WRITE
 // SHARED-NEXT:     ]
-// SHARED-NEXT:     Address: 0x20540
-
-// SHARED:     Name: .got.plt
-// SHARED-NEXT:     Type: SHT_PROGBITS
-// SHARED-NEXT:     Flags [
-// SHARED-NEXT:       SHF_ALLOC
-// SHARED-NEXT:       SHF_WRITE
-// SHARED-NEXT:     ]
-// SHARED-NEXT:     Address: 0x30560
+// SHARED-NEXT:     Address: 0x304A0
 
 // SHARED: Relocations [
 // SHARED-NEXT:   .rela.dyn {
-// SHARED-NEXT:     0x20450 R_MORELLO_CAPINIT foo 0x0
-// SHARED-NEXT:     0x20540 R_MORELLO_GLOB_DAT foo 0x0
+// SHARED-NEXT:     0x30490 R_MORELLO_CAPINIT foo 0x0
+// SHARED-NEXT:     0x304A0 R_MORELLO_GLOB_DAT foo 0x0
 // SHARED-NEXT:   }
 // SHARED-NEXT:   .rela.plt {
-// SHARED-NEXT:     0x30590 R_MORELLO_JUMP_SLOT target 0x21
+// SHARED-NEXT:     0x20480 R_MORELLO_JUMP_SLOT target 0x21
 // SHARED-NEXT:   }
 // SHARED-NEXT:   .rela.text {
 // SHARED-NEXT:     0x10400 R_MORELLO_CALL26 target 0x0
@@ -135,10 +135,10 @@ foo:
 // SHARED-NEXT:     0x1040C R_MORELLO_LD128_GOT_LO12_NC foo 0x0
 // SHARED-NEXT:   }
 // SHARED-NEXT:   .rela.data.rel.ro {
-// SHARED-NEXT:     0x20450 R_MORELLO_CAPINIT foo 0x0
+// SHARED-NEXT:     0x30490 R_MORELLO_CAPINIT foo 0x0
 
 // SHARED:         Name: foo
-// SHARED-NEXT:    Value: 0x30550
+// SHARED-NEXT:    Value: 0x405A0
 // SHARED-NEXT:    Size: 4
 // SHARED-NEXT:    Binding: Global
 // SHARED-NEXT:    Type: Object
@@ -146,7 +146,7 @@ foo:
 // SHARED-NEXT:    Section: .data
 
 // SHARED:      Hex dump of section '.data.rel.ro':
-// SHARED-NEXT: 0x00020450 00000000 00000000 00000000 00000000
+// SHARED-NEXT: 0x00030490 00000000 00000000 00000000 00000000
 
 // SHARED:      Hex dump of section '.got':
-// SHARED-NEXT: 0x00020540 00000000 00000000 00000000 00000000
+// SHARED-NEXT: 0x000304a0 00000000 00000000 00000000 00000000

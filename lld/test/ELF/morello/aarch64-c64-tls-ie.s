@@ -39,26 +39,26 @@ _start:
  ldp x0, x1, [c0]
 
 // RELAX-LABEL: <_start>:
-// RELAX-NEXT: 210280: adrp c0, 0x220000
-// RELAX-NEXT: 210284: add  c0, c0, #0x2a0
-// RELAX-NEXT: 210288: ldp  x0, x1, [c0]
-// RELAX-NEXT: 21028c: adrp c0, 0x220000
-// RELAX-NEXT: 210290: add  c0, c0, #0x2b0
-// RELAX-NEXT: 210294: ldp  x0, x1, [c0]
+// RELAX-NEXT: 2102c0: adrp c0, 0x220000
+// RELAX-NEXT: 2102c4: add  c0, c0, #0x2e0
+// RELAX-NEXT: 2102c8: ldp  x0, x1, [c0]
+// RELAX-NEXT: 2102cc: adrp c0, 0x220000
+// RELAX-NEXT: 2102d0: add  c0, c0, #0x2f0
+// RELAX-NEXT: 2102d4: ldp  x0, x1, [c0]
 
 // NORELAX-LABEL: Sections:
-// NORELAX: .got 00000020 0000000000020490 DATA
+// NORELAX: .got 00000020 0000000000020400 DATA
 // NORELAX-LABEL: <_start>:
-// NORELAX-NEXT: 103c0: adrp c0, 0x20000
+// NORELAX-NEXT: 103e0: adrp c0, 0x20000
 /// Lower part of GOT address:
-// NORELAX-NEXT: 103c4: add  c0, c0, #0x490
-// NORELAX-NEXT: 103c8: ldp  x0, x1, [c0]
-// NORELAX-NEXT: 103cc: adrp c0, 0x20000
+// NORELAX-NEXT: 103e4: add  c0, c0, #0x400
+// NORELAX-NEXT: 103e8: ldp  x0, x1, [c0]
+// NORELAX-NEXT: 103ec: adrp c0, 0x20000
 /// Lower part of GOT address:
-// NORELAX-NEXT: 103d0: add  c0, c0, #0x4a0
-// NORELAX-NEXT: 103d4: ldp  x0, x1, [c0]
+// NORELAX-NEXT: 103f0: add  c0, c0, #0x410
+// NORELAX-NEXT: 103f4: ldp  x0, x1, [c0]
 
 // CHECK: Relocations [
 // CHECK-NEXT:   Section {{.*}} .rela.dyn {
-// CHECK-NEXT:     0x20490 R_MORELLO_TLS_TPREL128 foo 0x0
-// CHECK-NEXT:     0x204A0 R_MORELLO_TLS_TPREL128 bar 0x0
+// CHECK-NEXT:     0x20400 R_MORELLO_TLS_TPREL128 foo 0x0
+// CHECK-NEXT:     0x20410 R_MORELLO_TLS_TPREL128 bar 0x0

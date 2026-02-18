@@ -82,51 +82,51 @@ _start:
 
  .chericap __fini_array_end
 
-// FIXME: the __cap_reloc at 0x230040 should be using __fini_array_start and
+// FIXME: the __cap_reloc at 0x220040 should be using __fini_array_start and
 // not intersect with other sections. currently this capability also covers
 // the entire .init_array section. This seems to be related to setting
 // isCheriABI?
 
 // CHECK: __cap_relocs {
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x230000
+// CHECK-NEXT:     Offset: 0x220000
 // CHECK-NEXT:     Type: RODATA (0x1BFBE)
 // CHECK-NEXT:     Address: 0x200340
 // CHECK-NEXT:     Base: 0x200340
 // CHECK-NEXT:     Length: 1
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x230010
+// CHECK-NEXT:     Offset: 0x220010
 // CHECK-NEXT:     Type: RODATA (0x1BFBE)
 // CHECK-NEXT:     Address: 0x200341
 // CHECK-NEXT:     Base: 0x200341
 // CHECK-NEXT:     Length: 16383
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x230020
+// CHECK-NEXT:     Offset: 0x220020
 // CHECK-NEXT:     Type: RODATA (0x1BFBE)
 // CHECK-NEXT:     Address: 0x204344
 // CHECK-NEXT:     Base: 0x204340
 // CHECK-NEXT:     Length: 16392
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x230030
+// CHECK-NEXT:     Offset: 0x220030
 // CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
 // CHECK-NEXT:     Address: 0x220000
 // CHECK-NEXT:     Base: 0x200340
-// CHECK-NEXT:     Length: 195904
+// CHECK-NEXT:     Length: 130336
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x230040
+// CHECK-NEXT:     Offset: 0x220040
 // CHECK-NEXT:     Type: RODATA (0x1BFBE)
-// CHECK-NEXT:     Address: 0x220008
-// CHECK-NEXT:     Base: 0x220000
+// CHECK-NEXT:     Address: 0x220068
+// CHECK-NEXT:     Base: 0x220060
 // CHECK-NEXT:     Length: 32784
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x230050
+// CHECK-NEXT:     Offset: 0x220050
 // CHECK-NEXT:     Type: RODATA (0x1BFBE)
-// CHECK-NEXT:     Address: 0x228008
-// CHECK-NEXT:     Base: 0x228008
+// CHECK-NEXT:     Address: 0x228068
+// CHECK-NEXT:     Base: 0x228068
 // CHECK-NEXT:     Length: 0
 // CHECK-NEXT:   }

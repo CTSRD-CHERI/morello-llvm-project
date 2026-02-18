@@ -86,8 +86,8 @@ _start:
 // CHECK-NEXT:     SHF_ALLOC
 // CHECK-NEXT:     SHF_WRITE
 // CHECK-NEXT:   ]
-// CHECK-NEXT:   Address: 0x220008
-// CHECK-NEXT:   Offset: 0x10008
+// CHECK-NEXT:   Address: 0x220068
+// CHECK-NEXT:   Offset: 0x10068
 // CHECK-NEXT:   Size: 8192
 // CHECK-NEXT:   Link: 0
 // CHECK-NEXT:   Info: 0
@@ -97,37 +97,37 @@ _start:
 
 // CHECK: .rela.dyn {
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x230000
+// CHECK-NEXT:     Offset: 0x220000
 // CHECK-NEXT:     Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:     Symbol: - (0)
 // CHECK-NEXT:     Addend: 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x230010
+// CHECK-NEXT:     Offset: 0x220010
 // CHECK-NEXT:     Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:     Symbol: - (0)
 // CHECK-NEXT:     Addend: 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x230020
+// CHECK-NEXT:     Offset: 0x220020
 // CHECK-NEXT:     Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:     Symbol: - (0)
 // CHECK-NEXT:     Addend: 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x230030
+// CHECK-NEXT:     Offset: 0x220030
 // CHECK-NEXT:     Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:     Symbol: - (0)
-// CHECK-NEXT:     Addend: 0x1FD00
+// CHECK-NEXT:     Addend: 0x1FD20
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x230040
+// CHECK-NEXT:     Offset: 0x220040
 // CHECK-NEXT:     Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:     Symbol: - (0)
 // CHECK-NEXT:     Addend: 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x230050
+// CHECK-NEXT:     Offset: 0x220050
 // CHECK-NEXT:     Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:     Symbol: - (0)
 // CHECK-NEXT:     Addend: 0x0
@@ -135,7 +135,7 @@ _start:
 
 // CHECK:        Symbol {
 // CHECK:          Name: __fini_array_start
-// CHECK-NEXT:     Value: 0x220008
+// CHECK-NEXT:     Value: 0x220068
 // CHECK-NEXT:     Size: 8192
 // CHECK-NEXT:     Binding: Local
 // CHECK-NEXT:     Type: None
@@ -146,7 +146,7 @@ _start:
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Symbol {
 // CHECK-NEXT:     Name: __fini_array_end
-// CHECK-NEXT:     Value: 0x222008
+// CHECK-NEXT:     Value: 0x222068
 // CHECK-NEXT:     Size: 0
 // CHECK-NEXT:     Binding: Local
 // CHECK-NEXT:     Type: None
@@ -157,7 +157,7 @@ _start:
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Symbol {
 // CHECK-NEXT:     Name: small
-// CHECK-NEXT:     Value: 0x200300
+// CHECK-NEXT:     Value: 0x2002E0
 // CHECK-NEXT:     Size: 1
 // CHECK-NEXT:     Binding: Global
 // CHECK-NEXT:     Type: Object
@@ -166,7 +166,7 @@ _start:
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Symbol {
 // CHECK-NEXT:     Name: no_alignment
-// CHECK-NEXT:     Value: 0x200301
+// CHECK-NEXT:     Value: 0x2002E1
 // CHECK-NEXT:     Size: 4095
 // CHECK-NEXT:     Binding: Global
 // CHECK-NEXT:     Type: Object
@@ -175,7 +175,7 @@ _start:
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Symbol {
 // CHECK-NEXT:     Name: rodata2_start
-// CHECK-NEXT:     Value: 0x201300
+// CHECK-NEXT:     Value: 0x2012E0
 // CHECK-NEXT:     Size: 0
 // CHECK-NEXT:     Binding: Global
 // CHECK-NEXT:     Type: None
@@ -184,7 +184,7 @@ _start:
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Symbol {
 // CHECK-NEXT:     Name: cap_align_8
-// CHECK-NEXT:     Value: 0x201304
+// CHECK-NEXT:     Value: 0x2012E4
 // CHECK-NEXT:     Size: 4096
 // CHECK-NEXT:     Binding: Global
 // CHECK-NEXT:     Type: Object
@@ -204,20 +204,20 @@ _start:
 
 
 // CHECK: Hex dump of section '.data.rel.ro'
-/// small: address: 0x200300, size = 1 (0x1), perms = RO(0x1)
-// CHECK-NEXT: 0x00230000 00032000 00000000 01000000 00000001
+/// small: address: 0x2002e0, size = 1 (0x1), perms = RO(0x1)
+// CHECK-NEXT: 0x00220000 e0022000 00000000 01000000 00000001
 
-/// no_alignment: address: 0x200301, size = 4095 (0xfff), perms = RO(0x1)
-// CHECK-NEXT: 0x00230010 01032000 00000000 ff0f0000 00000001
+/// no_alignment: address: 0x2002e1, size = 4095 (0xfff), perms = RO(0x1)
+// CHECK-NEXT: 0x00220010 e1022000 00000000 ff0f0000 00000001
 
-/// cap_align_8: address: 0x201304, size = 4096 (0x1000), perms = RO(0x1)
-// CHECK-NEXT: 0x00230020 04132000 00000000 00100000 00000001
+/// cap_align_8: address: 0x2012e4, size = 4096 (0x1000), perms = RO(0x1)
+// CHECK-NEXT: 0x00220020 e4122000 00000000 00100000 00000001
 
 /// _start: address: 0x220000, size = 4 (0x4), perms = EXEC(0x4)
-// CHECK-NEXT: 0x00230030 00032000 00000000 80fd0200 00000004
+// CHECK-NEXT: 0x00220030 e0022000 00000000 80fd0100 00000004
 
-/// __fini_array_start: address: 0x220008, size = 8192 (0x2000), perms = RO(0x1)
-// CHECK-NEXT: 0x00230040 08002200 00000000 00200000 00000001
+/// __fini_array_start: address: 0x220068, size = 8192 (0x2000), perms = RO(0x1)
+// CHECK-NEXT: 0x00220040 68002200 00000000 00200000 00000001
 
-/// __fini_array_end: address: 0x222008, size = 0 (0x0), perms = RO(0x1)
-// CHECK-NEXT: 0x00230050 08202200 00000000 00000000 00000001
+/// __fini_array_end: address: 0x222068, size = 0 (0x0), perms = RO(0x1)
+// CHECK-NEXT: 0x00220050 68202200 00000000 00000000 00000001

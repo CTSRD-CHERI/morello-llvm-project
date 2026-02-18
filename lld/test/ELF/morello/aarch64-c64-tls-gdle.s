@@ -37,7 +37,7 @@ _start:
 // SEC-NEXT:      SHF_ALLOC
 // SEC-NEXT:      SHF_WRITE
 // SEC-NEXT:    ]
-// SEC-NEXT:    Address: 0x1DFFC40
+// SEC-NEXT:    Address: 0x220300
 // SEC-NEXT:    Offset:
 // SEC-NEXT:    Size: 32
 
@@ -47,22 +47,22 @@ _start:
 
 // The offset and size of foo and bar are encoded in .got.
 // DATA: Hex dump of section '.got':
-// DATA-NEXT: 0x01dffc40 20edfe00 00000000 00efbe00 00000000
-// DATA-NEXT: 0x01dffc50 20000000 00000000 00edfe00 00000000
+// DATA-NEXT: 0x00220300 20edfe00 00000000 00efbe00 00000000
+// DATA-NEXT: 0x00220310 20000000 00000000 00edfe00 00000000
 
 // CHECK-LABEL: <_start>:
-// CHECK-NEXT:  212000: adrp   c0, 0x1dff000
-// CHECK-NEXT:          add    c0, c0, #0xc40
+// CHECK-NEXT:  2102c0: adrp   c0, 0x220000
+// CHECK-NEXT:          add    c0, c0, #0x300
 // CHECK-NEXT:          ldp    x0, x1, [c0]
 // CHECK-NEXT:          add    c0, c2, x0, uxtx
 // CHECK-NEXT:          scbnds c0, c0, x1
-// CHECK-NEXT:          adrp   c0, 0x1dff000
-// CHECK-NEXT:          add    c0, c0, #0xc50
+// CHECK-NEXT:          adrp   c0, 0x220000
+// CHECK-NEXT:          add    c0, c0, #0x310
 // CHECK-NEXT:          ldp    x0, x1, [c0]
 // CHECK-NEXT:          add    c0, c2, x0, uxtx
 // CHECK-NEXT:          scbnds c0, c0, x1
-// CHECK-NEXT:          adrp   c0, 0x1dff000
-// CHECK-NEXT:          add    c0, c0, #0xc40
+// CHECK-NEXT:          adrp   c0, 0x220000
+// CHECK-NEXT:          add    c0, c0, #0x300
 // CHECK-NEXT:          ldp    x0, x1, [c0]
 // CHECK-NEXT:          add    c0, c2, x0, uxtx
 // CHECK-NEXT:          scbnds c0, c0, x1

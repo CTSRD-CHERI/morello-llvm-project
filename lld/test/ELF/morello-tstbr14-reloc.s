@@ -30,7 +30,7 @@
 #DSOREL-NEXT:     SHF_ALLOC
 #DSOREL-NEXT:     SHF_WRITE
 #DSOREL-NEXT:   ]
-#DSOREL-NEXT:   Address: 0x304E0
+#DSOREL-NEXT:   Address: 0x20430
 #DSOREL-NEXT:   Offset:
 #DSOREL-NEXT:   Size:
 #DSOREL-NEXT:   Link: 0
@@ -40,8 +40,8 @@
 #DSOREL-NEXT:  }
 #DSOREL:      Relocations [
 #DSOREL-NEXT:  Section ({{.*}}) .rela.plt {
-#DSOREL-NEXT:    0x30510 R_MORELLO_JUMP_SLOT _foo 0x31
-#DSOREL-NEXT:    0x30520 R_MORELLO_JUMP_SLOT _bar 0x31
+#DSOREL-NEXT:    0x20460 R_MORELLO_JUMP_SLOT _foo 0x31
+#DSOREL-NEXT:    0x20470 R_MORELLO_JUMP_SLOT _bar 0x31
 #DSOREL-NEXT:  }
 #DSOREL-NEXT:]
 
@@ -66,21 +66,21 @@
 #DSO-EMPTY:
 #DSO-LABEL: <.plt>:
 #DSO-NEXT:  103f0: stp  c16, c30, [csp, #-0x20]!
-#DSO-NEXT:         adrp c16, 0x30000
-#DSO-NEXT:         ldr  c17, [c16, #0x500]
-#DSO-NEXT:         add  c16, c16, #0x500
+#DSO-NEXT:         adrp c16, 0x20000
+#DSO-NEXT:         ldr  c17, [c16, #0x450]
+#DSO-NEXT:         add  c16, c16, #0x450
 #DSO-NEXT:         br   c17
 #DSO-NEXT:         nop
 #DSO-NEXT:         nop
 #DSO-NEXT:         nop
 #DSO-LABEL: <_foo@plt>:
-#DSO-NEXT:  10410: adrp c16, 0x30000
-#DSO-NEXT:         add  c16, c16, #0x510
+#DSO-NEXT:  10410: adrp c16, 0x20000
+#DSO-NEXT:         add  c16, c16, #0x460
 #DSO-NEXT:         ldr  c17, [c16, #0x0]
 #DSO-NEXT:         br   c17
 #DSO-LABEL: <_bar@plt>:
-#DSO-NEXT:  10420: adrp c16, 0x30000
-#DSO-NEXT:         add  c16, c16, #0x520
+#DSO-NEXT:  10420: adrp c16, 0x20000
+#DSO-NEXT:         add  c16, c16, #0x470
 #DSO-NEXT:         ldr  c17, [c16, #0x0]
 #DSO-NEXT:         br   c17
 

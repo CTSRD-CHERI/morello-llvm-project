@@ -89,49 +89,49 @@ _start: ret
 // CHECK: Relocations [
 // CHECK-NEXT:   .rela.dyn {
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x221410
+// CHECK-NEXT:       Offset: 0x220810
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x221420
+// CHECK-NEXT:       Offset: 0x220820
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x221430
+// CHECK-NEXT:       Offset: 0x220830
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x221440
+// CHECK-NEXT:       Offset: 0x220840
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x221450
+// CHECK-NEXT:       Offset: 0x220850
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x221460
+// CHECK-NEXT:       Offset: 0x220860
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x221470
+// CHECK-NEXT:       Offset: 0x220870
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x221480
+// CHECK-NEXT:       Offset: 0x220880
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
@@ -222,21 +222,21 @@ _start: ret
 
 // CHECK:      Hex dump of section '.data.rel.ro':
 /// __preinit_array_start: address: 0x220C00, size = 8, perms = RO(0x1)
-// CHECK-NEXT: 0x00221410 000c2200 00000000 08000000 00000001
+// CHECK-NEXT: 0x00220810 000c2200 00000000 08000000 00000001
 /// __preinit_array_end: address: 0x220C08, size = 0, perms = RO(0x1)
-// CHECK-NEXT: 0x00221420 080c2200 00000000 00000000 00000001
+// CHECK-NEXT: 0x00220820 080c2200 00000000 00000000 00000001
 
 /// __init_array_start: address: 0x221000, size = 8, perms = RO(0x1)
-// CHECK-NEXT: 0x00221430 00102200 00000000 08000000 00000001
+// CHECK-NEXT: 0x00220830 00102200 00000000 08000000 00000001
 /// __init_array_end: address: 0x221008, size = 0, perms = RO(0x1)
-// CHECK-NEXT: 0x00221440 08102200 00000000 00000000 00000001
+// CHECK-NEXT: 0x00220840 08102200 00000000 00000000 00000001
 
 /// __fini_array_start: address: 0x221400, size = 8, perms = RO(0x1)
-// CHECK-NEXT: 0x00221450 00142200 00000000 08000000 00000001
+// CHECK-NEXT: 0x00220850 00142200 00000000 08000000 00000001
 /// __fini_array_end: address: 0x221408, size = 0, perms = RO(0x1)
-// CHECK-NEXT: 0x00221460 08142200 00000000 00000000 00000001
+// CHECK-NEXT: 0x00220860 08142200 00000000 00000000 00000001
 
 /// __start_mysection: address: 0x200400, size = 8, perms = RO(0x1)
-// CHECK-NEXT: 0x00221470 00042000 00000000 08000000 00000001
+// CHECK-NEXT: 0x00220870 00042000 00000000 08000000 00000001
 /// __stop_mysection: address: 0x200408, size = 0, perms = RO(0x1)
-// CHECK-NEXT: 0x00221480 08042000 00000000 00000000 00000001
+// CHECK-NEXT: 0x00220880 08042000 00000000 00000000 00000001

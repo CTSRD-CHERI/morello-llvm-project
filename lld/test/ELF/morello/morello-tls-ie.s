@@ -14,8 +14,8 @@
 # RELOC-NEXT:     SHF_ALLOC
 # RELOC-NEXT:     SHF_WRITE
 # RELOC-NEXT:   ]
-# RELOC-NEXT:   Address: 0x220410
-# RELOC-NEXT:   Offset: 0x410
+# RELOC-NEXT:   Address: 0x220360
+# RELOC-NEXT:   Offset: 0x360
 # RELOC-NEXT:   Size: 32
 # RELOC-NEXT:   Link: 0
 # RELOC-NEXT:   Info: 0
@@ -24,22 +24,22 @@
 # RELOC-NEXT: }
 # RELOC:      Relocations [
 # RELOC-NEXT:  Section ({{.*}}) .rela.dyn {
-# RELOC-NEXT:    0x220410 R_MORELLO_TLS_TPREL128 foo 0x0
-# RELOC-NEXT:    0x220420 R_MORELLO_TLS_TPREL128 bar 0x0
+# RELOC-NEXT:    0x220360 R_MORELLO_TLS_TPREL128 foo 0x0
+# RELOC-NEXT:    0x220370 R_MORELLO_TLS_TPREL128 bar 0x0
 # RELOC-NEXT:  }
 # RELOC-NEXT:]
 
-## Page(0x220410) - Page(0x210340) = 0x10000 = 65536
-## 0x220410 & 0xfff = 0x410 = 1040
-## Page(0x220420) - Page(0x21034c) = 0x10000 = 65536
-## 0x220420 & 0xfff = 0x420 = 1056
+## Page(0x220360) - Page(0x210340) = 0x10000 = 65536
+## 0x220360 & 0xfff = 0x360 = 864
+## Page(0x220370) - Page(0x21034c) = 0x10000 = 65536
+## 0x220370 & 0xfff = 0x370 = 880
 
 # CHECK:     <_start>:
 # CHECK-NEXT: 210340: adrp c0, 0x220000
-# CHECK-NEXT: 210344: add  c0, c0, #1040
+# CHECK-NEXT: 210344: add  c0, c0, #864
 # CHECK-NEXT: 210348: ldp  x0, x1, [c0]
 # CHECK-NEXT: 21034c: adrp c0, 0x220000
-# CHECK-NEXT: 210350: add  c0, c0, #1056
+# CHECK-NEXT: 210350: add  c0, c0, #880
 # CHECK-NEXT: 210354: ldp  x0, x1, [c0]
 
 

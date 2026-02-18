@@ -15,9 +15,9 @@
 // create target specific dynamic TLSDESC relocation where addend is
 // the symbol VMA in tls block.
 
-// CHECK:      10360: adrp    c0, 0x20000 <local2+0x1fff8>
-// CHECK-NEXT: 10364: ldr     c1, [c0, #1056]
-// CHECK-NEXT: 10368: add     c0, c0, #1056
+// CHECK:      10360: adrp    c0, 0x20000
+// CHECK-NEXT: 10364: ldr     c1, [c0, #912]
+// CHECK-NEXT: 10368: add     c0, c0, #912
 // CHECK-NEXT: 1036c: blr     c1
 
 	adrp	c0, :tlsdesc:local1
@@ -26,9 +26,9 @@
   .tlsdesccall local1
   blr     c1
 
-// CHECK:      10370: adrp    c0, 0x20000 <local2+0x1fff8>
-// CHECK-NEXT: 10374: ldr     c1, [c0, #1088]
-// CHECK-NEXT: 10378: add     c0, c0, #1088
+// CHECK:      10370: adrp    c0, 0x20000
+// CHECK-NEXT: 10374: ldr     c1, [c0, #944]
+// CHECK-NEXT: 10378: add     c0, c0, #944
 // CHECK-NEXT: 1037c: blr     c1
 
   adrp	c0, :tlsdesc:local2
@@ -37,9 +37,9 @@
   .tlsdesccall local2
   blr     c1
 
-// CHECK:      10380: adrp    c0, 0x20000 <local2+0x1fff8>
-// CHECK-NEXT: 10384: ldr     c1, [c0, #1120]
-// CHECK-NEXT: 10388: add     c0, c0, #1120
+// CHECK:      10380: adrp    c0, 0x20000
+// CHECK-NEXT: 10384: ldr     c1, [c0, #976]
+// CHECK-NEXT: 10388: add     c0, c0, #976
 // CHECK-NEXT: 1038c: blr     c1
 
   .section .tbss,"awT",@nobits
@@ -55,17 +55,17 @@ local2:
   .size   local2, 8
 
 
-// 0x20000 + 1056 = 0x20420 (.got@a)
-// 0x20000 + 1088 = 0x20440 (.got@local1)
-// 0x20000 + 1120 = 0x20460 (.got@local2)
+// 0x20000 + 912 = 0x20390 (.got@a)
+// 0x20000 + 944 = 0x203b0 (.got@local1)
+// 0x20000 + 976 = 0x203d0 (.got@local2)
 
 // R_MORELLO_TLSDESC - 0x0 -> start of tls block
 // R_MORELLO_TLSDESC - 0x8 -> align (sizeof (local1), 8)
 
 // REL:      Relocations [
 // REL-NEXT:   .rela.dyn {
-// REL-NEXT:     0x20440 R_MORELLO_TLSDESC - 0x0
-// REL-NEXT:     0x20460 R_MORELLO_TLSDESC - 0x8
-// REL-NEXT:     0x20420 R_MORELLO_TLSDESC a 0x0
+// REL-NEXT:     0x203B0 R_MORELLO_TLSDESC - 0x0
+// REL-NEXT:     0x203D0 R_MORELLO_TLSDESC - 0x8
+// REL-NEXT:     0x20390 R_MORELLO_TLSDESC a 0x0
 // REL-NEXT:   }
 // REL-NEXT: ]
