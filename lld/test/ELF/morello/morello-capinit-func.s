@@ -63,27 +63,12 @@ rw:
 bss:
  .space 4
 
-/// Executable capability ranges from __cap_relocs up to the end of
+/// Executable capability ranges from .rodata up to the end of
 /// .data.rel.ro (and the ensuing .pad.cheri.pcc).
-/// Range is [0x200280, 0x240080) including alignment to CHERI concentrate
+/// Range is [0x210000, 0x240080) including alignment to CHERI concentrate
 /// boundary.
 
-// CHECK:          Name: __cap_relocs
-// CHECK-NEXT:     Type: SHT_PROGBITS
-// CHECK-NEXT:     Flags [
-// CHECK-NEXT:       SHF_ALLOC
-// CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x200280
-// CHECK-NEXT:     Offset: 0x280
-// CHECK-NEXT:     Size: 240
-// CHECK-NEXT:     Link: 0
-// CHECK-NEXT:     Info: 0
-// CHECK-NEXT:     AddressAlignment: 64
-// CHECK-NEXT:     EntrySize: 40
-// CHECK-NEXT:   }
-// CHECK-NEXT:   Section {
-// CHECK-NEXT:     Index:
-// CHECK-NEXT:     Name: .rodata
+// CHECK:          Name: .rodata
 // CHECK-NEXT:     Type: SHT_PROGBITS
 // CHECK-NEXT:     Flags [
 // CHECK-NEXT:       SHF_ALLOC
@@ -197,15 +182,15 @@ bss:
 // CHECK-NEXT:     Offset: 0x240030
 // CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
 // CHECK-NEXT:     Address: 0x230001
-// CHECK-NEXT:     Base: 0x200280
-// CHECK-NEXT:     Length: 261632
+// CHECK-NEXT:     Base: 0x210000
+// CHECK-NEXT:     Length: 196736
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Offset: 0x240040
 // CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
 // CHECK-NEXT:     Address: 0x230005
-// CHECK-NEXT:     Base: 0x200280
-// CHECK-NEXT:     Length: 261632
+// CHECK-NEXT:     Base: 0x210000
+// CHECK-NEXT:     Length: 196736
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Offset: 0x240050
@@ -252,15 +237,15 @@ bss:
 // CHECK-SCRIPT-NEXT:     Offset: 0x220030
 // CHECK-SCRIPT-NEXT:     Type: FUNC (0x8000000000013DBC)
 // CHECK-SCRIPT-NEXT:     Address: 0x210001
-// CHECK-SCRIPT-NEXT:     Base: 0x400
-// CHECK-SCRIPT-NEXT:     Length: 2228224
+// CHECK-SCRIPT-NEXT:     Base: 0x210000
+// CHECK-SCRIPT-NEXT:     Length: 65664
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
 // CHECK-SCRIPT-NEXT:     Offset: 0x220040
 // CHECK-SCRIPT-NEXT:     Type: FUNC (0x8000000000013DBC)
 // CHECK-SCRIPT-NEXT:     Address: 0x210005
-// CHECK-SCRIPT-NEXT:     Base: 0x400
-// CHECK-SCRIPT-NEXT:     Length: 2228224
+// CHECK-SCRIPT-NEXT:     Base: 0x210000
+// CHECK-SCRIPT-NEXT:     Length: 65664
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
 // CHECK-SCRIPT-NEXT:     Offset: 0x220050

@@ -29,34 +29,34 @@ _start:
 // CHECK-NEXT:     Flags [ (0x2)
 // CHECK-NEXT:       SHF_ALLOC (0x2)
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x200280
+// CHECK-NEXT:     Address: 0x200248
 // CHECK-NEXT:     Offset:
 // CHECK-NEXT:     Size: 160
 
 // CHECK: __cap_relocs {
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x220330
+// CHECK-NEXT:     Offset: 0x220310
 // CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
 // CHECK-NEXT:     Address: 0x218001
-// CHECK-NEXT:     Base: 0x200280
-// CHECK-NEXT:     Length: 131328
+// CHECK-NEXT:     Base: 0x210300
+// CHECK-NEXT:     Length: 65632
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x220340
+// CHECK-NEXT:     Offset: 0x220320
 // CHECK-NEXT:     Type: DATA (0x8FBE)
 // CHECK-NEXT:     Address: 0x400000
 // CHECK-NEXT:     Base: 0x400000
 // CHECK-NEXT:     Length: 8
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x220350
+// CHECK-NEXT:     Offset: 0x220330
 // CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
 // CHECK-NEXT:     Address: 0x218001
-// CHECK-NEXT:     Base: 0x200280
-// CHECK-NEXT:     Length: 131328
+// CHECK-NEXT:     Base: 0x210300
+// CHECK-NEXT:     Length: 65632
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x220360
+// CHECK-NEXT:     Offset: 0x220340
 // CHECK-NEXT:     Type: DATA (0x8FBE)
 // CHECK-NEXT:     Address: 0x400000
 // CHECK-NEXT:     Base: 0x400000

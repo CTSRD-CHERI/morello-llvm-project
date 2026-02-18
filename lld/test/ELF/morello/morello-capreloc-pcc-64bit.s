@@ -18,5 +18,5 @@ code_cap:
 	.size code_cap, . - code_cap
 
 // CHECK:      __cap_relocs {
-// CHECK-NEXT:   0x100020260 FUNC - 0x100010249 [0x100000220-0x100010260]
+// CHECK-NEXT:   0x100020240 FUNC - 0x100010239 [0x100010238-0x10001023C]
 // CHECK-NEXT: }
