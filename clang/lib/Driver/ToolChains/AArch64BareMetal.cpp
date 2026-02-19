@@ -236,15 +236,7 @@ void Linker::ConstructJob(Compilation &C, const JobAction &JA,
     CmdArgs.push_back(Args.MakeArgString(ImageBase));
 
     // Pass the linker option --local-caprelocs=elf by default.
-    std::string CapRelocsMode = "--local-caprelocs=elf";
-    for (Arg *A : Args) {
-      if (A->getOption().matches(options::OPT_Wl_COMMA) &&
-          A->getNumValues() == 1 &&
-          StringRef(A->getValue(0)).startswith("--local-caprelocs=")) {
-        CapRelocsMode = A->getValue(0);
-      }
-    }
-    CmdArgs.push_back(Args.MakeArgString(CapRelocsMode));
+    CmdArgs.push_back(Args.MakeArgString("--local-caprelocs=elf"));
   }
   // Force the search path to the targetted variant library.
   CmdArgs.push_back("-L");
