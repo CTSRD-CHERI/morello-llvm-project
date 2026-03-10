@@ -2504,7 +2504,7 @@ SDValue SelectionDAG::FoldSetCC(EVT VT, SDValue N1, SDValue N2,
   case ISD::SETUEQ:
   case ISD::SETUNE:
     assert(!OpVT.isInteger() && !OpVT.isFatPointer() &&
-           "Illegal setcc for integer!");
+           "Illegal setcc for integer or pointer!");
     break;
   }
 
