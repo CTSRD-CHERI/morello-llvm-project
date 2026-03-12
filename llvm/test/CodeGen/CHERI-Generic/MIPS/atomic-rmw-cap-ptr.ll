@@ -6,7 +6,7 @@
 ; RUN: llc -mtriple=mips64 -mcpu=cheri128 -mattr=+cheri128 --relocation-model=pic -target-abi purecap %s -o - | FileCheck %s --check-prefix=PURECAP
 ; RUN: llc -mtriple=mips64 -mcpu=cheri128 -mattr=+cheri128 --relocation-model=pic -target-abi n64 %s -o - | FileCheck %s --check-prefix=HYBRID
 
-define i64 @atomic_cap_ptr_xchg(i64 addrspace(200)* %ptr, i64 %val) nounwind {
+define i64 @atomic_cap_ptr_xchg(ptr addrspace(200) %ptr, i64 %val) nounwind {
 ; PURECAP-LABEL: atomic_cap_ptr_xchg:
 ; PURECAP:       # %bb.0:
 ; PURECAP-NEXT:    sync
@@ -32,11 +32,11 @@ define i64 @atomic_cap_ptr_xchg(i64 addrspace(200)* %ptr, i64 %val) nounwind {
 ; HYBRID-NEXT:    sync
 ; HYBRID-NEXT:    jr $ra
 ; HYBRID-NEXT:    nop
-  %tmp = atomicrmw xchg i64 addrspace(200)* %ptr, i64 %val seq_cst
+  %tmp = atomicrmw xchg ptr addrspace(200) %ptr, i64 %val seq_cst
   ret i64 %tmp
 }
 
-define i64 @atomic_cap_ptr_add(i64 addrspace(200)* %ptr, i64 %val) nounwind {
+define i64 @atomic_cap_ptr_add(ptr addrspace(200) %ptr, i64 %val) nounwind {
 ; PURECAP-LABEL: atomic_cap_ptr_add:
 ; PURECAP:       # %bb.0:
 ; PURECAP-NEXT:    sync
@@ -64,11 +64,11 @@ define i64 @atomic_cap_ptr_add(i64 addrspace(200)* %ptr, i64 %val) nounwind {
 ; HYBRID-NEXT:    sync
 ; HYBRID-NEXT:    jr $ra
 ; HYBRID-NEXT:    nop
-  %tmp = atomicrmw add i64 addrspace(200)* %ptr, i64 %val seq_cst
+  %tmp = atomicrmw add ptr addrspace(200) %ptr, i64 %val seq_cst
   ret i64 %tmp
 }
 
-define i64 @atomic_cap_ptr_sub(i64 addrspace(200)* %ptr, i64 %val) nounwind {
+define i64 @atomic_cap_ptr_sub(ptr addrspace(200) %ptr, i64 %val) nounwind {
 ; PURECAP-LABEL: atomic_cap_ptr_sub:
 ; PURECAP:       # %bb.0:
 ; PURECAP-NEXT:    sync
@@ -96,11 +96,11 @@ define i64 @atomic_cap_ptr_sub(i64 addrspace(200)* %ptr, i64 %val) nounwind {
 ; HYBRID-NEXT:    sync
 ; HYBRID-NEXT:    jr $ra
 ; HYBRID-NEXT:    nop
-  %tmp = atomicrmw sub i64 addrspace(200)* %ptr, i64 %val seq_cst
+  %tmp = atomicrmw sub ptr addrspace(200) %ptr, i64 %val seq_cst
   ret i64 %tmp
 }
 
-define i64 @atomic_cap_ptr_and(i64 addrspace(200)* %ptr, i64 %val) nounwind {
+define i64 @atomic_cap_ptr_and(ptr addrspace(200) %ptr, i64 %val) nounwind {
 ; PURECAP-LABEL: atomic_cap_ptr_and:
 ; PURECAP:       # %bb.0:
 ; PURECAP-NEXT:    sync
@@ -128,11 +128,11 @@ define i64 @atomic_cap_ptr_and(i64 addrspace(200)* %ptr, i64 %val) nounwind {
 ; HYBRID-NEXT:    sync
 ; HYBRID-NEXT:    jr $ra
 ; HYBRID-NEXT:    nop
-  %tmp = atomicrmw and i64 addrspace(200)* %ptr, i64 %val seq_cst
+  %tmp = atomicrmw and ptr addrspace(200) %ptr, i64 %val seq_cst
   ret i64 %tmp
 }
 
-define i64 @atomic_cap_ptr_nand(i64 addrspace(200)* %ptr, i64 %val) nounwind {
+define i64 @atomic_cap_ptr_nand(ptr addrspace(200) %ptr, i64 %val) nounwind {
 ; PURECAP-LABEL: atomic_cap_ptr_nand:
 ; PURECAP:       # %bb.0:
 ; PURECAP-NEXT:    sync
@@ -162,11 +162,11 @@ define i64 @atomic_cap_ptr_nand(i64 addrspace(200)* %ptr, i64 %val) nounwind {
 ; HYBRID-NEXT:    sync
 ; HYBRID-NEXT:    jr $ra
 ; HYBRID-NEXT:    nop
-  %tmp = atomicrmw nand i64 addrspace(200)* %ptr, i64 %val seq_cst
+  %tmp = atomicrmw nand ptr addrspace(200) %ptr, i64 %val seq_cst
   ret i64 %tmp
 }
 
-define i64 @atomic_cap_ptr_or(i64 addrspace(200)* %ptr, i64 %val) nounwind {
+define i64 @atomic_cap_ptr_or(ptr addrspace(200) %ptr, i64 %val) nounwind {
 ; PURECAP-LABEL: atomic_cap_ptr_or:
 ; PURECAP:       # %bb.0:
 ; PURECAP-NEXT:    sync
@@ -194,11 +194,11 @@ define i64 @atomic_cap_ptr_or(i64 addrspace(200)* %ptr, i64 %val) nounwind {
 ; HYBRID-NEXT:    sync
 ; HYBRID-NEXT:    jr $ra
 ; HYBRID-NEXT:    nop
-  %tmp = atomicrmw or i64 addrspace(200)* %ptr, i64 %val seq_cst
+  %tmp = atomicrmw or ptr addrspace(200) %ptr, i64 %val seq_cst
   ret i64 %tmp
 }
 
-define i64 @atomic_cap_ptr_xor(i64 addrspace(200)* %ptr, i64 %val) nounwind {
+define i64 @atomic_cap_ptr_xor(ptr addrspace(200) %ptr, i64 %val) nounwind {
 ; PURECAP-LABEL: atomic_cap_ptr_xor:
 ; PURECAP:       # %bb.0:
 ; PURECAP-NEXT:    sync
@@ -226,11 +226,11 @@ define i64 @atomic_cap_ptr_xor(i64 addrspace(200)* %ptr, i64 %val) nounwind {
 ; HYBRID-NEXT:    sync
 ; HYBRID-NEXT:    jr $ra
 ; HYBRID-NEXT:    nop
-  %tmp = atomicrmw xor i64 addrspace(200)* %ptr, i64 %val seq_cst
+  %tmp = atomicrmw xor ptr addrspace(200) %ptr, i64 %val seq_cst
   ret i64 %tmp
 }
 
-define i64 @atomic_cap_ptr_max(i64 addrspace(200)* %ptr, i64 %val) nounwind {
+define i64 @atomic_cap_ptr_max(ptr addrspace(200) %ptr, i64 %val) nounwind {
 ; PURECAP-LABEL: atomic_cap_ptr_max:
 ; PURECAP:       # %bb.0:
 ; PURECAP-NEXT:    sync
@@ -262,11 +262,11 @@ define i64 @atomic_cap_ptr_max(i64 addrspace(200)* %ptr, i64 %val) nounwind {
 ; HYBRID-NEXT:    sync
 ; HYBRID-NEXT:    jr $ra
 ; HYBRID-NEXT:    nop
-  %tmp = atomicrmw max i64 addrspace(200)* %ptr, i64 %val seq_cst
+  %tmp = atomicrmw max ptr addrspace(200) %ptr, i64 %val seq_cst
   ret i64 %tmp
 }
 
-define i64 @atomic_cap_ptr_min(i64 addrspace(200)* %ptr, i64 %val) nounwind {
+define i64 @atomic_cap_ptr_min(ptr addrspace(200) %ptr, i64 %val) nounwind {
 ; PURECAP-LABEL: atomic_cap_ptr_min:
 ; PURECAP:       # %bb.0:
 ; PURECAP-NEXT:    sync
@@ -298,11 +298,11 @@ define i64 @atomic_cap_ptr_min(i64 addrspace(200)* %ptr, i64 %val) nounwind {
 ; HYBRID-NEXT:    sync
 ; HYBRID-NEXT:    jr $ra
 ; HYBRID-NEXT:    nop
-  %tmp = atomicrmw min i64 addrspace(200)* %ptr, i64 %val seq_cst
+  %tmp = atomicrmw min ptr addrspace(200) %ptr, i64 %val seq_cst
   ret i64 %tmp
 }
 
-define i64 @atomic_cap_ptr_umax(i64 addrspace(200)* %ptr, i64 %val) nounwind {
+define i64 @atomic_cap_ptr_umax(ptr addrspace(200) %ptr, i64 %val) nounwind {
 ; PURECAP-LABEL: atomic_cap_ptr_umax:
 ; PURECAP:       # %bb.0:
 ; PURECAP-NEXT:    sync
@@ -334,11 +334,11 @@ define i64 @atomic_cap_ptr_umax(i64 addrspace(200)* %ptr, i64 %val) nounwind {
 ; HYBRID-NEXT:    sync
 ; HYBRID-NEXT:    jr $ra
 ; HYBRID-NEXT:    nop
-  %tmp = atomicrmw umax i64 addrspace(200)* %ptr, i64 %val seq_cst
+  %tmp = atomicrmw umax ptr addrspace(200) %ptr, i64 %val seq_cst
   ret i64 %tmp
 }
 
-define i64 @atomic_cap_ptr_umin(i64 addrspace(200)* %ptr, i64 %val) nounwind {
+define i64 @atomic_cap_ptr_umin(ptr addrspace(200) %ptr, i64 %val) nounwind {
 ; PURECAP-LABEL: atomic_cap_ptr_umin:
 ; PURECAP:       # %bb.0:
 ; PURECAP-NEXT:    sync
@@ -370,11 +370,11 @@ define i64 @atomic_cap_ptr_umin(i64 addrspace(200)* %ptr, i64 %val) nounwind {
 ; HYBRID-NEXT:    sync
 ; HYBRID-NEXT:    jr $ra
 ; HYBRID-NEXT:    nop
-  %tmp = atomicrmw umin i64 addrspace(200)* %ptr, i64 %val seq_cst
+  %tmp = atomicrmw umin ptr addrspace(200) %ptr, i64 %val seq_cst
   ret i64 %tmp
 }
 
-define float @atomic_cap_ptr_fadd(float addrspace(200)* %ptr, float %val) nounwind {
+define float @atomic_cap_ptr_fadd(ptr addrspace(200) %ptr, float %val) nounwind {
 ; PURECAP-LABEL: atomic_cap_ptr_fadd:
 ; PURECAP:       # %bb.0:
 ; PURECAP-NEXT:    sync
@@ -436,11 +436,11 @@ define float @atomic_cap_ptr_fadd(float addrspace(200)* %ptr, float %val) nounwi
 ; HYBRID-NEXT:    sync
 ; HYBRID-NEXT:    jr $ra
 ; HYBRID-NEXT:    nop
-  %tmp = atomicrmw fadd float addrspace(200)* %ptr, float %val seq_cst
+  %tmp = atomicrmw fadd ptr addrspace(200) %ptr, float %val seq_cst
   ret float %tmp
 }
 
-define float @atomic_cap_ptr_fsub(float addrspace(200)* %ptr, float %val) nounwind {
+define float @atomic_cap_ptr_fsub(ptr addrspace(200) %ptr, float %val) nounwind {
 ; PURECAP-LABEL: atomic_cap_ptr_fsub:
 ; PURECAP:       # %bb.0:
 ; PURECAP-NEXT:    sync
@@ -502,6 +502,6 @@ define float @atomic_cap_ptr_fsub(float addrspace(200)* %ptr, float %val) nounwi
 ; HYBRID-NEXT:    sync
 ; HYBRID-NEXT:    jr $ra
 ; HYBRID-NEXT:    nop
-  %tmp = atomicrmw fsub float addrspace(200)* %ptr, float %val seq_cst
+  %tmp = atomicrmw fsub ptr addrspace(200) %ptr, float %val seq_cst
   ret float %tmp
 }

@@ -8,7 +8,7 @@
 ; RUN: llc -mtriple=riscv32 --relocation-model=pic -target-abi ilp32f -mattr=+xcheri,+f -mattr=+a < %s | FileCheck %s --check-prefixes=HYBRID,HYBRID-ATOMICS --allow-unused-prefixes
 ; RUN: llc -mtriple=riscv32 --relocation-model=pic -target-abi ilp32f -mattr=+xcheri,+f -mattr=-a < %s | FileCheck %s --check-prefixes=HYBRID,HYBRID-LIBCALLS --allow-unused-prefixes
 
-define i32 addrspace(200)* @atomic_cap_ptr_xchg_sc(i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val) nounwind {
+define ptr addrspace(200) @atomic_cap_ptr_xchg_sc(ptr addrspace(200) %ptr, ptr addrspace(200) %val) nounwind {
 ; PURECAP-ATOMICS-LABEL: atomic_cap_ptr_xchg_sc:
 ; PURECAP-ATOMICS:       # %bb.0:
 ; PURECAP-ATOMICS-NEXT:    amoswap.c.aqrl ca0, ca1, (ca0)
@@ -33,11 +33,11 @@ define i32 addrspace(200)* @atomic_cap_ptr_xchg_sc(i32 addrspace(200)* addrspace
 ; HYBRID-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; HYBRID-NEXT:    addi sp, sp, 16
 ; HYBRID-NEXT:    ret
-  %tmp = atomicrmw xchg i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val seq_cst
-  ret i32 addrspace(200)* %tmp
+  %tmp = atomicrmw xchg ptr addrspace(200) %ptr, ptr addrspace(200) %val seq_cst
+  ret ptr addrspace(200) %tmp
 }
 
-define i32 addrspace(200)* @atomic_cap_ptr_xchg_relaxed(i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val) nounwind {
+define ptr addrspace(200) @atomic_cap_ptr_xchg_relaxed(ptr addrspace(200) %ptr, ptr addrspace(200) %val) nounwind {
 ; PURECAP-ATOMICS-LABEL: atomic_cap_ptr_xchg_relaxed:
 ; PURECAP-ATOMICS:       # %bb.0:
 ; PURECAP-ATOMICS-NEXT:    amoswap.c ca0, ca1, (ca0)
@@ -62,11 +62,11 @@ define i32 addrspace(200)* @atomic_cap_ptr_xchg_relaxed(i32 addrspace(200)* addr
 ; HYBRID-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; HYBRID-NEXT:    addi sp, sp, 16
 ; HYBRID-NEXT:    ret
-  %tmp = atomicrmw xchg i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val monotonic
-  ret i32 addrspace(200)* %tmp
+  %tmp = atomicrmw xchg ptr addrspace(200) %ptr, ptr addrspace(200) %val monotonic
+  ret ptr addrspace(200) %tmp
 }
 
-define i32 addrspace(200)* @atomic_cap_ptr_xchg_acquire(i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val) nounwind {
+define ptr addrspace(200) @atomic_cap_ptr_xchg_acquire(ptr addrspace(200) %ptr, ptr addrspace(200) %val) nounwind {
 ; PURECAP-ATOMICS-LABEL: atomic_cap_ptr_xchg_acquire:
 ; PURECAP-ATOMICS:       # %bb.0:
 ; PURECAP-ATOMICS-NEXT:    amoswap.c.aq ca0, ca1, (ca0)
@@ -91,11 +91,11 @@ define i32 addrspace(200)* @atomic_cap_ptr_xchg_acquire(i32 addrspace(200)* addr
 ; HYBRID-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; HYBRID-NEXT:    addi sp, sp, 16
 ; HYBRID-NEXT:    ret
-  %tmp = atomicrmw xchg i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val acquire
-  ret i32 addrspace(200)* %tmp
+  %tmp = atomicrmw xchg ptr addrspace(200) %ptr, ptr addrspace(200) %val acquire
+  ret ptr addrspace(200) %tmp
 }
 
-define i32 addrspace(200)* @atomic_cap_ptr_xchg_rel(i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val) nounwind {
+define ptr addrspace(200) @atomic_cap_ptr_xchg_rel(ptr addrspace(200) %ptr, ptr addrspace(200) %val) nounwind {
 ; PURECAP-ATOMICS-LABEL: atomic_cap_ptr_xchg_rel:
 ; PURECAP-ATOMICS:       # %bb.0:
 ; PURECAP-ATOMICS-NEXT:    amoswap.c.rl ca0, ca1, (ca0)
@@ -120,11 +120,11 @@ define i32 addrspace(200)* @atomic_cap_ptr_xchg_rel(i32 addrspace(200)* addrspac
 ; HYBRID-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; HYBRID-NEXT:    addi sp, sp, 16
 ; HYBRID-NEXT:    ret
-  %tmp = atomicrmw xchg i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val release
-  ret i32 addrspace(200)* %tmp
+  %tmp = atomicrmw xchg ptr addrspace(200) %ptr, ptr addrspace(200) %val release
+  ret ptr addrspace(200) %tmp
 }
 
-define i32 addrspace(200)* @atomic_cap_ptr_xchg_acq_rel(i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val) nounwind {
+define ptr addrspace(200) @atomic_cap_ptr_xchg_acq_rel(ptr addrspace(200) %ptr, ptr addrspace(200) %val) nounwind {
 ; PURECAP-ATOMICS-LABEL: atomic_cap_ptr_xchg_acq_rel:
 ; PURECAP-ATOMICS:       # %bb.0:
 ; PURECAP-ATOMICS-NEXT:    amoswap.c.aqrl ca0, ca1, (ca0)
@@ -149,12 +149,12 @@ define i32 addrspace(200)* @atomic_cap_ptr_xchg_acq_rel(i32 addrspace(200)* addr
 ; HYBRID-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; HYBRID-NEXT:    addi sp, sp, 16
 ; HYBRID-NEXT:    ret
-  %tmp = atomicrmw xchg i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val acq_rel
-  ret i32 addrspace(200)* %tmp
+  %tmp = atomicrmw xchg ptr addrspace(200) %ptr, ptr addrspace(200) %val acq_rel
+  ret ptr addrspace(200) %tmp
 }
 
-; Also check non-i8* xchg:
-define i32 addrspace(200)* @atomic_cap_ptr_xchg_i32ptr(i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val) nounwind {
+; Also check non-ptr xchg:
+define ptr addrspace(200) @atomic_cap_ptr_xchg_i32ptr(ptr addrspace(200) %ptr, ptr addrspace(200) %val) nounwind {
 ; PURECAP-ATOMICS-LABEL: atomic_cap_ptr_xchg_i32ptr:
 ; PURECAP-ATOMICS:       # %bb.0:
 ; PURECAP-ATOMICS-NEXT:    amoswap.c.aqrl ca0, ca1, (ca0)
@@ -179,11 +179,11 @@ define i32 addrspace(200)* @atomic_cap_ptr_xchg_i32ptr(i32 addrspace(200)* addrs
 ; HYBRID-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; HYBRID-NEXT:    addi sp, sp, 16
 ; HYBRID-NEXT:    ret
-  %tmp = atomicrmw xchg i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val acq_rel
-  ret i32 addrspace(200)* %tmp
+  %tmp = atomicrmw xchg ptr addrspace(200) %ptr, ptr addrspace(200) %val acq_rel
+  ret ptr addrspace(200) %tmp
 }
 
-define i32 addrspace(200)* @atomic_cap_ptr_add(i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val) nounwind {
+define ptr addrspace(200) @atomic_cap_ptr_add(ptr addrspace(200) %ptr, ptr addrspace(200) %val) nounwind {
 ; PURECAP-ATOMICS-LABEL: atomic_cap_ptr_add:
 ; PURECAP-ATOMICS:       # %bb.0:
 ; PURECAP-ATOMICS-NEXT:  .LBB6_1: # =>This Inner Loop Header: Depth=1
@@ -253,11 +253,11 @@ define i32 addrspace(200)* @atomic_cap_ptr_add(i32 addrspace(200)* addrspace(200
 ; HYBRID-NEXT:    lw ra, 28(sp) # 4-byte Folded Reload
 ; HYBRID-NEXT:    addi sp, sp, 32
 ; HYBRID-NEXT:    ret
-  %tmp = atomicrmw add i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val seq_cst
-  ret i32 addrspace(200)* %tmp
+  %tmp = atomicrmw add ptr addrspace(200) %ptr, ptr addrspace(200) %val seq_cst
+  ret ptr addrspace(200) %tmp
 }
 
-define i32 addrspace(200)* @atomic_cap_ptr_sub(i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val) nounwind {
+define ptr addrspace(200) @atomic_cap_ptr_sub(ptr addrspace(200) %ptr, ptr addrspace(200) %val) nounwind {
 ; PURECAP-ATOMICS-LABEL: atomic_cap_ptr_sub:
 ; PURECAP-ATOMICS:       # %bb.0:
 ; PURECAP-ATOMICS-NEXT:  .LBB7_1: # =>This Inner Loop Header: Depth=1
@@ -328,11 +328,11 @@ define i32 addrspace(200)* @atomic_cap_ptr_sub(i32 addrspace(200)* addrspace(200
 ; HYBRID-NEXT:    lw ra, 28(sp) # 4-byte Folded Reload
 ; HYBRID-NEXT:    addi sp, sp, 32
 ; HYBRID-NEXT:    ret
-  %tmp = atomicrmw sub i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val seq_cst
-  ret i32 addrspace(200)* %tmp
+  %tmp = atomicrmw sub ptr addrspace(200) %ptr, ptr addrspace(200) %val seq_cst
+  ret ptr addrspace(200) %tmp
 }
 
-define i32 addrspace(200)* @atomic_cap_ptr_and(i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val) nounwind {
+define ptr addrspace(200) @atomic_cap_ptr_and(ptr addrspace(200) %ptr, ptr addrspace(200) %val) nounwind {
 ; PURECAP-ATOMICS-LABEL: atomic_cap_ptr_and:
 ; PURECAP-ATOMICS:       # %bb.0:
 ; PURECAP-ATOMICS-NEXT:  .LBB8_1: # =>This Inner Loop Header: Depth=1
@@ -403,11 +403,11 @@ define i32 addrspace(200)* @atomic_cap_ptr_and(i32 addrspace(200)* addrspace(200
 ; HYBRID-NEXT:    lw ra, 28(sp) # 4-byte Folded Reload
 ; HYBRID-NEXT:    addi sp, sp, 32
 ; HYBRID-NEXT:    ret
-  %tmp = atomicrmw and i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val seq_cst
-  ret i32 addrspace(200)* %tmp
+  %tmp = atomicrmw and ptr addrspace(200) %ptr, ptr addrspace(200) %val seq_cst
+  ret ptr addrspace(200) %tmp
 }
 
-define i32 addrspace(200)* @atomic_cap_ptr_nand(i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val) nounwind {
+define ptr addrspace(200) @atomic_cap_ptr_nand(ptr addrspace(200) %ptr, ptr addrspace(200) %val) nounwind {
 ; PURECAP-ATOMICS-LABEL: atomic_cap_ptr_nand:
 ; PURECAP-ATOMICS:       # %bb.0:
 ; PURECAP-ATOMICS-NEXT:  .LBB9_1: # =>This Inner Loop Header: Depth=1
@@ -481,11 +481,11 @@ define i32 addrspace(200)* @atomic_cap_ptr_nand(i32 addrspace(200)* addrspace(20
 ; HYBRID-NEXT:    lw ra, 28(sp) # 4-byte Folded Reload
 ; HYBRID-NEXT:    addi sp, sp, 32
 ; HYBRID-NEXT:    ret
-  %tmp = atomicrmw nand i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val seq_cst
-  ret i32 addrspace(200)* %tmp
+  %tmp = atomicrmw nand ptr addrspace(200) %ptr, ptr addrspace(200) %val seq_cst
+  ret ptr addrspace(200) %tmp
 }
 
-define i32 addrspace(200)* @atomic_cap_ptr_or(i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val) nounwind {
+define ptr addrspace(200) @atomic_cap_ptr_or(ptr addrspace(200) %ptr, ptr addrspace(200) %val) nounwind {
 ; PURECAP-ATOMICS-LABEL: atomic_cap_ptr_or:
 ; PURECAP-ATOMICS:       # %bb.0:
 ; PURECAP-ATOMICS-NEXT:  .LBB10_1: # =>This Inner Loop Header: Depth=1
@@ -556,11 +556,11 @@ define i32 addrspace(200)* @atomic_cap_ptr_or(i32 addrspace(200)* addrspace(200)
 ; HYBRID-NEXT:    lw ra, 28(sp) # 4-byte Folded Reload
 ; HYBRID-NEXT:    addi sp, sp, 32
 ; HYBRID-NEXT:    ret
-  %tmp = atomicrmw or i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val seq_cst
-  ret i32 addrspace(200)* %tmp
+  %tmp = atomicrmw or ptr addrspace(200) %ptr, ptr addrspace(200) %val seq_cst
+  ret ptr addrspace(200) %tmp
 }
 
-define i32 addrspace(200)* @atomic_cap_ptr_xor(i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val) nounwind {
+define ptr addrspace(200) @atomic_cap_ptr_xor(ptr addrspace(200) %ptr, ptr addrspace(200) %val) nounwind {
 ; PURECAP-ATOMICS-LABEL: atomic_cap_ptr_xor:
 ; PURECAP-ATOMICS:       # %bb.0:
 ; PURECAP-ATOMICS-NEXT:  .LBB11_1: # =>This Inner Loop Header: Depth=1
@@ -631,11 +631,11 @@ define i32 addrspace(200)* @atomic_cap_ptr_xor(i32 addrspace(200)* addrspace(200
 ; HYBRID-NEXT:    lw ra, 28(sp) # 4-byte Folded Reload
 ; HYBRID-NEXT:    addi sp, sp, 32
 ; HYBRID-NEXT:    ret
-  %tmp = atomicrmw xor i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val seq_cst
-  ret i32 addrspace(200)* %tmp
+  %tmp = atomicrmw xor ptr addrspace(200) %ptr, ptr addrspace(200) %val seq_cst
+  ret ptr addrspace(200) %tmp
 }
 
-define i32 addrspace(200)* @atomic_cap_ptr_max(i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val) nounwind {
+define ptr addrspace(200) @atomic_cap_ptr_max(ptr addrspace(200) %ptr, ptr addrspace(200) %val) nounwind {
 ; PURECAP-ATOMICS-LABEL: atomic_cap_ptr_max:
 ; PURECAP-ATOMICS:       # %bb.0:
 ; PURECAP-ATOMICS-NEXT:  .LBB12_1: # =>This Inner Loop Header: Depth=1
@@ -723,11 +723,11 @@ define i32 addrspace(200)* @atomic_cap_ptr_max(i32 addrspace(200)* addrspace(200
 ; HYBRID-NEXT:    lw ra, 28(sp) # 4-byte Folded Reload
 ; HYBRID-NEXT:    addi sp, sp, 32
 ; HYBRID-NEXT:    ret
-  %tmp = atomicrmw max i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val seq_cst
-  ret i32 addrspace(200)* %tmp
+  %tmp = atomicrmw max ptr addrspace(200) %ptr, ptr addrspace(200) %val seq_cst
+  ret ptr addrspace(200) %tmp
 }
 
-define i32 addrspace(200)* @atomic_cap_ptr_min(i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val) nounwind {
+define ptr addrspace(200) @atomic_cap_ptr_min(ptr addrspace(200) %ptr, ptr addrspace(200) %val) nounwind {
 ; PURECAP-ATOMICS-LABEL: atomic_cap_ptr_min:
 ; PURECAP-ATOMICS:       # %bb.0:
 ; PURECAP-ATOMICS-NEXT:  .LBB13_1: # =>This Inner Loop Header: Depth=1
@@ -815,11 +815,11 @@ define i32 addrspace(200)* @atomic_cap_ptr_min(i32 addrspace(200)* addrspace(200
 ; HYBRID-NEXT:    lw ra, 28(sp) # 4-byte Folded Reload
 ; HYBRID-NEXT:    addi sp, sp, 32
 ; HYBRID-NEXT:    ret
-  %tmp = atomicrmw min i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val seq_cst
-  ret i32 addrspace(200)* %tmp
+  %tmp = atomicrmw min ptr addrspace(200) %ptr, ptr addrspace(200) %val seq_cst
+  ret ptr addrspace(200) %tmp
 }
 
-define i32 addrspace(200)* @atomic_cap_ptr_umax(i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val) nounwind {
+define ptr addrspace(200) @atomic_cap_ptr_umax(ptr addrspace(200) %ptr, ptr addrspace(200) %val) nounwind {
 ; PURECAP-ATOMICS-LABEL: atomic_cap_ptr_umax:
 ; PURECAP-ATOMICS:       # %bb.0:
 ; PURECAP-ATOMICS-NEXT:  .LBB14_1: # =>This Inner Loop Header: Depth=1
@@ -907,11 +907,11 @@ define i32 addrspace(200)* @atomic_cap_ptr_umax(i32 addrspace(200)* addrspace(20
 ; HYBRID-NEXT:    lw ra, 28(sp) # 4-byte Folded Reload
 ; HYBRID-NEXT:    addi sp, sp, 32
 ; HYBRID-NEXT:    ret
-  %tmp = atomicrmw umax i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val seq_cst
-  ret i32 addrspace(200)* %tmp
+  %tmp = atomicrmw umax ptr addrspace(200) %ptr, ptr addrspace(200) %val seq_cst
+  ret ptr addrspace(200) %tmp
 }
 
-define i32 addrspace(200)* @atomic_cap_ptr_umin(i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val) nounwind {
+define ptr addrspace(200) @atomic_cap_ptr_umin(ptr addrspace(200) %ptr, ptr addrspace(200) %val) nounwind {
 ; PURECAP-ATOMICS-LABEL: atomic_cap_ptr_umin:
 ; PURECAP-ATOMICS:       # %bb.0:
 ; PURECAP-ATOMICS-NEXT:  .LBB15_1: # =>This Inner Loop Header: Depth=1
@@ -999,6 +999,6 @@ define i32 addrspace(200)* @atomic_cap_ptr_umin(i32 addrspace(200)* addrspace(20
 ; HYBRID-NEXT:    lw ra, 28(sp) # 4-byte Folded Reload
 ; HYBRID-NEXT:    addi sp, sp, 32
 ; HYBRID-NEXT:    ret
-  %tmp = atomicrmw umin i32 addrspace(200)* addrspace(200)* %ptr, i32 addrspace(200)* %val seq_cst
-  ret i32 addrspace(200)* %tmp
+  %tmp = atomicrmw umin ptr addrspace(200) %ptr, ptr addrspace(200) %val seq_cst
+  ret ptr addrspace(200) %tmp
 }
