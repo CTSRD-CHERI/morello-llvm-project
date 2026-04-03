@@ -4,7 +4,7 @@
 ; RUN: llc -mtriple=aarch64 --relocation-model=pic -target-abi purecap -mattr=+morello,+c64 < %s | FileCheck %s
 ; RUN: llc -mtriple=aarch64 --relocation-model=pic -target-abi aapcs -mattr=+morello,-c64 < %s | FileCheck %s --check-prefix=HYBRID
 
-define internal i64 @ptrtoint(i8 addrspace(200)* %cap) addrspace(200) nounwind {
+define internal i64 @ptrtoint(ptr addrspace(200) %cap) addrspace(200) nounwind {
 ; CHECK-LABEL: ptrtoint:
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    gcvalue x0, c0
@@ -14,11 +14,11 @@ define internal i64 @ptrtoint(i8 addrspace(200)* %cap) addrspace(200) nounwind {
 ; HYBRID:       // %bb.0:
 ; HYBRID-NEXT:    gcvalue x0, c0
 ; HYBRID-NEXT:    ret
-  %ret = ptrtoint i8 addrspace(200)* %cap to i64
+  %ret = ptrtoint ptr addrspace(200) %cap to i64
   ret i64 %ret
 }
 
-define internal i64 @ptrtoint_plus_const(i8 addrspace(200)* %cap) addrspace(200) nounwind {
+define internal i64 @ptrtoint_plus_const(ptr addrspace(200) %cap) addrspace(200) nounwind {
 ; CHECK-LABEL: ptrtoint_plus_const:
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    add x0, x0, #2
@@ -28,12 +28,12 @@ define internal i64 @ptrtoint_plus_const(i8 addrspace(200)* %cap) addrspace(200)
 ; HYBRID:       // %bb.0:
 ; HYBRID-NEXT:    add x0, x0, #2
 ; HYBRID-NEXT:    ret
-  %zero = ptrtoint i8 addrspace(200)* %cap to i64
+  %zero = ptrtoint ptr addrspace(200) %cap to i64
   %ret = add i64 %zero, 2
   ret i64 %ret
 }
 
-define internal i64 @ptrtoint_plus_var(i8 addrspace(200)* %cap, i64 %add) addrspace(200) nounwind {
+define internal i64 @ptrtoint_plus_var(ptr addrspace(200) %cap, i64 %add) addrspace(200) nounwind {
 ; CHECK-LABEL: ptrtoint_plus_var:
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    add x0, x0, x1
@@ -43,7 +43,7 @@ define internal i64 @ptrtoint_plus_var(i8 addrspace(200)* %cap, i64 %add) addrsp
 ; HYBRID:       // %bb.0:
 ; HYBRID-NEXT:    add x0, x0, x1
 ; HYBRID-NEXT:    ret
-  %zero = ptrtoint i8 addrspace(200)* %cap to i64
+  %zero = ptrtoint ptr addrspace(200) %cap to i64
   %ret = add i64 %zero, %add
   ret i64 %ret
 }
@@ -60,7 +60,7 @@ define internal i64 @ptrtoint_null() addrspace(200) nounwind {
 ; HYBRID-NEXT:    mov x0, xzr
 ; HYBRID-NEXT:    gcvalue x0, c0
 ; HYBRID-NEXT:    ret
-  %ret = ptrtoint i8 addrspace(200)* null to i64
+  %ret = ptrtoint ptr addrspace(200) null to i64
   ret i64 %ret
 }
 
@@ -76,7 +76,7 @@ define internal i64 @ptrtoint_null_plus_const() addrspace(200) nounwind {
 ; HYBRID-NEXT:    mov x0, xzr
 ; HYBRID-NEXT:    add x0, x0, #2
 ; HYBRID-NEXT:    ret
-  %zero = ptrtoint i8 addrspace(200)* null to i64
+  %zero = ptrtoint ptr addrspace(200) null to i64
   %ret = add i64 %zero, 2
   ret i64 %ret
 }
@@ -93,7 +93,7 @@ define internal i64 @ptrtoint_null_plus_var(i64 %add) addrspace(200) nounwind {
 ; HYBRID-NEXT:    mov x1, xzr
 ; HYBRID-NEXT:    add x0, x1, x0
 ; HYBRID-NEXT:    ret
-  %zero = ptrtoint i8 addrspace(200)* null to i64
+  %zero = ptrtoint ptr addrspace(200) null to i64
   %ret = add i64 %zero, %add
   ret i64 %ret
 }

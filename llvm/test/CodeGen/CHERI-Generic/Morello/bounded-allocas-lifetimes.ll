@@ -7,14 +7,14 @@
 ; Check that lifetime markers don't get lost due to CheriBoundAllocas, as we'd
 ; risk StackSlotColoring reusing the slot.
 
-declare void @use(i8 addrspace(200)*)
+declare void @use(ptr addrspace(200))
 
 define void @static_alloca() {
   ; CHECK-LABEL: name: static_alloca
   ; CHECK: bb.0 (%ir-block.0):
+  ; CHECK-NEXT:   LIFETIME_START %stack.0
   ; CHECK-NEXT:   [[CapAddImm:%[0-9]+]]:capsp = CapAddImm %stack.0, 0, 0
   ; CHECK-NEXT:   [[CapSetBoundsImm:%[0-9]+]]:capsp = CapSetBoundsImm killed [[CapAddImm]], 4, 0
-  ; CHECK-NEXT:   LIFETIME_START %stack.0
   ; CHECK-NEXT:   ADJCALLSTACKDOWN 0, 0, implicit-def dead $sp, implicit $sp
   ; CHECK-NEXT:   $c0 = COPY [[CapSetBoundsImm]]
   ; CHECK-NEXT:   BL @use, csr_aarch64_aapcs_32cap_regs, implicit-def dead $lr, implicit $sp, implicit $c0, implicit-def $sp
@@ -22,10 +22,9 @@ define void @static_alloca() {
   ; CHECK-NEXT:   LIFETIME_END %stack.0
   ; CHECK-NEXT:   CRET_ReallyLR
   %1 = alloca i32, align 4, addrspace(200)
-  %2 = bitcast i32 addrspace(200)* %1 to i8 addrspace(200)*
-  call void @llvm.lifetime.start.p200i8(i64 4, i8 addrspace(200)* %2)
-  call void @use(i8 addrspace(200)* %2)
-  call void @llvm.lifetime.end.p200i8(i64 4, i8 addrspace(200)* %2)
+  call void @llvm.lifetime.start.p200(i64 4, ptr addrspace(200) %1)
+  call void @use(ptr addrspace(200) %1)
+  call void @llvm.lifetime.end.p200(i64 4, ptr addrspace(200) %1)
   ret void
 }
 
@@ -58,12 +57,11 @@ define void @dynamic_alloca(i64 zeroext %n) {
   ; CHECK-NEXT:   ADJCALLSTACKUP 0, 0, implicit-def dead $sp, implicit $sp
   ; CHECK-NEXT:   CRET_ReallyLR
   %1 = alloca i32, i64 %n, align 4, addrspace(200)
-  %2 = bitcast i32 addrspace(200)* %1 to i8 addrspace(200)*
-  call void @llvm.lifetime.start.p200i8(i64 -1, i8 addrspace(200)* %2)
-  call void @use(i8 addrspace(200)* %2)
-  call void @llvm.lifetime.end.p200i8(i64 -1, i8 addrspace(200)* %2)
+  call void @llvm.lifetime.start.p200(i64 -1, ptr addrspace(200) %1)
+  call void @use(ptr addrspace(200) %1)
+  call void @llvm.lifetime.end.p200(i64 -1, ptr addrspace(200) %1)
   ret void
 }
 
-declare void @llvm.lifetime.start.p200i8(i64, i8 addrspace(200)*)
-declare void @llvm.lifetime.end.p200i8(i64, i8 addrspace(200)*)
+declare void @llvm.lifetime.start.p200(i64, ptr addrspace(200))
+declare void @llvm.lifetime.end.p200(i64, ptr addrspace(200))

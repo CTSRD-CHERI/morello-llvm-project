@@ -10,7 +10,7 @@
 ; check which fails here since the last 15 bytes need four (8 + 4 + 2 + 1 bytes) copies on
 ; architectures where LLVM does not emit misaligned loads/stores.
 
-define hidden void @optnone_preserve_tags_memcpy(i8 addrspace(200)* %dst, i8 addrspace(200)* %src) optnone noinline nounwind {
+define hidden void @optnone_preserve_tags_memcpy(ptr addrspace(200) %dst, ptr addrspace(200) %src) optnone noinline nounwind {
 ; CHECK-LABEL: optnone_preserve_tags_memcpy:
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    ldr c2, [c1, #0]
@@ -24,20 +24,20 @@ define hidden void @optnone_preserve_tags_memcpy(i8 addrspace(200)* %dst, i8 add
 ; CHECK-NEXT:    str w9, [c0, #24]
 ; CHECK-NEXT:    str x8, [c0, #16]
 ; CHECK-NEXT:    ret c30
-  tail call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %dst, i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %src, i64 31, i1 false) must_preserve_cheri_tags
+  tail call void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) noundef nonnull align 16 dereferenceable(31) %dst, ptr addrspace(200) noundef nonnull align 16 dereferenceable(31) %src, i64 31, i1 false) must_preserve_cheri_tags
   ret void
 }
 
-define hidden void @optsize_preserve_tags_memcpy(i8 addrspace(200)* %dst, i8 addrspace(200)* %src) optsize nounwind {
+define hidden void @optsize_preserve_tags_memcpy(ptr addrspace(200) %dst, ptr addrspace(200) %src) optsize nounwind {
 ; CHECK-LABEL: optsize_preserve_tags_memcpy:
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    mov w2, #31 // =0x1f
 ; CHECK-NEXT:    b memcpy
-  tail call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %dst, i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %src, i64 31, i1 false) must_preserve_cheri_tags
+  tail call void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) noundef nonnull align 16 dereferenceable(31) %dst, ptr addrspace(200) noundef nonnull align 16 dereferenceable(31) %src, i64 31, i1 false) must_preserve_cheri_tags
   ret void
 }
 
-define hidden void @default_preserve_tags_memcpy(i8 addrspace(200)* %dst, i8 addrspace(200)* %src) nounwind {
+define hidden void @default_preserve_tags_memcpy(ptr addrspace(200) %dst, ptr addrspace(200) %src) nounwind {
 ; CHECK-LABEL: default_preserve_tags_memcpy:
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    ldr c2, [c1, #0]
@@ -51,36 +51,36 @@ define hidden void @default_preserve_tags_memcpy(i8 addrspace(200)* %dst, i8 add
 ; CHECK-NEXT:    str w10, [c0, #24]
 ; CHECK-NEXT:    str x11, [c0, #16]
 ; CHECK-NEXT:    ret c30
-  tail call void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %dst, i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %src, i64 31, i1 false) must_preserve_cheri_tags
+  tail call void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) noundef nonnull align 16 dereferenceable(31) %dst, ptr addrspace(200) noundef nonnull align 16 dereferenceable(31) %src, i64 31, i1 false) must_preserve_cheri_tags
   ret void
 }
 
-define hidden void @optnone_preserve_tags_memmove(i8 addrspace(200)* %dst, i8 addrspace(200)* %src) optnone noinline nounwind {
+define hidden void @optnone_preserve_tags_memmove(ptr addrspace(200) %dst, ptr addrspace(200) %src) optnone noinline nounwind {
 ; CHECK-LABEL: optnone_preserve_tags_memmove:
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    mov w2, #31 // =0x1f
 ; CHECK-NEXT:    b memmove
-  tail call void @llvm.memmove.p200i8.p200i8.i64(i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %dst, i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %src, i64 31, i1 false) must_preserve_cheri_tags
+  tail call void @llvm.memmove.p200.p200.i64(ptr addrspace(200) noundef nonnull align 16 dereferenceable(31) %dst, ptr addrspace(200) noundef nonnull align 16 dereferenceable(31) %src, i64 31, i1 false) must_preserve_cheri_tags
   ret void
 }
 
-define hidden void @optsize_preserve_tags_memmove(i8 addrspace(200)* %dst, i8 addrspace(200)* %src) optsize nounwind {
+define hidden void @optsize_preserve_tags_memmove(ptr addrspace(200) %dst, ptr addrspace(200) %src) optsize nounwind {
 ; CHECK-LABEL: optsize_preserve_tags_memmove:
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    mov w2, #31 // =0x1f
 ; CHECK-NEXT:    b memmove
-  tail call void @llvm.memmove.p200i8.p200i8.i64(i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %dst, i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %src, i64 31, i1 false) must_preserve_cheri_tags
+  tail call void @llvm.memmove.p200.p200.i64(ptr addrspace(200) noundef nonnull align 16 dereferenceable(31) %dst, ptr addrspace(200) noundef nonnull align 16 dereferenceable(31) %src, i64 31, i1 false) must_preserve_cheri_tags
   ret void
 }
 
-define hidden void @default_preserve_tags_memmove(i8 addrspace(200)* %dst, i8 addrspace(200)* %src) nounwind{
+define hidden void @default_preserve_tags_memmove(ptr addrspace(200) %dst, ptr addrspace(200) %src) nounwind{
 ; CHECK-LABEL: default_preserve_tags_memmove:
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    mov w2, #31 // =0x1f
 ; CHECK-NEXT:    b memmove
-  tail call void @llvm.memmove.p200i8.p200i8.i64(i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %dst, i8 addrspace(200)* noundef nonnull align 16 dereferenceable(31) %src, i64 31, i1 false) must_preserve_cheri_tags
+  tail call void @llvm.memmove.p200.p200.i64(ptr addrspace(200) noundef nonnull align 16 dereferenceable(31) %dst, ptr addrspace(200) noundef nonnull align 16 dereferenceable(31) %src, i64 31, i1 false) must_preserve_cheri_tags
   ret void
 }
 
-declare void @llvm.memcpy.p200i8.p200i8.i64(i8 addrspace(200)* noalias nocapture writeonly, i8 addrspace(200)* noalias nocapture readonly, i64, i1 immarg) addrspace(200)
-declare void @llvm.memmove.p200i8.p200i8.i64(i8 addrspace(200)* noalias nocapture writeonly, i8 addrspace(200)* noalias nocapture readonly, i64, i1 immarg) addrspace(200)
+declare void @llvm.memcpy.p200.p200.i64(ptr addrspace(200) noalias nocapture writeonly, ptr addrspace(200) noalias nocapture readonly, i64, i1 immarg) addrspace(200)
+declare void @llvm.memmove.p200.p200.i64(ptr addrspace(200) noalias nocapture writeonly, ptr addrspace(200) noalias nocapture readonly, i64, i1 immarg) addrspace(200)
