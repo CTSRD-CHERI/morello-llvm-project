@@ -78,9 +78,22 @@ typedef enum __attribute__((flag_enum, enum_extensibility(open))) {
   CHERI_PERM_STORE_CAP = __CHERI_CAP_PERMISSION_PERMIT_STORE_CAPABILITY__,
   CHERI_PERM_STORE_LOCAL_CAP = __CHERI_CAP_PERMISSION_PERMIT_STORE_LOCAL__,
   CHERI_PERM_SEAL = __CHERI_CAP_PERMISSION_PERMIT_SEAL__,
-#if !defined(__aarch64__)
+  /*
+   * CHERI_PERM_INVOKE/LOAD_MUTABLE were not previously defined here for
+   * Morello so CheriBSD defined its own macros that conflict. Allow for
+   * backwards compatibility.
+   *
+   * TODO: Remove once all supported CheriBSD versions no longer do so.
+   */
+#if !defined(__aarch64__) || !defined(__FreeBSD__) ||                          \
+    !defined(CHERI_PERM_INVOKE)
   CHERI_PERM_INVOKE = __CHERI_CAP_PERMISSION_PERMIT_INVOKE__,
-#else
+#endif
+#if defined(__aarch64__)
+#if !defined(__FreeBSD__) || !defined(CHERI_PERM_LOAD_MUTABLE)
+  CHERI_PERM_LOAD_MUTABLE = __CHERI_CAP_PERMISSION_PERMIT_LOAD_MUTABLE__,
+#endif
+
   ARM_CAP_PERMISSION_EXECUTIVE = __ARM_CAP_PERMISSION_EXECUTIVE__,
   ARM_CAP_PERMISSION_MUTABLE_LOAD = __ARM_CAP_PERMISSION_MUTABLE_LOAD__,
   ARM_CAP_PERMISSION_COMPARTMENT_ID = __ARM_CAP_PERMISSION_COMPARTMENT_ID__,

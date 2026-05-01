@@ -495,9 +495,13 @@ void AArch64TargetInfo::getTargetDefines(const LangOptions &Opts,
             Twine(1 << 1));
     Builder.defineMacro("__ARM_CAP_PERMISSION_MUTABLE_LOAD__",
             Twine(1 << 6));
+    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_LOAD_MUTABLE__",
+            Twine(1 << 6));
     Builder.defineMacro("__ARM_CAP_PERMISSION_COMPARTMENT_ID__",
             Twine(1 << 7));
     Builder.defineMacro("__ARM_CAP_PERMISSION_BRANCH_SEALED_PAIR__",
+            Twine(1 << 8));
+    Builder.defineMacro("__CHERI_CAP_PERMISSION_PERMIT_INVOKE__",
             Twine(1 << 8));
     Builder.defineMacro("__CHERI_CAP_PERMISSION_ACCESS_SYSTEM_REGISTERS__",
             Twine(1 << 9));

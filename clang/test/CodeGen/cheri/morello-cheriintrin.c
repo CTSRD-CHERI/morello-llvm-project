@@ -210,6 +210,8 @@ void test(void *__capability cap, char *__capability cap2, void *ptr, __SIZE_TYP
   _Static_assert(CHERI_PERM_SEAL != 0, "must be defined");
   _Static_assert(CHERI_PERM_UNSEAL != 0, "must be defined");
   _Static_assert(CHERI_PERM_SYSTEM_REGS != 0, "must be defined");
+  _Static_assert(CHERI_PERM_INVOKE != 0, "must be defined");
+  _Static_assert(CHERI_PERM_LOAD_MUTABLE != 0, "must be defined");
 
   _Static_assert(ARM_CAP_PERMISSION_EXECUTIVE != 0, "must be defined");
   _Static_assert(ARM_CAP_PERMISSION_MUTABLE_LOAD != 0, "must be defined");
