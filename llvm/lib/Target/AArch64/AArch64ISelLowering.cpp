@@ -19334,7 +19334,9 @@ static bool isSetCCOrZExtSetCC(const SDValue& Op, SetCCInfoAndKind &Info) {
 //
 // The latter will get matched to a CSINC instruction.
 static SDValue performSetccAddFolding(SDNode *Op, SelectionDAG &DAG) {
-  assert(Op && Op->getOpcode() == ISD::ADD && "Unexpected operation!");
+  assert(Op && (Op->getOpcode() == ISD::ADD ||
+                Op->getOpcode() == ISD::PTRADD) &&
+      "Unexpected operation!");
   SDValue LHS = Op->getOperand(0);
   SDValue RHS = Op->getOperand(1);
   SetCCInfoAndKind InfoAndKind;
@@ -19357,7 +19359,7 @@ static SDValue performSetccAddFolding(SDNode *Op, SelectionDAG &DAG) {
   EVT CmpVT = InfoAndKind.IsAArch64
                   ? InfoAndKind.Info.AArch64.Cmp->getOperand(0).getValueType()
                   : InfoAndKind.Info.Generic.Opnd0->getValueType();
-  if (CmpVT != MVT::i32 && CmpVT != MVT::i64)
+  if (CmpVT != MVT::i32 && CmpVT != MVT::i64 && CmpVT != MVT::iFATPTR128)
     return SDValue();
 
   SDValue CCVal;
@@ -19375,7 +19377,8 @@ static SDValue performSetccAddFolding(SDNode *Op, SelectionDAG &DAG) {
         dl);
 
   EVT VT = Op->getValueType(0);
-  LHS = DAG.getNode(ISD::ADD, dl, VT, RHS, DAG.getConstant(1, dl, VT));
+  EVT ConstVT = Op->getOperand(1).getValueType();
+  LHS = DAG.getNode(Op->getOpcode(), dl, VT, RHS, DAG.getConstant(1, dl, ConstVT));
   return DAG.getNode(AArch64ISD::CSEL, dl, VT, RHS, LHS, CCVal, Cmp);
 }
 
@@ -19703,6 +19706,9 @@ static SDValue performPtrAddCombine(SDNode *N,
                                     const AArch64Subtarget *Subtarget) {
   if (DCI.isBeforeLegalizeOps() || !Subtarget->hasMorello())
     return SDValue();
+
+  if (SDValue Fold = performSetccAddFolding(N, DAG))
+    return Fold;
 
   // We only need these until the mid-end can emit the ptrmask intrinsic.
   if (SDValue AlignU = combineToAlignU(N, DAG))
