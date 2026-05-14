@@ -401,6 +401,10 @@ template <class ELFT> void elf::createSyntheticSections() {
       part.relaDyn = std::make_unique<RelocationSection<ELFT>>(
           relaDynName, config->zCombreloc, threadCount);
 
+    if (config->isCheriAbi)
+      part.cheriRelFlags =
+        std::make_unique<CheriRelFlagsSection>(part.relaDyn.get());
+
     if (config->hasDynSymTab) {
       add(*part.dynSymTab);
 
@@ -429,6 +433,8 @@ template <class ELFT> void elf::createSyntheticSections() {
       add(*part.dynStrTab);
     }
     add(*part.relaDyn);
+      if (part.cheriRelFlags)
+        add(*part.cheriRelFlags);
 
     if (config->relrPackDynRelocs) {
       part.relrDyn = std::make_unique<RelrSection<ELFT>>(threadCount);
@@ -2513,6 +2519,7 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
         // Compute DT_RELACOUNT to be used by part.dynamic.
         part.relaDyn->partitionRels();
         finalizeSynthetic(part.relaDyn.get());
+        finalizeSynthetic(part.cheriRelFlags.get());
       }
       if (part.relrDyn) {
         part.relrDyn->mergeRels();
