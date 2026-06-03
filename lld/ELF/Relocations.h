@@ -172,6 +172,7 @@ void reportUndefinedSymbols();
 void postScanRelocations();
 
 bool isAbsolute(const Symbol &sym, bool ignoreWeak = false);
+bool isDirectPcExpr(RelExpr expr);
 
 void hexagonTLSSymbolUpdate(ArrayRef<OutputSection *> outputSections);
 bool hexagonNeedsTLSSymbol(ArrayRef<OutputSection *> outputSections);
