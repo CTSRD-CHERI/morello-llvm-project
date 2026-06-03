@@ -1157,7 +1157,7 @@ void RelocationScanner::processAux(RelExpr expr, RelType type, uint64_t offset,
   }
 
   if (config->isCheriAbi && sym.isDefined() && (sec->flags & SHF_EXECINSTR) &&
-      oneof<R_PC, R_AARCH64_PAGE_PC>(expr)) {
+      oneof<R_PC, R_AARCH64_PAGE_PC, R_MORELLO_VADREF>(expr)) {
     OutputSection *osec = sym.getOutputSection();
     if (osec == nullptr)
       llvm_unreachable(
