@@ -284,6 +284,8 @@ public:
   StringRef getDynamicStringTable() const { return DynamicStringTable; }
 
 protected:
+  StringRef getC18nString(uint64_t Offset) const;
+
   virtual void printVersionSymbolSection(const Elf_Shdr *Sec) = 0;
   virtual void printVersionDefinitionSection(const Elf_Shdr *Sec) = 0;
   virtual void printVersionDependencySection(const Elf_Shdr *Sec) = 0;
@@ -395,6 +397,7 @@ protected:
                                        bool &IsDefault) const;
   Expected<SmallVector<std::optional<VersionEntry>, 0> *> getVersionMap() const;
 
+  StringRef C18nStringTable;
   DynRegionInfo DynRelRegion;
   DynRegionInfo DynRelaRegion;
   DynRegionInfo DynRelrRegion;
@@ -629,7 +632,6 @@ public:
                                bool IsGnu) const override;
 
 private:
-  ArrayRef<uint8_t> lookupC18nStrtab();
   void printHashTableSymbols(const Elf_Hash &HashTable);
   void printGnuHashTableSymbols(const Elf_GnuHash &GnuHashTable);
 
@@ -2037,6 +2039,22 @@ ELFDumper<ELFT>::ELFDumper(const object::ELFObjectFile<ELFT> &O,
       if (!DotAddrsigSec)
         DotAddrsigSec = &Sec;
       break;
+    case ELF::SHT_STRTAB:
+      if (Sec.sh_flags & ELF::SHF_ALLOC) {
+        if (Expected<StringRef> NameOrErr =
+                Obj.getSectionName(Sec, this->WarningHandler)) {
+          if (*NameOrErr == ".c18nstrtab") {
+            if (Expected<StringRef> E =
+                    Obj.getStringTable(Sec, this->WarningHandler))
+              C18nStringTable = *E;
+            else
+              reportUniqueWarning("unable to get the string table for the " +
+                                  describe(Sec) + ": " +
+                                  toString(E.takeError()));
+          }
+        }
+      }
+      break;
     }
   }
 
@@ -2345,6 +2363,44 @@ ELFDumper<ELFT>::findSectionByName(StringRef Name) const {
     }
   }
   return nullptr;
+}
+
+template <class ELFT>
+StringRef ELFDumper<ELFT>::getC18nString(uint64_t Value) const {
+  if (C18nStringTable.empty() && !C18nStringTable.data()) {
+    reportUniqueWarning("string table was not found");
+    return "<?>";
+  }
+
+  auto WarnAndReturn = [this](const Twine &Msg, uint64_t Offset) {
+    reportUniqueWarning("c18n string table at offset 0x" +
+                        Twine::utohexstr(Offset) + Msg);
+    return "<?>";
+  };
+
+  const uint64_t FileSize = Obj.getBufSize();
+  const uint64_t Offset = (const uint8_t *)C18nStringTable.data() - Obj.base();
+  if (C18nStringTable.size() > FileSize - Offset)
+    return WarnAndReturn(" with size 0x" +
+                             Twine::utohexstr(C18nStringTable.size()) +
+                             " goes past the end of the file (0x" +
+                             Twine::utohexstr(FileSize) + ")",
+                         Offset);
+
+  if (Value >= C18nStringTable.size())
+    return WarnAndReturn(
+        ": unable to read the string at 0x" + Twine::utohexstr(Offset + Value) +
+            ": it goes past the end of the table (0x" +
+            Twine::utohexstr(Offset + C18nStringTable.size()) + ")",
+        Offset);
+
+  if (C18nStringTable.back() != '\0')
+    return WarnAndReturn(": unable to read the string at 0x" +
+                             Twine::utohexstr(Offset + Value) +
+                             ": the string table is not null-terminated",
+                         Offset);
+
+  return C18nStringTable.data() + Value;
 }
 
 template <class ELFT>
@@ -4932,40 +4988,6 @@ template <class ELFT> void GNUELFDumper<ELFT>::printSectionDetails() {
   }
 }
 
-template <class ELFT> ArrayRef<uint8_t> GNUELFDumper<ELFT>::lookupC18nStrtab() {
-  ArrayRef<Elf_Shdr> Sections = cantFail(this->Obj.sections());
-
-  StringRef SecStrTable;
-  if (Expected<StringRef> SecStrTableOrErr =
-          this->Obj.getSectionStringTable(Sections, this->WarningHandler))
-    SecStrTable = *SecStrTableOrErr;
-  else
-    return {};
-
-  for (const Elf_Shdr &S : Sections) {
-    if (S.sh_type != ELF::SHT_STRTAB || (S.sh_flags & ELF::SHF_ALLOC) == 0)
-      continue;
-
-    StringRef Name;
-    if (Expected<StringRef> NameOrErr =
-            this->Obj.getSectionName(S, SecStrTable))
-      Name = *NameOrErr;
-    else
-      continue;
-
-    if (Name == ".c18nstrtab") {
-      if (S.sh_offset >= this->Obj.getBufSize() ||
-          S.sh_offset + S.sh_size >= this->Obj.getBufSize())
-        return {};
-
-      const uint8_t *Data = this->Obj.base() + S.sh_offset;
-      return ArrayRef(Data, S.sh_size);
-    }
-  }
-
-  return {};
-}
-
 static inline std::string printPhdrFlags(unsigned Flag) {
   std::string Str;
   Str = (Flag & PF_R) ? "R" : " ";
@@ -5095,8 +5117,6 @@ template <class ELFT> void GNUELFDumper<ELFT>::printProgramHeaders() {
     return;
   }
 
-  ArrayRef<uint8_t> C18nStrtab = lookupC18nStrtab();
-
   for (const Elf_Phdr &Phdr : *PhdrsOrErr) {
     Fields[0].Str = getGNUPtType(Header.e_machine, Phdr.p_type);
     Fields[1].Str = to_string(format_hex(Phdr.p_offset, 8));
@@ -5135,33 +5155,9 @@ template <class ELFT> void GNUELFDumper<ELFT>::printProgramHeaders() {
       OS << StringRef(Data, Len) << "]";
     }
     if (Phdr.p_type == ELF::PT_C18N_NAME) {
-      OS << "\n";
-      auto ReportBadCompartName = [&](const Twine &Msg) {
-        this->reportUniqueWarning(
-            "unable to read compartment name at offset 0x" +
-            Twine::utohexstr(Phdr.p_paddr) + ": " + Msg);
-      };
-
-      if (C18nStrtab.data() == nullptr) {
-        ReportBadCompartName("unable to read .c18nstrtab");
-        continue;
-      }
-      if (Phdr.p_paddr >= C18nStrtab.size()) {
-        ReportBadCompartName("offset out of bounds of .c18nstrtab");
-        continue;
-      }
-
-      const char *Data =
-          reinterpret_cast<const char *>(C18nStrtab.data()) + Phdr.p_paddr;
-      size_t MaxSize = C18nStrtab.size() - Phdr.p_paddr;
-      size_t Len = strnlen(Data, MaxSize);
-      if (Len == MaxSize) {
-        ReportBadCompartName("it is not null-terminated");
-        continue;
-      }
-
-      OS << "      [Compartment: ";
-      OS << StringRef(Data, Len) << "]";
+      StringRef Data = this->getC18nString(Phdr.p_paddr);
+      if (!Data.empty())
+        OS << "\n      [Compartment: " << Data << "]";
     }
     OS << "\n";
   }
