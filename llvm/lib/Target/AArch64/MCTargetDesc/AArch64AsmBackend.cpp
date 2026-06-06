@@ -787,15 +787,17 @@ class ELFAArch64AsmBackend : public AArch64AsmBackend {
 public:
   uint8_t OSABI;
   bool IsILP32;
+  bool IsPurecapBenchmarkABI;
 
   ELFAArch64AsmBackend(const Target &T, const Triple &TT, uint8_t OSABI,
-                       bool IsLittleEndian, bool IsILP32)
+                       bool IsLittleEndian, bool IsILP32,
+                       bool IsPurecapBenchmarkABI)
       : AArch64AsmBackend(T, TT, IsLittleEndian), OSABI(OSABI),
-        IsILP32(IsILP32) {}
+        IsILP32(IsILP32), IsPurecapBenchmarkABI(IsPurecapBenchmarkABI) {}
 
   std::unique_ptr<MCObjectTargetWriter>
   createObjectTargetWriter() const override {
-    return createAArch64ELFObjectWriter(OSABI, IsILP32);
+    return createAArch64ELFObjectWriter(OSABI, IsILP32, IsPurecapBenchmarkABI);
   }
 };
 
@@ -830,8 +832,9 @@ MCAsmBackend *llvm::createAArch64leAsmBackend(const Target &T,
 
   uint8_t OSABI = MCELFObjectTargetWriter::getOSABI(TheTriple.getOS());
   bool IsILP32 = STI.getTargetTriple().getEnvironment() == Triple::GNUILP32;
+  bool IsPurecapBenchmark = Options.getABIName() == "purecap-benchmark";
   return new ELFAArch64AsmBackend(T, TheTriple, OSABI, /*IsLittleEndian=*/true,
-                                  IsILP32);
+                                  IsILP32, IsPurecapBenchmark);
 }
 
 MCAsmBackend *llvm::createAArch64beAsmBackend(const Target &T,
@@ -843,6 +846,8 @@ MCAsmBackend *llvm::createAArch64beAsmBackend(const Target &T,
          "Big endian is only supported for ELF targets!");
   uint8_t OSABI = MCELFObjectTargetWriter::getOSABI(TheTriple.getOS());
   bool IsILP32 = STI.getTargetTriple().getEnvironment() == Triple::GNUILP32;
+  assert(Options.getABIName() != "purecap-benchmark" &&
+         "Big endian is not supported for Morello!");
   return new ELFAArch64AsmBackend(T, TheTriple, OSABI, /*IsLittleEndian=*/false,
-                                  IsILP32);
+                                  IsILP32, /*IsPurecapBenchmark=*/false);
 }
