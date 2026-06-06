@@ -30,7 +30,8 @@ namespace {
 
 class AArch64ELFObjectWriter : public MCELFObjectTargetWriter {
 public:
-  AArch64ELFObjectWriter(uint8_t OSABI, bool IsILP32);
+  AArch64ELFObjectWriter(uint8_t OSABI, bool IsILP32,
+                         bool IsPurecapBenchmarkABI);
 
   ~AArch64ELFObjectWriter() override = default;
 
@@ -42,12 +43,23 @@ protected:
   unsigned getRelocType(MCContext &Ctx, const MCValue &Target,
                         const MCFixup &Fixup, bool IsPCRel) const override;
   bool IsILP32;
+  bool IsPurecapBenchmarkABI;
 };
 
 } // end anonymous namespace
 
 bool AArch64ELFObjectWriter::needsRelocateWithSymbol(const MCSymbol &Sym,
                                                      unsigned Type) const {
+  // ELFObjectWriter::shouldRelocateWithSymbol will always use a symbol for
+  // relocations against IFUNCs and Thumb, i.e. C64, symbols, but for the
+  // purecap benchmark ABI the symbols are logically C64 but have their LSB
+  // clear. Approximate the same behaviour for them by treating all functions
+  // as if they were Thumb symbols so the linker has full symbol information,
+  // e.g. for compartmentalisation.
+  if (IsPurecapBenchmarkABI && Sym.isELF() &&
+      cast<MCSymbolELF>(Sym).getType() == ELF::STT_FUNC)
+    return true;
+
   switch (Type) {
   default:
     return false;
@@ -60,10 +72,11 @@ bool AArch64ELFObjectWriter::needsRelocateWithSymbol(const MCSymbol &Sym,
   }
 }
 
-AArch64ELFObjectWriter::AArch64ELFObjectWriter(uint8_t OSABI, bool IsILP32)
+AArch64ELFObjectWriter::AArch64ELFObjectWriter(uint8_t OSABI, bool IsILP32,
+                                               bool IsPurecapBenchmarkABI)
     : MCELFObjectTargetWriter(/*Is64Bit*/ !IsILP32, OSABI, ELF::EM_AARCH64,
                               /*HasRelocationAddend*/ true),
-      IsILP32(IsILP32) {}
+      IsILP32(IsILP32), IsPurecapBenchmarkABI(IsPurecapBenchmarkABI) {}
 
 #define R_CLS(rtype)                                                           \
   IsILP32 ? ELF::R_AARCH64_P32_##rtype : ELF::R_AARCH64_##rtype
@@ -563,6 +576,8 @@ AArch64ELFObjectWriter::getMemtagRelocsSection(MCContext &Ctx) const {
 }
 
 std::unique_ptr<MCObjectTargetWriter>
-llvm::createAArch64ELFObjectWriter(uint8_t OSABI, bool IsILP32) {
-  return std::make_unique<AArch64ELFObjectWriter>(OSABI, IsILP32);
+llvm::createAArch64ELFObjectWriter(uint8_t OSABI, bool IsILP32,
+                                   bool IsPurecapBenchmarkABI) {
+  return std::make_unique<AArch64ELFObjectWriter>(OSABI, IsILP32,
+                                                  IsPurecapBenchmarkABI);
 }

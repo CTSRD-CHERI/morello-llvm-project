@@ -47,7 +47,8 @@ MCAsmBackend *createAArch64beAsmBackend(const Target &T,
                                         const MCTargetOptions &Options);
 
 std::unique_ptr<MCObjectTargetWriter>
-createAArch64ELFObjectWriter(uint8_t OSABI, bool IsILP32);
+createAArch64ELFObjectWriter(uint8_t OSABI, bool IsILP32,
+                             bool IsPurecapBenchmarkABI);
 
 std::unique_ptr<MCObjectTargetWriter>
 createAArch64MachObjectWriter(uint32_t CPUType, uint32_t CPUSubtype,
