@@ -119,6 +119,7 @@ public:
   virtual void printDependentLibs() {}
   virtual void printDynamicRelocations() { }
   virtual void printDynamicTable() { }
+  virtual void printEffectiveAcls() {}
   virtual void printNeededLibraries() { }
   virtual void printSectionAsHex(StringRef SectionName) {}
   virtual void printHashTable() { }
