@@ -95,6 +95,40 @@ template <class ELFT> struct RelSymbol {
   std::string Name;
 };
 
+class CompartmentAddressMap {
+  struct Range {
+    Range(uint64_t S, uint64_t E, uint64_t N) : Start(S), End(E), Name(N) {}
+
+    uint64_t Start;
+    uint64_t End;
+    uint64_t Name;
+  };
+
+  std::map<uint64_t, Range> Ranges;
+
+public:
+  static const uint64_t DefaultName = (uint64_t)-1;
+
+  void addRange(uint64_t Addr, uint64_t Length, uint64_t Name) {
+    Ranges.emplace(Addr, Range(Addr, Addr + Length, Name));
+  }
+
+  uint64_t findName(uint64_t Addr) const {
+    if (Ranges.empty())
+      return DefaultName;
+
+    auto It = Ranges.lower_bound(Addr);
+    if (It != Ranges.begin() && (It == Ranges.end() || It->first > Addr))
+      It--;
+
+    const Range &R = It->second;
+    if (Addr >= R.Start && Addr < R.End)
+      return R.Name;
+
+    return DefaultName;
+  }
+};
+
 /// Represents a contiguous uniform range in the file. We cannot just create a
 /// range directly because when creating one of these from the .dynamic table
 /// the size, entity size and virtual address are different entries in arbitrary
@@ -161,6 +195,45 @@ struct DynRegionInfo {
     return {Start, Start};
   }
 };
+
+struct EffectiveAcls {
+  struct Perms {
+    bool Read = false;
+    bool Write = false;
+    bool Execute = false;
+
+    void update(bool R, bool W, bool X) {
+      Read |= R;
+      Write |= W;
+      Execute |= X;
+    }
+
+    std::string toString() const {
+      std::string S;
+      if (Read)
+        S += "r";
+      if (Write)
+        S += "w";
+      if (Execute)
+        S += "x";
+      return S;
+    }
+  };
+
+  void addAccess(uint64_t Subject, bool Read, bool Write, bool Execute,
+                 std::string &&symName);
+
+  std::map<uint64_t, std::unordered_map<std::string, Perms>> Acls;
+};
+
+void EffectiveAcls::addAccess(uint64_t Subject, bool Read, bool Write,
+                              bool Execute, std::string &&symName) {
+  auto Pair = Acls.try_emplace(Subject);
+  auto &InnerMap = Pair.first->second;
+  auto InnerPair = InnerMap.try_emplace(symName);
+  auto &Perms = InnerPair.first->second;
+  Perms.update(Read, Write, Execute);
+}
 
 struct GroupMember {
   StringRef Name;
@@ -328,6 +401,15 @@ protected:
   std::optional<MorelloFrag> fetchMorelloFragment(const Relocation<ELFT> &R);
   bool squashMorelloAddend(const Relocation<ELFT> &R);
 
+  void addAclForReloc(const Relocation<ELFT> &R, unsigned RelIndex,
+                      const Elf_Shdr &Sec, const Elf_Shdr *SymTab,
+                      const CompartmentAddressMap &C18nMap,
+                      EffectiveAcls &Acls);
+  void addCheriCapRelocsAcls(const Elf_Shdr &Sec,
+                             const CompartmentAddressMap &C18nMap,
+                             EffectiveAcls &Acls);
+  Expected<EffectiveAcls> parseEffectiveAcls();
+
   virtual void printMipsABIFlags() = 0;
   virtual void printMipsGOT(const MipsGOTParser<ELFT> &Parser) = 0;
   virtual void printMipsPLT(const MipsGOTParser<ELFT> &Parser) = 0;
@@ -351,6 +433,7 @@ protected:
   std::vector<GroupSection> getGroups();
 
   void buildAddressToIndexMap();
+  std::vector<std::string> getSymbolNames(uint64_t Addr);
 
   // Returns the function symbol index for the given address. Matches the
   // symbol's section with FunctionSec when specified.
@@ -740,6 +823,7 @@ public:
   void printCheriCapReloc(uintX_t Offset, uintX_t Base, uintX_t Addend,
                           uintX_t Length, uintX_t Type,
                           StringRef TypeName) override;
+  void printEffectiveAcls() override;
   void printMemtag(
       const ArrayRef<std::pair<std::string, std::string>> DynamicEntries,
       const ArrayRef<uint8_t> AndroidNoteDesc,
@@ -3609,6 +3693,269 @@ bool ELFDumper<ELFT>::squashMorelloAddend(const Relocation<ELFT> &R) {
   }
 }
 
+template <class ELFT>
+void ELFDumper<ELFT>::addAclForReloc(const Relocation<ELFT> &R,
+                                     unsigned RelIndex, const Elf_Shdr &Sec,
+                                     const Elf_Shdr *SymTab,
+                                     const CompartmentAddressMap &C18nMap,
+                                     EffectiveAcls &Acls) {
+  Expected<RelSymbol<ELFT>> Target = getRelocationTarget(R, SymTab);
+  if (!Target) {
+    reportUniqueWarning("unable to parse relocation " + Twine(RelIndex) +
+                        " in " + describe(Sec) + ": " +
+                        toString(Target.takeError()));
+    return;
+  }
+
+  uint64_t Subject = C18nMap.findName(R.Offset);
+
+  RelSymbol<ELFT> RelSym = *Target;
+  if (RelSym.Sym && !RelSym.Name.empty()) {
+    unsigned char SymbolType = RelSym.Sym->getType();
+    bool Read, Write, Execute;
+    switch (SymbolType) {
+    case STT_NOTYPE:
+      switch (R.Type) {
+      case R_MORELLO_JUMP_SLOT:
+      case R_RISCV_JUMP_SLOT:
+        Read = false;
+        Write = false;
+        Execute = true;
+        break;
+      default:
+        // Who knows?  The effective permissions at runtime depend on the
+        // the type of the resolved symbol.
+        Read = true;
+        Write = true;
+        Execute = true;
+        break;
+      }
+      break;
+    case STT_FUNC:
+    case STT_GNU_IFUNC:
+      Read = false;
+      Write = false;
+      Execute = true;
+      break;
+    default:
+      Read = true;
+      Write = true;
+      Execute = false;
+      break;
+    }
+    Acls.addAccess(Subject, Read, Write, Execute, std::move(RelSym.Name));
+    return;
+  }
+
+  std::optional<MorelloFrag> Frag = this->fetchMorelloFragment(R);
+  if (Frag) {
+    // Drop the LSB from the address for functions
+    uint64_t Addr = Frag->Addr;
+    if (Frag->Type == 4)
+      Addr &= ~1;
+
+    // Ignore attempts to access address 0.
+    if (Addr == 0)
+      return;
+
+    // No ACL for intra-compartment access.
+    if (Subject == C18nMap.findName(Addr))
+      return;
+
+    auto SymNames = this->getSymbolNames(Addr);
+    if (SymNames.empty())
+      SymNames.push_back("<0x" + utohexstr(Addr, true) + ">");
+
+    bool Read, Write, Execute;
+    switch (Frag->Type) {
+    case 2:
+      Read = true;
+      Write = true;
+      Execute = false;
+      break;
+    case 1:
+      Read = true;
+      Write = false;
+      Execute = false;
+      break;
+    case 4:
+      Read = false;
+      Write = false;
+      Execute = true;
+      break;
+    default:
+      reportUniqueWarning("unknown permissions for relocation " +
+                          Twine(RelIndex) + " in " + describe(Sec));
+      return;
+    }
+
+    for (auto SymName : SymNames)
+      Acls.addAccess(Subject, Read, Write, Execute, std::move(SymName));
+    return;
+  }
+}
+
+template <class ELFT>
+void ELFDumper<ELFT>::addCheriCapRelocsAcls(
+    const Elf_Shdr &Sec, const CompartmentAddressMap &C18nMap,
+    EffectiveAcls &Acls) {
+  StringRef SecName = this->getPrintableSectionName(Sec);
+  ArrayRef<uint8_t> Data =
+      unwrapOrError(ObjF.getFileName(), Obj.getSectionContents(Sec));
+  const size_t EntrySize = ELFT::Is64Bits ? 40 : 20;
+  if (Data.size() % EntrySize != 0) {
+    reportUniqueWarning("The " + Twine(SecName) +
+                        " section has a wrong size: " + Twine(Data.size()));
+    return;
+  }
+
+  for (int I = 0, E = Data.size() / EntrySize; I < E; I++) {
+    const uint64_t CurrentOffset = EntrySize * I;
+    const uint8_t *Entry = Data.data() + CurrentOffset;
+    uintX_t Offset =
+        support::endian::read<uintX_t, ELFT::TargetEndianness, 1>(Entry);
+    uintX_t Base = support::endian::read<uintX_t, ELFT::TargetEndianness, 1>(
+        Entry + sizeof(uintX_t));
+    uintX_t Addend = support::endian::read<uintX_t, ELFT::TargetEndianness, 1>(
+        Entry + 2 * sizeof(uintX_t));
+    uintX_t Type = support::endian::read<uintX_t, ELFT::TargetEndianness, 1>(
+        Entry + 4 * sizeof(uintX_t));
+
+    uint64_t Addr = Base + Addend;
+
+    bool Read, Write, Execute, Valid;
+
+    Valid = true;
+    if (Obj.getHeader().e_machine == EM_AARCH64) {
+      // AArch64 C64 capabilities are encoded differently to CHERI
+      // Check for Morello Capability Permission Encodings
+      const uint64_t Function = 0x8000000000013dbc;
+      const uint64_t Constant = 0x1bfbe;
+      const uint64_t Writable = 0x8fbe;
+      switch ((uint64_t)Type) {
+      case Writable:
+        Read = true;
+        Write = true;
+        Execute = false;
+        break;
+      case Constant:
+        Read = true;
+        Write = false;
+        Execute = false;
+        break;
+      case Function:
+        Read = false;
+        Write = false;
+        Execute = true;
+
+        // Trim LSB
+        Addr &= ~1;
+        break;
+      default:
+        Valid = false;
+        break;
+      }
+    } else {
+      const uintX_t Function = uintX_t(1) << ((sizeof(uintX_t) * 8) - 1);
+      const uintX_t Constant = uintX_t(1) << ((sizeof(uintX_t) * 8) - 2);
+      const uintX_t Indirect = uintX_t(1) << ((sizeof(uintX_t) * 8) - 3);
+      const uintX_t Code = uintX_t(1) << ((sizeof(uintX_t) * 8) - 4);
+      switch (Type) {
+      case 0:
+        Read = true;
+        Write = true;
+        Execute = false;
+        break;
+      case Constant:
+        Read = true;
+        Write = false;
+        Execute = false;
+        break;
+      case Function:
+      case Function | Indirect:
+      case Function | Code:
+        Read = false;
+        Write = false;
+        Execute = true;
+        break;
+      default:
+        Valid = false;
+        break;
+      }
+    }
+
+    if (!Valid) {
+      reportUniqueWarning("unknown permissions for relocation " + Twine(I) +
+                          " in " + describe(Sec));
+      continue;
+    }
+
+    // Ignore attempts to access address 0.
+    if (Addr == 0)
+      return;
+
+    uint64_t Subject = C18nMap.findName(Offset);
+
+    // No ACL for intra-compartment access.
+    if (Subject == C18nMap.findName(Addr))
+      continue;
+
+    auto SymNames = this->getSymbolNames(Addr);
+    if (SymNames.empty())
+      SymNames.push_back("<0x" + utohexstr(Addr, true) + ">");
+
+    for (auto SymName : SymNames)
+      Acls.addAccess(Subject, Read, Write, Execute, std::move(SymName));
+  }
+}
+
+template <class ELFT>
+static bool isRelocationSec(const typename ELFT::Shdr &Sec) {
+  return Sec.sh_type == ELF::SHT_REL || Sec.sh_type == ELF::SHT_RELA ||
+         Sec.sh_type == ELF::SHT_RELR || Sec.sh_type == ELF::SHT_ANDROID_REL ||
+         Sec.sh_type == ELF::SHT_ANDROID_RELA ||
+         Sec.sh_type == ELF::SHT_ANDROID_RELR;
+}
+
+template <class ELFT>
+Expected<EffectiveAcls> ELFDumper<ELFT>::parseEffectiveAcls() {
+  // First, parse PT_C18N_NAME segments to build a list of address
+  // ranges.
+  Expected<ArrayRef<Elf_Phdr>> PhdrsOrErr = Obj.program_headers();
+  if (!PhdrsOrErr) {
+    return createError(
+        "unable to read program headers to parse PT_C18N_NAME segments: " +
+        toString(PhdrsOrErr.takeError()));
+  }
+
+  CompartmentAddressMap C18nMap;
+  for (const Elf_Phdr &Phdr : *PhdrsOrErr) {
+    if (Phdr.p_type == ELF::PT_C18N_NAME)
+      C18nMap.addRange(Phdr.p_vaddr, Phdr.p_memsz, Phdr.p_paddr);
+  }
+
+  // Scan relocations possibly outputting an ACL for each relocation.  Ignore
+  // relocations that are intra-compartment access.
+  EffectiveAcls Acls;
+  for (const Elf_Shdr &Sec : cantFail(this->Obj.sections())) {
+    if (isRelocationSec<ELFT>(Sec)) {
+      this->forEachRelocationDo(
+          Sec, false,
+          [&](const Relocation<ELFT> &R, unsigned Ndx, const Elf_Shdr &Sec,
+              const Elf_Shdr *SymTab) {
+            addAclForReloc(R, Ndx, Sec, SymTab, C18nMap, Acls);
+          },
+          [&](const Elf_Relr &R) { assert(false); });
+    }
+
+    StringRef Name = this->getPrintableSectionName(Sec);
+    if (Name == "__cap_relocs" || Name == "__tgot_cap_relocs") {
+      addCheriCapRelocsAcls(Sec, C18nMap, Acls);
+    }
+  }
+  return Acls;
+}
+
 template <class ELFT> void ELFDumper<ELFT>::printCheriCapTable() {
   const ELFFile<ELFT> &Obj = ObjF.getELFFile();
   const Elf_Shdr *Shdr = findSectionByName(".captable");
@@ -4359,14 +4706,6 @@ void GNUELFDumper<ELFT>::printDynamicRelocHeader(unsigned Type, StringRef Name,
   OS << "\n'" << Name.str().c_str() << "' relocation section at offset 0x"
      << utohexstr(Offset, /*LowerCase=*/true) << " contains " << Reg.Size << " bytes:\n";
   printRelocHeaderFields<ELFT>(OS, Type);
-}
-
-template <class ELFT>
-static bool isRelocationSec(const typename ELFT::Shdr &Sec) {
-  return Sec.sh_type == ELF::SHT_REL || Sec.sh_type == ELF::SHT_RELA ||
-         Sec.sh_type == ELF::SHT_RELR || Sec.sh_type == ELF::SHT_ANDROID_REL ||
-         Sec.sh_type == ELF::SHT_ANDROID_RELA ||
-         Sec.sh_type == ELF::SHT_ANDROID_RELR;
 }
 
 template <class ELFT> void GNUELFDumper<ELFT>::printRelocations() {
@@ -6992,6 +7331,22 @@ template <class ELFT> void GNUELFDumper<ELFT>::printDependentLibs() {
     PrintSection();
 }
 
+template <class ELFT>
+std::vector<std::string> ELFDumper<ELFT>::getSymbolNames(uint64_t Addr) {
+  std::vector<std::string> Names;
+  if (!this->AddressToIndexMap)
+    buildAddressToIndexMap();
+
+  auto Symbols = this->AddressToIndexMap->find(Addr);
+  if (Symbols == this->AddressToIndexMap->end())
+    return Names;
+
+  for (auto &Pair : Symbols->second)
+      Names.push_back(this->getStaticSymbolName(Pair.first));
+
+  return Names;
+}
+
 template <class ELFT> void ELFDumper<ELFT>::buildAddressToIndexMap() {
   this->AddressToIndexMap.emplace();
   if (this->DotSymtabSec) {
@@ -8259,6 +8614,30 @@ void LLVMELFDumper<ELFT>::printCheriCapReloc(uintX_t Offset, uintX_t Base,
     // on their own lines and that seems a bit unnecessary.
     OS << W.hex(Offset) << " " << TypeName << " - " << W.hex(Base + Addend)
        << " [" << W.hex(Base) << "-" << W.hex(Base + Length) << "]\n";
+  }
+}
+
+template <class ELFT> void LLVMELFDumper<ELFT>::printEffectiveAcls() {
+  Expected<EffectiveAcls> AclsOrErr = this->parseEffectiveAcls();
+  if (!AclsOrErr) {
+    this->reportUniqueWarning(AclsOrErr.takeError());
+    return;
+  }
+
+  ListScope List(W, "acls");
+  for (const auto &OuterKV : AclsOrErr->Acls) {
+    StringRef Subject;
+    if (OuterKV.first != CompartmentAddressMap::DefaultName)
+      Subject = this->getC18nString(OuterKV.first);
+
+    for (const auto &InnerKV : OuterKV.second) {
+      DictScope Group(W);
+
+      W.printString("subject", Subject);
+      W.printString("permissions", InnerKV.second.toString());
+      ListScope Symbols(W, "symbols");
+      W.printString(InnerKV.first);
+    }
   }
 }
 

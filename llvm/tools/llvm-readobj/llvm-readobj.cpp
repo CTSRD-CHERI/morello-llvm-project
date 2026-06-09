@@ -114,6 +114,7 @@ bool Demangle;
 static bool DependentLibraries;
 static bool DynRelocs;
 static bool DynamicSymbols;
+static bool EffectiveAcls;
 static bool FileHeaders;
 static bool Headers;
 static std::vector<std::string> HexDump;
@@ -232,6 +233,7 @@ static void parseOptions(const opt::InputArgList &Args) {
   opts::DependentLibraries = Args.hasArg(OPT_dependent_libraries);
   opts::DynRelocs = Args.hasArg(OPT_dyn_relocations);
   opts::DynamicSymbols = Args.hasArg(OPT_dyn_syms);
+  opts::EffectiveAcls = Args.hasArg(OPT_effective_acls);
   opts::ExpandRelocs = Args.hasArg(OPT_expand_relocs);
   opts::FileHeaders = Args.hasArg(OPT_file_header);
   opts::Headers = Args.hasArg(OPT_headers);
@@ -477,6 +479,8 @@ static void dumpObject(ObjectFile &Obj, ScopedPrinter &Writer,
       Dumper->printCheriCapTable();
     if (opts::CheriCapTableMapping)
       Dumper->printCheriCapTableMapping();
+    if (opts::EffectiveAcls)
+      Dumper->printEffectiveAcls();
     if (opts::SectionGroups)
       Dumper->printGroupSections();
     if (opts::HashHistogram)

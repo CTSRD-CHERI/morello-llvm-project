@@ -28,6 +28,7 @@ defm demangle : BB<"demangle", "Demangle symbol names", "Do not demangle symbol 
 def dependent_libraries : FF<"dependent-libraries", "Display the dependent libraries section">;
 def dyn_relocations : FF<"dyn-relocations", "Display the dynamic relocation entries in the file">;
 def dyn_syms : FF<"dyn-syms", "Display the dynamic symbol table">;
+def effective_acls : FF<"effective-acls", "Display effective compartmentalization ACLs">;
 def expand_relocs : FF<"expand-relocs", "Expand each shown relocation to multiple lines">;
 def file_header : FF<"file-header", "Display file header">;
 def headers : FF<"headers", "Equivalent to setting: --file-header, --program-headers, --section-headers">;
