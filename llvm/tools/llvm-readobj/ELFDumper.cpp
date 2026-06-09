@@ -350,6 +350,8 @@ protected:
 
   std::vector<GroupSection> getGroups();
 
+  void buildAddressToIndexMap();
+
   // Returns the function symbol index for the given address. Matches the
   // symbol's section with FunctionSec when specified.
   // Returns std::nullopt if no function symbol can be found for the address or
@@ -413,7 +415,9 @@ protected:
   const Elf_Shdr *DotAddrsigSec = nullptr;
   DenseMap<const Elf_Shdr *, ArrayRef<Elf_Word>> ShndxTables;
   std::optional<uint64_t> SONameOffset;
-  std::optional<DenseMap<uint64_t, std::vector<uint32_t>>> AddressToIndexMap;
+  std::optional<
+      DenseMap<uint64_t, std::vector<std::pair<uint32_t, unsigned char>>>>
+      AddressToIndexMap;
 
   const Elf_Shdr *SymbolVersionSection = nullptr;   // .gnu.version
   const Elf_Shdr *SymbolVersionNeedSection = nullptr; // .gnu.version_r
@@ -6988,47 +6992,52 @@ template <class ELFT> void GNUELFDumper<ELFT>::printDependentLibs() {
     PrintSection();
 }
 
+template <class ELFT> void ELFDumper<ELFT>::buildAddressToIndexMap() {
+  this->AddressToIndexMap.emplace();
+  if (this->DotSymtabSec) {
+    if (Expected<Elf_Sym_Range> SymsOrError = Obj.symbols(this->DotSymtabSec)) {
+      uint32_t Index = (uint32_t)-1;
+      for (const Elf_Sym &Sym : *SymsOrError) {
+        ++Index;
+
+        if (Sym.st_shndx == ELF::SHN_UNDEF)
+          continue;
+
+        Expected<uint64_t> SymAddrOrErr =
+            ObjF.toSymbolRef(this->DotSymtabSec, Index).getAddress();
+        if (!SymAddrOrErr) {
+          std::string Name = this->getStaticSymbolName(Index);
+          reportUniqueWarning("unable to get address of symbol '" + Name +
+                              "': " + toString(SymAddrOrErr.takeError()));
+          continue;
+        }
+
+        (*this->AddressToIndexMap)[*SymAddrOrErr].emplace_back(Index,
+                                                               Sym.getType());
+      }
+    } else {
+      reportUniqueWarning("unable to read the symbol table: " +
+                          toString(SymsOrError.takeError()));
+    }
+  }
+}
+
 template <class ELFT>
 SmallVector<uint32_t> ELFDumper<ELFT>::getSymbolIndexesForFunctionAddress(
     uint64_t SymValue, std::optional<const Elf_Shdr *> FunctionSec) {
   SmallVector<uint32_t> SymbolIndexes;
-  if (!this->AddressToIndexMap) {
-    // Populate the address to index map upon the first invocation of this
-    // function.
-    this->AddressToIndexMap.emplace();
-    if (this->DotSymtabSec) {
-      if (Expected<Elf_Sym_Range> SymsOrError =
-              Obj.symbols(this->DotSymtabSec)) {
-        uint32_t Index = (uint32_t)-1;
-        for (const Elf_Sym &Sym : *SymsOrError) {
-          ++Index;
-
-          if (Sym.st_shndx == ELF::SHN_UNDEF || Sym.getType() != ELF::STT_FUNC)
-            continue;
-
-          Expected<uint64_t> SymAddrOrErr =
-              ObjF.toSymbolRef(this->DotSymtabSec, Index).getAddress();
-          if (!SymAddrOrErr) {
-            std::string Name = this->getStaticSymbolName(Index);
-            reportUniqueWarning("unable to get address of symbol '" + Name +
-                                "': " + toString(SymAddrOrErr.takeError()));
-            return SymbolIndexes;
-          }
-
-          (*this->AddressToIndexMap)[*SymAddrOrErr].push_back(Index);
-        }
-      } else {
-        reportUniqueWarning("unable to read the symbol table: " +
-                            toString(SymsOrError.takeError()));
-      }
-    }
-  }
+  if (!this->AddressToIndexMap)
+    buildAddressToIndexMap();
 
   auto Symbols = this->AddressToIndexMap->find(SymValue);
   if (Symbols == this->AddressToIndexMap->end())
     return SymbolIndexes;
 
-  for (uint32_t Index : Symbols->second) {
+  for (auto &Pair : Symbols->second) {
+    if (Pair.second != ELF::STT_FUNC)
+      continue;
+    uint32_t Index = Pair.first;
+
     // Check if the symbol is in the right section. FunctionSec == None
     // means "any section".
     if (FunctionSec) {
