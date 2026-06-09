@@ -6,21 +6,19 @@
 # RUN: ld.lld --gc-sections --shared --compartment-policy=%t/compartments.json %t/one.o -o %t/shared_merge_sections_gc.so
 # RUN: llvm-readelf -t %t/shared_merge_sections.so | FileCheck --check-prefix=SECTIONS %s
 # RUN: llvm-readelf -t %t/shared_merge_sections_gc.so | FileCheck --check-prefix=SECTIONS-GC %s
-# RUN: llvm-objdump -s -j .rodata %t/shared_merge_sections.so | FileCheck --check-prefix=RODATA %s
-# RUN: llvm-objdump -s -j .rodata.one %t/shared_merge_sections.so | FileCheck --check-prefix=RODATA %s
-# RUN: llvm-objdump -s -j .rodata.two %t/shared_merge_sections.so | FileCheck --check-prefix=RODATA %s
+# RUN: llvm-objdump -s -j .rodata.one %t/shared_merge_sections.so | FileCheck --check-prefix=RODATA-ONE %s
+# RUN: llvm-objdump -s -j .rodata.two %t/shared_merge_sections.so | FileCheck --check-prefix=RODATA-TWO %s
 # RUN: llvm-objdump -s -j .rodata.one %t/shared_merge_sections_gc.so | FileCheck --check-prefix=RODATA-ONE %s
 # RUN: llvm-objdump -s -j .rodata.two %t/shared_merge_sections_gc.so | FileCheck --check-prefix=RODATA-TWO %s
 
+## Without --gc-sections, the empty .text is still present
 # SECTIONS-LABEL: Section Headers:
-# SECTIONS:         [ 6] .rodata
-# SECTIONS-NEXT:         PROGBITS        0000000000000428 000428 000008 04   0   0  4
+# SECTIONS-NOT:   .rodata
+# SECTIONS:         [ 8] .rodata.one
+# SECTIONS-NEXT:         PROGBITS        00000000000034b8 0004b8 000004 04   0   0  8
 # SECTIONS-NEXT:         [0000000000000012]: ALLOC, MERGE
-# SECTIONS:         [ 9] .rodata.one
-# SECTIONS-NEXT:         PROGBITS        00000000000034c0 0004c0 000008 04   0   0  8
-# SECTIONS-NEXT:         [0000000000000012]: ALLOC, MERGE
-# SECTIONS:         [12] .rodata.two
-# SECTIONS-NEXT:         PROGBITS        00000000000054d8 0004d8 000008 04   0   0  8
+# SECTIONS:         [11] .rodata.two
+# SECTIONS-NEXT:         PROGBITS        00000000000054c8 0004c8 000004 04   0   0  8
 # SECTIONS-NEXT:         [0000000000000012]: ALLOC, MERGE
 
 # SECTIONS-GC-LABEL: Section Headers:
@@ -31,9 +29,6 @@
 # SECTIONS-GC:         [10] .rodata.two
 # SECTIONS-GC-NEXT:         PROGBITS        0000000000004490 000490 000004 04   0   0  8
 # SECTIONS-GC-NEXT:         [0000000000000012]: ALLOC, MERGE
-
-# RODATA-LABEL: Contents of section .rodata
-# RODATA-NEXT:     34120000 78560000                    4...xV..
 
 # RODATA-ONE-LABEL: Contents of section .rodata.one:
 # RODATA-ONE-NEXT: 34120000                             4...

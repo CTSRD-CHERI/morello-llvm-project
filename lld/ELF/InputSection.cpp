@@ -1413,7 +1413,8 @@ static size_t findNull(StringRef s, size_t entSize) {
 // Split SHF_STRINGS section. Such section is a sequence of
 // null-terminated strings.
 void MergeInputSection::splitStrings(StringRef s, size_t entSize) {
-  const bool live = !(flags & SHF_ALLOC) || !config->gcSections;
+  const bool live =
+      !(flags & SHF_ALLOC) || (!config->gcSections && !alwaysGc());
   const char *p = s.data(), *end = s.data() + s.size();
   if (!std::all_of(end - entSize, end, [](char c) { return c == 0; }))
     fatal(toString(this) + ": string is not null terminated");
@@ -1439,7 +1440,8 @@ void MergeInputSection::splitNonStrings(ArrayRef<uint8_t> data,
                                         size_t entSize) {
   size_t size = data.size();
   assert((size % entSize) == 0);
-  const bool live = !(flags & SHF_ALLOC) || !config->gcSections;
+  const bool live =
+      !(flags & SHF_ALLOC) || (!config->gcSections && !alwaysGc());
 
   pieces.resize_for_overwrite(size / entSize);
   for (size_t i = 0, j = 0; i != size; i += entSize, j++)

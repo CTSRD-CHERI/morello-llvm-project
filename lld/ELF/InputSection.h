@@ -333,6 +333,8 @@ public:
     return cast_or_null<SyntheticSection>(parent);
   }
 
+  bool alwaysGc() const { return !clones.empty() || !symMap.empty(); }
+
 private:
   // Each compartment contains its own copy of each merge section.
   SmallVector<MergeInputSection *, 0> clones;

@@ -363,7 +363,21 @@ template <class ELFT> void elf::markLive() {
       if (auto *s = dyn_cast<SharedSymbol>(sym))
         if (s->isUsedInRegularObj && !s->isWeak())
           cast<SharedFile>(s->file)->isNeeded = true;
-    return;
+
+    // If cloned merge sections are present due to compartments, still perform
+    // the pass so that those sections are GC'd.
+    bool foundClonedMS = false;
+    if (compartments.size() > 1) {
+      for (InputSectionBase *sec : ctx.inputSections) {
+        if (MergeInputSection::classof(sec) &&
+            cast<MergeInputSection>(sec)->alwaysGc()) {
+          foundClonedMS = true;
+          break;
+        }
+      }
+    }
+    if (!foundClonedMS)
+      return;
   }
 
   for (InputSectionBase *sec : ctx.inputSections)
@@ -372,6 +386,16 @@ template <class ELFT> void elf::markLive() {
   // Follow the graph to mark all live sections.
   for (unsigned curPart = 1; curPart <= partitions.size(); ++curPart)
     MarkLive<ELFT>(curPart).run();
+
+  // If only cloned merge sections are supposed to be GC'd, ensure all other
+  // sections are marked live.
+  if (!config->gcSections) {
+    for (InputSectionBase *sec : ctx.inputSections) {
+      if (!MergeInputSection::classof(sec) ||
+          !cast<MergeInputSection>(sec)->alwaysGc())
+        sec->markLive();
+    }
+  }
 
   // If we have multiple partitions, some sections need to live in the main
   // partition even if they were allocated to a loadable partition. Move them

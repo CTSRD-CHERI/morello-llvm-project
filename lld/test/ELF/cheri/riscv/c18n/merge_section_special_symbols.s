@@ -7,26 +7,26 @@
 # RUN: llvm-objdump -d --no-show-raw-insn %t/merge_section_symbol.so | FileCheck --check-prefix=DIS %s
 
 # SECTIONS-LABEL: Section Headers:
-# SECTIONS:         [ 9] .rodata.one
-# SECTIONS-NEXT:         PROGBITS        00000000000034c0 0004c0 000008 04   0   0  8
+# SECTIONS:         [ 8] .rodata.one
+# SECTIONS-NEXT:         PROGBITS        00000000000034b8 0004b8 000004 04   0   0  8
 # SECTIONS-NEXT:         [0000000000000012]: ALLOC, MERGE
-# SECTIONS:         [12] .rodata.two
-# SECTIONS-NEXT:         PROGBITS        00000000000054d8 0004d8 000008 04   0   0  8
+# SECTIONS:         [11] .rodata.two
+# SECTIONS-NEXT:         PROGBITS        00000000000054c8 0004c8 000008 04   0   0  8
 # SECTIONS-NEXT:         [0000000000000012]: ALLOC, MERGE
 
 # DIS-LABEL: Disassembly of section .text.one:
 # DIS:       <foo>:
-## .Lfoo_data.one - . = 0x34c0 - 0x44c8 = 4096*-1 - 8
-# DIS-NEXT:  44c8:       auipcc  ct0, 1048575
-# DIS-NEXT:              cincoffset      ct0, ct0, -8
+## .Lfoo_data.one - . = 0x34b8 - 0x44bc = 4096*-1 - 4
+# DIS-NEXT:  44bc:       auipcc  ct0, 1048575
+# DIS-NEXT:              cincoffset      ct0, ct0, -4
 
 # DIS-LABEL: Disassembly of section .text.two:
 # DIS:       <bar>:
-## .Lbar_data.two - . = 0x64e0 - 0x54dc = 4096*-1 - 4
-# DIS-NEXT:  64e0:       auipcc  ct0, 1048575
+## .Lbar_data.two - . = 0x54cc - 0x64d0 = 4096*-1 - 4
+# DIS-NEXT:  64d0:       auipcc  ct0, 1048575
 # DIS-NEXT:              cincoffset      ct0, ct0, -4
-## .rodata.two - . = 0x64e8 - 0x54d8 = 4096*-1 - 16
-# DIS:       64e8:       auipcc  ct1, 1048575
+## .rodata.two - . = 0x54c8 - 0x64d8 = 4096*-1 - 16
+# DIS:       64d8:       auipcc  ct1, 1048575
 # DIS-NEXT:              cincoffset      ct1, ct1, -16
 
 #--- one.s
