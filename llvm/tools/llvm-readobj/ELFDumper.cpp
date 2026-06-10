@@ -220,17 +220,33 @@ struct EffectiveAcls {
     }
   };
 
+  struct Objects {
+    std::unordered_map<uint64_t, Perms> Compartments;
+    std::unordered_map<std::string, Perms> Symbols;
+  };
+
   void addAccess(uint64_t Subject, bool Read, bool Write, bool Execute,
                  std::string &&symName);
+  void addAccess(uint64_t Subject, bool Read, bool Write, bool Execute,
+                 uint64_t Compartment);
 
-  std::map<uint64_t, std::unordered_map<std::string, Perms>> Acls;
+  std::map<uint64_t, Objects> Acls;
 };
 
 void EffectiveAcls::addAccess(uint64_t Subject, bool Read, bool Write,
                               bool Execute, std::string &&symName) {
   auto Pair = Acls.try_emplace(Subject);
-  auto &InnerMap = Pair.first->second;
-  auto InnerPair = InnerMap.try_emplace(symName);
+  Objects &Objects = Pair.first->second;
+  auto InnerPair = Objects.Symbols.try_emplace(symName);
+  auto &Perms = InnerPair.first->second;
+  Perms.update(Read, Write, Execute);
+}
+
+void EffectiveAcls::addAccess(uint64_t Subject, bool Read, bool Write,
+                              bool Execute, uint64_t Compartment) {
+  auto Pair = Acls.try_emplace(Subject);
+  Objects &Objects = Pair.first->second;
+  auto InnerPair = Objects.Compartments.try_emplace(Compartment);
   auto &Perms = InnerPair.first->second;
   Perms.update(Read, Write, Execute);
 }
@@ -3759,12 +3775,15 @@ void ELFDumper<ELFT>::addAclForReloc(const Relocation<ELFT> &R,
       return;
 
     // No ACL for intra-compartment access.
-    if (Subject == C18nMap.findName(Addr))
+    uint64_t Object = C18nMap.findName(Addr);
+    if (Subject == Object)
       return;
 
     auto SymNames = this->getSymbolNames(Addr);
+#if 1
     if (SymNames.empty())
       SymNames.push_back("<0x" + utohexstr(Addr, true) + ">");
+#endid
 
     bool Read, Write, Execute;
     switch (Frag->Type) {
@@ -3788,6 +3807,11 @@ void ELFDumper<ELFT>::addAclForReloc(const Relocation<ELFT> &R,
                           Twine(RelIndex) + " in " + describe(Sec));
       return;
     }
+
+#if 0
+    if (SymNames.empty())
+      Acls.addAccess(Subject, Read, Write, Execute, Object);
+#endif
 
     for (auto SymName : SymNames)
       Acls.addAccess(Subject, Read, Write, Execute, std::move(SymName));
@@ -3895,14 +3919,19 @@ void ELFDumper<ELFT>::addCheriCapRelocsAcls(
       return;
 
     uint64_t Subject = C18nMap.findName(Offset);
+    uint64_t Object = C18nMap.findName(Addr);
 
     // No ACL for intra-compartment access.
-    if (Subject == C18nMap.findName(Addr))
+    if (Subject == Object)
       continue;
 
     auto SymNames = this->getSymbolNames(Addr);
     if (SymNames.empty())
+#if 0
+      Acls.addAccess(Subject, Read, Write, Execute, Object);
+#else
       SymNames.push_back("<0x" + utohexstr(Addr, true) + ">");
+#endif
 
     for (auto SymName : SymNames)
       Acls.addAccess(Subject, Read, Write, Execute, std::move(SymName));
@@ -8630,13 +8659,27 @@ template <class ELFT> void LLVMELFDumper<ELFT>::printEffectiveAcls() {
     if (OuterKV.first != CompartmentAddressMap::DefaultName)
       Subject = this->getC18nString(OuterKV.first);
 
-    for (const auto &InnerKV : OuterKV.second) {
+    const auto &Objects = OuterKV.second;
+
+    for (const auto &CompartKV : Objects.Compartments) {
+      StringRef Compartment;
+      if (CompartKV.first != CompartmentAddressMap::DefaultName)
+        Compartment = this->getC18nString(CompartKV.first);
+
+      DictScope Group(W);
+      W.printString("subject", Subject);
+      W.printString("permissions", CompartKV.second.toString());
+      ListScope Symbols(W, "compartments");
+      W.printString(Compartment);
+    }
+
+    for (const auto &SymbolKV : Objects.Symbols) {
       DictScope Group(W);
 
       W.printString("subject", Subject);
-      W.printString("permissions", InnerKV.second.toString());
+      W.printString("permissions", SymbolKV.second.toString());
       ListScope Symbols(W, "symbols");
-      W.printString(InnerKV.first);
+      W.printString(SymbolKV.first);
     }
   }
 }
