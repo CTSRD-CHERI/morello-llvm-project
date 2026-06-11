@@ -434,7 +434,7 @@ protected:
   std::vector<GroupSection> getGroups();
 
   void buildAddressToIndexMap();
-  std::string getSymbolName(uint64_t Addr);
+  std::vector<std::string> getSymbolNames(uint64_t Addr);
 
   // Returns the function symbol index for the given address. Matches the
   // symbol's section with FunctionSec when specified.
@@ -3849,10 +3849,9 @@ void ELFDumper<ELFT>::addAclForReloc(const Relocation<ELFT> &R,
     if (Subject == C18nMap.findName(Addr))
       return;
 
-    std::string SymName = this->getSymbolName(Addr);
-    if (SymName.empty()) {
-      SymName = "<0x" + utohexstr(Addr, true) + ">";
-    }
+    auto SymNames = this->getSymbolNames(Addr);
+    if (SymNames.empty())
+      SymNames.push_back("<0x" + utohexstr(Addr, true) + ">");
 
     bool Read, Write, Execute;
     switch (Frag->Type) {
@@ -3877,7 +3876,8 @@ void ELFDumper<ELFT>::addAclForReloc(const Relocation<ELFT> &R,
       return;
     }
 
-    Acls.addAccess(Subject, Read, Write, Execute, std::move(SymName));
+    for (auto SymName : SymNames)
+      Acls.addAccess(Subject, Read, Write, Execute, std::move(SymName));
     return;
   }
 }
@@ -3983,12 +3983,12 @@ void ELFDumper<ELFT>::addCheriCapRelocsAcls(
     if (Subject == C18nMap.findName(Addr))
       continue;
 
-    std::string SymName = this->getSymbolName(Addr);
-    if (SymName.empty()) {
-      SymName = "<0x" + utohexstr(Addr, true) + ">";
-    }
+    auto SymNames = this->getSymbolNames(Addr);
+    if (SymNames.empty())
+      SymNames.push_back("<0x" + utohexstr(Addr, true) + ">");
 
-    Acls.addAccess(Subject, Read, Write, Execute, std::move(SymName));
+    for (auto SymName : SymNames)
+      Acls.addAccess(Subject, Read, Write, Execute, std::move(SymName));
   }
 }
 
@@ -7415,22 +7415,23 @@ template <class ELFT> void GNUELFDumper<ELFT>::printDependentLibs() {
 }
 
 template <class ELFT>
-std::string ELFDumper<ELFT>::getSymbolName(uint64_t Addr) {
+std::vector<std::string> ELFDumper<ELFT>::getSymbolNames(uint64_t Addr) {
+  std::vector<std::string> Names;
   if (!this->AddressToIndexMap)
     buildAddressToIndexMap();
 
   auto Symbols = this->AddressToIndexMap->find(Addr);
   if (Symbols == this->AddressToIndexMap->end())
-    return {};
+    return Names;
 
-  // Look for a symbol with a suitable type.
+  // Look for symbols with a suitable type.
   for (auto &Pair : Symbols->second) {
     if (Pair.second == ELF::STT_OBJECT || Pair.second == ELF::STT_FUNC ||
         Pair.second == ELF::STT_GNU_IFUNC)
-      return this->getStaticSymbolName(Pair.first);
+      Names.push_back(this->getStaticSymbolName(Pair.first));
   }
 
-  return {};
+  return Names;
 }
 
 template <class ELFT> void ELFDumper<ELFT>::buildAddressToIndexMap() {
