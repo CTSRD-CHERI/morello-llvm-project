@@ -7424,12 +7424,8 @@ std::vector<std::string> ELFDumper<ELFT>::getSymbolNames(uint64_t Addr) {
   if (Symbols == this->AddressToIndexMap->end())
     return Names;
 
-  // Look for symbols with a suitable type.
-  for (auto &Pair : Symbols->second) {
-    if (Pair.second == ELF::STT_OBJECT || Pair.second == ELF::STT_FUNC ||
-        Pair.second == ELF::STT_GNU_IFUNC)
+  for (auto &Pair : Symbols->second)
       Names.push_back(this->getStaticSymbolName(Pair.first));
-  }
 
   return Names;
 }
