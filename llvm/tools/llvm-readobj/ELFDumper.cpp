@@ -3845,6 +3845,10 @@ void ELFDumper<ELFT>::addAclForReloc(const Relocation<ELFT> &R,
     if (Frag->Type == 4)
       Addr &= ~1;
 
+    // Ignore attempts to access address 0.
+    if (Addr == 0)
+      return;
+
     // No ACL for intra-compartment access.
     if (Subject == C18nMap.findName(Addr))
       return;
@@ -3976,6 +3980,10 @@ void ELFDumper<ELFT>::addCheriCapRelocsAcls(
                           " in " + describe(Sec));
       continue;
     }
+
+    // Ignore attempts to access address 0.
+    if (Addr == 0)
+      return;
 
     uint64_t Subject = C18nMap.findName(Offset);
 
