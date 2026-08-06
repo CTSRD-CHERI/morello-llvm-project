@@ -109,6 +109,7 @@ static bool CGProfile;
 static bool CheriCapRelocs;
 static bool CheriCapTable;
 static bool CheriCapTableMapping;
+bool DecodeMorelloFragments;
 bool Demangle;
 static bool DependentLibraries;
 static bool DynRelocs;
@@ -226,6 +227,7 @@ static void parseOptions(const opt::InputArgList &Args) {
   opts::CheriCapTable = Args.hasArg(OPT_cap_table);
   opts::CheriCapTableMapping = Args.hasArg(OPT_cap_table_mapping);
   opts::CGProfile = Args.hasArg(OPT_cg_profile);
+  opts::DecodeMorelloFragments = Args.hasArg(OPT_decode_morello_fragments);
   opts::Demangle = Args.hasFlag(OPT_demangle, OPT_no_demangle, false);
   opts::DependentLibraries = Args.hasArg(OPT_dependent_libraries);
   opts::DynRelocs = Args.hasArg(OPT_dyn_relocations);
