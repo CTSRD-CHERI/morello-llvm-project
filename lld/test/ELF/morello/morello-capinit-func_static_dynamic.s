@@ -55,9 +55,8 @@ rw:
 bss:
  .space 4
 
-/// Executable capability ranges from .rodata up to the end of .data.rel.ro
-/// (and the ensuing .pad.cheri.pcc).
-/// Range is [0x210000, 0x240080) including alignment to CHERI concentrate
+/// Executable capability covers .text (and the empty ensuing .pad.cheri.pcc).
+/// Range is [0x230000, 0x230008), already aligned to CHERI concentrate boundary
 /// boundary.
 
 // CHECK:    Name: .rela.dyn
@@ -106,6 +105,22 @@ bss:
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
 // CHECK-NEXT:     Index: 5
+// CHECK-NEXT:     Name: .pad.cheri.pcc
+// CHECK-NEXT:     Type: SHT_PROGBITS
+// CHECK-NEXT:     Flags [
+// CHECK-NEXT:       SHF_ALLOC
+// CHECK-NEXT:       SHF_EXECINSTR
+// CHECK-NEXT:     ]
+// CHECK-NEXT:     Address: 0x230008
+// CHECK-NEXT:     Offset: 0x20008
+// CHECK-NEXT:     Size: 0
+// CHECK-NEXT:     Link: 0
+// CHECK-NEXT:     Info: 0
+// CHECK-NEXT:     AddressAlignment: 1
+// CHECK-NEXT:     EntrySize: 0
+// CHECK-NEXT:   }
+// CHECK-NEXT:   Section {
+// CHECK-NEXT:     Index: 6
 // CHECK-NEXT:     Name: .data.rel.ro
 // CHECK-NEXT:     Type: SHT_PROGBITS
 // CHECK-NEXT:     Flags [
@@ -118,22 +133,6 @@ bss:
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
 // CHECK-NEXT:     AddressAlignment: 16
-// CHECK-NEXT:     EntrySize: 0
-// CHECK-NEXT:   }
-// CHECK-NEXT:   Section {
-// CHECK-NEXT:     Index: 6
-// CHECK-NEXT:     Name: .pad.cheri.pcc
-// CHECK-NEXT:     Type: SHT_PROGBITS
-// CHECK-NEXT:     Flags [
-// CHECK-NEXT:       SHF_ALLOC
-// CHECK-NEXT:       SHF_WRITE
-// CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x240070
-// CHECK-NEXT:     Offset: 0x20070
-// CHECK-NEXT:     Size: 16
-// CHECK-NEXT:     Link: 0
-// CHECK-NEXT:     Info: 0
-// CHECK-NEXT:     AddressAlignment: 1
 // CHECK-NEXT:     EntrySize: 0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
@@ -171,8 +170,7 @@ bss:
 
 /// Expect 6 capabilities, 2 for each type of permission. Note that the base
 /// and limit for FUNC permissions is the range of addresses that a compiler
-/// would access pc-relative via an ADRP. In effect the .rodata and .text in
-/// this example.
+/// would access pc-relative via an ADRP. In effect the .text in this example.
 
 // CHECK: Relocations [
 // CHECK-NEXT:   .rela.dyn {
@@ -192,13 +190,13 @@ bss:
 // CHECK-NEXT:       Offset: 0x240030
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x20001
+// CHECK-NEXT:       Addend: 0x1
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
 // CHECK-NEXT:       Offset: 0x240040
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x20005
+// CHECK-NEXT:       Addend: 0x5
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
 // CHECK-NEXT:       Offset: 0x240050
@@ -282,10 +280,10 @@ bss:
 // CHECK-NEXT: 0x00240020 04002100 00000000 04000000 00000001
 
 /// _start: address: 0x230001, size = 4, perms = EXEC(0x4)
-// CHECK-NEXT: 0x00240030 00002100 00000000 80000300 00000004
+// CHECK-NEXT: 0x00240030 00002300 00000000 08000000 00000004
 
 /// func: address: 0x230005, size = 4, perms = EXEC(0x4)
-// CHECK-NEXT: 0x00240040 00002100 00000000 80000300 00000004
+// CHECK-NEXT: 0x00240040 00002300 00000000 08000000 00000004
 
 /// rw: address: 0x260000, size = 4, perms = RW(0x2)
 // CHECK-NEXT: 0x00240050 00002600 00000000 04000000 00000002
@@ -316,6 +314,22 @@ bss:
 // CHECK-SCRIPT-NEXT:     Link: 0
 // CHECK-SCRIPT-NEXT:     Info: 0
 // CHECK-SCRIPT-NEXT:     AddressAlignment: 65536
+// CHECK-SCRIPT-NEXT:     EntrySize: 0
+// CHECK-SCRIPT-NEXT:   }
+// CHECK-SCRIPT-NEXT:   Section {
+// CHECK-SCRIPT-NEXT:     Index:
+// CHECK-SCRIPT-NEXT:     Name: .pad.cheri.pcc
+// CHECK-SCRIPT-NEXT:     Type: SHT_PROGBITS
+// CHECK-SCRIPT-NEXT:     Flags [
+// CHECK-SCRIPT-NEXT:       SHF_ALLOC
+// CHECK-SCRIPT-NEXT:       SHF_EXECINSTR
+// CHECK-SCRIPT-NEXT:     ]
+// CHECK-SCRIPT-NEXT:     Address: 0x210008
+// CHECK-SCRIPT-NEXT:     Offset: 0x20008
+// CHECK-SCRIPT-NEXT:     Size: 0
+// CHECK-SCRIPT-NEXT:     Link: 0
+// CHECK-SCRIPT-NEXT:     Info: 0
+// CHECK-SCRIPT-NEXT:     AddressAlignment: 1
 // CHECK-SCRIPT-NEXT:     EntrySize: 0
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Section {
@@ -362,22 +376,6 @@ bss:
 // CHECK-SCRIPT-NEXT:     Link: 0
 // CHECK-SCRIPT-NEXT:     Info: 0
 // CHECK-SCRIPT-NEXT:     AddressAlignment: 16
-// CHECK-SCRIPT-NEXT:     EntrySize: 0
-// CHECK-SCRIPT-NEXT:   }
-// CHECK-SCRIPT-NEXT:   Section {
-// CHECK-SCRIPT-NEXT:     Index:
-// CHECK-SCRIPT-NEXT:     Name: .pad.cheri.pcc
-// CHECK-SCRIPT-NEXT:     Type: SHT_PROGBITS
-// CHECK-SCRIPT-NEXT:     Flags [
-// CHECK-SCRIPT-NEXT:       SHF_ALLOC
-// CHECK-SCRIPT-NEXT:       SHF_WRITE
-// CHECK-SCRIPT-NEXT:     ]
-// CHECK-SCRIPT-NEXT:     Address: 0x220070
-// CHECK-SCRIPT-NEXT:     Offset: 0x30070
-// CHECK-SCRIPT-NEXT:     Size: 16
-// CHECK-SCRIPT-NEXT:     Link: 0
-// CHECK-SCRIPT-NEXT:     Info: 0
-// CHECK-SCRIPT-NEXT:     AddressAlignment: 1
 // CHECK-SCRIPT-NEXT:     EntrySize: 0
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Section {
@@ -526,10 +524,10 @@ bss:
 // CHECK-SCRIPT-NEXT: 0x00220020 04002200 00000000 04000000 00000001
 
 /// _start: address: 0x210001, size = 4, perms = EXEC(0x4)
-// CHECK-SCRIPT-NEXT: 0x00220030 00002100 00000000 80000100 00000004
+// CHECK-SCRIPT-NEXT: 0x00220030 00002100 00000000 08000000 00000004
 
 /// func: address: 0x210005, size = 4, perms = EXEC(0x4)
-// CHECK-SCRIPT-NEXT: 0x00220040 00002100 00000000 80000100 00000004
+// CHECK-SCRIPT-NEXT: 0x00220040 00002100 00000000 08000000 00000004
 
 /// rw: address: 0x230000, size = 4, perms = RW(0x2)
 // CHECK-SCRIPT-NEXT: 0x00220050 00002300 00000000 04000000 00000002

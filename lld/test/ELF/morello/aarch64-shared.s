@@ -74,59 +74,59 @@ caller:
 // CHECK-NEXT:  20750 00000000 00000000 00000000 00000000
 // CHECK-NEXT:  20760 00000000 00000000 00000000 00000000
 /// Initialised to PCC fragment
-// CHECK-NEXT:  20770 80060100 00000000 80020200 00000004
-// CHECK-NEXT:  20780 80060100 00000000 80020200 00000004
+// CHECK-NEXT:  20770 80060100 00000000 80010200 00000004
+// CHECK-NEXT:  20780 80060100 00000000 80010200 00000004
+
+// CHECK: Contents of section .got:
+/// globalfunc undef
+// CHECK:       30790 00000000 00000000 00000000 00000000
+/// hiddenfunc 0x10651 executable 10
+// CHECK-NEXT:  307a0 80060100 00000000 80010200 00000004
+/// importfunc undef
+// CHECK-NEXT:  307b0 00000000 00000000 00000000 00000000
+/// import     undef
+// CHECK-NEXT:  307c0 00000000 00000000 00000000 00000000
+/// global     undef
+// CHECK-NEXT:  307d0 00000000 00000000 00000000 00000000
+/// hidden     0x409f8 hidden readwrite 8
+// CHECK-NEXT:  307e0 f8090400 00000000 08000000 00000002
+/// localfunc  0x106a1 executable 10
+// CHECK-NEXT:  307f0 80060100 00000000 80010200 00000004
 
  .data.rel.ro
  .chericap globalfunc
 // CHECK: Contents of section .data.rel.ro:
-// CHECK-NEXT:  30790 00000000 00000000 00000000 00000000
- .chericap hiddenfunc
-// CHECK-NEXT:  307a0 80060100 00000000 80020200 00000004
- .chericap localfunc
-// CHECK-NEXT:  307b0 80060100 00000000 80020200 00000004
- .chericap importfunc
-// CHECK-NEXT:  307c0 00000000 00000000 00000000 00000000
- .chericap global
-// CHECK-NEXT:  307d0 00000000 00000000 00000000 00000000
- .chericap hidden
-// CHECK-NEXT:  307e0 f8090400 00000000 08000000 00000002
- .chericap local
-// CHECK-NEXT:  307f0 000a0400 00000000 08000000 00000002
- .chericap import
 // CHECK-NEXT:  30800 00000000 00000000 00000000 00000000
- .chericap globalfunc + 4
-// CHECK-NEXT:  30810 00000000 00000000 00000000 00000000
- .chericap hiddenfunc + 8
-// CHECK-NEXT:  30820 80060100 00000000 80020200 00000004
- .chericap localfunc + 12
-// CHECK-NEXT:  30830 80060100 00000000 80020200 00000004
- .chericap importfunc + 16
+ .chericap hiddenfunc
+// CHECK-NEXT:  30810 80060100 00000000 80010200 00000004
+ .chericap localfunc
+// CHECK-NEXT:  30820 80060100 00000000 80010200 00000004
+ .chericap importfunc
+// CHECK-NEXT:  30830 00000000 00000000 00000000 00000000
+ .chericap global
 // CHECK-NEXT:  30840 00000000 00000000 00000000 00000000
- .chericap global + 1
-// CHECK-NEXT:  30850 00000000 00000000 00000000 00000000
- .chericap hidden + 2
-// CHECK-NEXT:  30860 f8090400 00000000 08000000 00000002
- .chericap local + 3
-// CHECK-NEXT:  30870 000a0400 00000000 08000000 00000002
- .chericap import +4
+ .chericap hidden
+// CHECK-NEXT:  30850 f8090400 00000000 08000000 00000002
+ .chericap local
+// CHECK-NEXT:  30860 000a0400 00000000 08000000 00000002
+ .chericap import
+// CHECK-NEXT:  30870 00000000 00000000 00000000 00000000
+ .chericap globalfunc + 4
 // CHECK-NEXT:  30880 00000000 00000000 00000000 00000000
-
-// CHECK: Contents of section .got:
-/// globalfunc undef
-// CHECK:       30890 00000000 00000000 00000000 00000000
-/// hiddenfunc 0x10651 executable 10
-// CHECK-NEXT:  308a0 80060100 00000000 80020200 00000004
-/// importfunc undef
+ .chericap hiddenfunc + 8
+// CHECK-NEXT:  30890 80060100 00000000 80010200 00000004
+ .chericap localfunc + 12
+// CHECK-NEXT:  308a0 80060100 00000000 80010200 00000004
+ .chericap importfunc + 16
 // CHECK-NEXT:  308b0 00000000 00000000 00000000 00000000
-/// import     undef
+ .chericap global + 1
 // CHECK-NEXT:  308c0 00000000 00000000 00000000 00000000
-/// global     undef
-// CHECK-NEXT:  308d0 00000000 00000000 00000000 00000000
-/// hidden     0x409f8 hidden readwrite 8
-// CHECK-NEXT:  308e0 f8090400 00000000 08000000 00000002
-/// localfunc  0x106a1 executable 10
-// CHECK-NEXT:  308f0 80060100 00000000 80020200 00000004
+ .chericap hidden + 2
+// CHECK-NEXT:  308d0 f8090400 00000000 08000000 00000002
+ .chericap local + 3
+// CHECK-NEXT:  308e0 000a0400 00000000 08000000 00000002
+ .chericap import +4
+// CHECK-NEXT:  308f0 00000000 00000000 00000000 00000000
 
 // CHECK: Contents of section .data:
 /// global 409f0, hidden 409f8, local 40a00
@@ -158,19 +158,19 @@ caller:
 // CHECK-NEXT:        bl  0x10730
 // CHECK-NEXT:        ret  c30
 // CHECK-NEXT:        adrp c0, 0x30000
-// CHECK-NEXT:        ldr  c0, [c0, #0x890]
+// CHECK-NEXT:        ldr  c0, [c0, #0x790]
 // CHECK-NEXT:        adrp c1, 0x30000
-// CHECK-NEXT:        ldr  c1, [c1, #0x8a0]
+// CHECK-NEXT:        ldr  c1, [c1, #0x7a0]
 // CHECK-NEXT:        adrp c2, 0x30000
-// CHECK-NEXT:        ldr  c2, [c2, #0x8f0]
+// CHECK-NEXT:        ldr  c2, [c2, #0x7f0]
 // CHECK-NEXT:        adrp c3, 0x30000
-// CHECK-NEXT:        ldr  c3, [c3, #0x8b0]
+// CHECK-NEXT:        ldr  c3, [c3, #0x7b0]
 // CHECK-NEXT:        adrp c4, 0x30000
-// CHECK-NEXT:        ldr  c4, [c4, #0x8d0]
+// CHECK-NEXT:        ldr  c4, [c4, #0x7d0]
 // CHECK-NEXT:        adrp c5, 0x30000
-// CHECK-NEXT:        ldr  c5, [c5, #0x8e0]
+// CHECK-NEXT:        ldr  c5, [c5, #0x7e0]
 // CHECK-NEXT:        adrp c17, 0x30000
-// CHECK-NEXT:        ldr  c17, [c17, #0x8c0]
+// CHECK-NEXT:        ldr  c17, [c17, #0x7c0]
 
 // CHECK-LABEL: <.plt>:
 // CHECK-NEXT: 10700: stp  c16, c30, [csp, #-0x20]!
@@ -196,42 +196,42 @@ caller:
 
 // RELS: Relocations [
 // RELS-NEXT:   Section {{.*}} .rela.dyn {
-/// .chericap hiddenfunc
-// RELS-NEXT:     0x307A0 R_MORELLO_RELATIVE - 0x11
-/// .chericap localfunc
-// RELS-NEXT:     0x307B0 R_MORELLO_RELATIVE - 0x21
-/// .chericap hidden
-// RELS-NEXT:     0x307E0 R_MORELLO_RELATIVE - 0x0
-/// .chericap local
-// RELS-NEXT:     0x307F0 R_MORELLO_RELATIVE - 0x0
-/// .chericap hiddenfunc + 8
-// RELS-NEXT:     0x30820 R_MORELLO_RELATIVE - 0x19
-/// .chericap localfunc + 12
-// RELS-NEXT:     0x30830 R_MORELLO_RELATIVE - 0x2D
-/// .chericap hidden + 2
-// RELS-NEXT:     0x30860 R_MORELLO_RELATIVE - 0x2
-/// .chericap import + 4
-// RELS-NEXT:     0x30870 R_MORELLO_RELATIVE - 0x3
 /// .got hiddenfunc
-// RELS-NEXT:     0x308A0 R_MORELLO_RELATIVE - 0x11
+// RELS-NEXT:     0x307A0 R_MORELLO_RELATIVE - 0x11
 /// .got hidden
-// RELS-NEXT:     0x308E0 R_MORELLO_RELATIVE - 0x0
+// RELS-NEXT:     0x307E0 R_MORELLO_RELATIVE - 0x0
 /// .got localfunc
-// RELS-NEXT:     0x308F0 R_MORELLO_RELATIVE - 0x21
-// RELS-NEXT:     0x307C0 R_MORELLO_CAPINIT importfunc 0x0
-// RELS-NEXT:     0x30840 R_MORELLO_CAPINIT importfunc 0x10
-// RELS-NEXT:     0x308B0 R_MORELLO_GLOB_DAT importfunc 0x0
-// RELS-NEXT:     0x30800 R_MORELLO_CAPINIT import 0x0
-// RELS-NEXT:     0x30880 R_MORELLO_CAPINIT import 0x4
-// RELS-NEXT:     0x308C0 R_MORELLO_GLOB_DAT import 0x0
-// RELS-NEXT:     0x30790 R_MORELLO_CAPINIT globalfunc 0x0
+// RELS-NEXT:     0x307F0 R_MORELLO_RELATIVE - 0x21
+/// .chericap hiddenfunc
+// RELS-NEXT:     0x30810 R_MORELLO_RELATIVE - 0x11
+/// .chericap localfunc
+// RELS-NEXT:     0x30820 R_MORELLO_RELATIVE - 0x21
+/// .chericap hidden
+// RELS-NEXT:     0x30850 R_MORELLO_RELATIVE - 0x0
+/// .chericap local
+// RELS-NEXT:     0x30860 R_MORELLO_RELATIVE - 0x0
+/// .chericap hiddenfunc + 8
+// RELS-NEXT:     0x30890 R_MORELLO_RELATIVE - 0x19
+/// .chericap localfunc + 12
+// RELS-NEXT:     0x308A0 R_MORELLO_RELATIVE - 0x2D
+/// .chericap hidden + 2
+// RELS-NEXT:     0x308D0 R_MORELLO_RELATIVE - 0x2
+/// .chericap import + 4
+// RELS-NEXT:     0x308E0 R_MORELLO_RELATIVE - 0x3
+// RELS-NEXT:     0x307B0 R_MORELLO_GLOB_DAT importfunc 0x0
+// RELS-NEXT:     0x30830 R_MORELLO_CAPINIT importfunc 0x0
+// RELS-NEXT:     0x308B0 R_MORELLO_CAPINIT importfunc 0x10
+// RELS-NEXT:     0x307C0 R_MORELLO_GLOB_DAT import 0x0
+// RELS-NEXT:     0x30870 R_MORELLO_CAPINIT import 0x0
+// RELS-NEXT:     0x308F0 R_MORELLO_CAPINIT import 0x4
+// RELS-NEXT:     0x30790 R_MORELLO_GLOB_DAT globalfunc 0x0
+// RELS-NEXT:     0x30800 R_MORELLO_CAPINIT globalfunc 0x0
 /// .data.rel.ro globalfunc+4
-// RELS-NEXT:     0x30810 R_MORELLO_CAPINIT globalfunc 0x4
+// RELS-NEXT:     0x30880 R_MORELLO_CAPINIT globalfunc 0x4
 /// .got globalfunc
-// RELS-NEXT:     0x30890 R_MORELLO_GLOB_DAT globalfunc 0x0
-// RELS-NEXT:     0x307D0 R_MORELLO_CAPINIT global 0x0
-// RELS-NEXT:     0x30850 R_MORELLO_CAPINIT global 0x1
-// RELS-NEXT:     0x308D0 R_MORELLO_GLOB_DAT global 0x0
+// RELS-NEXT:     0x307D0 R_MORELLO_GLOB_DAT global 0x0
+// RELS-NEXT:     0x30840 R_MORELLO_CAPINIT global 0x0
+// RELS-NEXT:     0x308C0 R_MORELLO_CAPINIT global 0x1
 // RELS-NEXT:   }
 // RELS-NEXT:   Section {{.*}} .rela.plt {
 // RELS-NEXT:     0x20770 R_MORELLO_JUMP_SLOT globalfunc 0x81

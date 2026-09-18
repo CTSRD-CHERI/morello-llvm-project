@@ -41,26 +41,26 @@ foo:
 // CHECK-NEXT:     ]
 // CHECK-NEXT:     Address: 0x2102C0
 
-// CHECK:    Name: .data.rel.ro
-// CHECK-NEXT:     Type: SHT_PROGBITS
-// CHECK-NEXT:     Flags [ (0x3)
-// CHECK-NEXT:       SHF_ALLOC
-// CHECK-NEXT:       SHF_WRITE
-// CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x2202E0
-
 // CHECK:    Name: .got
 // CHECK-NEXT:    Type: SHT_PROGBITS
 // CHECK-NEXT:    Flags [ (0x3)
 // CHECK-NEXT:      SHF_ALLOC
 // CHECK-NEXT:      SHF_WRITE
 // CHECK-NEXT:    ]
-// CHECK-NEXT:    Address: 0x2202F0
+// CHECK-NEXT:    Address: 0x2202E0
+
+// CHECK:    Name: .data.rel.ro
+// CHECK-NEXT:     Type: SHT_PROGBITS
+// CHECK-NEXT:     Flags [ (0x3)
+// CHECK-NEXT:       SHF_ALLOC
+// CHECK-NEXT:       SHF_WRITE
+// CHECK-NEXT:     ]
+// CHECK-NEXT:     Address: 0x220300
 
 // CHECK: Relocations [
 // CHECK-NEXT:   .rela.dyn {
 // CHECK-NEXT:     0x2202E0 R_MORELLO_RELATIVE - 0x0
-// CHECK-NEXT:     0x2202F0 R_MORELLO_RELATIVE - 0x0
+// CHECK-NEXT:     0x220300 R_MORELLO_RELATIVE - 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   .rela.text {
 // CHECK-NEXT:     0x2102C0 R_MORELLO_CALL26 target 0x0
@@ -69,23 +69,23 @@ foo:
 // CHECK-NEXT:     0x2102CC R_MORELLO_LD128_GOT_LO12_NC foo 0x0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   .rela.data.rel.ro {
-// CHECK-NEXT:     0x2202E0 R_MORELLO_CAPINIT foo 0x0
+// CHECK-NEXT:     0x220300 R_MORELLO_CAPINIT foo 0x0
 
 // CHECK:         Name: foo
-// CHECK-NEXT:    Value: 0x230300
+// CHECK-NEXT:    Value: 0x230310
 // CHECK-NEXT:    Size: 4
 // CHECK-NEXT:    Binding: Global
 // CHECK-NEXT:    Type: Object
 // CHECK-NEXT:    Other: 0
 // CHECK-NEXT:    Section: .data
 
-// CHECK:      Hex dump of section '.data.rel.ro':
-/// foo: address: 0x230300, size = 4, perms = RW(0x2)
-// CHECK-NEXT: 0x002202e0 00032300 00000000 04000000 00000002
-
 // CHECK:      Hex dump of section '.got':
-/// foo: address: 0x230300, size = 4, perms = RW(0x2)
-// CHECK-NEXT: 0x002202f0 00032300 00000000 04000000 00000002
+/// foo: address: 0x230310, size = 4, perms = RW(0x2)
+// CHECK-NEXT: 0x002202e0 10032300 00000000 04000000 00000002
+
+// CHECK:      Hex dump of section '.data.rel.ro':
+/// foo: address: 0x230310, size = 4, perms = RW(0x2)
+// CHECK-NEXT: 0x00220300 10032300 00000000 04000000 00000002
 
 
 // SHARED:     Name: .text
@@ -104,7 +104,7 @@ foo:
 // SHARED-NEXT:     ]
 // SHARED-NEXT:     Address: 0x20450
 
-// SHARED:     Name: .data.rel.ro
+// SHARED:     Name: .got
 // SHARED-NEXT:     Type: SHT_PROGBITS
 // SHARED-NEXT:     Flags [
 // SHARED-NEXT:       SHF_ALLOC
@@ -112,18 +112,18 @@ foo:
 // SHARED-NEXT:     ]
 // SHARED-NEXT:     Address: 0x30490
 
-// SHARED:     Name: .got
+// SHARED:     Name: .data.rel.ro
 // SHARED-NEXT:     Type: SHT_PROGBITS
 // SHARED-NEXT:     Flags [
 // SHARED-NEXT:       SHF_ALLOC
 // SHARED-NEXT:       SHF_WRITE
 // SHARED-NEXT:     ]
-// SHARED-NEXT:     Address: 0x304A0
+// SHARED-NEXT:     Address: 0x304C0
 
 // SHARED: Relocations [
 // SHARED-NEXT:   .rela.dyn {
-// SHARED-NEXT:     0x30490 R_MORELLO_CAPINIT foo 0x0
-// SHARED-NEXT:     0x304A0 R_MORELLO_GLOB_DAT foo 0x0
+// SHARED-NEXT:     0x30490 R_MORELLO_GLOB_DAT foo 0x0
+// SHARED-NEXT:     0x304C0 R_MORELLO_CAPINIT foo 0x0
 // SHARED-NEXT:   }
 // SHARED-NEXT:   .rela.plt {
 // SHARED-NEXT:     0x20480 R_MORELLO_JUMP_SLOT target 0x21
@@ -135,18 +135,18 @@ foo:
 // SHARED-NEXT:     0x1040C R_MORELLO_LD128_GOT_LO12_NC foo 0x0
 // SHARED-NEXT:   }
 // SHARED-NEXT:   .rela.data.rel.ro {
-// SHARED-NEXT:     0x30490 R_MORELLO_CAPINIT foo 0x0
+// SHARED-NEXT:     0x304C0 R_MORELLO_CAPINIT foo 0x0
 
 // SHARED:         Name: foo
-// SHARED-NEXT:    Value: 0x405A0
+// SHARED-NEXT:    Value: 0x405B0
 // SHARED-NEXT:    Size: 4
 // SHARED-NEXT:    Binding: Global
 // SHARED-NEXT:    Type: Object
 // SHARED-NEXT:    Other: 0
 // SHARED-NEXT:    Section: .data
 
-// SHARED:      Hex dump of section '.data.rel.ro':
+// SHARED:      Hex dump of section '.got':
 // SHARED-NEXT: 0x00030490 00000000 00000000 00000000 00000000
 
-// SHARED:      Hex dump of section '.got':
-// SHARED-NEXT: 0x000304a0 00000000 00000000 00000000 00000000
+// SHARED:      Hex dump of section '.data.rel.ro':
+// SHARED-NEXT: 0x000304c0 00000000 00000000 00000000 00000000

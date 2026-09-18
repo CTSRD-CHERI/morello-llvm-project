@@ -38,24 +38,25 @@ bar:
 foo:
  .xword 10
 
-// DIS: 0000000000210308 <_start>:
-// DIS-NEXT: 210308:  adrp c0, 0x220000
-// DIS-NEXT: 21030c:  ldr c0, [c0, #0x340]
-// DIS-NEXT: 210310:  adrp c1, 0x220000
-// DIS-NEXT: 210314:  ldr c1, [c1, #0x330]
-// DIS-NEXT: 210318:  adrp c1, 0x220000
-// DIS-NEXT: 21031c:  ldr c1, [c1, #0x330]
-// DIS-NEXT: 210320:  adrp c2, 0x220000
-// DIS-NEXT: 210324:  ldr c2, [c1, #0x350]
+// DIS: 00000000002102e0 <_start>:
+// DIS-NEXT: 2102e0:  adrp c0, 0x220000
+// DIS-NEXT: 2102e4:  ldr c0, [c0, #0x310]
+// DIS-NEXT: 2102e8:  adrp c1, 0x220000
+// DIS-NEXT: 2102ec:  ldr c1, [c1, #0x300]
+// DIS-NEXT: 2102f0:  adrp c1, 0x220000
+// DIS-NEXT: 2102f4:  ldr c1, [c1, #0x300]
+// DIS-NEXT: 2102f8:  adrp c2, 0x220000
+// DIS-NEXT: 2102fc:  ldr c2, [c1, #0x320]
 
-/// .rodata is the start of the executable capability range
+/// .text is the start of the executable capability range
 
-// CHECK:          Name: .rodata
+// CHECK:          Name: .text
 // CHECK-NEXT:     Type: SHT_PROGBITS
 // CHECK-NEXT:     Flags [
 // CHECK-NEXT:       SHF_ALLOC
+// CHECK-NEXT:       SHF_EXECINSTR
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x200300
+// CHECK-NEXT:     Address: 0x2102E0
 
 /// Check that .got exists, has 16-byte entries and is 16-byte aligned.
 // CHECK:          Name: .got
@@ -64,8 +65,8 @@ foo:
 // CHECK-NEXT:       SHF_ALLOC
 // CHECK-NEXT:       SHF_WRITE
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x220330
-// CHECK-NEXT:     Offset: 0x330
+// CHECK-NEXT:     Address: 0x220300
+// CHECK-NEXT:     Offset: 0x300
 // CHECK-NEXT:     Size: 48
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
@@ -78,32 +79,32 @@ foo:
 // CHECK-NEXT:       SHF_ALLOC (0x2)
 // CHECK-NEXT:       SHF_WRITE (0x1)
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x220360
-// CHECK-NEXT:     Offset: 0x360
-// CHECK-NEXT:     Size: 32
+// CHECK-NEXT:     Address: 0x220330
+// CHECK-NEXT:     Offset: 0x330
+// CHECK-NEXT:     Size: 16
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
 // CHECK-NEXT:     AddressAlignment: 1
 
 /// Check 3 locations in the .got are referred to by CAPINITs in rela.dyn.
 /// Note the length of of the executable capability is end of .pad.cheri.pcc -
-/// base of .rodata.
+/// base of .text.
 // CHECK: Relocations [
 // CHECK-NEXT:   .rela.dyn {
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x220330
+// CHECK-NEXT:       Offset: 0x220300
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x220340
+// CHECK-NEXT:       Offset: 0x220310
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
-// CHECK-NEXT:       Addend: 0x10009
+// CHECK-NEXT:       Addend: 0x1
 // CHECK-NEXT:     }
 // CHECK-NEXT:     Relocation {
-// CHECK-NEXT:       Offset: 0x220350
+// CHECK-NEXT:       Offset: 0x220320
 // CHECK-NEXT:       Type: R_MORELLO_RELATIVE
 // CHECK-NEXT:       Symbol: - (0)
 // CHECK-NEXT:       Addend: 0x0
@@ -112,7 +113,7 @@ foo:
 // CHECK-NEXT: ]
 
 // CHECK:          Name: foo
-// CHECK-NEXT:     Value: 0x230380
+// CHECK-NEXT:     Value: 0x230340
 // CHECK-NEXT:     Size: 8
 // CHECK-NEXT:     Binding: Global
 // CHECK-NEXT:     Type: None (0x0)
@@ -120,7 +121,7 @@ foo:
 // CHECK-NEXT:     Section: .data
 
 // CHECK:          Name: _start
-// CHECK-NEXT:     Value: 0x210309
+// CHECK-NEXT:     Value: 0x2102E1
 // CHECK-NEXT:     Size: 16
 // CHECK-NEXT:     Binding: Global
 // CHECK-NEXT:     Type: Function
@@ -128,7 +129,7 @@ foo:
 // CHECK-NEXT:     Section: .text
 
 // CHECK:          Name: bar
-// CHECK-NEXT:     Value: 0x200300
+// CHECK-NEXT:     Value: 0x2002C8
 // CHECK-NEXT:     Size: 8
 // CHECK-NEXT:     Binding: Global
 // CHECK-NEXT:     Type: None (0x0)
@@ -138,11 +139,11 @@ foo:
 /// Check the fragments in .got match
 // CHECK:      Hex dump of section '.got':
 
-/// foo: address: 0x230380, size = 8 (0x8), perms = RW(0x2)
-// CHECK-NEXT: 0x00220330 80032300 00000000 08000000 00000002
+/// foo: address: 0x230340, size = 8 (0x8), perms = RW(0x2)
+// CHECK-NEXT: 0x00220300 40032300 00000000 08000000 00000002
 
-/// _start: address: 0x210309, size = 16 (0x10), perms = exec(0x4)
-// CHECK-NEXT: 0x00220340 00032000 00000000 80000200 00000004
+/// _start: address: 0x2102e1, size = 16 (0x10), perms = exec(0x4)
+// CHECK-NEXT: 0x00220310 e0022100 00000000 60000100 00000004
 
-/// bar: address: 0x200300, size = 8 (0x8), perms = RO(0x1)
-// CHECK-NEXT: 0x00220350 00032000 00000000 08000000 00000001
+/// bar: address: 0x2002c8, size = 8 (0x8), perms = RO(0x1)
+// CHECK-NEXT: 0x00220320 c8022000 00000000 08000000 00000001

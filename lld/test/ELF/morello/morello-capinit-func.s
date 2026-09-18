@@ -63,9 +63,8 @@ rw:
 bss:
  .space 4
 
-/// Executable capability ranges from .rodata up to the end of
-/// .data.rel.ro (and the ensuing .pad.cheri.pcc).
-/// Range is [0x210000, 0x240080) including alignment to CHERI concentrate
+/// Executable capability covers .text (and the empty ensuing .pad.cheri.pcc).
+/// Range is [0x230000, 0x230008), already aligned to CHERI concentrate boundary
 /// boundary.
 
 // CHECK:          Name: .rodata
@@ -99,6 +98,22 @@ bss:
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
 // CHECK-NEXT:     Index:
+// CHECK-NEXT:     Name: .pad.cheri.pcc
+// CHECK-NEXT:     Type: SHT_PROGBITS
+// CHECK-NEXT:     Flags [
+// CHECK-NEXT:       SHF_ALLOC
+// CHECK-NEXT:       SHF_EXECINSTR
+// CHECK-NEXT:     ]
+// CHECK-NEXT:     Address: 0x230008
+// CHECK-NEXT:     Offset: 0x20008
+// CHECK-NEXT:     Size: 0
+// CHECK-NEXT:     Link: 0
+// CHECK-NEXT:     Info: 0
+// CHECK-NEXT:     AddressAlignment: 1
+// CHECK-NEXT:     EntrySize: 0
+// CHECK-NEXT:   }
+// CHECK-NEXT:   Section {
+// CHECK-NEXT:     Index:
 // CHECK-NEXT:     Name: .data.rel.ro
 // CHECK-NEXT:     Type: SHT_PROGBITS
 // CHECK-NEXT:     Flags [
@@ -111,22 +126,6 @@ bss:
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
 // CHECK-NEXT:     AddressAlignment: 16
-// CHECK-NEXT:     EntrySize: 0
-// CHECK-NEXT:   }
-// CHECK-NEXT:   Section {
-// CHECK-NEXT:     Index:
-// CHECK-NEXT:     Name: .pad.cheri.pcc
-// CHECK-NEXT:     Type: SHT_PROGBITS
-// CHECK-NEXT:     Flags [
-// CHECK-NEXT:       SHF_ALLOC
-// CHECK-NEXT:       SHF_WRITE
-// CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x240070
-// CHECK-NEXT:     Offset: 0x20070
-// CHECK-NEXT:     Size: 16
-// CHECK-NEXT:     Link: 0
-// CHECK-NEXT:     Info: 0
-// CHECK-NEXT:     AddressAlignment: 1
 // CHECK-NEXT:     EntrySize: 0
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Section {
@@ -160,8 +159,7 @@ bss:
 
 /// Expect 6 capabilities, 2 for each type of permission. Note that the base
 /// and limit for FUNC permissions is the range of addresses that a compiler
-/// would access pc-relative via an ADRP. In effect the .rodata and .text in
-/// this example.
+/// would access pc-relative via an ADRP. In effect the .text in this example.
 
 // CHECK: __cap_relocs {
 // CHECK-NEXT:   Relocation {
@@ -182,15 +180,15 @@ bss:
 // CHECK-NEXT:     Offset: 0x240030
 // CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
 // CHECK-NEXT:     Address: 0x230001
-// CHECK-NEXT:     Base: 0x210000
-// CHECK-NEXT:     Length: 196736
+// CHECK-NEXT:     Base: 0x230000
+// CHECK-NEXT:     Length: 8
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Offset: 0x240040
 // CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
 // CHECK-NEXT:     Address: 0x230005
-// CHECK-NEXT:     Base: 0x210000
-// CHECK-NEXT:     Length: 196736
+// CHECK-NEXT:     Base: 0x230000
+// CHECK-NEXT:     Length: 8
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
 // CHECK-NEXT:     Offset: 0x240050
@@ -238,14 +236,14 @@ bss:
 // CHECK-SCRIPT-NEXT:     Type: FUNC (0x8000000000013DBC)
 // CHECK-SCRIPT-NEXT:     Address: 0x210001
 // CHECK-SCRIPT-NEXT:     Base: 0x210000
-// CHECK-SCRIPT-NEXT:     Length: 65664
+// CHECK-SCRIPT-NEXT:     Length: 8
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
 // CHECK-SCRIPT-NEXT:     Offset: 0x220040
 // CHECK-SCRIPT-NEXT:     Type: FUNC (0x8000000000013DBC)
 // CHECK-SCRIPT-NEXT:     Address: 0x210005
 // CHECK-SCRIPT-NEXT:     Base: 0x210000
-// CHECK-SCRIPT-NEXT:     Length: 65664
+// CHECK-SCRIPT-NEXT:     Length: 8
 // CHECK-SCRIPT-NEXT:   }
 // CHECK-SCRIPT-NEXT:   Relocation {
 // CHECK-SCRIPT-NEXT:     Offset: 0x220050
