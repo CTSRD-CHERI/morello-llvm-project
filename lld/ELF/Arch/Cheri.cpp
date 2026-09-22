@@ -1214,7 +1214,6 @@ static bool alignPCCBounds(PhdrEntry *p, CheriPccPaddingSection &psec) {
     if (first->ptLoad)
       first->ptLoad->p_align =
           std::max(first->ptLoad->p_align, first->addralign);
-    p->p_align = std::max(p->p_align, first->addralign);
     changed = true;
   }
   uint64_t padSize = alignTo(size, align) - size;
@@ -1222,6 +1221,8 @@ static bool alignPCCBounds(PhdrEntry *p, CheriPccPaddingSection &psec) {
     psec.setSize(padSize);
     changed = true;
   }
+  // NB: Updating this has no effect on layout, so changed can remain false.
+  p->p_align = align;
   return changed;
 }
 
