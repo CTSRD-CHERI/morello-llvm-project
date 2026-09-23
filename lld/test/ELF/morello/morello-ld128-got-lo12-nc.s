@@ -38,24 +38,25 @@ bar:
 foo:
  .xword 10
 
-// DIS: 0000000000210308 <_start>:
-// DIS-NEXT:   210308:        adrp    c0, 0x220000
-// DIS-NEXT:   21030c:        ldr     c0, [c0, #832]
+// DIS: 0000000000210300 <_start>:
+// DIS-NEXT:   210300:        adrp    c0, 0x220000
+// DIS-NEXT:   210304:        ldr     c0, [c0, #816]
+// DIS-NEXT:   210308:        adrp    c1, 0x220000
+// DIS-NEXT:   21030c:        ldr     c1, [c1, #800]
 // DIS-NEXT:   210310:        adrp    c1, 0x220000
-// DIS-NEXT:   210314:        ldr     c1, [c1, #816]
-// DIS-NEXT:   210318:        adrp    c1, 0x220000
-// DIS-NEXT:   21031c:        ldr     c1, [c1, #816]
-// DIS-NEXT:   210320:        adrp    c2, 0x220000
-// DIS-NEXT:   210324:        ldr     c2, [c1, #848]
+// DIS-NEXT:   210314:        ldr     c1, [c1, #800]
+// DIS-NEXT:   210318:        adrp    c2, 0x220000
+// DIS-NEXT:   21031c:        ldr     c2, [c1, #832]
 
-/// .rodata is the start of the executable capability range
+/// .text is the start of the executable capability range
 
-// CHECK:          Name: .rodata
+// CHECK:          Name: .text
 // CHECK-NEXT:     Type: SHT_PROGBITS (0x1)
-// CHECK-NEXT:     Flags [ (0x2)
+// CHECK-NEXT:     Flags [ (0x6)
 // CHECK-NEXT:       SHF_ALLOC (0x2)
+// CHECK-NEXT:       SHF_EXECINSTR (0x4)
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x200300
+// CHECK-NEXT:     Address: 0x210300
 
 /// Check that .got exists, has 16-byte entries and is 16-byte aligned.
 // CHECK:          Name: .got
@@ -64,8 +65,8 @@ foo:
 // CHECK-NEXT:       SHF_ALLOC (0x2)
 // CHECK-NEXT:       SHF_WRITE (0x1)
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x220330
-// CHECK-NEXT:     Offset: 0x330
+// CHECK-NEXT:     Address: 0x220320
+// CHECK-NEXT:     Offset: 0x320
 // CHECK-NEXT:     Size: 48
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
@@ -78,35 +79,35 @@ foo:
 // CHECK-NEXT:       SHF_ALLOC (0x2)
 // CHECK-NEXT:       SHF_WRITE (0x1)
 // CHECK-NEXT:     ]
-// CHECK-NEXT:     Address: 0x220360
-// CHECK-NEXT:     Offset: 0x360
-// CHECK-NEXT:     Size: 32
+// CHECK-NEXT:     Address: 0x220350
+// CHECK-NEXT:     Offset: 0x350
+// CHECK-NEXT:     Size: 16
 // CHECK-NEXT:     Link: 0
 // CHECK-NEXT:     Info: 0
 // CHECK-NEXT:     AddressAlignment: 1
 
 /// Check 3 locations in the .got are referred to by __cap_relocs
 /// Note the length of of the executable capability is end of .pad.cheri.pcc -
-/// base of __cap_relocs.
+/// base of .text.
 // CHECK: __cap_relocs {
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x220330
+// CHECK-NEXT:     Offset: 0x220320
 // CHECK-NEXT:     Type: DATA (0x8FBE)
-// CHECK-NEXT:     Address: 0x230380
-// CHECK-NEXT:     Base: 0x230380
+// CHECK-NEXT:     Address: 0x230360
+// CHECK-NEXT:     Base: 0x230360
 // CHECK-NEXT:     Length: 8
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x220340
+// CHECK-NEXT:     Offset: 0x220330
 // CHECK-NEXT:     Type: FUNC (0x8000000000013DBC)
-// CHECK-NEXT:     Address: 0x210309
-// CHECK-NEXT:     Base: 0x200300
-// CHECK-NEXT:     Length: 131200
+// CHECK-NEXT:     Address: 0x210301
+// CHECK-NEXT:     Base: 0x210300
+// CHECK-NEXT:     Length: 65632
 // CHECK-NEXT:   }
 // CHECK-NEXT:   Relocation {
-// CHECK-NEXT:     Offset: 0x220350
+// CHECK-NEXT:     Offset: 0x220340
 // CHECK-NEXT:     Type: RODATA (0x1BFBE)
-// CHECK-NEXT:     Address: 0x200300
-// CHECK-NEXT:     Base: 0x200300
+// CHECK-NEXT:     Address: 0x2002F8
+// CHECK-NEXT:     Base: 0x2002F8
 // CHECK-NEXT:     Length: 8
 // CHECK-NEXT:   }

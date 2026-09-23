@@ -2020,16 +2020,6 @@ static bool isCheriBoundsSection(const OutputSection *sec) {
   if (sec == in.pccPadding->getParent())
     return true;
 
-  // XXX: CheriBSD's runtime loader assumes all read-only capabilities can be
-  // derived from PCC, so include all read-only sections as a workaround for
-  // now.  Once CheriBSD 25.03 is no longer supported, this can be removed.
-  // Treat __(tgot_)cap_relocs like REL* even though it's PROGBITS.
-  if (sec->type == SHT_PROGBITS && sec->name != "__cap_relocs" &&
-      sec->name != "__tgot_cap_relocs" && sec != in.tgot->getParent() &&
-      (flags & SHF_TLS) == 0 &&
-      ((flags & SHF_WRITE) == 0 || isRelroSection(sec, /*ignoreZRelro=*/true)))
-    return true;
-
   return false;
 }
 
@@ -2785,6 +2775,9 @@ SmallVector<PhdrEntry *, 0> Writer<ELFT>::createPhdrs(Partition &part) {
         continue;
       in.cheriBounds->add(sec);
     }
+    // Ignore alignment of PCC sections and reset back to 0. alignPCCBounds
+    // will ensure it's set to the actual required PCC alignment.
+    in.cheriBounds->p_align = 0;
   }
 
   for (OutputSection *sec : outputSections) {
@@ -3155,6 +3148,26 @@ template <class ELFT> void Writer<ELFT>::setPhdrs(Partition &part) {
       p->p_memsz =
           alignToPowerOf2(p->p_offset + p->p_memsz, config->commonPageSize) -
           p->p_offset;
+    }
+
+    // PT_CHERI_PCC can span multiple PT_LOADs, and having a program header
+    // where section offsets and section addresses are not just constant
+    // offsets from each other confuses tools like llvm-objcopy -O binary (each
+    // new PT_LOAD can increase p_offset and p_vaddr by differing amounts).
+    // Zeroing the offset-related fields should ensure they don't believe any
+    // sections are within the segments from an offset perspective.
+    //
+    // Similarly, p_paddr can get weird if linker scripts are assigning LMAs
+    // for the PT_LOADs PT_CHERI_PCC overlaps with that aren't just the VMAs at
+    // a constant offset. This hasn't been seen to cause issues, but zero it
+    // out as well to be clear it's not meaningful (beyond being the LMA of the
+    // first section in the segment).
+    if (p->p_type == PT_CHERI_PCC) {
+      p->p_filesz = 0;
+      p->p_offset = 0;
+      // See ScriptParser::readPhdrs
+      assert(!p->hasLMA && "PT_CHERI_PCC should never have an explicit LMA");
+      p->p_paddr = 0;
     }
   }
 }

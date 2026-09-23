@@ -558,7 +558,6 @@ void CheriCapRelocsSection::writeToImpl(uint8_t *buf) {
       InputSectionBase *isec = cast<InputSectionBase *>(realTarget.symOrSec);
       targetVA = isec->getVA(0);
     }
-    uint64_t targetSize = getTargetSize(location, realTarget);
     uint64_t targetOffset = reloc.capabilityOffset + realTarget.offset;
     CapRelocType targetType = getTargetType(realTarget);
     if (isCode) {
@@ -575,11 +574,14 @@ void CheriCapRelocsSection::writeToImpl(uint8_t *buf) {
             location.toString());
     uint64_t permissions = CapRelocPermission<ELFT>::encodeType(targetType);
 
-    // Use PCC bounds from the PT_CHERI_PCC segment.
+    uint64_t targetSize;
     if (PhdrEntry *ph = in.cheriBounds; ph && isCapRelocTypeExec(targetType)) {
+      // Use PCC bounds from the PT_CHERI_PCC segment.
       targetOffset += targetVA - ph->p_vaddr;
       targetVA = ph->p_vaddr;
       targetSize = ph->p_memsz;
+    } else {
+      targetSize = getTargetSize(location, realTarget);
     }
 
     // Ensure that the base and limit of the capabilities are representable
@@ -1212,7 +1214,6 @@ static bool alignPCCBounds(PhdrEntry *p, CheriPccPaddingSection &psec) {
     if (first->ptLoad)
       first->ptLoad->p_align =
           std::max(first->ptLoad->p_align, first->addralign);
-    p->p_align = std::max(p->p_align, first->addralign);
     changed = true;
   }
   uint64_t padSize = alignTo(size, align) - size;
@@ -1220,6 +1221,8 @@ static bool alignPCCBounds(PhdrEntry *p, CheriPccPaddingSection &psec) {
     psec.setSize(padSize);
     changed = true;
   }
+  // NB: Updating this has no effect on layout, so changed can remain false.
+  p->p_align = align;
   return changed;
 }
 

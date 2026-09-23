@@ -51,7 +51,7 @@ from_app:
 // CHECK-NEXT:  2205d0 00000000 00000000 00000000 00000000
 
 /// .got.plt[3] should be initialized to a PCC fragment
-// CHECK-NEXT:  2205e0 40052100 00000000 80010200 00000004
+// CHECK-NEXT:  2205e0 40052100 00000000 40010200 00000004
 
 // CHECK-PIE: Contents of section .got.plt:
 // CHECK-PIE-NEXT: 205b0 00000000 00000000 00000000 00000000
@@ -59,31 +59,59 @@ from_app:
 // CHECK-PIE-NEXT: 205d0 00000000 00000000 00000000 00000000
 
 /// .got.plt[3] should be initialized to a PCC fragment
-// CHECK-PIE-NEXT: 205e0 40050100 00000000 80010200 00000004
+// CHECK-PIE-NEXT: 205e0 40050100 00000000 40010200 00000004
+
+// CHECK: Contents of section .got:
+/// from_app 0x210578 exec size 4
+// CHECK-NEXT:  2305f0 40052100 00000000 40010200 00000004
+/// func2 (shlib.so) exec undef
+// CHECK-NEXT:  230600 00000000 00000000 00000000 00000000
+/// rodata (shlib.so) undef
+// CHECK-NEXT:  230610 00000000 00000000 00000000 00000000
+/// data (shlib.so) undef
+// CHECK-NEXT:  230620 00000000 00000000 00000000 00000000
+/// _start 0x210540 exec size 4
+// CHECK-NEXT:  230630 40052100 00000000 40010200 00000004
+/// appdata 0x2407e0 rw size 8
+// CHECK-NEXT:  230640 e0072400 00000000 08000000 00000002
+
+// CHECK-PIE: Contents of section .got:
+/// from_app 0x10578 exec size 4
+// CHECK-PIE-NEXT:  305f0 40050100 00000000 40010200 00000004
+/// func2 (shlib.so) exec undef
+// CHECK-PIE-NEXT:  30600 00000000 00000000 00000000 00000000
+/// rodata (shlib.so) undef
+// CHECK-PIE-NEXT:  30610 00000000 00000000 00000000 00000000
+/// data (shlib.so) undef
+// CHECK-PIE-NEXT:  30620 00000000 00000000 00000000 00000000
+/// _start 0x10540 exec size 4
+// CHECK-PIE-NEXT:  30630 40050100 00000000 40010200 00000004
+/// appdata 0x407f0 rw size 8
+// CHECK-PIE-NEXT:  30640 f0070400 00000000 08000000 00000002
 
 // CHECK: Contents of section .data.rel.ro:
 /// rodata (shlib.so) undef
-// CHECK-NEXT:  2305f0 00000000 00000000 00000000 00000000
+// CHECK-NEXT:  230680 00000000 00000000 00000000 00000000
 /// data (shlib.so) undef
-// CHECK-NEXT:  230600 00000000 00000000 00000000 00000000
-/// appdata 0x2407d0 rw size 8
-// CHECK-NEXT:  230610 d0072400 00000000 08000000 00000002
+// CHECK-NEXT:  230690 00000000 00000000 00000000 00000000
+/// appdata 0x2407e0 rw size 8
+// CHECK-NEXT:  2306a0 e0072400 00000000 08000000 00000002
 /// from_app 0x210578 exec size 4
-// CHECK-NEXT:  230620 40052100 00000000 80010200 00000004
+// CHECK-NEXT:  2306b0 40052100 00000000 40010200 00000004
 /// func2 (shlib.so) exec undef
-// CHECK-NEXT:  230630 00000000 00000000 00000000 00000000
+// CHECK-NEXT:  2306c0 00000000 00000000 00000000 00000000
 
 // CHECK-PIE: Contents of section .data.rel.ro:
 /// rodata (shlib.so) undef
-// CHECK-PIE-NEXT:  305f0 00000000 00000000 00000000 00000000
+// CHECK-PIE-NEXT:  30680 00000000 00000000 00000000 00000000
 /// data (shlib.so) undef
-// CHECK-PIE-NEXT:  30600 00000000 00000000 00000000 00000000
-/// appdata 0x407e0 rw size 8
-// CHECK-PIE-NEXT:  30610 e0070400 00000000 08000000 00000002
+// CHECK-PIE-NEXT:  30690 00000000 00000000 00000000 00000000
+/// appdata 0x407f0 rw size 8
+// CHECK-PIE-NEXT:  306a0 f0070400 00000000 08000000 00000002
 /// from_app 0x10578 exec size 4
-// CHECK-PIE-NEXT:  30620 40050100 00000000 80010200 00000004
+// CHECK-PIE-NEXT:  306b0 40050100 00000000 40010200 00000004
 /// func2 (shlib.so) exec undef
-// CHECK-PIE-NEXT:  30630 00000000 00000000 00000000 00000000
+// CHECK-PIE-NEXT:  306c0 00000000 00000000 00000000 00000000
 
  .data
  .global appdata
@@ -91,54 +119,26 @@ from_app:
  .size appdata, 8
 appdata: .xword 8
 
-// CHECK: Contents of section .got:
-/// from_app 0x210578 exec size 4
-// CHECK-NEXT:  230640 40052100 00000000 80010200 00000004
-/// func2 (shlib.so) exec undef
-// CHECK-NEXT:  230650 00000000 00000000 00000000 00000000
-/// rodata (shlib.so) undef
-// CHECK-NEXT:  230660 00000000 00000000 00000000 00000000
-/// data (shlib.so) undef
-// CHECK-NEXT:  230670 00000000 00000000 00000000 00000000
-/// _start 0x210540 exec size 4
-// CHECK-NEXT:  230680 40052100 00000000 80010200 00000004
-/// appdata 0x2407d0 rw size 8
-// CHECK-NEXT:  230690 d0072400 00000000 08000000 00000002
-
-// CHECK-PIE: Contents of section .got:
-/// from_app 0x10578 exec size 4
-// CHECK-PIE-NEXT:  30640 40050100 00000000 80010200 00000004
-/// func2 (shlib.so) exec size 4
-// CHECK-PIE-NEXT:  30650 00000000 00000000 00000000 00000000
-/// rodata (shlib.so) undef
-// CHECK-PIE-NEXT:  30660 00000000 00000000 00000000 00000000
-/// data (shlib.so) undef
-// CHECK-PIE-NEXT:  30670 00000000 00000000 00000000 00000000
-/// _start 0x10540 exec size 4
-// CHECK-PIE-NEXT:  30680 40050100 00000000 80010200 00000004
-/// appdata 0x407e0 rw size 8
-// CHECK-PIE-NEXT:  30690 e0070400 00000000 08000000 00000002
-
 // CHECK: Contents of section .data:
-// CHECK-NEXT:  2407d0 08000000 00000000
+// CHECK-NEXT:  2407e0 08000000 00000000
 
 // CHECK-PIE: Contents of section .data:
-// CHECK-PIE-NEXT:  407e0 08000000 00000000
+// CHECK-PIE-NEXT:  407f0 08000000 00000000
 
 // CHECK-LABEL: <_start>:
 // CHECK-NEXT: 210540: bl   0x2105a0
 // CHECK-NEXT:         adrp c0, 0x230000
-// CHECK-NEXT:         ldr  c0, [c0, #0x660]
+// CHECK-NEXT:         ldr  c0, [c0, #0x610]
 // CHECK-NEXT:         adrp c1, 0x230000
-// CHECK-NEXT:         ldr  c1, [c1, #0x670]
+// CHECK-NEXT:         ldr  c1, [c1, #0x620]
 // CHECK-NEXT:         adrp c2, 0x230000
-// CHECK-NEXT:         ldr  c2, [c2, #0x690]
+// CHECK-NEXT:         ldr  c2, [c2, #0x640]
 // CHECK-NEXT:         adrp c3, 0x230000
-// CHECK-NEXT:         ldr  c3, [c3, #0x640]
+// CHECK-NEXT:         ldr  c3, [c3, #0x5f0]
 // CHECK-NEXT:         adrp c4, 0x230000
-// CHECK-NEXT:         ldr  c4, [c4, #0x650]
+// CHECK-NEXT:         ldr  c4, [c4, #0x600]
 // CHECK-NEXT:         adrp c5, 0x230000
-// CHECK-NEXT:         ldr  c5, [c5, #0x680]
+// CHECK-NEXT:         ldr  c5, [c5, #0x630]
 // CHECK-NEXT:         ret  c30
 
 // CHECK-LABEL: <from_app>:
@@ -165,17 +165,17 @@ appdata: .xword 8
 // CHECK-PIE-LABEL: <_start>:
 // CHECK-PIE-NEXT:    10540: bl  0x105a0
 // CHECK-PIE-NEXT:           adrp c0, 0x30000
-// CHECK-PIE-NEXT:           ldr  c0, [c0, #0x660]
+// CHECK-PIE-NEXT:           ldr  c0, [c0, #0x610]
 // CHECK-PIE-NEXT:           adrp c1, 0x30000
-// CHECK-PIE-NEXT:           ldr  c1, [c1, #0x670]
+// CHECK-PIE-NEXT:           ldr  c1, [c1, #0x620]
 // CHECK-PIE-NEXT:           adrp c2, 0x30000
-// CHECK-PIE-NEXT:           ldr  c2, [c2, #0x690]
+// CHECK-PIE-NEXT:           ldr  c2, [c2, #0x640]
 // CHECK-PIE-NEXT:           adrp c3, 0x30000
-// CHECK-PIE-NEXT:           ldr  c3, [c3, #0x640]
+// CHECK-PIE-NEXT:           ldr  c3, [c3, #0x5f0]
 // CHECK-PIE-NEXT:           adrp c4, 0x30000
-// CHECK-PIE-NEXT:           ldr  c4, [c4, #0x650]
+// CHECK-PIE-NEXT:           ldr  c4, [c4, #0x600]
 // CHECK-PIE-NEXT:           adrp c5, 0x30000
-// CHECK-PIE-NEXT:           ldr  c5, [c5, #0x680]
+// CHECK-PIE-NEXT:           ldr  c5, [c5, #0x630]
 // CHECK-PIE-NEXT:           ret  c30
 
 // CHECK-PIE-LABEL: <from_app>:
@@ -201,56 +201,56 @@ appdata: .xword 8
 
 // RELS: Relocations [
 // RELS-NEXT:   Section {{.*}} .rela.dyn {
-/// .chericap appdata
-// RELS-NEXT:     0x230610 R_MORELLO_RELATIVE - 0x0
-//// .chericap from_app
-// RELS-NEXT:     0x230620 R_MORELLO_RELATIVE - 0x39
 /// .got from_app
-// RELS-NEXT:     0x230640 R_MORELLO_RELATIVE - 0x39
-/// _start
-// RELS-NEXT:     0x230680 R_MORELLO_RELATIVE - 0x1
+// RELS-NEXT:     0x2305F0 R_MORELLO_RELATIVE - 0x39
+/// .got _start
+// RELS-NEXT:     0x230630 R_MORELLO_RELATIVE - 0x1
 // .got appdata
-// RELS-NEXT:     0x230690 R_MORELLO_RELATIVE - 0x0
-/// .chericap func2
-// RELS-NEXT:     0x230630 R_MORELLO_CAPINIT func2 0x0
+// RELS-NEXT:     0x230640 R_MORELLO_RELATIVE - 0x0
+/// .chericap appdata
+// RELS-NEXT:     0x2306A0 R_MORELLO_RELATIVE - 0x0
+//// .chericap from_app
+// RELS-NEXT:     0x2306B0 R_MORELLO_RELATIVE - 0x39
 /// .got func2
-// RELS-NEXT:     0x230650 R_MORELLO_GLOB_DAT func2 0x0
-/// .chericap rodata
-// RELS-NEXT:     0x2305F0 R_MORELLO_CAPINIT rodata 0x0
+// RELS-NEXT:     0x230600 R_MORELLO_GLOB_DAT func2 0x0
+/// .chericap func2
+// RELS-NEXT:     0x2306C0 R_MORELLO_CAPINIT func2 0x0
 /// .got rodata
-// RELS-NEXT:     0x230660 R_MORELLO_GLOB_DAT rodata 0x0
-/// .chericap data
-// RELS-NEXT:     0x230600 R_MORELLO_CAPINIT data 0x0
+// RELS-NEXT:     0x230610 R_MORELLO_GLOB_DAT rodata 0x0
+/// .chericap rodata
+// RELS-NEXT:     0x230680 R_MORELLO_CAPINIT rodata 0x0
 /// .got data
-// RELS-NEXT:     0x230670 R_MORELLO_GLOB_DAT data 0x0
+// RELS-NEXT:     0x230620 R_MORELLO_GLOB_DAT data 0x0
+/// .chericap data
+// RELS-NEXT:     0x230690 R_MORELLO_CAPINIT data 0x0
 // RELS-NEXT:   }
 // RELS-NEXT:   Section {{.*}} .rela.plt {
 // RELS-NEXT:     0x2205E0 R_MORELLO_JUMP_SLOT func 0x41
 
 // RELS-PIE: Relocations [
 // RELS-PIE-NEXT:   Section {{.*}} .rela.dyn {
-/// .chericap appdata
-// RELS-PIE-NEXT:     0x30610 R_MORELLO_RELATIVE - 0x0
-/// .chericap from_app
-// RELS-PIE-NEXT:     0x30620 R_MORELLO_RELATIVE - 0x39
 /// .got from_app
-// RELS-PIE-NEXT:     0x30640 R_MORELLO_RELATIVE - 0x39
-/// _start
-// RELS-PIE-NEXT:     0x30680 R_MORELLO_RELATIVE - 0x1
-/// .got appdata
-// RELS-PIE-NEXT:     0x30690 R_MORELLO_RELATIVE - 0x0
-/// .chericap func2
-// RELS-PIE-NEXT:     0x30630 R_MORELLO_CAPINIT func2 0x0
+// RELS-PIE-NEXT:     0x305F0 R_MORELLO_RELATIVE - 0x39
+/// .got _start
+// RELS-PIE-NEXT:     0x30630 R_MORELLO_RELATIVE - 0x1
+// .got appdata
+// RELS-PIE-NEXT:     0x30640 R_MORELLO_RELATIVE - 0x0
+/// .chericap appdata
+// RELS-PIE-NEXT:     0x306A0 R_MORELLO_RELATIVE - 0x0
+//// .chericap from_app
+// RELS-PIE-NEXT:     0x306B0 R_MORELLO_RELATIVE - 0x39
 /// .got func2
-// RELS-PIE-NEXT:     0x30650 R_MORELLO_GLOB_DAT func2 0x0
-/// .chericap rodata
-// RELS-PIE-NEXT:     0x305F0 R_MORELLO_CAPINIT rodata 0x0
+// RELS-PIE-NEXT:     0x30600 R_MORELLO_GLOB_DAT func2 0x0
+/// .chericap func2
+// RELS-PIE-NEXT:     0x306C0 R_MORELLO_CAPINIT func2 0x0
 /// .got rodata
-// RELS-PIE-NEXT:     0x30660 R_MORELLO_GLOB_DAT rodata 0x0
-/// .chericap data
-// RELS-PIE-NEXT:     0x30600 R_MORELLO_CAPINIT data 0x0
+// RELS-PIE-NEXT:     0x30610 R_MORELLO_GLOB_DAT rodata 0x0
+/// .chericap rodata
+// RELS-PIE-NEXT:     0x30680 R_MORELLO_CAPINIT rodata 0x0
 /// .got data
-// RELS-PIE-NEXT:     0x30670 R_MORELLO_GLOB_DAT data 0x0
+// RELS-PIE-NEXT:     0x30620 R_MORELLO_GLOB_DAT data 0x0
+/// .chericap data
+// RELS-PIE-NEXT:     0x30690 R_MORELLO_CAPINIT data 0x0
 // RELS-PIE-NEXT:   }
 // RELS-PIE-NEXT:   Section {{.*}} .rela.plt {
 // RELS-PIE-NEXT:     0x205E0 R_MORELLO_JUMP_SLOT func 0x41
