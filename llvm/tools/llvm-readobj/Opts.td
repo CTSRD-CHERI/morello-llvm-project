@@ -23,6 +23,7 @@ def cap_relocs : FF<"cap-relocs", "Display the CHERI __cap_relocs section">;
 def cap_table : FF<"cap-table", "Display the CHERI .captable section">;
 def cap_table_mapping : FF<"cap-table-mapping", "Display the CHERI .captable_mapping section">;
 def cg_profile : FF<"cg-profile", "Display call graph profile section">;
+def decode_morello_fragments : FF<"decode-morello-fragments", "Fetch and decode Morello relative relocation fragments">;
 defm demangle : BB<"demangle", "Demangle symbol names", "Do not demangle symbol names (default)">;
 def dependent_libraries : FF<"dependent-libraries", "Display the dependent libraries section">;
 def dyn_relocations : FF<"dyn-relocations", "Display the dynamic relocation entries in the file">;

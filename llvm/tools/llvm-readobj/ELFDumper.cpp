@@ -178,6 +178,14 @@ struct GroupSection {
   std::vector<GroupMember> Members;
 };
 
+struct MorelloFrag {
+  uint64_t Addr;
+  uint64_t Base;
+  uint64_t Length;
+  uint64_t Type;
+  StringRef TypeName;
+};
+
 namespace {
 
 struct NoteType {
@@ -314,6 +322,9 @@ protected:
   virtual void printCheriCapReloc(uintX_t Offset, uintX_t Base, uintX_t Addend,
                                   uintX_t Length, uintX_t Type,
                                   StringRef TypeName) = 0;
+
+  std::optional<MorelloFrag> fetchMorelloFragment(const Relocation<ELFT> &R);
+  bool squashMorelloAddend(const Relocation<ELFT> &R);
 
   virtual void printMipsABIFlags() = 0;
   virtual void printMipsGOT(const MipsGOTParser<ELFT> &Parser) = 0;
@@ -3450,6 +3461,94 @@ template <class ELFT> void ELFDumper<ELFT>::printCheriCapRelocsHelper() {
     printCheriCapRelocsSection(*Shdr);
 }
 
+template <class ELFT>
+std::optional<MorelloFrag>
+ELFDumper<ELFT>::fetchMorelloFragment(const Relocation<ELFT> &R) {
+  if (Obj.getHeader().e_machine != EM_AARCH64)
+    return {};
+
+  switch (R.Type) {
+  case R_MORELLO_RELATIVE:
+  case R_MORELLO_IRELATIVE:
+  case R_MORELLO_FUNC_RELATIVE:
+    break;
+  default:
+    return {};
+  }
+
+  uintX_t Fragment[2];
+  for (const Elf_Shdr &Sec : cantFail(Obj.sections())) {
+    if ((Sec.sh_flags & ELF::SHF_ALLOC) == 0)
+      continue;
+    if (Sec.sh_addr > R.Offset)
+      continue;
+    uint64_t Offset = R.Offset - Sec.sh_addr;
+    if (Offset + sizeof(Fragment) > Sec.sh_size)
+      continue;
+
+    ArrayRef<uint8_t> Data =
+        unwrapOrError(ObjF.getFileName(), Obj.getSectionContents(Sec));
+    const uint8_t *Frag = Data.data() + Offset;
+
+    uintX_t Fragment[2];
+    Fragment[0] =
+        support::endian::read<uintX_t, ELFT::TargetEndianness, 1>(Frag);
+    Fragment[1] = support::endian::read<uintX_t, ELFT::TargetEndianness, 1>(
+        Frag + sizeof(uintX_t));
+
+    uint64_t Base = Fragment[0];
+    uint64_t Addr = Base;
+    if (R.Addend)
+      Addr += *R.Addend;
+    uint64_t Length = (Fragment[1] << 8) >> 8;
+    uint64_t Type = Fragment[1] >> ((sizeof(uintX_t) - 1) * 8);
+
+    StringRef TypeName;
+    switch (Type) {
+    case 2:
+      TypeName = "DATA";
+      break;
+    case 1:
+      TypeName = "RODATA";
+      break;
+    case 4:
+      switch (R.Type) {
+      case R_MORELLO_IRELATIVE:
+      case R_MORELLO_FUNC_RELATIVE:
+        TypeName = "FUNC";
+        break;
+      default:
+        TypeName = "CODE";
+        break;
+      }
+      break;
+    default:
+      TypeName = "Unknown";
+      break;
+    }
+
+    return {{Addr, Base, Length, Type, TypeName}};
+  }
+
+  return {};
+}
+
+template <class ELFT>
+bool ELFDumper<ELFT>::squashMorelloAddend(const Relocation<ELFT> &R) {
+  if (!opts::DecodeMorelloFragments)
+    return false;
+
+  if (Obj.getHeader().e_machine != EM_AARCH64)
+    return false;
+
+  switch (R.Type) {
+  case R_MORELLO_JUMP_SLOT:
+    return true;
+  default:
+    return false;;
+  }
+}
+
 template <class ELFT> void ELFDumper<ELFT>::printCheriCapTable() {
   const ELFFile<ELFT> &Obj = ObjF.getELFFile();
   const Elf_Shdr *Shdr = findSectionByName(".captable");
@@ -4113,6 +4212,10 @@ void GNUELFDumper<ELFT>::printRelrReloc(const Elf_Relr &R) {
 template <class ELFT>
 void GNUELFDumper<ELFT>::printRelRelaReloc(const Relocation<ELFT> &R,
                                            const RelSymbol<ELFT> &RelSym) {
+  std::optional<MorelloFrag> Frag = opts::DecodeMorelloFragments
+                                        ? this->fetchMorelloFragment(R)
+                                        : std::nullopt;
+
   // First two fields are bit width dependent. The rest of them are fixed width.
   unsigned Bias = ELFT::Is64Bits ? 8 : 0;
   Field Fields[5] = {0, 10 + Bias, 19 + 2 * Bias, 42 + 2 * Bias, 53 + 2 * Bias};
@@ -4123,6 +4226,10 @@ void GNUELFDumper<ELFT>::printRelRelaReloc(const Relocation<ELFT> &R,
 
   SmallString<32> RelocName;
   this->Obj.getRelocationTypeName(R.Type, RelocName);
+  if (Frag) {
+    RelocName += '/';
+    RelocName += Frag->TypeName;
+  }
   Fields[2].Str = RelocName.c_str();
 
   if (RelSym.Sym)
@@ -4133,12 +4240,23 @@ void GNUELFDumper<ELFT>::printRelRelaReloc(const Relocation<ELFT> &R,
   else
     Fields[4].Str = std::string(RelSym.Name);
 
+  if (Frag) {
+    Fields[3].Str = to_string(format_hex_no_prefix(Frag->Addr, Width));
+    Fields[4].Str = "";
+  }
+
   for (const Field &F : Fields)
     printField(F);
 
   std::string Addend;
-  if (std::optional<int64_t> A = R.Addend) {
+  if (Frag) {
+    Addend = " [" + to_string(format_hex_no_prefix(Frag->Base, Width)) + "-" +
+             to_string(format_hex_no_prefix(Frag->Base + Frag->Length, Width)) +
+             "]";
+  } else if (std::optional<int64_t> A = R.Addend) {
     int64_t RelAddend = *A;
+    if (this->squashMorelloAddend(R))
+      RelAddend = 0;
     if (!Fields[4].Str.empty()) {
       if (RelAddend < 0) {
         Addend = " - ";
@@ -7514,11 +7632,19 @@ void LLVMELFDumper<ELFT>::printExpandedRelRelaReloc(const Relocation<ELFT> &R,
                                                     StringRef SymbolName,
                                                     StringRef RelocName) {
   DictScope Group(W, "Relocation");
+  std::optional<MorelloFrag> Frag = opts::DecodeMorelloFragments
+                                        ? this->fetchMorelloFragment(R)
+                                        : std::nullopt;
   W.printHex("Offset", R.Offset);
   W.printNumber("Type", RelocName, R.Type);
   W.printNumber("Symbol", !SymbolName.empty() ? SymbolName : "-", R.Symbol);
   if (R.Addend)
-    W.printHex("Addend", (uintX_t)*R.Addend);
+    W.printHex("Addend", this->squashMorelloAddend(R) ? 0 : (uintX_t)*R.Addend);
+  if (Frag) {
+    W.printNumber("MorelloType", Frag->TypeName, Frag->Type);
+    W.printHex("Base", Frag->Base);
+    W.printHex("Length", Frag->Length);
+  }
 }
 
 template <class ELFT>
@@ -7526,10 +7652,18 @@ void LLVMELFDumper<ELFT>::printDefaultRelRelaReloc(const Relocation<ELFT> &R,
                                                    StringRef SymbolName,
                                                    StringRef RelocName) {
   raw_ostream &OS = W.startLine();
-  OS << W.hex(R.Offset) << " " << RelocName << " "
-     << (!SymbolName.empty() ? SymbolName : "-");
-  if (R.Addend)
-    OS << " " << W.hex((uintX_t)*R.Addend);
+  std::optional<MorelloFrag> Frag = opts::DecodeMorelloFragments
+                                        ? this->fetchMorelloFragment(R)
+                                        : std::nullopt;
+  OS << W.hex(R.Offset) << " " << RelocName;
+  if (Frag)
+    OS << "/" << Frag->TypeName;
+  OS << " " << (!SymbolName.empty() ? SymbolName : "-");
+  if (Frag) {
+    OS << " " << W.hex(Frag->Addr) << " [" << W.hex(Frag->Base) << "-"
+       << W.hex(Frag->Base + Frag->Length) << "]";
+  } else if (R.Addend)
+    OS << " " << W.hex(this->squashMorelloAddend(R) ? 0 : (uintX_t)*R.Addend);
   OS << "\n";
 }
 
